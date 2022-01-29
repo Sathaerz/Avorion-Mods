@@ -1,0 +1,1 @@
+WeaponTypes.addType("PulseAccelerator", "Pulse Accelerator", armed)

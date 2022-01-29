@@ -1,0 +1,1 @@
+weaponProbabilities[WeaponType.PulseAccelerator] =            {d = 0.4, p = 0.05 }

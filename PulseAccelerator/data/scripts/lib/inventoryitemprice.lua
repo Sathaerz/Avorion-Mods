@@ -1,0 +1,1 @@
+valueWeights[WeaponType.PulseAccelerator] = 3 --They are incredibly powerful.
