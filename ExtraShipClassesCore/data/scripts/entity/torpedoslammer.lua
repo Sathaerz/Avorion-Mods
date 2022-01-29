@@ -42,9 +42,9 @@ self._Data._TargetScriptValue = nil
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Beginning...")
+    self.Log(_MethodName, "Initializing Torpedo Slammer v3 script on entity.")
 
-    self._Data = _Values
+    self._Data = _Values or {}
 
     --Preferred warhead / body type aren't set - if they are nil, that is fine.
 

@@ -211,6 +211,13 @@ mission.phases[2].onTargetLocationEntered = function(x, y)
         }
 end
 
+mission.phases[2].onTargetLocationArrivalConfirmed = function(x, y)
+    local _Sector = Sector()
+    local _DefendObjective = {_Sector:getEntitiesByScriptValue("_lotw_mission4_defendobjective")}
+
+    _Sector:broadcastChatMessage(_DefendObjective[1], ChatMessageType.Chatter, "Prioritize destroying enemies with torpedoes! We've marked them with a special icon.")
+end
+
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _MethodName = "Phase 2 on Entity Destroyed"
     mission.Log(_MethodName, "Beginning...")
@@ -306,10 +313,6 @@ function buildSector(_X, _Y)
     local _StationBay = CargoBay(_Station)
     _StationBay:clear()
     _Station:setDropsLoot(false)
-
-    local _DamageFactor = 0.25 + (0.25 * mission.data.custom.missionsFailed)
-
-    _Station.damageMulitplier = (_Station.damageMulitplier or 1) * _DamageFactor
 
     local _DuraFactor = 1.0 + (0.2 * mission.data.custom.missionsFailed)
     local _Dura = Durability(_Station)
@@ -434,19 +437,20 @@ end
 
 function onBetaBackgroundPiratesFinished(_Generated)
     local _SlamCtMax = 2
-    local _Slammers = Sector():getEntitiesByScript("torpedoslammer.lua")
+    local _Slammers = {Sector():getEntitiesByScript("torpedoslammer.lua")}
     local _SlamCt = #_Slammers
     local _SlamAdded = 0
 
     local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = 15
-    _TorpSlammerValues._ROF = 5
+    _TorpSlammerValues._TimeToActive = 25
+    _TorpSlammerValues._ROF = 8
     _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DamageFactor = 8
+    _TorpSlammerValues._DamageFactor = 0.1 --The station will DIE if this is set any higher, it's actually quite funny to watch.
     _TorpSlammerValues._DurabilityFactor = 8
     _TorpSlammerValues._ForwardAdjustFactor = 2
     _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
-    _TorpSlammerValues._PreferBodyType = TorpedoUtility.BodyType.Hawk
+    _TorpSlammerValues._TargetPriority = 2
+    _TorpSlammerValues._TargetScriptValue = "_lotw_mission4_defendobjective"
 
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_lotw_mission4_objective", true)
@@ -459,6 +463,8 @@ function onBetaBackgroundPiratesFinished(_Generated)
 
             _Pirate:setTitleArguments(_TitleArguments)
 
+            _Pirate:removeScript("icon.lua")
+            _Pirate:addScript("icon.lua", "data/textures/icons/pixel/torpedoboat.png")
             _Pirate:addScript("torpedoslammer.lua", _TorpSlammerValues)
             _SlamAdded = _SlamAdded + 1
         end
