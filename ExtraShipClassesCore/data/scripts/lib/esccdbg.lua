@@ -281,7 +281,9 @@ end
 function onSlammerGenerated(_Generated)
     onPiratesGenerated(_Generated)
     for _, _S in pairs(_Generated) do
-        _S:addScript("torpedoslammer.lua", nil, nil, nil, nil, nil, nil, 2)
+        local _TorpSlammerValues = {}
+        _TorpSlammerValues._ForwardAdjustFactor = 2
+        _S:addScript("torpedoslammer.lua", _TorpSlammerValues)
     end
 end
 

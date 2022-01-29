@@ -69,12 +69,16 @@ function The4.spawnWastelayer(_X, _Y, _Factor)
     _Boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
 
     --Add offensive script
-    local _TorpedoFactor = 16
-    local _TorpDuraFactor = 4
-    local _SlamRate = 4
-    local _TimeToActive = 12
+    local _TorpSlammerValues = {}
+    _TorpSlammerValues._TimeToActive = 12
+    _TorpSlammerValues._ROF = 4
+    _TorpSlammerValues._UpAdjust = false
+    _TorpSlammerValues._DamageFactor = 16
+    _TorpSlammerValues._DurabilityFactor = 4
+    _TorpSlammerValues._ForwardAdjustFactor = 1
+    _TorpSlammerValues._UseEntityDamageMult = true
 
-    _Boss:addScriptOnce("torpedoslammer.lua", _TimeToActive, _SlamRate, nil, nil, false, _TorpedoFactor, 1, _TorpDuraFactor, true)
+    _Boss:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
 
     if _Factor >= 10 then
         _Boss:addScriptOnce("overdrive.lua")

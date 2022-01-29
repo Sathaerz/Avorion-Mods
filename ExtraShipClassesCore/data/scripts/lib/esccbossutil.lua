@@ -62,11 +62,16 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             	end
             end
 
-            local _TimeToActive = 12
-            local _SlamRate = 1.75
+            local _TorpSlammerValues = {}
+            _TorpSlammerValues._TimeToActive = 12
+            _TorpSlammerValues._ROF = 1.75
+            _TorpSlammerValues._UpAdjust = false
+            _TorpSlammerValues._DamageFactor = _TorpedoFactor
+            _TorpSlammerValues._DurabilityFactor = _TorpDuraFactor
+            _TorpSlammerValues._ForwardAdjustFactor = 1
 
             _Boss:addScriptOnce("phasemode.lua")
-            _Boss:addScriptOnce("torpedoslammer.lua", _TimeToActive, _SlamRate, nil, nil, false, _TorpedoFactor, 1, _TorpDuraFactor)
+            _Boss:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
             _Boss:addScriptOnce("dialogs/encounters/dervishgoliath.lua")
             ShipUtility.addGoliathLaunchers(_Boss)
             ShipUtility.addBossAntiTorpedoEquipment(_Boss, nil, nil, 2000)
@@ -117,11 +122,18 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             	end
             end
 
-            local _TimeToActive = 12
-            local _SlamRate = 9
+            local _TorpSlammerValues = {}
+            _TorpSlammerValues._TimeToActive = 12
+            _TorpSlammerValues._ROF = 9
+            _TorpSlammerValues._UpAdjust = false
+            _TorpSlammerValues._DamageFactor = _TorpedoFactor
+            _TorpSlammerValues._DurabilityFactor = _TorpDuraFactor
+            _TorpSlammerValues._ForwardAdjustFactor = 1
+            _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
+            _TorpSlammerValues._PreferBodyType = TorpedoUtility.BodyType.Hawk
 
             _Boss:addScriptOnce("overdrive.lua", 3)
-            _Boss:addScriptOnce("torpedoslammer.lua", _TimeToActive, _SlamRate, TorpedoUtility.WarheadType.Nuclear, TorpedoUtility.BodyType.Hawk, false, _TorpedoFactor, 1, _TorpDuraFactor)
+            _Boss:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
             _Boss:addScriptOnce("dialogs/encounters/scouringphoenix.lua")
             ShipUtility.addPhoenixCannons(_Boss)
             ShipUtility.addBossAntiTorpedoEquipment(_Boss, nil, nil, 2000)

@@ -261,11 +261,18 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         _TorpDamageFactor = 3
     end
 
+    local _TorpSlammerValues = {}
+    _TorpSlammerValues._TimeToActive = 10
+    _TorpSlammerValues._ROF = 1
+    _TorpSlammerValues._UpAdjust = _AdjustSlammer
+    _TorpSlammerValues._DamageFactor = _TorpDamageFactor
+    _TorpSlammerValues._ForwardAdjustFactor = 1
+
     _Superweapon:addAbsoluteBias(StatsBonuses.ShieldImpenetrable, true)
     _Superweapon:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
     _Superweapon:addScriptOnce("terminalblocker.lua", 1)
     _Superweapon:addScriptOnce("hyperaggro.lua")
-    _Superweapon:addScriptOnce("torpedoslammer.lua", 10, 1, nil, nil, _AdjustSlammer, _TorpDamageFactor, true)
+    _Superweapon:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
     _Superweapon:addScriptOnce("absolutepointdefense.lua")
     _Superweapon:addScriptOnce("gordianknotbehavior.lua")
     if _ic2 then

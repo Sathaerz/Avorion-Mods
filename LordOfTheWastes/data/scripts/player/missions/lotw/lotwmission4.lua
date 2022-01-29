@@ -28,6 +28,7 @@ local AsyncPirateGenerator = include ("asyncpirategenerator")
 local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 local Placer = include ("placer")
+local TorpedoUtility = include ("torpedoutility")
 
 mission._Debug = 0
 mission._Name = "Defend Secret Outpost"
@@ -306,6 +307,10 @@ function buildSector(_X, _Y)
     _StationBay:clear()
     _Station:setDropsLoot(false)
 
+    local _DamageFactor = 0.25 + (0.25 * mission.data.custom.missionsFailed)
+
+    _Station.damageMulitplier = (_Station.damageMulitplier or 1) * _DamageFactor
+
     local _DuraFactor = 1.0 + (0.2 * mission.data.custom.missionsFailed)
     local _Dura = Durability(_Station)
     if _Dura then
@@ -428,9 +433,35 @@ function onAlphaBackgroundPiratesFinished(_Generated)
 end
 
 function onBetaBackgroundPiratesFinished(_Generated)
+    local _SlamCtMax = 2
+    local _Slammers = Sector():getEntitiesByScript("torpedoslammer.lua")
+    local _SlamCt = #_Slammers
+    local _SlamAdded = 0
+
+    local _TorpSlammerValues = {}
+    _TorpSlammerValues._TimeToActive = 15
+    _TorpSlammerValues._ROF = 5
+    _TorpSlammerValues._UpAdjust = false
+    _TorpSlammerValues._DamageFactor = 8
+    _TorpSlammerValues._DurabilityFactor = 8
+    _TorpSlammerValues._ForwardAdjustFactor = 2
+    _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
+    _TorpSlammerValues._PreferBodyType = TorpedoUtility.BodyType.Hawk
+
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_lotw_mission4_objective", true)
         _Pirate:setValue("_lotw_beta_wing", true)
+
+        if _SlamCt + _SlamAdded < _SlamCtMax then
+            local _TitleArguments = _Pirate:getTitleArguments()
+            local _OldTitle = _TitleArguments.title
+            _TitleArguments.title = "Bombardier " .. _OldTitle
+
+            _Pirate:setTitleArguments(_TitleArguments)
+
+            _Pirate:addScript("torpedoslammer.lua", _TorpSlammerValues)
+            _SlamAdded = _SlamAdded + 1
+        end
 
         local _ShipAI = ShipAI(_Pirate)
         local _DefenseObjectives = {Sector():getEntitiesByScriptValue("_lotw_mission4_defendobjective")}

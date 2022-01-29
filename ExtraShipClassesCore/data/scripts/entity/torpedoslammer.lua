@@ -19,11 +19,13 @@ self._Data = {}
         _CurrentTarget          = The current target of the script
         _PreferWarheadType      = This script will always use this warhead type if this value is supplied. Otherwise a random type is used.
         _PreferBodyType         = This script will always use this body type if this value is supplied. Otherwise a random type is used.
-        _UpAdjust               = Adjusts how far up a torpedo spawns relative to the attached entity. Used for not spawning a torpedo in the ship's bounding box which does weird shit to the AI.
+        _UpAdjust               = Adjusts the spawned torpedo upwards or not. Used for not spawning a torpedo in the ship's bounding box which does weird shit to the AI.
         _DamageFactor           = Multiplies the amount of damage the torpedo does.
         _ForwardAdjustFactor    = Adjusts how far forward a torpedo spawns relative to the attached entity. Used for not spawning a torpedo in the ship's bounding box which does weird shit to the AI.
         _DurabilityFactor       = Multiplies the durability of torpedoes by this amount. Useful for making torpedoes that are hard to shoot down.
         _UseEntityDamageMult    = Multiplies the damage of the torpedoes by the attached entity's damage multiplier. Useful for overdrive or avenger enemies.
+        _TargetPriority         = 1 = most firepower, 2 = by script value
+        _TargetScriptValue      = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
 ]]
 self._Data._ROF = nil
 self._Data._TimeToActive = nil
@@ -35,28 +37,27 @@ self._Data._DamageFactor = nil
 self._Data._ForwardAdjustFactor = nil --Consider setting this to a value greater than 1 if you put this on a smaller ship.
 self._Data._DurabilityFactor = nil
 self._Data._UseEntityDamageMult = nil
+self._Data._TargetPriority = nil
+self._Data._TargetScriptValue = nil
 
-function TorpedoSlammer.initialize(_TimeUntilActive, _RateOfFire, _PreferredWarhead, _PreferredBody, _UpAdjust, _DamageFactor, _ForwardAdjustFactor, _DurabilityFactor, _UseEntityDamageMult)
+function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    _TimeUntilActive = _TimeUntilActive or 10
-    _RateOfFire = _RateOfFire or 1
-    _UpAdjust = _UpAdjust or false
-    _DamageFactor = _DamageFactor or 1
-    _ForwardAdjustFactor = _ForwardAdjustFactor or 1
-    _DurabilityFactor = _DurabilityFactor or 1
-    _UseEntityDamageMult = _UseEntityDamageMult or false
+    self.Log(_MethodName, "Beginning...")
 
-    self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(_UpAdjust))
+    self._Data = _Values
 
-    self._Data._TimeToActive = _TimeUntilActive
-    self._Data._ROF = _RateOfFire
-    self._Data._PreferWarheadType = _PreferredWarhead
-    self._Data._PreferBodyType = _PreferredBody
-    self._Data._UpAdjust = _UpAdjust
-    self._Data._DamageFactor = _DamageFactor
-    self._Data._ForwardAdjustFactor = _ForwardAdjustFactor
-    self._Data._DurabilityFactor = _DurabilityFactor
-    self._Data._UseEntityDamageMult = _UseEntityDamageMult
+    --Preferred warhead / body type aren't set - if they are nil, that is fine.
+
+    self._Data._TimeToActive = self._Data._TimeToActive or 10
+    self._Data._ROF = self._Data._ROF or 1
+    self._Data._UpAdjust = self._Data._UpAdjust or false
+    self._Data._DamageFactor = self._Data._DamageFactor or 1
+    self._Data._ForwardAdjustFactor = self._Data._ForwardAdjustFactor or 1
+    self._Data._DurabilityFactor = self._Data._DurabilityFactor or 1
+    self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
+    self._Data._TargetPriority = self._Data._TargetPriority or 1
+
+    self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust))
 end
 
 function TorpedoSlammer.getUpdateInterval()
@@ -82,20 +83,29 @@ function TorpedoSlammer.pickNewTarget()
     local _MethodName = "Pick New Target"
     local _Factionidx = Entity().factionIndex
     local _Rgen = ESCCUtil.getRand()
+    local _TargetPriority = self._Data._TargetPriority
 
     local _Enemies = {Sector():getEnemies(_Factionidx)}
     local _TargetCandidates = {}
 
-    local _TargetValue = 0
-    for _, _Candidate in pairs(_Enemies) do
-        if _Candidate.firePower > _TargetValue then
-            _TargetValue = _Candidate.firePower
+    if _TargetPriority == 1 then --Go through and find the highest firepower total of all enemies, then put any enemies that match that into a table.
+        local _TargetValue = 0
+        for _, _Candidate in pairs(_Enemies) do
+            if _Candidate.firePower > _TargetValue then
+                _TargetValue = _Candidate.firePower
+            end
         end
-    end
-
-    for _, _Candidate in pairs(_Enemies) do
-        if _Candidate.firePower == _TargetValue then
-            table.insert(_TargetCandidates, _Candidate)
+    
+        for _, _Candidate in pairs(_Enemies) do
+            if _Candidate.firePower == _TargetValue then
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end
+    elseif _TargetPriority == 2 then --Go through and find all enemies with a specific script value - those go in the table.
+        for _, _Candidate in pairs(_Enemies) do
+            if _Candidate:getValue(self._Data._TargetScriptValue) then
+                table.insert(_TargetCandidates, _Candidate)
+            end
         end
     end
 
