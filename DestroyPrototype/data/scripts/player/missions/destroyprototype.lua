@@ -516,7 +516,7 @@ function getBulletin(station)
         _BaseReward = _BaseReward * 1.33
     end
 
-    reward = {credits = _BaseReward, relations = 4000, paymentMessage = "Earned %1% for destroying the prototype."}
+    reward = {credits = _BaseReward, relations = 8000, paymentMessage = "Earned %1% for destroying the prototype."}
 	punishment = {relations = reward.relations}
 
     local bulletin =
