@@ -186,6 +186,10 @@ function initialize()
             end
             PirateGenerator.pirateLevel = mission.data.custom.pirateLevel
 
+            if insideBarrier then
+                _RewardBase = _RewardBase * 2
+            end
+
             local missionReward = ESCCUtil.clampToNearest(_RewardBase * Balancing.GetSectorRichnessFactor(Sector():getCoordinates()), 5000, "Up")
 
             missionData_in = {location = _Target, reward = {credits = missionReward}}

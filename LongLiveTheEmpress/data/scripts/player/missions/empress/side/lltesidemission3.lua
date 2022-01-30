@@ -134,6 +134,10 @@ function initialize()
 
             mission.Log(_MethodName, "dangerLevel is " .. tostring(mission.data.custom.dangerLevel) .. " pirates is " .. tostring(mission.data.custom.pirates) .. " maxDefenders is " .. tostring(mission.data.custom.maxDefenders) .. " secondStation is " .. tostring(mission.data.custom.secondStation) .. " thirdStation is " .. tostring(mission.data.custom.thirdStation))
 
+            if insideBarrier then
+                _RewardBase = _RewardBase * 2
+            end
+
             local missionReward = ESCCUtil.clampToNearest(_RewardBase * Balancing.GetSectorRichnessFactor(Sector():getCoordinates()), 5000, "Up")
 
             missionData_in = {location = target, reward = {credits = missionReward}}
