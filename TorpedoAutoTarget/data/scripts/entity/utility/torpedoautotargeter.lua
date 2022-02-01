@@ -32,7 +32,7 @@ function TorpedoAutoTargeter.reassignTorpedoTargetIfNeeded(firingEntityId, fired
     -- Only consider reassignment if there's no current target for the torpedo or if the player
     -- is self-targeting the current ship
     local torpedoAI = TorpedoAI(firedTorpedoId)
-    if not playerShip.id == torpedoAI.target and not torpedoAI.target.isNil then return end
+    if playerShip.id ~= torpedoAI.target and not torpedoAI.target.isNil then return end
 
     -- Update what targets exist in the sector
     TorpedoAutoTargeter.updateSectorEnemies(firingEntity)
