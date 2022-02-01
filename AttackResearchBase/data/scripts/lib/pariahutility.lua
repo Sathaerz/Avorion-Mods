@@ -282,6 +282,8 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         _Superweapon:addScriptOnce("eternal.lua")
     end
 
+    _Superweapon:setDropsAttachedTurrets(false)
+
     return _Superweapon
 end
 
