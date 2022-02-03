@@ -18,7 +18,8 @@ if onServer() then
         local scripts = MissionBulletins.getPossibleMissions()
         if #scripts == 0 then return end
 
-        local ostime = os.time()
+        local ostime = Server().unpausedRuntime
+        --local ostime = os.time()
         local r = MissionBulletins.random()
 
         local _MissionCount = r:getInt(0, 5)
