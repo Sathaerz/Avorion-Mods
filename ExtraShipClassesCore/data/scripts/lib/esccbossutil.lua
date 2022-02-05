@@ -248,6 +248,8 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
     _IncreasingThreatBoss:setValue("_DefenseController_Manage_Own_Invincibility", true)
     _IncreasingThreatBoss:setValue("is_pirate", true) --These guys should always spawn for pirate factions.
 
+    _IncreasingThreatBoss:setDropsAttachedTurrets(false)
+
     local Balancing = include("galaxy")
     --Finally, add a DCD.
 

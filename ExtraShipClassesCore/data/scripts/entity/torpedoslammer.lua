@@ -15,6 +15,7 @@ self._Data = {}
 --[[
     Some of these values are self-explanatory, but here's a guide to how this thing works:
         _ROF                    = Time in seconds that a torpedo is fired.
+        _FireCycle              = Keeps track of how much time has passed. Sets to 0 every time a torp fires.
         _TimeToActive           = Time in seconds until this script becomes active.
         _CurrentTarget          = The current target of the script
         _PreferWarheadType      = This script will always use this warhead type if this value is supplied. Otherwise a random type is used.
@@ -28,6 +29,7 @@ self._Data = {}
         _TargetScriptValue      = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
 ]]
 self._Data._ROF = nil
+self._Data._FireCycle = nil
 self._Data._TimeToActive = nil
 self._Data._CurrentTarget = nil
 self._Data._PreferWarheadType = nil
@@ -42,9 +44,12 @@ self._Data._TargetScriptValue = nil
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v3 script on entity.")
+    self.Log(_MethodName, "Initializing Torpedo Slammer v4 script on entity.")
 
     self._Data = _Values or {}
+
+    --Stuff the player can't mess with.
+    self._Data._FireCycle = 0
 
     --Preferred warhead / body type aren't set - if they are nil, that is fine.
 
@@ -61,7 +66,7 @@ function TorpedoSlammer.initialize(_Values)
 end
 
 function TorpedoSlammer.getUpdateInterval()
-    return self._Data._ROF
+    return 1
 end
 
 function TorpedoSlammer.updateServer(_TimeStep)
@@ -71,10 +76,14 @@ function TorpedoSlammer.updateServer(_TimeStep)
     if self._Data._TimeToActive >= 0 then
         self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
     else
+        self._Data._FireCycle = self._Data._FireCycle + _TimeStep
         if self._Data._CurrentTarget == nil or not valid(self._Data._CurrentTarget) then
             self._Data._CurrentTarget = self.pickNewTarget()
         else
-            self.fireAtTarget()
+            if self._Data._FireCycle >= self._Data._ROF then
+                self.fireAtTarget()
+                self._Data._FireCycle = 0
+            end
         end
     end
 end

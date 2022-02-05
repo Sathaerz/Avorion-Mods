@@ -542,7 +542,7 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 		PirateGenerator.Log(_MethodName, "Setting ship title / toughness argument, increasing shields to max.")
 		ShipAI(craft.index):setAggressive()
-		craft:setTitle("${toughness}"..title, {toughness = ""})
+		craft:setTitle("${toughness}${title}", {toughness = "", title = title})
 		craft.shieldDurability = craft.shieldMaxDurability
 
 		craft:setValue("is_pirate", true)

@@ -329,8 +329,10 @@ function ShipUtility.addVigShieldCannons(_Craft)
     local _CannonWeapons = {_CannonTurret:getWeapons()}
     _CannonTurret:clearWeapons()
 
+    local _Damage = 12000 + _Rgen:getInt(100, 200)
+
     for _, _W in pairs(_CannonWeapons) do
-        _W.damage = math.max(_W.damage, 12000)
+        _W.damage = math.max(_W.damage, _Damage)
         _W.reach = 3800
         _W.fireDelay = 1.2
         _W.pmaximumTime = _W.reach / _W.pvelocity
@@ -366,7 +368,7 @@ function ShipUtility.addPhoenixCannons(_Craft)
     local _BaseFireRate = 10
     local _CoolingTime = 21
     local _ShootingTime = 1.25
-    local _Damage = 7500 + _Rgen:getInt(1, 100)
+    local _Damage = 10000 + _Rgen:getInt(1, 500)
 
     for _, _W in pairs(_CannonWeapons) do
         _W.damage = math.max(_W.damage, _Damage)
@@ -403,7 +405,7 @@ function ShipUtility.addHunterRailguns(_Craft)
     local _RailgunWeapons = {_RailgunTurret:getWeapons()}
     _RailgunTurret:clearWeapons()
 
-    local _Damage = 19500 + _Rgen:getInt(0, 500)
+    local _Damage = 20500 + _Rgen:getInt(0, 500)
     local _BaseFireRate = 0.25
 
     for _, _W in pairs(_RailgunWeapons) do
@@ -412,7 +414,7 @@ function ShipUtility.addHunterRailguns(_Craft)
         _W.fireRate = _BaseFireRate / _NumWeapons
         _W.bouterColor = ColorHSV(240, 0.6, 1.0)
         _W.binnerColor = ColorHSV(240, 1.0, 1.0)
-        _W.blockPenetration = 12
+        _W.blockPenetration = 20
         _W.bwidth = 1.5 --0.75
         _W.bauraWidth = 6 --4.5
         _W.hullDamageMultiplier = 1

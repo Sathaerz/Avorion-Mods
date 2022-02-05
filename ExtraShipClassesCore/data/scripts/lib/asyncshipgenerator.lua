@@ -305,6 +305,44 @@ end
 
 --endregion
 
+--region #CIVIL TRANSPORT
+
+function AsyncShipGenerator:createCivilTransportShip(faction, position, volume)
+    position = position or Matrix()
+    volume = volume or Balancing_GetSectorShipVolume(Sector():getCoordinates()) * Balancing_GetShipVolumeDeviation()
+
+    PlanGenerator.makeAsyncCivilTransportPlan("_ship_generator_on_civiltransport_plan_generated", {self.generatorId, position, faction.index}, faction, volume)
+    self:shipCreationStarted()
+end
+
+local function onCivilTransportPlanFinished(plan, generatorId, position, factionIndex)
+    local self = generators[generatorId] or {}
+
+    local faction = Faction(self.factionIndex or factionIndex)
+    local ship = Sector():createShip(faction, "", plan, position, self.arrivalType)
+
+    local turrets = Balancing_GetEnemySectorTurrets(Sector():getCoordinates())
+
+    ShipUtility.addArmedTurretsToCraft(ship, turrets)
+
+    ship.title = ShipUtility.getFreighterNameByVolume(ship.volume)
+
+    ship:addScript("civilship.lua")
+    ship:addScript("dialogs/storyhints.lua")
+    ship:setValue("is_civil", true)
+    ship:setValue("is_freighter", true)
+    ship:setValue("npc_chatter", true)
+
+    ship:addScript("icon.lua", "data/textures/icons/pixel/civil-ship.png")
+
+    ship:setTitle("Civilian Transport", {})
+
+    finalizeShip(ship)
+    onShipCreated(generatorId, ship)
+end
+
+--endregion
+
 local extraShipClassesCore_new = new
 local function new(namespace, onGeneratedCallback)
     local _MethodName = "[ESCC] New Async Ship Generator"
@@ -320,6 +358,7 @@ local function new(namespace, onGeneratedCallback)
         namespace._ship_generator_on_heavy_carrier_plan_generated = onHeavyCarrierPlanFinished
         namespace._ship_generator_on_awacs_plan_generated = onAWACSPlanFinished
         namespace._ship_generator_on_scout_plan_generated = onScoutPlanFinished
+        namespace._ship_generator_on_civiltransport_plan_generated = onCivilTransportPlanFinished
     else
         ASGLog.Debug(_MethodName, "No namespace found - using generic names")
 
@@ -328,6 +367,7 @@ local function new(namespace, onGeneratedCallback)
         _ship_generator_on_heavy_carrier_plan_generated = onHeavyCarrierPlanFinished
         _ship_generator_on_awacs_plan_generated = onAWACSPlanFinished
         _ship_generator_on_scout_plan_generated = onScoutPlanFinished
+        _ship_generator_on_civiltransport_plan_generated = onCivilTransportPlanFinished
     end
 
     return instance

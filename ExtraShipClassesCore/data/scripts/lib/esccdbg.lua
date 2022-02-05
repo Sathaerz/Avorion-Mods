@@ -91,6 +91,12 @@ function initUI()
     tab3:createButton(ButtonRect(), "Executioner VI", "onSpawnExecutioner6ButtonPressed")
     tab3:createButton(ButtonRect(), "Executioner VII", "onSpawnExecutioner7ButtonPressed")
     tab3:createButton(ButtonRect(), "Executioner VIII", "onSpawnExecutioner8ButtonPressed")
+    tab3:createButton(ButtonRect(), "Spawn Katana BOSS", "onKatanaBossButtonPressed")
+    tab3:createButton(ButtonRect(), "Spawn Phoenix BOSS", "onPhoenixBossButtonPressed")
+    tab3:createButton(ButtonRect(), "Spawn Hunter BOSS", "onHunterBossButtonPressed")
+    tab3:createButton(ButtonRect(), "Spawn Hellcat BOSS", "onHellcatBossButtonPressed")
+    tab3:createButton(ButtonRect(), "Spawn Goliath BOSS", "onGoliathBossButtonPressed")
+    tab3:createButton(ButtonRect(), "Spawn Shield BOSS", "onShieldBossButtonPressed")
 
     local tab8 = tabbedWindow:createTab("Entity", "data/textures/icons/gunner.png", "Turret Builder")
     numButtons = 0
@@ -176,12 +182,6 @@ function initUI()
         tab2:createButton(ButtonRect(), "Decapitation Strike", "onDecapStrikeButtonPressed")
         tab2:createButton(ButtonRect(), "Deepfake Distress Call", "onDeepfakeDistressButtonPressed")
         tab2:createButton(ButtonRect(), "Fake Distress Call", "onFakeDistressButtonPressed")
-        tab2:createButton(ButtonRect(), "Spawn Katana BOSS", "onKatanaBossButtonPressed")
-        tab2:createButton(ButtonRect(), "Spawn Phoenix BOSS", "onPhoenixBossButtonPressed")
-        tab2:createButton(ButtonRect(), "Spawn Hunter BOSS", "onHunterBossButtonPressed")
-        tab2:createButton(ButtonRect(), "Spawn Hellcat BOSS", "onHellcatBossButtonPressed")
-        tab2:createButton(ButtonRect(), "Spawn Goliath BOSS", "onGoliathBossButtonPressed")
-        tab2:createButton(ButtonRect(), "Spawn Shield BOSS", "onShieldBossButtonPressed")
     end
 
     if hasLongLiveTheEmpress then

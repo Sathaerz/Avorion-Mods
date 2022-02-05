@@ -181,3 +181,35 @@ function ShipGenerator.createScout(faction, position)
     finalizeShip(ship)
     onShipCreated(generatorId, ship)
 end
+
+function ShipGenerator.createCivilTransport(faction, position, volume)
+    position = position or Matrix()
+    volume = volume or Balancing_GetSectorShipVolume(Sector():getCoordinates()) * Balancing_GetShipVolumeDeviation()
+
+    local plan = PlanGenerator.makeCivilTransportPlan(faction, volume)
+
+    local ship = Sector():createShip(faction, "", plan, position)
+
+    ship.shieldDurability = ship.shieldMaxDurability
+    ship.crew = ship.idealCrew
+
+    AddDefaultShipScripts(ship)
+
+    local turrets = Balancing_GetEnemySectorTurrets(Sector():getCoordinates())
+    ShipUtility.addArmedTurretsToCraft(ship, turrets)
+
+    ship.crew = ship.idealCrew
+    ship.title = ShipUtility.getFreighterNameByVolume(ship.volume)
+
+    ship:addScript("civilship.lua")
+    ship:addScript("dialogs/storyhints.lua")
+    ship:setValue("is_civil", true)
+    ship:setValue("is_civiliantransport", true)
+    ship:setValue("npc_chatter", true)
+
+    ship:addScript("icon.lua", "data/textures/icons/pixel/civil-ship.png")
+
+    ship:setTitle("Civilian Transport", {})
+
+    return ship
+end
