@@ -464,7 +464,7 @@ function onBetaBackgroundPiratesFinished(_Generated)
             _Pirate:setTitleArguments(_TitleArguments)
 
             _Pirate:removeScript("icon.lua")
-            _Pirate:addScript("icon.lua", "data/textures/icons/pixel/torpedoboat.png")
+            _Pirate:addScript("icon.lua", "data/textures/icons/pixel/torpedoboatex.png")
             _Pirate:addScript("torpedoslammer.lua", _TorpSlammerValues)
             _SlamAdded = _SlamAdded + 1
         end

@@ -17,7 +17,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "Lord of the Wastes is a polished five mission campaign, intended to be tackled within the first few hours of starting a new galaxy. The rewards will provide a quick boost of credits, materials, and turrets / systems to bypass much of the early game grind. Unlike my other campaign - Long Live The Empress - this campaign does NOT require the DLC to play. This mod features:\n- Five new story missions.\n- A new boss to defeat.\n- Two new repeatable side missions that can be done after the campaign.\n- A new random boss encounter after the campaign is finished.\n\nPlease leave any feedback, and enjoy the extra content!",
+    description = "Lord of the Wastes is a polished five mission campaign, intended to be tackled within the first few hours of starting a new galaxy. The rewards will provide a quick boost of credits, materials, and turrets / systems to bypass much of the early game grind. Unlike my other campaign - Long Live The Empress - this campaign does NOT require the DLC to play. This mod features:\n\n- Five new story missions.\n- A new boss to defeat.\n- Two new repeatable side missions that can be done after the campaign.\n- A new random boss encounter after the campaign is finished.\n\nPlease leave any feedback, and enjoy the extra content!",
 
     -- Insert all authors into this list
     authors = {"KnifeHeart"},
@@ -26,7 +26,7 @@ meta =
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.0.2",
+    version = "1.0.3",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
@@ -44,7 +44,7 @@ meta =
     --      {id = "OptionalMod", min = "0.2", optional = true}, -- we support OptionalMod optionally, starting at version 0.2
     -- },
     dependencies = {
-        {id = "2207469437", min = "1.7.1"},
+        {id = "2207469437", min = "1.7.2"},
         {id = "Avorion", min = "2.0", max = "*.*"}
     },
 

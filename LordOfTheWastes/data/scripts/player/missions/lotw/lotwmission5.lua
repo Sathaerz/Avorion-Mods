@@ -3,11 +3,12 @@
     NOTES:
         - NOTES HERE
     ADDITIONAL REQUIREMENTS TO DO THIS MISSION:
-        - REQS HERE
+        - Have completed the fourth LOTW mission.
     ROUGH OUTLINE
-        - OUTLINE HERE
+        - Go to the location, fight Swenks. Easy enough!
     DANGER LEVEL
-        5 - 
+        5 - Swenks + 7 buddies
+        5 - Every 25%, Swenks goes immune for 30-40 seconds and summons 4 more buddies.
 ]]
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
