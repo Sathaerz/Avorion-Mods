@@ -49,6 +49,7 @@ meta =
         {id = "2381708468", exact = "*.*", optional = true},
         {id = "2379374382", exact = "*.*", optional = true},
         {id = "2133506910", exact = "*.*", optional = true},
+        {id = "2743848682", exact = "*.*", optional = true},
         {id = "Avorion", min = "1.1", max = "*.*"}
     },
 
