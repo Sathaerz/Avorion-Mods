@@ -1,5 +1,3 @@
-ESCCUtil = include("esccutil")
-
 local Swenks = include("story/swenks")
 
 local noCoreSpawnTimer = 0
