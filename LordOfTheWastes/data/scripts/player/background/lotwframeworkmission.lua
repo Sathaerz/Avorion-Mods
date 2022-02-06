@@ -99,10 +99,8 @@ function LOTWFrameworkMission.onSectorArrivalConfirmed(_PlayerIndex, _X, _Y)
         
                 local _Rgen = ESCCUtil.getRand()
                 local _Station = _Stations[_Rgen:getInt(1, #_Stations)]
-        
-                local _Ok, _Bulletin = run(_ScriptPath, "getBulletin", _Station)
-                _Station:invokeFunction("bulletinboard", "postBulletin", _Bulletin)
-                _Station:invokeFunction("bulletonboard", "refreshIcon")
+
+                _Station:invokeFunction("bulletinboard", "addMission", _ScriptPath)
             end
         else
             self.Log(_MethodName, "Distance is " .. tostring(_Dist) .. " - which is NOT inside the " .. tostring(_MinDist) .. " to 707 range")

@@ -66,6 +66,10 @@ function initialize(_Data_in)
                 .friendlyFaction
                 .enemyFaction
                 .firstWaveTaunt
+                .waveCounter
+                .firstTimerAdvance
+                .secondTimerAdvance
+                .thirdTimerAdvance
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.pirateLevel = Balancing_GetPirateLevel(_X, _Y)
@@ -103,26 +107,39 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].timers = {}
+
+--region #PHASE 1 TIMERS
+
+if onServer() then
+
+mission.phases[1].timers[1] = {
+    time = 10, 
+    callback = function() 
+        local _MethodName = "Phase 1 Timer 1 Callback"
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
+        mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.firstTimerAdvance))
+        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.firstTimerAdvance and #_Pirates == 0 then
+            nextPhase()
+        end
+    end,
+    repeating = true}
+
+end
+
+--endregion
+
 mission.phases[1].noBossEncountersTargetSector = true --Probably going to happen anyways due to the distance from the core, but no sense in taking chances.
+mission.phases[1].noPlayerEventsTargetSector = true
+mission.phases[1].noLocalPlayerEventsTargetSector = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
     local _MethodName = "Phase 1 On Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
 
-    spawnPirateWave(false)
-
-    mission.phases[1].timers[1] = {
-        time = 10, 
-        callback = function() 
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
-            if _X == mission.data.location.x and _Y == mission.data.location.y and #_Pirates == 0 then
-                nextPhase()
-            end
-        end,
-        repeating = true}
+    spawnPirateWave(false, 1)
 end
 
 mission.phases[1].onSectorArrivalConfirmed = function(x, y)
@@ -131,55 +148,83 @@ end
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
+
+--region #PHASE 2 TIMERS
+
+if onServer() then
+   
+mission.phases[2].timers[1] = {
+    time = 10, 
+    callback = function() 
+        local _MethodName = "Phase 2 Timer 1 Callback"
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
+        mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.secondTimerAdvance))
+        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.secondTimerAdvance and #_Pirates == 0 then
+            nextPhase()
+        end
+    end,
+    repeating = true}
+
+end
+
+--endregion
+
 mission.phases[2].noBossEncountersTargetSector = true
+mission.phases[2].noPlayerEventsTargetSector = true
+mission.phases[2].noLocalPlayerEventsTargetSector = true
 mission.phases[2].onBeginServer = function()
     local _MethodName = "Phase 2 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
     mission.data.description[4].fulfilled = true
     mission.data.description[5].visible = true
 
-    spawnPirateWave(false)
-
-    mission.phases[2].timers[1] = {
-        time = 10, 
-        callback = function() 
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
-            if _X == mission.data.location.x and _Y == mission.data.location.y and #_Pirates == 0 then
-                nextPhase()
-            end
-        end,
-        repeating = true}
+    spawnPirateWave(false, 2)
 end
 
 mission.phases[3] = {}
 mission.phases[3].timers = {}
+
+--region #PHASE 3 TIMERS
+
+if onServer() then
+
+mission.phases[3].timers[1] = {
+    time = 10, 
+    callback = function() 
+        local _MethodName = "Phase 3 Timer 1 Callback"
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
+        mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.thirdTimerAdvance))
+        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.thirdTimerAdvance and #_Pirates == 0 then
+            nextPhase()
+        end
+    end,
+    repeating = true}
+
+end
+
+--endregion
+
 mission.phases[3].noBossEncountersTargetSector = true
+mission.phases[3].noPlayerEventsTargetSector = true
+mission.phases[3].noLocalPlayerEventsTargetSector = true
+mission.phases[3].showUpdateOnEnd = true
 mission.phases[3].onBeginServer = function()
     local _MethodName = "Phase 3 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
     mission.data.description[5].fulfilled = true
     mission.data.description[6].visible = true
 
-    spawnPirateWave(true)
-
-    mission.phases[3].timers[1] = {
-        time = 10, 
-        callback = function() 
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
-            if _X == mission.data.location.x and _Y == mission.data.location.y and #_Pirates == 0 then
-                nextPhase()
-            end
-        end,
-        repeating = true}
+    spawnPirateWave(true, 3)
 end
 
 mission.phases[4] = {}
-mission.phases[4].timers = {}
 mission.phases[4].noBossEncountersTargetSector = true
+mission.phases[4].noPlayerEventsTargetSector = true
+mission.phases[4].noLocalPlayerEventsTargetSector = true
 mission.phases[4].onBeginServer = function()
     local _MethodName = "Phase 4 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
@@ -203,7 +248,7 @@ end
 
 --region #SERVER CALLS
 
-function spawnPirateWave(_LastWave) 
+function spawnPirateWave(_LastWave, _WaveNumber) 
     local _MethodName = "Spawn Pirate Wave"
     mission.Log(_MethodName, "Beginning...")
 
@@ -233,6 +278,8 @@ function spawnPirateWave(_LastWave)
         end
     end
 
+    mission.data.custom.waveCounter = _WaveNumber
+
     local generator = AsyncPirateGenerator(nil, onPiratesFinished)
 
     generator:startBatch()
@@ -250,7 +297,20 @@ end
 
 function onPiratesFinished(_Generated)
     local _MethodName = "On Pirates Generated (Server)"
-    mission.Log(_MethodName, "Beginning...")
+    local _WaveNumber = mission.data.custom.waveCounter
+    mission.Log(_MethodName, "Beginning. Wave number is : " .. tostring(_WaveNumber))
+
+    if _WaveNumber == 1 then
+        mission.data.custom.firstTimerAdvance = true
+    end
+
+    if _WaveNumber == 2 then
+        mission.data.custom.secondTimerAdvance = true
+    end
+
+    if _WaveNumber == 3 then
+        mission.data.custom.thirdTimerAdvance = true
+    end
 
     SpawnUtility.addEnemyBuffs(_Generated)
 end

@@ -15,6 +15,7 @@ data.closeableDialog = false
 
 function LOTWLiasonMission6Dialog1.getDialog()
     local d0 = {}
+    local d1 = {}
 
     local _PlayerName = Player().name
 
@@ -23,7 +24,11 @@ function LOTWLiasonMission6Dialog1.getDialog()
     --d0
     d0.text = "Well done, " .. _PlayerName .. ". As promised, full salvage rights are yours. We're transferring a license for any goods in your cargo bay right now."
     d0.talker = _Talker
-    d0.onEnd = "onEnd"
+    d0.followUp = d1
+
+    d1.text = "Remember that this is a one-time license and will not be valid for future ops."
+    d1.talker = _Talker
+    d1.onEnd = "onEnd"
 
     return d0
 end

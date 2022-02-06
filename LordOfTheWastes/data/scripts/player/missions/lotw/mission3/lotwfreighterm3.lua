@@ -39,10 +39,12 @@ function LOTWFreighterMission3.initialize(_AddLoot, _AddMoreLoot)
                 goonLoot:insert(upgrade)
             end
 
+            --Add commonly used upgrades to get the player started off.
             if _AddMoreLoot then
                 local _SeedInt = random():getInt(1, 20000)
                 goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
                 goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/hyperspacebooster.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
+                goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/energybooster.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
             end
         end
     end

@@ -44,7 +44,7 @@ mission.data.description = {
     { text = "Don't let too many cargo ships escape - ${_ESCAPED}/${_MAXESCAPED} Escaped", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Meet the liason in sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false, visible = false }
 }
-mission.data.accomplishMessage = "Good work. We transferred the reward to your account. Be on the lookout for more opportunities in the future."
+mission.data.accomplishMessage = "Good work. We transferred the reward to your account."
 
 local LOTW_Mission_init = initialize
 function initialize(_Data_in)
@@ -111,11 +111,85 @@ end
 --region #PHASE CALLS
 
 mission.phases[1] = {}
-mission.phases[1].timers = {}
 mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].noPlayerEventsTargetSector = true
 mission.phases[1].noLocalPlayerEventsTargetSector = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
+    nextPhase()
+end
+
+mission.phases[2] = {}
+mission.phases[2].timers = {}
+
+--region #PHASE 2 TIMERS
+
+if onServer() then
+
+--Timer 1 = spawn background pirates
+mission.phases[2].timers[1] = {
+    time = mission.data.custom.pirateSpawnTimer or 45,
+    callback = function()
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        if _X == mission.data.location.x and _Y == mission.data.location.y then
+            spawnBackgroundPirates()
+        end
+    end,
+    repeating = true
+}
+--Timer 2 = spawn loot goons
+mission.phases[2].timers[2] = {
+    time = 90,
+    callback = function()
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        if _X == mission.data.location.x and _Y == mission.data.location.y then
+            spawnPirateFreighter()
+        end
+    end,
+    repeating = true
+}
+--Timer 3 = soft fail timer
+mission.phases[2].timers[3] = {
+    time = 90, 
+    callback = function() 
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
+            mission.data.custom.escaped = mission.data.custom.escaped + 1
+            mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
+            sync()
+        end
+    end,
+    repeating = true
+}
+--Timer 4 = advancement / objective timer
+mission.phases[2].timers[4] = {
+    time = 10,
+    callback = function()
+        local _MethodName = "Phase 1 Timer 4 Callback"
+        mission.Log(_MethodName, "Beginning...")
+        mission.Log(_MethodName, "Number of freighters destroyed " .. tostring(mission.data.custom.destroyed))
+        if mission.data.custom.destroyed >= 3 then
+            ESCCUtil.allPiratesDepart()
+            nextPhase()
+        end
+        if mission.data.custom.escaped >= mission.data.custom.maxEscaped then
+            fail()
+        end
+    end,
+    repeating = true
+}
+
+end
+
+--endregion
+
+mission.phases[2].noBossEncountersTargetSector = true
+mission.phases[2].noPlayerEventsTargetSector = true
+mission.phases[2].noLocalPlayerEventsTargetSector = true
+mission.phases[2].showUpdateOnEnd = true
+mission.phases[2].onBeginServer = function()
     mission.data.description[3].fulfilled = true
     mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
     mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
@@ -123,65 +197,9 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.description[5].visible = true
 
     spawnBackgroundPirates()
-
-    --Timer 1 = spawn background pirates
-    mission.phases[1].timers[1] = {
-        time = mission.data.custom.pirateSpawnTimer,
-        callback = function()
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            if _X == mission.data.location.x and _Y == mission.data.location.y then
-                spawnBackgroundPirates()
-            end
-        end,
-        repeating = true
-    }
-    --Timer 2 = spawn loot goons
-    mission.phases[1].timers[2] = {
-        time = 90,
-        callback = function()
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            if _X == mission.data.location.x and _Y == mission.data.location.y then
-                spawnPirateFreighter()
-            end
-        end,
-        repeating = true
-    }
-    --Timer 3 = soft fail timer
-    mission.phases[1].timers[3] = {
-        time = 90, 
-        callback = function() 
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
-                mission.data.custom.escaped = mission.data.custom.escaped + 1
-                mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
-                sync()
-            end
-        end,
-        repeating = true
-    }
-    --Timer 4 = advancement / objective timer
-    mission.phases[1].timers[4] = {
-        time = 10,
-        callback = function()
-            local _MethodName = "Phase 1 Timer 4 Callback"
-            mission.Log(_MethodName, "Beginning...")
-            mission.Log(_MethodName, "Number of freighters destroyed " .. tostring(mission.data.custom.destroyed))
-            if mission.data.custom.destroyed >= 3 then
-                ESCCUtil.allPiratesDepart()
-                nextPhase()
-            end
-            if mission.data.custom.escaped >= mission.data.custom.maxEscaped then
-                fail()
-            end
-        end,
-        repeating = true
-    }
 end
 
-mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
+mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _MethodName = "Phase 1 on Entity Destroyed"
     mission.Log(_MethodName, "Beginning...")
     if Entity(_ID):getValue("_lotw_mission6_objective") then
@@ -194,11 +212,11 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     end
 end
 
-mission.phases[2] = {}
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
-mission.phases[2].onBeginServer = function()
+mission.phases[3] = {}
+mission.phases[3].noBossEncountersTargetSector = true
+mission.phases[3].noPlayerEventsTargetSector = true
+mission.phases[3].noLocalPlayerEventsTargetSector = true
+mission.phases[3].onBeginServer = function()
     local _MethodName = "Phase 2 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
 
@@ -214,7 +232,7 @@ mission.phases[2].onBeginServer = function()
     Player():sendChatMessage(_Faction.name, 0, "We have a liason waiting for you in sector \\s(%1%:%2%). Please contact them there.", mission.data.location.x, mission.data.location.y)
 end
 
-mission.phases[2].onTargetLocationEntered = function(x, y)
+mission.phases[3].onTargetLocationEntered = function(x, y)
     spawnLiason()
 end
 

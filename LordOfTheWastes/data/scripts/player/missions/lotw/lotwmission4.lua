@@ -44,7 +44,8 @@ mission.data.description = {
     { text = "This is an emergecy request. Despite your success in crippling the pirate supply lines, they've managed to tap a backup cache of materiel and are attacking one of our installations in force. We were under the impression that it was hidden, so we left it exposed to counterattack. You should have enough money and hardware to get a 2nd ship moving. The outpost is located in sector (${_X}:${_Y}). We'll need your help to defend it." },
     { text = "Build and outfit a 2nd ship", bulletPoint = true, fulfilled = false },
     { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false, visible = false },
-    { text = "Defend the Military Outpost from the pirates", bulletPoint = true, fulfilled = false, visible = false }
+    { text = "Defend the Military Outpost from the pirates", bulletPoint = true, fulfilled = false, visible = false },
+    { text = "Prioritize the marked torpedo enemies", bulletPoint = true, fulfilled = false, visible = false }
 }
 mission.data.accomplishMessage = "Thank you. The reward has been transferred to your account. We'll be in touch."
 
@@ -141,7 +142,6 @@ mission.phases[1].onBeginServer = function()
 end
 
 mission.phases[2] = {}
-mission.phases[2].timers = {}
 mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].noPlayerEventsTargetSector = true
 mission.phases[2].noLocalPlayerEventsTargetSector = true
@@ -162,53 +162,10 @@ mission.phases[2].onTargetLocationEntered = function(x, y)
 
     mission.data.description[4].fulfilled = true
     mission.data.description[5].visible = true
+    mission.data.description[6].visible = true
 
     --Make sector.
-    buildSector(x, y)
-
-    --Spawn enemies.
-    spawnBackgroundPirates()
-    --Set timers.
-    mission.phases[2].timers[1] = {
-        time = 45,
-        callback = function()
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            if _X == mission.data.location.x and _Y == mission.data.location.y then
-                spawnBackgroundPirates()
-            end
-        end,
-        repeating = true
-    }
-        --Timer 3 = soft fail timer
-        mission.phases[2].timers[2] = {
-            time = 60, 
-            callback = function() 
-                local _Sector = Sector()
-                local _X, _Y = _Sector:getCoordinates()
-                if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
-                    mission.data.custom.failureCounter = mission.data.custom.failureCounter + 1
-                end
-            end,
-            repeating = true
-        }
-        --Timer 4 = advancement / objective timer
-        mission.phases[2].timers[3] = {
-            time = 10,
-            callback = function()
-                local _MethodName = "Phase 1 Timer 4 Callback"
-                mission.Log(_MethodName, "Beginning...")
-                mission.Log(_MethodName, "Number of pirates destroyed " .. tostring(mission.data.custom.destroyed))
-                if mission.data.custom.destroyed >= 20 then
-                    ESCCUtil.allPiratesDepart()
-                    finishAndReward()
-                end
-                if mission.data.custom.failureCounter >= 3 then
-                    fail()
-                end
-            end,
-            repeating = true
-        }
+    buildSector(x, y)   
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(x, y)
@@ -216,9 +173,72 @@ mission.phases[2].onTargetLocationArrivalConfirmed = function(x, y)
     local _DefendObjective = {_Sector:getEntitiesByScriptValue("_lotw_mission4_defendobjective")}
 
     _Sector:broadcastChatMessage(_DefendObjective[1], ChatMessageType.Chatter, "Prioritize destroying enemies with torpedoes! We've marked them with a special icon.")
+
+    nextPhase()
 end
 
-mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
+mission.phases[3] = {}
+mission.phases[3].timers = {}
+
+--region #PHASE 2 TIMERS
+
+if onServer() then
+
+--Set timers.
+mission.phases[3].timers[1] = {
+    time = 45,
+    callback = function()
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        if _X == mission.data.location.x and _Y == mission.data.location.y then
+            spawnBackgroundPirates()
+        end
+    end,
+    repeating = true
+}
+--Timer 3 = soft fail timer
+mission.phases[3].timers[2] = {
+        time = 60, 
+        callback = function() 
+            local _Sector = Sector()
+            local _X, _Y = _Sector:getCoordinates()
+            if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
+                mission.data.custom.failureCounter = mission.data.custom.failureCounter + 1
+            end
+        end,
+        repeating = true
+}
+--Timer 4 = advancement / objective timer
+mission.phases[3].timers[3] = {
+        time = 10,
+        callback = function()
+            local _MethodName = "Phase 1 Timer 4 Callback"
+            mission.Log(_MethodName, "Beginning...")
+            mission.Log(_MethodName, "Number of pirates destroyed " .. tostring(mission.data.custom.destroyed))
+            if mission.data.custom.destroyed >= 20 then
+                ESCCUtil.allPiratesDepart()
+                finishAndReward()
+            end
+            if mission.data.custom.failureCounter >= 3 then
+                fail()
+            end
+        end,
+        repeating = true
+}
+
+end
+
+--endregion
+
+mission.phases[3].noBossEncountersTargetSector = true
+mission.phases[3].noPlayerEventsTargetSector = true
+mission.phases[3].noLocalPlayerEventsTargetSector = true
+mission.phases[3].onBeginServer = function()
+    --Spawn enemies.
+    spawnBackgroundPirates()
+end
+
+mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _MethodName = "Phase 2 on Entity Destroyed"
     mission.Log(_MethodName, "Beginning...")
 
@@ -234,7 +254,7 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     end
 end
 
-mission.phases[2].onTargetLocationLeft = function(x, y)
+mission.phases[3].onTargetLocationLeft = function(x, y)
     mission.data.custom.destroyed = 0
 end
 
@@ -442,10 +462,10 @@ function onBetaBackgroundPiratesFinished(_Generated)
     local _SlamAdded = 0
 
     local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = 25
+    _TorpSlammerValues._TimeToActive = 30
     _TorpSlammerValues._ROF = 8
     _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DamageFactor = 0.1 --The station will DIE if this is set any higher, it's actually quite funny to watch.
+    _TorpSlammerValues._DamageFactor = 0.5 --If you get a bad seed, this might just obliterate the station. That's why it gets more HP for every failure.
     _TorpSlammerValues._DurabilityFactor = 8
     _TorpSlammerValues._ForwardAdjustFactor = 2
     _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear

@@ -17,6 +17,7 @@ function LOTWLiasonMission2Dialog1.getDialog()
     local d0 = {}
     local d1 = {}
     local d2 = {}
+    local d3 = {}
 
     local _PlayerName = Player().name
 
@@ -33,7 +34,11 @@ function LOTWLiasonMission2Dialog1.getDialog()
     --d2
     d2.text = "As promised, full salvage rights are yours. We're transferring a license for any goods in your cargo bay right now."
     d2.talker = _Talker
-    d2.onEnd = "onEnd"
+    d2.followUp = d3
+
+    d3.text = "I should warn you that is a one-time license and is not valid for future use. Please do not run an unlicensed smuggling operation in our territory."
+    d3.talker = _Talker
+    d3.onEnd = "onEnd"
 
     return d0
 end
