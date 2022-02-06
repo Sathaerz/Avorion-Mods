@@ -144,11 +144,86 @@ end
 --region #PHASE CALLS
 
 mission.phases[1] = {}
-mission.phases[1].timers = {}
 mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].noPlayerEventsTargetSector = true
 mission.phases[1].noLocalPlayerEventsTargetSector = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
+    nextPhase()
+end
+
+mission.phases[2] = {}
+mission.phases[2].timers = {}
+
+if onServer() then
+
+--Timer 1 = spawn background pirates
+mission.phases[2].timers[1] = {
+    time = mission.data.custom.pirateSpawnTimer or 45,
+    callback = function()
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        if _X == mission.data.location.x and _Y == mission.data.location.y then
+            spawnBackgroundPirates()
+        end
+    end,
+    repeating = true
+}
+--Timer 8 = set timer 2 to spawn transports - timers 5, 6, and 7 are spoken for in the spacn transports call
+mission.phases[2].timers[8] = {
+    time = 30,
+    callback = function()
+        spawnCivilTransport()
+        mission.phases[2].timers[2] = {
+            time = 130,
+            callback = function()
+                local _Sector = Sector()
+                local _X, _Y = _Sector:getCoordinates()
+                if _X == mission.data.location.x and _Y == mission.data.location.y then
+                    spawnCivilTransport()
+                end
+            end,
+            repeating = true
+        }
+    end,
+    repeating = false
+}
+--Timer 3 = soft fail timer
+mission.phases[2].timers[3] = {
+    time = 110, 
+    callback = function() 
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
+            mission.data.custom.destroyed = mission.data.custom.destroyed + 1
+            mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
+            sync()
+        end
+    end,
+    repeating = true
+}
+--Timer 4 = advancement / objective timer
+mission.phases[2].timers[4] = {
+    time = 10,
+    callback = function()
+        local _MethodName = "Phase 1 Timer 4 Callback"
+        mission.Log(_MethodName, "Beginning...")
+        if mission.data.custom.escorted >= mission.data.custom.maxEscorted then
+            ESCCUtil.allPiratesDepart()
+            finishAndReward()
+        end
+        if mission.data.custom.destroyed >= mission.data.custom.maxDestroyed then
+            failAndPunish()
+        end
+    end,
+    repeating = true
+}
+
+end
+
+mission.phases[2].noBossEncountersTargetSector = true
+mission.phases[2].noPlayerEventsTargetSector = true
+mission.phases[2].noLocalPlayerEventsTargetSector = true
+mission.phases[2].onBeginServer = function()
     mission.data.description[3].fulfilled = true
     mission.data.description[4].arguments = { _ESCORTED = mission.data.custom.escorted, _MAXESCORTED = mission.data.custom.maxEscorted }
     mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
@@ -156,73 +231,9 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.description[5].visible = true
 
     spawnBackgroundPirates()
-
-    --Timer 1 = spawn background pirates
-    mission.phases[1].timers[1] = {
-        time = mission.data.custom.pirateSpawnTimer,
-        callback = function()
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            if _X == mission.data.location.x and _Y == mission.data.location.y then
-                spawnBackgroundPirates()
-            end
-        end,
-        repeating = true
-    }
-    --Timer 8 = set timer 2 to spawn transports - timers 5, 6, and 7 are spoken for in the spacn transports call
-    mission.phases[1].timers[8] = {
-        time = 30,
-        callback = function()
-            spawnCivilTransport()
-
-            mission.phases[1].timers[2] = {
-                time = 130,
-                callback = function()
-                    local _Sector = Sector()
-                    local _X, _Y = _Sector:getCoordinates()
-                    if _X == mission.data.location.x and _Y == mission.data.location.y then
-                        spawnCivilTransport()
-                    end
-                end,
-                repeating = true
-            }
-        end,
-        repeating = false
-    }
-    --Timer 3 = soft fail timer
-    mission.phases[1].timers[3] = {
-        time = 110, 
-        callback = function() 
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
-                mission.data.custom.destroyed = mission.data.custom.destroyed + 1
-                mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
-                sync()
-            end
-        end,
-        repeating = true
-    }
-    --Timer 4 = advancement / objective timer
-    mission.phases[1].timers[4] = {
-        time = 10,
-        callback = function()
-            local _MethodName = "Phase 1 Timer 4 Callback"
-            mission.Log(_MethodName, "Beginning...")
-
-            if mission.data.custom.escorted >= mission.data.custom.maxEscorted then
-                ESCCUtil.allPiratesDepart()
-                finishAndReward()
-            end
-            if mission.data.custom.destroyed >= mission.data.custom.maxDestroyed then
-                failAndPunish()
-            end
-        end,
-        repeating = true
-    }
 end
 
-mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
+mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _MethodName = "Phase 1 on Entity Destroyed"
     mission.Log(_MethodName, "Beginning...")
     if Entity(_ID):getValue("_escortcivilians_defendobjective") then
@@ -292,7 +303,7 @@ function onCivilTransportFinished(_Generated)
     Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, "Transport here. Protect us while our hyperdrive recharges!")
 
     --Set timer for escape so we don't need a script.
-    mission.phases[1].timers[5] = {
+    mission.phases[2].timers[5] = {
         time = 100,
         callback = function()
             local _Transports = {Sector():getEntitiesByScriptValue("_escortcivilians_defendobjective")}
@@ -308,7 +319,7 @@ function onCivilTransportFinished(_Generated)
         repeating = false
     }
     --Set a 2nd timer for it to send a message @ 30 seconds.
-    mission.phases[1].timers[6] = {
+    mission.phases[2].timers[6] = {
         time = 70,
         callback = function()
             local _Transports = {Sector():getEntitiesByScriptValue("_escortcivilians_defendobjective")}
@@ -319,7 +330,7 @@ function onCivilTransportFinished(_Generated)
         repeating = false
     }
     --Set a 3rd timer for it to send a message @ 10 seconds.
-    mission.phases[1].timers[7] = {
+    mission.phases[2].timers[7] = {
         time = 90,
         callback = function()
             local _Transports = {Sector():getEntitiesByScriptValue("_escortcivilians_defendobjective")}
