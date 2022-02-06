@@ -164,9 +164,9 @@ function ShipUtility.addHellcatLasers(_Craft)
     --So we multiply the base damage amount by the # of slots in the turret and then divide that by the # of weapons. This should keep the
     --RNG fairly consistent and not cause WILD variances (like 700k to 7 million)
     local _Version = GameVersion()
-    local _Damage = 2600 + _Rgen:getInt(100, 450)
+    local _Damage = 2900 + _Rgen:getInt(100, 450)
     if _Version.major <= 1 then
-        _Damage = (2500 + _Rgen:getInt(1, 400)) * math.max(1, _LaserTurret.slots / 1.75)
+        _Damage = (2800 + _Rgen:getInt(1, 400)) * math.max(1, _LaserTurret.slots / 1.75)
     end
 
     for _, _W in pairs(_LaserWeapons) do

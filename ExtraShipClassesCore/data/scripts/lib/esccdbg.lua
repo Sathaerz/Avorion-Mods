@@ -81,7 +81,7 @@ function initUI()
     tab:createButton(ButtonRect(), "Booster", "onSpawnBoosterButtonPressed")
     tab:createButton(ButtonRect(), "Booster Healer", "onSpawnBoosterHealerButtonPressed")
 
-    local tab3 = tabbedWindow:createTab("Entity", "data/textures/icons/edge-crack.png", "Executioner")
+    local tab3 = tabbedWindow:createTab("Entity", "data/textures/icons/edge-crack.png", "Boss Ships")
     numButtons = 0
     tab3:createButton(ButtonRect(), "Executioner", "onSpawnExecutionerButtonPressed")
     tab3:createButton(ButtonRect(), "Executioner II", "onSpawnExecutioner2ButtonPressed")
@@ -231,6 +231,7 @@ function initUI()
         tab11:createButton(ButtonRect(), "Mission 5", "onLOTWMission5ButtonPressed")
         tab11:createButton(ButtonRect(), "Mission 6", "onLOTWMission6ButtonPressed")
         tab11:createButton(ButtonRect(), "Mission 7", "onLOTWMission7ButtonPressed")
+        tab11:createButton(ButtonRect(), "Clear Values", "onLOTWClearValuesPressed")
     end 
 end
 
@@ -1722,5 +1723,45 @@ function onLOTWMission7ButtonPressed()
     _Player:addScript(_Script)
 end
 callable(nil, "onLOTWMission7ButtonPressed")
+
+function onLOTWClearValuesPressed()
+    if onClient() then
+        invokeServerFunction("onLOTWClearValuesPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+
+    local _Scripts = {
+        "missions/lotw/lotwmission1.lua",
+        "missions/lotw/lotwmission2.lua",
+        "missions/lotw/lotwmission3.lua",
+        "missions/lotw/lotwmission4.lua",
+        "missions/lotw/lotwmission5.lua",
+        "missions/lotw/lotwmission6.lua",
+        "missions/lotw/lotwmission7.lua",
+    }
+
+    for _k, _v in pairs(_Scripts) do
+        _Player:removeScript(_v)
+    end
+
+    _Player:setValue("_lotw_story_1_accomplished", nil)
+    _Player:setValue("_lotw_story_2_accomplished", nil)
+    _Player:setValue("_lotw_story_3_accomplished", nil)
+    _Player:setValue("_lotw_story_4_accomplished", nil)
+    _Player:setValue("_lotw_story_5_accomplished", nil)
+    _Player:setValue("_lotw_faction", nil)
+    _Player:setValue("_lotw_mission2_failures", nil)
+    _Player:setValue("_lotw_mission2_freighterskilled", nil)
+    _Player:setValue("_lotw_mission3_failures", nil)
+    _Player:setValue("_lotw_mission3_freighterskilled", nil)
+    _Player:setValue("_lotw_mission4_failures", nil)
+
+    local _msg = "All Lord of the Wastes data cleared."
+    print(_msg)
+    _Player:sendChatMessage("Server", ChatMessageType.Information, _msg)
+end
+callable(nil, "onLOTWClearValuesPressed")
 
 --endregion
