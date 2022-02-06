@@ -1,5 +1,3 @@
-ESCCUtil = include("esccutil")
-
 local CoreBoss = include("story/coreboss")
 
 local noCoreSpawnTimer = 0
@@ -34,6 +32,7 @@ function SpawnRandomBosses.trySpawningCoreBoss(_Player, _X, _Y)
     local _Spawn
     local _Sector = Sector()
     local _PlayerObj = Player(_Player)
+    local ESCCUtil = include("esccutil")
 
     --Don't do anything here unless the player has already completed the story.
     if ESCCUtil.playerBeatStory(_PlayerObj) then
