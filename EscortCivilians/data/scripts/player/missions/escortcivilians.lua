@@ -143,6 +143,39 @@ end
 
 --region #PHASE CALLS
 
+mission.globalPhase = {}
+mission.globalPhase.timers = {}
+
+--region #GLOBALPHASE TIMERS
+
+if onServer() then
+
+mission.globalPhase.timers[1] = {
+    time = 130, 
+    callback = function() 
+        local _MethodName = "Global Phase Timer 1"
+        mission.Log(_MethodName, "Beginning...")
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
+        if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
+            mission.data.custom.destroyed = mission.data.custom.destroyed + 1
+            mission.Log(_MethodName, "Not on location - incrementing destroyed to : " .. tostring(mission.data.custom.destroyed))
+
+            if mission.data.custom.destroyed >= mission.data.custom.maxDestroyed then
+                failAndPunish()
+            end
+
+            mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
+            sync()
+        end
+    end,
+    repeating = true
+}
+
+end
+
+--endregion
+
 mission.phases[1] = {}
 mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].noPlayerEventsTargetSector = true
@@ -153,6 +186,8 @@ end
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
+
+--region #PHASE 2 TIMERS
 
 if onServer() then
 
@@ -187,20 +222,7 @@ mission.phases[2].timers[8] = {
     end,
     repeating = false
 }
---Timer 3 = soft fail timer
-mission.phases[2].timers[3] = {
-    time = 110, 
-    callback = function() 
-        local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
-        if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
-            mission.data.custom.destroyed = mission.data.custom.destroyed + 1
-            mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
-            sync()
-        end
-    end,
-    repeating = true
-}
+--Timer 3 moved to global phase.
 --Timer 4 = advancement / objective timer
 mission.phases[2].timers[4] = {
     time = 10,
@@ -219,6 +241,8 @@ mission.phases[2].timers[4] = {
 }
 
 end
+
+--endregion
 
 mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].noPlayerEventsTargetSector = true

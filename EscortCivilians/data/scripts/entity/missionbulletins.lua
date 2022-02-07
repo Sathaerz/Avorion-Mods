@@ -1,6 +1,5 @@
 local EscortCivilians_getPossibleMissions = MissionBulletins.getPossibleMissions
 function MissionBulletins.getPossibleMissions()
-    print("Getting escort civilian mission bulletins")
 	local station = Entity()
 	local stationTitle = station.title
 
