@@ -17,7 +17,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "This is the mod description. Please fill it out for more clarity.",
+    description = "Adds a new, uncommon mission to all station types except for factories, headquarters, and military outposts. The mission tasks you with finding and destroying a group of pirates that plan on raiding a nearby sector.",
 
     -- Insert all authors into this list
     authors = {"KnifeHeart"},

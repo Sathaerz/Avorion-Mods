@@ -6,9 +6,17 @@ function MissionBulletins.getPossibleMissions()
 	local scripts = AmbushRaiders_getPossibleMissions()
 
     --Everything but factories.
+    local _Tokens = {
+        "factory",
+        "Factory",
+        "Military",
+        "Headquarters"
+    }
     local _Add = true
-    if string.find(stationTitle, "factor") or string.find(stationTitle, "Factory") then
-        _Add = false
+    for _k, _v in pairs(_Tokens) do
+        if string.find(stationTitle, _v) then
+            _Add = false
+        end
     end
 
     if _Add then
