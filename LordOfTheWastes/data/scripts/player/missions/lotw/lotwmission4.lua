@@ -70,6 +70,8 @@ function initialize()
                 .missionsFailed
                 .outpostLocation
                 .failureCounter
+                .firstAlphaInvincible
+                .firstBetaInvincible
             =========================================================]]
             mission.data.custom.dangerLevel = 5 --This is a story mission, so we keep things predictable.
             mission.data.custom.destroyed = 0
@@ -250,6 +252,7 @@ mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     end
 
     if _Entity:getValue("_lotw_mission4_defendobjective") then
+        ESCCUtil.allPiratesDepart()
         fail()
     end
 end
@@ -448,9 +451,26 @@ function spawnBackgroundPirates()
 end
 
 function onAlphaBackgroundPiratesFinished(_Generated)
+    --Make the first alpha wing invincible vs. the station.
+    local _Invincible = false
+    local _DefenseObjective = nil
+    if not mission.data.custom.firstAlphaInvincible then
+        local _DefenseObjectives = {Sector():getEntitiesByScriptValue("_lotw_mission4_defendobjective")}
+        _DefenseObjective = _DefenseObjectives[1]
+        _Invincible = true
+        mission.data.custom.firstAlphaInvincible = true
+    end
+
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_lotw_mission4_objective", true)
         _Pirate:setValue("_lotw_alpha_wing", true)
+
+        if _Invincible then
+            local _Dura = Durability(_Pirate)
+            if _Dura then
+                _Dura:addFactionImmunity(_DefenseObjective.factionIndex)
+            end
+        end
     end
     SpawnUtility.addEnemyBuffs(_Generated)
 end
@@ -472,7 +492,18 @@ function onBetaBackgroundPiratesFinished(_Generated)
     _TorpSlammerValues._TargetPriority = 2
     _TorpSlammerValues._TargetScriptValue = "_lotw_mission4_defendobjective"
 
+    local _DefenseObjectives = {Sector():getEntitiesByScriptValue("_lotw_mission4_defendobjective")}
+    local _DefenseObjective = _DefenseObjectives[1]
+
+    --Make the first beta wing invincible.
+    local _Invincible = false
+    if not mission.data.custom.firstBetaInvincible then
+        _Invincible = true
+        mission.data.custom.firstBetaInvincible = true
+    end
+
     for _, _Pirate in pairs(_Generated) do
+        local _Xinvincible = _Invincible --Set this each loop.
         _Pirate:setValue("_lotw_mission4_objective", true)
         _Pirate:setValue("_lotw_beta_wing", true)
 
@@ -486,12 +517,21 @@ function onBetaBackgroundPiratesFinished(_Generated)
             _Pirate:removeScript("icon.lua")
             _Pirate:addScript("icon.lua", "data/textures/icons/pixel/torpedoboatex.png")
             _Pirate:addScript("torpedoslammer.lua", _TorpSlammerValues)
+
+            --Bit of a cheap way to do this but the "fair" way risks making them too powerful for the player to kill.
+            _Xinvincible = true
             _SlamAdded = _SlamAdded + 1
         end
 
+        if _Xinvincible then
+            local _Dura = Durability(_Pirate)
+            if _Dura then
+                _Dura:addFactionImmunity(_DefenseObjective.factionIndex)
+            end
+        end
+
         local _ShipAI = ShipAI(_Pirate)
-        local _DefenseObjectives = {Sector():getEntitiesByScriptValue("_lotw_mission4_defendobjective")}
-        _ShipAI:setAttack(_DefenseObjectives[1])
+        _ShipAI:setAttack(_DefenseObjective)
     end
     SpawnUtility.addEnemyBuffs(_Generated)
 end
