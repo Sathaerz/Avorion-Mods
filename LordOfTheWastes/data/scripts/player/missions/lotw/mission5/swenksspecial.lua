@@ -23,6 +23,10 @@ function SwenksSpecial.initialize(_MaxDuration, _MinDurability, _Message)
     _MinDurability = _MinDurability or 0.25
     _Message = _Message or "Iron curtain activated!"
 
+    if onServer() then
+        Entity():registerCallback("onDamaged", "onDamaged")
+    end
+
     self._Data._Duration = _MaxDuration
     self._Data._MinDura = _MinDurability
     self._Data._TimeActive = 0
@@ -31,11 +35,21 @@ function SwenksSpecial.initialize(_MaxDuration, _MinDurability, _Message)
 end
 
 function SwenksSpecial.getUpdateInterval()
-    return 0.25
+    return 5
 end
 
 function SwenksSpecial.updateServer(_TimeStep)
-    --Find all torpedoes
+    if self._Data._Active then
+        self._Data._TimeActive = self._Data._TimeActive + _TimeStep
+        if self._Data._TimeActive > self._Data._Duration then
+            Entity().invincible = false
+            terminate()
+            return
+        end
+    end
+end
+
+function SwenksSpecial.onDamaged(selfIndex, amount, inflictor)
     local _Sector = Sector()
     
     local _Entity = Entity()
@@ -50,16 +64,7 @@ function SwenksSpecial.updateServer(_TimeStep)
         end
         _Entity.invincible = true
         self._Data._Active = true
-    end
-    
-    if self._Data._Active then
-        self._Data._TimeActive = self._Data._TimeActive + _TimeStep
-        if self._Data._TimeActive > self._Data._Duration then
-            _Entity.invincible = false
-            terminate()
-            return
-        end
-    end
+    end    
 end
 
 function SwenksSpecial.spawnReinforcements()
