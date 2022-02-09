@@ -433,6 +433,12 @@ function spawnLiason()
     local shipGenerator = AsyncShipGenerator(nil, onFactionShipsFinished)
     local faction = Faction(mission.data.custom.friendlyFaction)
 
+    if not faction or faction.isPlayer or faction.isAlliance then
+        print("ERROR - COULD NOT FIND MISSION FACTION")
+        terminate()
+        return
+    end
+
     shipGenerator:startBatch()
 
     shipGenerator:createDefender(faction, shipGenerator:getGenericPosition())

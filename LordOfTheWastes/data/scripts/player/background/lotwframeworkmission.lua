@@ -46,6 +46,18 @@ function LOTWFrameworkMission.updateServer(_TimeStep)
 
     local _Player = Player()
 
+    --If the player somehow accepted the mission from their own station (or an ally's station... or another player's station, etc. just set it to the start ally)
+    if not _Player:getValue("_lotw_faction_verified") then
+        if _Player:getValue("_lotw_faction") then
+            local _LOTWFaction = Faction(_Player:getValue("_lotw_faction"))
+            if _LOTWFaction.isPlayer or _LOTWFaction.isAlliance then
+                local _StartFaction = _Player:getValue("start_ally")
+                _Player:setValue("_lotw_faction", _StartFaction)
+            end
+            _Player:setValue("_lotw_faction_verified", true)
+        end
+    end
+
     local _Story1Done = _Player:getValue("_lotw_story_1_accomplished")
     local _Story2Done = _Player:getValue("_lotw_story_2_accomplished")
     local _Story3Done = _Player:getValue("_lotw_story_3_accomplished")
@@ -85,7 +97,14 @@ function LOTWFrameworkMission.onSectorArrivalConfirmed(_PlayerIndex, _X, _Y)
         if _Dist >= _MinDist then
             self.Log(_MethodName, "Distance is " .. tostring(_Dist) .. " - which is inside the " .. tostring(_MinDist) .. " to 707 range")
             
-            local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
+            local _StationCandidates = {_Sector:getEntitiesByType(EntityType.Station)}
+            local _Stations = {}
+            for _, _Station in pairs(_StationCandidates) do
+                local _StationFaction = Faction(_Station.factionIndex)
+                if not _StationFaction.isPlayer and not _StationFaction.isAlliance then
+                    table.insert(_Stations, _Station)
+                end
+            end
         
             if #_Stations > 0 then
                 --Find a random station and add it to the bulletin board of that station.
@@ -101,6 +120,8 @@ function LOTWFrameworkMission.onSectorArrivalConfirmed(_PlayerIndex, _X, _Y)
                 local _Station = _Stations[_Rgen:getInt(1, #_Stations)]
 
                 _Station:invokeFunction("bulletinboard", "addMission", _ScriptPath)
+            else
+                self.Log(_MethodName, "No viable stations from the list of candidates.")
             end
         else
             self.Log(_MethodName, "Distance is " .. tostring(_Dist) .. " - which is NOT inside the " .. tostring(_MinDist) .. " to 707 range")

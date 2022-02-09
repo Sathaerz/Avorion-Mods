@@ -300,6 +300,12 @@ function buildSector(_X, _Y)
     local _MethodName = "Build Sector"
     local _Faction = Faction(mission.data.custom.friendlyFaction)
 
+    if not _Faction or _Faction.isPlayer or _Faction.isAlliance then
+        print("ERROR - COULD NOT FIND MISSION FACTION")
+        terminate()
+        return
+    end
+
     local generator = SectorGenerator(_X, _Y)
     local _Rgen = ESCCUtil.getRand()
     for _ = 1, _Rgen:getInt(3, 5) do
