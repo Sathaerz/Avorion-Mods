@@ -30,7 +30,7 @@ local AsyncPirateGenerator = include ("asyncpirategenerator")
 local SpawnUtility = include ("spawnutility")
 local Balancing = include ("galaxy")
 
-mission._Debug = 1
+mission._Debug = 0
 mission._Name = "Ambush Pirate Raiders"
 
 --region #INIT
@@ -60,7 +60,6 @@ function initialize(_Data_in)
         if not _restoring then
             mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
 
-            local _Rgen = ESCCUtil.getRand()
             local _X, _Y = _Data_in.location.x, _Data_in.location.y
 
             local _Sector = Sector()
@@ -102,6 +101,7 @@ end
 --endregion
 
 --region #PHASE CALLS
+--Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
 mission.phases[1] = {}
 mission.phases[1].timers = {}
