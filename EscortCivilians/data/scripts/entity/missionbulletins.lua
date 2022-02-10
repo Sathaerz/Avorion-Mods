@@ -2,6 +2,7 @@ local EscortCivilians_getPossibleMissions = MissionBulletins.getPossibleMissions
 function MissionBulletins.getPossibleMissions()
 	local station = Entity()
 	local stationTitle = station.title
+    local stationFaction = Faction(station.factionIndex)
 
 	local scripts = EscortCivilians_getPossibleMissions()
 
