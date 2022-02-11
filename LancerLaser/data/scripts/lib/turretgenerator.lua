@@ -1,5 +1,3 @@
-local _BaseScaleFactor = 3.0
-
 scales[WeaponType.LancerLaser] = {
     {from = 0, to = 24, size = 0.5, usedSlots = 1},
     {from = 25, to = 35, size = 1.0, usedSlots = 2},
@@ -66,6 +64,10 @@ function TurretGenerator.generateLancerLaserTurret(rand, dps, tech, material, ra
     return result
 end
 
+function TurretGenerator.getLancerScaleBonus(tech)
+    return 3.0 --No need for scaling better than teslas. These can do some vicious damage if given the right stats.
+end
+
 function TurretGenerator.scaleLancer(rand, turret, type, tech, turnSpeedFactor, coaxialPossible)
     --Lancer Lasers are always coaxial.
     local scaleTech = tech
@@ -80,7 +82,7 @@ function TurretGenerator.scaleLancer(rand, turret, type, tech, turnSpeedFactor, 
     turret.slots = scale.usedSlots
     turret.turningSpeed = lerp(turret.size, 0.5, 3, 1, 0.3) * rand:getFloat(0.8, 1.2) * turnSpeedFactor
 
-    local coaxialDamageScale = _BaseScaleFactor --No need for scaling better than teslas. These can do some vicious damage if given the right stats.
+    local coaxialDamageScale = TurretGenerator.getLancerScaleBonus(tech)
 
     local weapons = {turret:getWeapons()}
     for _, weapon in pairs(weapons) do
