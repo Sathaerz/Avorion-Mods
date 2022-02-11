@@ -11,6 +11,7 @@ local self = SwenksSpecial
 self._Data = {}
 
 self._Data._Active = nil
+self._Data._ReinforcementsToSpawn = 0
 
 self._Data._InvulnData = {
     { 
@@ -45,7 +46,7 @@ function SwenksSpecial.initialize(_MaxDuration, _MinDurability, _Message)
 end
 
 function SwenksSpecial.getUpdateInterval()
-    return 5
+    return 2
 end
 
 function SwenksSpecial.updateServer(_TimeStep)
@@ -66,6 +67,15 @@ function SwenksSpecial.updateServer(_TimeStep)
             end
         end
     end
+
+    --Spawn reinforcements each update.
+    if self._Data._ReinforcementsToSpawn > 0 then
+        local _ReinforcementCt = self._Data._ReinforcementsToSpawn
+        self.spawnReinforcements(_ReinforcementCt)
+
+        _ReinforcementCt = _ReinforcementCt - 1
+        self._Data._ReinforcementsToSpawn = _ReinforcementCt
+    end
 end
 
 function SwenksSpecial.onDamaged(selfIndex, amount, inflictor)
@@ -81,22 +91,28 @@ function SwenksSpecial.onDamaged(selfIndex, amount, inflictor)
                 self._Data._Active = true
                 _Entity.invincible = true
                 self.sendMessage(_data._Message)
-                self.spawnReinforcements()
+                self._Data._ReinforcementsToSpawn = 4
             end
         end
     end
 end
 
-function SwenksSpecial.spawnReinforcements()
+function SwenksSpecial.spawnReinforcements(_Ct)
     local _SpawnTable = {}
-    table.insert(_SpawnTable, "Pirate")
-    table.insert(_SpawnTable, "Pirate")
-    table.insert(_SpawnTable, "Marauder")
-    if random():getInt(1, 2) == 1 then
-        table.insert(_SpawnTable, "Raider")
-    else
-        table.insert(_SpawnTable, "Ravager")
+    if _Ct == 4 then
+        table.insert(_SpawnTable, "Pirate")
+    elseif _Ct == 3 then
+        table.insert(_SpawnTable, "Pirate")
+    elseif _Ct == 2 then
+        table.insert(_SpawnTable, "Marauder")
+    elseif _Ct == 1 then
+        if random():getInt(1, 2) == 1 then
+            table.insert(_SpawnTable, "Raider")
+        else
+            table.insert(_SpawnTable, "Ravager")
+        end
     end
+
     local generator = AsyncPirateGenerator(SwenksSpecial, onReinforcementsFinished)
 
     generator:startBatch()
