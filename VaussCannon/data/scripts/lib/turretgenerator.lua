@@ -1,5 +1,3 @@
-local _BaseScaleFactor = 3.0
-
 scales[WeaponType.VaussCannon] = {
     {from = 0, to = 11, size = 0.5, usedSlots = 1},
     {from = 12, to = 23, size = 1.0, usedSlots = 2},
@@ -72,6 +70,10 @@ function TurretGenerator.generateVaussCannonTurret(rand, dps, tech, material, ra
     return result
 end
 
+function TurretGenerator.getVaussScaleBonus(tech)
+    return 3.25 --Scale slightly better than vanilla to make it competitive with Teslas.
+end
+
 function TurretGenerator.scaleVauss(rand, turret, type, tech, turnSpeedFactor, coaxialPossible)
     --Vauss cannons are always coaxial.
     local scaleTech = tech
@@ -86,7 +88,7 @@ function TurretGenerator.scaleVauss(rand, turret, type, tech, turnSpeedFactor, c
     turret.slots = scale.usedSlots
     turret.turningSpeed = lerp(turret.size, 0.5, 3, 1, 0.5) * rand:getFloat(0.8, 1.2) * turnSpeedFactor
 
-    local coaxialDamageScale = _BaseScaleFactor + 0.25 --Scale slightly better than vanilla to make it competitive with Teslas.
+    local coaxialDamageScale = TurretGenerator.getVaussScaleBonus(tech)
 
     local weapons = {turret:getWeapons()}
     for _, weapon in pairs(weapons) do
