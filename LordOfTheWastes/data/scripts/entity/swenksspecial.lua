@@ -9,29 +9,39 @@ SwenksSpecial = {}
 local self = SwenksSpecial
 
 self._Data = {}
-self._Data._Duration = nil
-self._Data._TimeActive = nil
-self._Data._MinDura = nil
-self._Data._Active = nil
-self._Data._SentMessage = false
-self._Data._Message = nil
 
-self._Debug = 0
+self._Data._Active = nil
+
+self._Data._InvulnData = {
+    { 
+        _Message = "Think you have me, do you?",
+        _Point = 0.75,
+        _Activated = false,
+        _TimeActive = 0,
+        _MaxTimeActive = 30
+    },
+    { 
+        _Message = "More! More!!",
+        _Point = 0.5,
+        _Activated = false,
+        _TimeActive = 0,
+        _MaxTimeActive = 35
+    },
+    { 
+        _Message = "I'll tear you to pieces, wretch!",
+        _Point = 0.25,
+        _Activated = false,
+        _TimeActive = 0,
+        _MaxTimeActive = 40
+    }
+}
+
+self._Debug = 1
 
 function SwenksSpecial.initialize(_MaxDuration, _MinDurability, _Message)
-    _MaxDuration = _MaxDuration or 30
-    _MinDurability = _MinDurability or 0.25
-    _Message = _Message or "Iron curtain activated!"
-
     if onServer() then
         Entity():registerCallback("onDamaged", "onDamaged")
     end
-
-    self._Data._Duration = _MaxDuration
-    self._Data._MinDura = _MinDurability
-    self._Data._TimeActive = 0
-    self._Data._Active = false
-    self._Data._Message = _Message
 end
 
 function SwenksSpecial.getUpdateInterval()
@@ -39,32 +49,42 @@ function SwenksSpecial.getUpdateInterval()
 end
 
 function SwenksSpecial.updateServer(_TimeStep)
+    local _MethodName = "Update Server"
     if self._Data._Active then
-        self._Data._TimeActive = self._Data._TimeActive + _TimeStep
-        if self._Data._TimeActive > self._Data._Duration then
-            Entity().invincible = false
-            terminate()
-            return
+        for _, _data in pairs(self._Data._InvulnData) do
+            if _data._Activated and _data._TimeActive <= _data._MaxTimeActive then
+                local _TimeActive = _data._TimeActive
+                local _MaxTimeActive = _data._MaxTimeActive
+                self.Log(_MethodName, "Invuln is active - time active : " .. tostring(_TimeActive) .. " out of : " .. tostring(_MaxTimeActive))
+                
+                _TimeActive = _TimeActive + _TimeStep
+                if _TimeActive >= _MaxTimeActive then
+                    Entity().invincible = false
+                    self._Data._Active = false
+                end
+                _data._TimeActive = _TimeActive
+            end
         end
     end
 end
 
 function SwenksSpecial.onDamaged(selfIndex, amount, inflictor)
-    local _Sector = Sector()
+    if not self._Data._Active then
+        local _Sector = Sector()
     
-    local _Entity = Entity()
-    local _Ratio = _Entity.durability / _Entity.maxDurability
-    local _MinRatio = self._Data._MinDura
+        local _Entity = Entity()
+        local _Ratio = _Entity.durability / _Entity.maxDurability
 
-    if _Ratio < _MinRatio then
-        if not self._Data._SentMessage then
-            self.sendMessage()
-            self.spawnReinforcements()
-            self._Data._SentMessage = true
+        for _, _data in pairs(self._Data._InvulnData) do
+            if not _data._Activated and _Ratio <= _data._Point then
+                _data._Activated = true
+                self._Data._Active = true
+                _Entity.invincible = true
+                self.sendMessage(_data._Message)
+                self.spawnReinforcements()
+            end
         end
-        _Entity.invincible = true
-        self._Data._Active = true
-    end    
+    end
 end
 
 function SwenksSpecial.spawnReinforcements()
@@ -96,8 +116,8 @@ function SwenksSpecial.onReinforcementsFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function SwenksSpecial.sendMessage()
-    Sector():broadcastChatMessage(Entity(), ChatMessageType.Chatter, self._Data._Message)
+function SwenksSpecial.sendMessage(_Msg)
+    Sector():broadcastChatMessage(Entity(), ChatMessageType.Chatter, _Msg)
 end
 
 --region #CLIENT / SERVER functions

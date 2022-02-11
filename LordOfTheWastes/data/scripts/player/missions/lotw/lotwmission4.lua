@@ -80,7 +80,7 @@ function initialize()
             mission.data.custom.failureCounter = 0 --Used to fail the mission if the player is out of sector for to long, not to count mission failures.
 
             mission.data.custom.outpostLocation = getNextLocation()
-
+            
             local missionReward = ESCCUtil.clampToNearest(150000 + (50000 * Balancing.GetSectorRichnessFactor(_Sector:getCoordinates())), 5000, "Up")
 
             missionData_in = {location = nil, reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for defending the outpost."}}

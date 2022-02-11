@@ -65,7 +65,7 @@ function initialize()
 
             local missionReward = ESCCUtil.clampToNearest(200000 + (50000 * Balancing.GetSectorRichnessFactor(_Sector:getCoordinates())), 5000, "Up")
 
-            missionData_in = {location = nil, reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for destroying Swenks."}}
+            missionData_in = {location = getNextLocation(), reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for destroying Swenks."}}
     
             LOTW_Mission_init(missionData_in)
 
@@ -99,7 +99,6 @@ mission.phases[1].onBeginServer = function()
 
     local _Faction = Faction(mission.data.custom.friendlyFaction) --The phase is already set to 1 by the time we hit this, so it has to be done it this way.
 
-    mission.data.location = getNextLocation()
     mission.data.description[1].arguments = { factionName = _Faction.name }
     mission.data.description[2].arguments = { x = mission.data.location.x, y = mission.data.location.y }
     mission.data.description[3].arguments = { x = mission.data.location.x, y = mission.data.location.y }
@@ -215,9 +214,7 @@ function spawnSwenks()
     boss:removeScript("icon.lua")
     boss:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
     boss:addScript("player/missions/lotw/mission5/swenks.lua")
-    boss:addScript("player/missions/lotw/mission5/swenksspecial.lua", 30, 0.75, "Think you have me, do you?")
-    boss:addScript("player/missions/lotw/mission5/swenksspecial.lua", 35, 0.50, "More! More!!")
-    boss:addScript("player/missions/lotw/mission5/swenksspecial.lua", 40, 0.25, "I'll tear you to pieces, wretch!")
+    boss:addScript("swenksspecial.lua")
     boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
     boss:addScriptOnce("avenger.lua", {_Multiplier = 1.1})
     boss:setValue("is_pirate", true)
