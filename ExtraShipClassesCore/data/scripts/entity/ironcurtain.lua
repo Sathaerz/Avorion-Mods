@@ -23,14 +23,28 @@ function IronCurtain.initialize(_MaxDuration, _MinDurability)
     self._Data._MinDura = _MinDurability
     self._Data._TimeActive = 0
     self._Data._Active = false
+
+    if onServer() then
+        Entity():registerCallback("onDamaged", "onDamaged")
+    end
 end
 
 function IronCurtain.getUpdateInterval()
-    return 0.25
+    return 5
 end
 
 function IronCurtain.updateServer(_TimeStep)
-    --Find all torpedoes
+    if self._Data._Active then
+        self._Data._TimeActive = self._Data._TimeActive + _TimeStep
+        if self._Data._TimeActive > self._Data._Duration then
+            Entity().invincible = false
+            terminate()
+            return
+        end
+    end
+end
+
+function IronCurtain.onDamaged(_OwnID, _Amount, _InflictorID)
     local _Sector = Sector()
     
     local _Entity = Entity()
@@ -44,15 +58,6 @@ function IronCurtain.updateServer(_TimeStep)
         end
         _Entity.invincible = true
         self._Data._Active = true
-    end
-    
-    if self._Data._Active then
-        self._Data._TimeActive = self._Data._TimeActive + _TimeStep
-        if self._Data._TimeActive > self._Data._Duration then
-            _Entity.invincible = false
-            terminate()
-            return
-        end
     end
 end
 

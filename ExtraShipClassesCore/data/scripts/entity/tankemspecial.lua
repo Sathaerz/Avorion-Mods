@@ -25,14 +25,28 @@ function TankemSpecial.initialize(_MaxDuration, _MinDurability, _DamageFactor)
     self._Data._TimeActive = 0
     self._Data._Active = false
     self._Data._DamageFactor = _DamageFactor or 1
+
+    if onServer() then
+        Entity():registerCallback("onDamaged", "onDamaged")
+    end
 end
 
 function TankemSpecial.getUpdateInterval()
-    return 0.25
+    return 5
 end
 
 function TankemSpecial.updateServer(_TimeStep)
-    --Find all torpedoes
+    if self._Data._Active then
+        self._Data._TimeActive = self._Data._TimeActive + _TimeStep
+        if self._Data._TimeActive > self._Data._Duration then
+            Entity().invincible = false
+            terminate()
+            return
+        end
+    end
+end
+
+function TankemSpecial.onDamaged(_OwnID, _Amount, _InflictorID)
     local _Sector = Sector()
     
     local _Entity = Entity()
@@ -50,15 +64,6 @@ function TankemSpecial.updateServer(_TimeStep)
         if not self._Data._SGActive then
             self.addSG()
             self._Data._SGActive = true
-        end
-    end
-    
-    if self._Data._Active then
-        self._Data._TimeActive = self._Data._TimeActive + _TimeStep
-        if self._Data._TimeActive > self._Data._Duration then
-            _Entity.invincible = false
-            terminate()
-            return
         end
     end
 end

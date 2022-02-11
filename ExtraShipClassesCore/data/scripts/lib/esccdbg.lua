@@ -4,6 +4,7 @@ package.path = package.path .. ";data/scripts/?.lua"
 include("callable")
 include("productions")
 local Placer = include("placer")
+local PirateGenerator = include("pirategenerator")
 local AsyncPirateGenerator = include("asyncpirategenerator")
 local UpgradeGenerator = include("upgradegenerator")
 local SectorTurretGenerator = include("sectorturretgenerator")
@@ -80,6 +81,7 @@ function initUI()
     tab:createButton(ButtonRect(), "Meathook", "onSpawnMeathookButtonPressed")
     tab:createButton(ButtonRect(), "Booster", "onSpawnBoosterButtonPressed")
     tab:createButton(ButtonRect(), "Booster Healer", "onSpawnBoosterHealerButtonPressed")
+    tab:createButton(ButtonRect(), "Phaser", "onSpawnPhaserButtonPressed")
 
     local tab3 = tabbedWindow:createTab("Entity", "data/textures/icons/edge-crack.png", "Boss Ships")
     numButtons = 0
@@ -232,6 +234,7 @@ function initUI()
         tab11:createButton(ButtonRect(), "Mission 6", "onLOTWMission6ButtonPressed")
         tab11:createButton(ButtonRect(), "Mission 7", "onLOTWMission7ButtonPressed")
         tab11:createButton(ButtonRect(), "Clear Values", "onLOTWClearValuesPressed")
+        tab11:createButton(ButtonRect(), "Spawn Swenks", "onSpawnSwenksButtonPressed")
     end 
 end
 
@@ -364,6 +367,14 @@ function onBoosterHealerEnemyGenerated(_Generated)
     for _, _S in pairs(_Generated) do
         _S:addScript("allybooster.lua", {_HealWhenBoosting = true, _HealPctWhenBoosting = 33})
     end
+end
+
+function onPhaserEnemyGenerated(_Generated)
+    onPiratesGenerated(_Generated)
+    print("adding phaser script to enemy.")
+    for _, _S in pairs(_Generated) do
+        _S:addScript("phasemode.lua")
+    end   
 end
 
 --endregion
@@ -655,6 +666,21 @@ function onSpawnBoosterHealerButtonPressed()
     generator:endBatch()    
 end
 callable(nil, "onSpawnBoosterHealerButtonPressed")
+
+function onSpawnPhaserButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnPhaserButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onPhaserEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()    
+end
+callable(nil, "onSpawnPhaserButtonPressed")
 
 --endregion
 
@@ -1757,11 +1783,62 @@ function onLOTWClearValuesPressed()
     _Player:setValue("_lotw_mission3_failures", nil)
     _Player:setValue("_lotw_mission3_freighterskilled", nil)
     _Player:setValue("_lotw_mission4_failures", nil)
+    _Player:setValue("swenks_beaten", nil)
+    _Player:setValue("_lotw_faction_verified", nil)
 
     local _msg = "All Lord of the Wastes data cleared."
     print(_msg)
     _Player:sendChatMessage("Server", ChatMessageType.Information, _msg)
 end
 callable(nil, "onLOTWClearValuesPressed")
+
+function onSpawnSwenksButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnSwenksButtonPressed")
+        return
+    end
+
+    local function piratePosition()
+        local pos = random():getVector(-1000, 1000)
+        return MatrixLookUpPosition(-pos, vec3(0, 1, 0), pos)
+    end
+
+    -- spawn
+    local boss = PirateGenerator.createBoss(piratePosition())
+    boss:setTitle("Boss Swenks"%_T, {})
+    boss.dockable = false
+
+    local _pirates = {}
+    table.insert(_pirates, boss)
+
+    for _, pirate in pairs(_pirates) do
+        pirate:addScript("deleteonplayersleft.lua")
+
+        local _Player = Player()
+        if not _Player then break end
+        local allianceIndex = _Player.allianceIndex
+        local ai = ShipAI(pirate.index)
+        ai:registerFriendFaction(_Player.index)
+        if allianceIndex then
+            ai:registerFriendFaction(allianceIndex)
+        end
+    end
+
+    if Server():getValue("swoks_beaten") then
+        boss:setValue("swoks_beaten", true)
+    end
+    
+    boss:removeScript("icon.lua")
+    boss:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
+    boss:addScript("player/missions/lotw/mission5/swenks.lua")
+    boss:addScript("swenksspecial.lua")
+    boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
+    boss:addScriptOnce("avenger.lua", {_Multiplier = 1.1})
+    boss:setValue("is_pirate", true)
+    boss:setValue("is_swenks", true)
+
+    Boarding(boss).boardable = false
+end
+callable(nil, "onSpawnSwenksButtonPressed")
 
 --endregion
