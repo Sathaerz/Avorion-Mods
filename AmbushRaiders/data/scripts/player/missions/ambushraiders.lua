@@ -79,7 +79,7 @@ function initialize(_Data_in)
             mission.data.description[2].text = _Data_in.description
             mission.data.description[2].arguments = {x = _X, y = _Y }
 
-            _Data_in.reward.paymentMessage = "Earned %1% credits for escorting civilians."
+            _Data_in.reward.paymentMessage = "Earned %1% credits for eliminating raiders."
 
             --Run standard initialization
             AmbushRaiders_init(_Data_in)
@@ -104,6 +104,7 @@ end
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
 mission.phases[1] = {}
+mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].timers = {}
 
 --region #PHASE 1 TIMERS
@@ -145,6 +146,7 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
 end
 
 mission.phases[2] = {}
+mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].timers = {}
 
 --region #PHASE 2 TIMERS
@@ -176,6 +178,7 @@ mission.phases[2].onBeginServer = function()
 end
 
 mission.phases[3] = {}
+mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].timers = {}
 
 --region #PHASE 3 TIMERS
@@ -219,6 +222,7 @@ mission.phases[3].onBeginServer = function()
 end
 
 mission.phases[4] = {}
+mission.phases[4].noBossEncountersTargetSector = true
 mission.phases[4].timers = {}
 
 --region #PHASE 4 TIMERS
@@ -262,6 +266,7 @@ mission.phases[4].onBeginServer = function()
 end
 
 mission.phases[5] = {}
+mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].timers = {}
 
 --region #MISSION 5 TIMERS
@@ -454,7 +459,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = 6000},
+            reward = {credits = reward, relations = 4000}, --This is such a common mission. It's like free the slaves all over again!
             punishment = { relations = 4000 },
             dangerLevel = _DangerLevel,
             description = _Description
