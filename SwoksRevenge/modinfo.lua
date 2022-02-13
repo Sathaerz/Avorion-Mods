@@ -4,20 +4,20 @@ meta =
     -- ID of your mod; Make sure this is unique!
     -- Will be used for identifying the mod in dependency lists
     -- Will be changed to workshop ID (ensuring uniqueness) when you upload the mod to the workshop
-    id = "2726101047",
+    id = "SwoksRevenge",
 
     -- Name of your mod; You may want this to be unique, but it's not absolutely necessary.
     -- This is an additional helper attribute for you to easily identify your mod in the Mods() list
-    name = "The4Revenge",
+    name = "SwoksRevenge",
 
     -- Title of your mod that will be displayed to players
-    title = "The Brotherhood's Revenge",
+    title = "Mod Title",
 
     -- Type of your mod, either "mod" or "factionpack"
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "Makes The Four much more difficult to defeat (and drop better loot) during subsequent encounters.",
+    description = "This is the mod description. Please fill it out for more clarity.",
 
     -- Insert all authors into this list
     authors = {"KnifeHeart"},
@@ -26,7 +26,7 @@ meta =
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.0.5",
+    version = "1.0",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
@@ -44,8 +44,7 @@ meta =
     --      {id = "OptionalMod", min = "0.2", optional = true}, -- we support OptionalMod optionally, starting at version 0.2
     -- },
     dependencies = {
-        {id = "2207469437", min = "1.7.1"},
-        {id = "Avorion", min = "2.0", max = "*.*"}
+
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves
