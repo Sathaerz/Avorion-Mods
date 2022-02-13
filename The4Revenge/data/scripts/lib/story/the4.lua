@@ -298,7 +298,24 @@ function The4.spawn(x, y)
         for _, boss in pairs(enemies) do
             ShipAI(boss.index):setAggressive()
             boss:addScriptOnce("avenger.lua") --All of them are avengers
-            boss:addScriptOnce("megablocker.lua") --All are megablockers
+            local _AddBlocker = false
+            local _AddMegaBlocker = false
+
+            if _Factor >= 3 then
+                _AddBlocker = true
+            end
+            if _Factor >= 10 then
+                _AddBlocker = false
+                _AddMegaBlocker = true
+            end
+
+            if _AddBlocker then
+                boss:addScriptOnce("blocker.lua", 1)
+            end
+
+            if _AddMegaBlocker then
+                boss:addScriptOnce("megablocker.lua", 1) --All are megablockers
+            end
 
             local _DuraFactor = 2 + (_Factor / 2)
             local _ShieldDuraFactor = 2 + (_Factor / 2)
