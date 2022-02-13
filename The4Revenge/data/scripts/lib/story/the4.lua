@@ -301,10 +301,10 @@ function The4.spawn(x, y)
             local _AddBlocker = false
             local _AddMegaBlocker = false
 
-            if _Factor > 3 then
+            if _Factor >= 3 then
                 _AddBlocker = true
             end
-            if _Factor > 5 then
+            if _Factor >= 5 then
                 _AddBlocker = false
                 _AddMegaBlocker = true
             end

@@ -69,34 +69,17 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         ["2017677089"] = 0,     --Weapon Engineering is _Amp + 3 - Just want to note that it is on the list here. We have a special set of detection triggers for this later in the file.
         ["2191291553"] = 3,     --HarderEnemys - Your wish has been granted.
         ["2442089978"] = 3,     --Amped UP DPS - Sure, it makes the Gordian Knot hit harder, but we need to compensate with HP.
-        ["2674515274"] = 3,     --Voidspark upgrade
-        ["2673565613"] = 3,     --Doomsday weapon
-        ["2629827943"] = 3,     --Add exotic and legendary blueprints to turret factor
-        ["2623306700"] = 3,     --"Easy and powerful system XSTN-K V"
-        ["2601660342"] = 3,     --Turrets x20 - how original!
-        ["2601660284"] = 3,     --Turrets x4 to x20
-        ["2620549321"] = 2,     --1.1.4 turret balancing
         ["1991691736"] = 2,     --Turret Replicator for turret factories
         ["1789307930"] = 2,     --PowerTurrets (WIP)
         ["2014035735"] = 2,     --Scaling Turret System
-        ["2656616473"] = 2,     --The large AI
-        ["2601660220"] = 2,     --Turrets x10
-        ["2572559206"] = 2,     --Pulse Accelerators
-        ["2514027747"] = 2,     --Wave motion gun
-        ["2668246868"] = 2,     --Capital weapon foundry
         ["2052687922"] = 0.5,   --Pirate Drop Extra Turrets
         ["1905374778"] = 1.5,   --Nanobot System Upgrade
         ["2021277562"] = 1.5,   --Nanobot updated and reworked
-        ["2566347474"] = 1,     --Typhon turret
-        ["2575213622"] = 1,     --BFG turret
-        ["2635630603"] = 1,     --Star wars weapon
         ["2286575730"] = 1,     --Ancient Weapons
         ["2289497873"] = 1,     --Just Sell Me Guns Already
         ["1821043731"] = 2,     --High Efficiency Turrets (HET)
         ["1990599419"] = 3,     --v31-DmgFix
         ["2188351263"] = 1,     --Customize Turret Factory
-        ["2751734558"] = 1,     --Turrets x8
-        ["2713507250"] = 1,     --Oh look, it's another Turrets x8 mod.
         ["2043905084"] = 1,     
         ["2033776157"] = 1,
         ["2201230263"] = 1,     --Turret X4 - 28 RNG Edition!
@@ -115,7 +98,6 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         ["1912649093"] = 1,     --8x Turrets with reduced energy drain
         ["2287007906"] = 1,     --Custom Armed Turret Slots
         ["1847988904"] = 1,     --Weapon Pack Extended
-        ["2738498925"] = 0.5,   --Ballistic Missile
         ["2021071111"] = 0.5,   --Plasma blaster turret
         ["2021183079"] = 0.5,   --Autocannon turret
         ["2033631749"] = 0.5,   --Armour Hardener
@@ -125,8 +107,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         ["2127387501"] = 0.5,
         ["2201245637"] = 0.5,
         ["1817506461"] = 0.5,   --Turrets_x4
-        ["2070272331"] = 0.5,   --Capital Class Weapons
-        ["2573925137"] = 0.5    ---Another autocannon mod.
+        ["2070272331"] = 0.5    --Capital Class Weapons
     }
 
     for _, _Xmod in pairs(_ActiveMods) do
