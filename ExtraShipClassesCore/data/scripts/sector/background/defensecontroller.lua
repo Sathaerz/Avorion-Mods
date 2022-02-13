@@ -453,7 +453,7 @@ function DefenseController.spawnPirateDefenders(_WaveTable)
     generator:startBatch()
 
     local posCounter = 1
-    local distance = 150
+    local distance = 200 --_DistAdj
 
     local pirate_positions = generator:getStandardPositions(#_WaveTable, distance, self._Data._DefenderDistance)
     for _, p in pairs(_WaveTable) do
