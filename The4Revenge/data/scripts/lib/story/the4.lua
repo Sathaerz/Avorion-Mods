@@ -304,7 +304,7 @@ function The4.spawn(x, y)
             if _Factor >= 3 then
                 _AddBlocker = true
             end
-            if _Factor >= 10 then
+            if _Factor >= 5 then
                 _AddBlocker = false
                 _AddMegaBlocker = true
             end
