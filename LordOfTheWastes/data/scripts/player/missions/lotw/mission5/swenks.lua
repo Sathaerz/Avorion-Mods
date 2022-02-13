@@ -56,7 +56,6 @@ function startFight()
             ai:registerEnemyFaction(allianceIndex)
         end
     end
-    Entity():addScript("megablocker.lua")
 end
 callable(nil, "startFight")
 
