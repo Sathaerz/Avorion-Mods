@@ -262,8 +262,8 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     local _UpgradeGenerator = SectorUpgradeGenerator()
 
     local _Loot = Loot(_Superweapon)
-    local _TurretCount = _Rgen:getInt(14, 18)
-    local _SystemCount = _Rgen:getInt(12, 16)
+    local _TurretCount = _Rgen:getInt(20, 26)
+    local _SystemCount = _Rgen:getInt(20, 24)
     for _ = 1, _TurretCount do
         _Loot:insert(InventoryTurret(_TurretGenerator:generate(_X, _Y, -156, Rarity(self.getRandomRarity()))))
     end
@@ -310,7 +310,7 @@ function PariahUtil.getRandomRarity()
     local _MethodName = "Random Rarity"
 
     local _Raregen = ESCCUtil.getRand()
-    if _Raregen:getInt(1, 4) == 1 then
+    if _Raregen:getInt(1, 2) == 1 then
         return RarityType.Legendary
     else
         return RarityType.Exotic

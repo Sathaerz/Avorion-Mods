@@ -74,7 +74,7 @@ function initialize(_Data_in)
 
             mission.data.description[2].arguments = { _FACTION = Faction(mission.data.custom.friendlyFaction).name}
 
-            _Data_in.reward = { credits = 100000000, paymentMessage = "Earned %1% credits for destroying the Superweapon." }
+            _Data_in.reward = { credits = 100000000000, paymentMessage = "Earned %1% credits for destroying the Superweapon." }
 
             --Run standard initialization
             attackresearchbase_init(_Data_in)
