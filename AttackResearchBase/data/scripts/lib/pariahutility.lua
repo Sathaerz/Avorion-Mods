@@ -79,14 +79,16 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         ["1991691736"] = 2,     --Turret Replicator for turret factories
         ["1789307930"] = 2,     --PowerTurrets (WIP)
         ["2014035735"] = 2,     --Scaling Turret System
-        ["2656616473"] = 2,     --The large AI
         ["2601660220"] = 2,     --Turrets x10
         ["2572559206"] = 2,     --Pulse Accelerators
         ["2514027747"] = 2,     --Wave motion gun
         ["2668246868"] = 2,     --Capital weapon foundry
+        ["2745345613"] = 2,     --Xsotan Civil War
+        ["2108001003"] = 2,     --SDK mainframes
         ["2052687922"] = 0.5,   --Pirate Drop Extra Turrets
         ["1905374778"] = 1.5,   --Nanobot System Upgrade
         ["2021277562"] = 1.5,   --Nanobot updated and reworked
+        ["2656616473"] = 1,     --The large AI
         ["2566347474"] = 1,     --Typhon turret
         ["2575213622"] = 1,     --BFG turret
         ["2635630603"] = 1,     --Star wars weapon
