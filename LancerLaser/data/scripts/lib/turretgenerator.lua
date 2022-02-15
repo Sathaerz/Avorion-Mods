@@ -54,7 +54,7 @@ function TurretGenerator.generateLancerLaserTurret(rand, dps, tech, material, ra
         end
     
         local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
-        result.title = Format("%1%%2%%3%%4%%5%%6%%7%", outerAdjective, barrel, coax, dmgAdjective, multishot, name, serial)
+        result.title = Format("%1%%2%%3%%4%%5%%6%", outerAdjective, barrel, dmgAdjective, multishot, name, serial)
     end
 
     --Final check.
