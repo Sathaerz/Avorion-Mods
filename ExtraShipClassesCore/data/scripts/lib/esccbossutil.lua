@@ -64,7 +64,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
 
             local _TorpSlammerValues = {}
             _TorpSlammerValues._TimeToActive = 12
-            _TorpSlammerValues._ROF = 1.75
+            _TorpSlammerValues._ROF = 2
             _TorpSlammerValues._UpAdjust = false
             _TorpSlammerValues._DamageFactor = _TorpedoFactor
             _TorpSlammerValues._DurabilityFactor = _TorpDuraFactor
@@ -84,15 +84,29 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _Boss:addScriptOnce("eternal.lua", 0.005, 10)
             _Boss:addScriptOnce("dialogs/encounters/relentlesshellcat.lua")
             ShipUtility.addHellcatLasers(_Boss)
-            ShipUtility.addBossAntiTorpedoEquipment(_Boss, nil, nil, 575)
+            ShipUtility.addBossAntiTorpedoEquipment(_Boss, nil, nil, 550)
             _Boss:setValue("_escc_is_relentless_hellcat", true)
         end },
         { _PlanFile = "data/plans/Hunter.xml", _Title = "Steadfast Hunter", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss)
             local ShipUtility = include("shiputility")
 
+            local _APDValues = {}
+            _APDValues._ROF = 0.45
+            _APDValues._TargetTorps = true
+            _APDValues._TargetFighters = true
+            _APDValues._TorpDamage = 12
+            _APDValues._FighterDamage = 12
+            _APDValues._RangeFactor = 20
+            _APDValues._MaximumTargets = 4
+
+            local _LaserSniperValues = {}
+            _LaserSniperValues._IncreaseDamageOT = true
+            _LaserSniperValues._IncreaseDOTCycle = 30
+            _LaserSniperValues._IncreaseDOTAmount = 15000
+
             _Boss:addScriptOnce("dialogs/encounters/steadfasthunter.lua")
-            _Boss:addScriptOnce("lasersniper.lua")
-            _Boss:addScriptOnce("absolutepointdefense.lua", 0.45, true, true, 12, 12, 20, 4)
+            _Boss:addScriptOnce("lasersniper.lua", _LaserSniperValues)
+            _Boss:addScriptOnce("absolutepointdefense.lua", _APDValues)
             ShipUtility.addHunterRailguns(_Boss)
             ShipUtility.addHunterLightningGuns(_Boss)
             _Boss:setValue("_escc_is_steadfast_hunter", true)
@@ -100,9 +114,18 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
         { _PlanFile = "data/plans/Shield.xml", _Title = "Vigilant Shield", _EngineFactor = 0, _ThrustFactor = 1, _CustomFunction = function(_Boss)
             local ShipUtility = include("shiputility")
 
+            local _APDValues = {}
+            _APDValues._ROF = 0.45
+            _APDValues._TargetTorps = true
+            _APDValues._TargetFighters = true
+            _APDValues._TorpDamage = 12
+            _APDValues._FighterDamage = 12
+            _APDValues._RangeFactor = 20
+            _APDValues._MaximumTargets = 4
+
             _Boss:addScriptOnce("adaptivedefense.lua")
-            _Boss:addScriptOnce("allybooster.lua")
-            _Boss:addScriptOnce("absolutepointdefense.lua", 0.45, true, true, 12, 12, 20, 4)
+            _Boss:addScriptOnce("allybooster.lua", { _HealWhenBoosting = true, _HealPctWhenBoosting = 100, _MaxBoostCharges = 3})
+            _Boss:addScriptOnce("absolutepointdefense.lua", _APDValues)
             _Boss:addScriptOnce("dialogs/encounters/vigilantshield.lua")
             ShipUtility.addVigShieldCannons(_Boss)
             _Boss:setValue("_escc_is_vigilant_shield", true)

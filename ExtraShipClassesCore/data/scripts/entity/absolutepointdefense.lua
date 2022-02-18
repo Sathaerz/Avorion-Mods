@@ -17,28 +17,23 @@ self._Data._RangeFactor = nil
 self._Data._MaximumTargets = nil
 self._Data._TimeCycle = nil
 
-self._Debug = 0
+self._Debug = 1
 
 --!!!WARNING!!! 
 --The default values on this script will WRECK fighters and torpedoes. If you want to make this go a bit easier on the player, tone it down some. 
 --!!!WARNING!!!
-function AbsolutePointDefense.initialize(_ROF, _TargetTorpedoes, _TargetFighters, _DamageToTorpedoes, _DamageToFighters, _RangeFactor, _MaximumTargets)
+function AbsolutePointDefense.initialize(_Values)
     local _MethodName = "Initialize"
-    _ROF = _ROF or 0.25
-    _TargetTorpedoes = _TargetTorpedoes or true
-    _TargetFighters = _TargetFighters or true
-    _DamageToTorpedoes = _DamageToTorpedoes or 100
-    _DamageToFighters = _DamageToFighters or 10
-    _RangeFactor = _RangeFactor or 20
-    _MaximumTargets = _MaximumTargets or 4
+    self.Log(_MethodName, "Initializing v2 of APD script.")
+    self._Data = _Values or {}
 
-    self._Data._ROF = _ROF
-    self._Data._TargetTorps = _TargetTorpedoes
-    self._Data._TorpDamage = _DamageToTorpedoes
-    self._Data._TargetFighters = _TargetFighters
-    self._Data._FighterDamage = _DamageToFighters
-    self._Data._RangeFactor = _RangeFactor
-    self._Data._MaximumTargets = _MaximumTargets
+    self._Data._ROF = self._Data._ROF or 0.25
+    self._Data._TargetTorps = self._Data._TargetTorps or true
+    self._Data._TorpDamage = self._Data._TorpDamage or 100
+    self._Data._TargetFighters = self._Data._TargetFighters or true
+    self._Data._FighterDamage = self._Data._FighterDamage or 10
+    self._Data._RangeFactor = self._Data._RangeFactor or 20
+    self._Data._MaximumTargets = self._Data._MaximumTargets or 4
 
     if self._Debug == 1 and onServer() then
         for k, v in pairs(self._Data) do
@@ -52,22 +47,23 @@ function AbsolutePointDefense.getUpdateInterval()
 end
 
 function AbsolutePointDefense.updateServer(_TimeStep)
-    --Find all torpedoes
-    local _Sector = Sector()
-    
-    local _Entity = Entity()
-    local _Bounds = _Entity:getBoundingSphere()
-    local _MaxRange = _Bounds.radius * self._Data._RangeFactor
-
-    local _MyFactionIndex = _Entity.factionIndex
-    local _MyPosition = _Entity.translationf
-
-    local _TargetedEntities = 0
-    local _MaxTargets = self._Data._MaximumTargets
-    
     self._Data._TimeCycle = (self._Data._TimeCycle or 0) + _TimeStep
 
     if self._Data._TimeCycle >= self._Data._ROF then
+        --We basically don't care about any of this unless it is ready to shoot.
+        --Find all torpedoes
+        local _Sector = Sector()
+        
+        local _Entity = Entity()
+        local _Bounds = _Entity:getBoundingSphere()
+        local _MaxRange = _Bounds.radius * self._Data._RangeFactor
+
+        local _MyFactionIndex = _Entity.factionIndex
+        local _MyPosition = _Entity.translationf
+
+        local _TargetedEntities = 0
+        local _MaxTargets = self._Data._MaximumTargets
+
         if self._Data._TargetTorps then
             local _Torpedoes = {_Sector:getEntitiesByType(EntityType.Torpedo)}
     

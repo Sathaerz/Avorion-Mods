@@ -7,7 +7,7 @@ ESCCUtil = include("esccutil")
 LaserSniper = {}
 local self = LaserSniper
 
-self._Debug = 0
+self._Debug = 1
 
 self._Data = {}
 
@@ -23,7 +23,7 @@ self._LaserData._TargetPoint = nil
 
 function LaserSniper.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Laser Sniper v52 script on entity.")
+    self.Log(_MethodName, "Initializing Laser Sniper v53 script on entity.")
 
     self._Data = _Values or {}
 
@@ -36,6 +36,7 @@ function LaserSniper.initialize(_Values)
     self._Data._BeamMisses = 0
     self._Data._CurrentTarget = nil
     self._Data._FireCycle = nil
+    self._Data._DOTCycle = 0
     self._Data._TargetPoint = nil
 
     --Values the player can adjust.
@@ -47,6 +48,9 @@ function LaserSniper.initialize(_Values)
     self._Data._CreepingBeam = self._Data._CreepingBeam or true
     self._Data._CreepingBeamSpeed = self._Data._CreepingBeamSpeed  or 0.75
     self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
+    self._Data._IncreaseDamageOT = self._Data._IncreaseDamageOT or false
+    self._Data._IncreaseDOTCycle = self._Data._IncreaseDOTCycle or 0
+    self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
 
     Entity():registerCallback("onDestroyed", "onDestroyed")
 end
@@ -67,6 +71,15 @@ function LaserSniper.update(_TimeStep)
             self.Log(_MethodName, "Beam has missed too frequently. Picking a new target.")
             self._Data._CurrentTarget = nil
             self._Data._BeamMisses = 0
+        end
+
+        if self._Data._IncreaseDamageOT then
+            self._Data._DOTCycle = (self._Data._DOTCycle or 0) + _TimeStep
+            if self._Data._DOTCycle >= self._Data._IncreaseDOTCycle then
+                self._Data._DamagePerFrame = self._Data._DamagePerFrame + self._Data._IncreaseDOTAmount
+                self.Log(_MethodName, "Increasing damage per frame - new value is " .. tostring(self._Data._DamagePerFrame))
+                self._Data._DOTCycle = 0
+            end
         end
 
         if self._Data._CurrentTarget == nil or not valid(self._Data._CurrentTarget) then

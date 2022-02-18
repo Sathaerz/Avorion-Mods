@@ -465,11 +465,15 @@ function PirateGenerator.addPirateEquipment(craft, title)
 			if specialScale >= 300 then
 				local _APDBase = Balancing_GetTechLevel(x, y)
 
-				local _TorpDamage = math.max(8, (_APDBase / 4) * 0.9)
-				local _FighterDamage = math.max(8, _APDBase * 0.9)
-				local _MaxTargets = math.floor(math.max(2, _APDBase / 8.5))
+				local _APDValues = {}
+				_APDValues._ROF = 0.6
+				_APDValues._TargetTorps = true
+				_APDValues._TargetFighters = true
+				_APDValues._FighterDamage = math.max(8, _APDBase * 0.9)
+				_APDValues._TorpDamage = math.max(8, (_APDBase / 4) * 0.9)
+				_APDValues._MaxTargets = math.floor(math.max(2, _APDBase / 8.5))
 
-				craft:addScriptOnce("absolutepointdefense.lua", 0.6, true, true, _TorpDamage, _FighterDamage, 5, _MaxTargets)
+				craft:addScriptOnce("absolutepointdefense.lua", _APDValues)
 				finalDamageMultiplier = finalDamageMultiplier + 0.2
 			end
 			if specialScale >= 500 then

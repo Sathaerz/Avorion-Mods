@@ -363,9 +363,9 @@ end
 
 function onBoosterHealerEnemyGenerated(_Generated)
     onPiratesGenerated(_Generated)
-    print("adding booster + healer script to enemy.")
+    print("adding booster + args script to enemy.")
     for _, _S in pairs(_Generated) do
-        _S:addScript("allybooster.lua", {_HealWhenBoosting = true, _HealPctWhenBoosting = 33})
+        _S:addScript("allybooster.lua", {_HealWhenBoosting = true, _HealPctWhenBoosting = 33, _MaxBoostCharges = 3})
     end
 end
 

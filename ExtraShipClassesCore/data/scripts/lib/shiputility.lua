@@ -163,11 +163,7 @@ function ShipUtility.addHellcatLasers(_Craft)
     --Yeah I have no fucking clue what's going on here. Laser damage seems to be VERY dependent on # of slots for some reason????
     --So we multiply the base damage amount by the # of slots in the turret and then divide that by the # of weapons. This should keep the
     --RNG fairly consistent and not cause WILD variances (like 700k to 7 million)
-    local _Version = GameVersion()
-    local _Damage = 2900 + _Rgen:getInt(100, 450)
-    if _Version.major <= 1 then
-        _Damage = (2800 + _Rgen:getInt(1, 400)) * math.max(1, _LaserTurret.slots / 1.75)
-    end
+    local _Damage = 2800 + _Rgen:getInt(100, 450) * math.max(1, _LaserTurret.slots / 1.75)
 
     for _, _W in pairs(_LaserWeapons) do
         local hue = 182
@@ -178,7 +174,7 @@ function ShipUtility.addHellcatLasers(_Craft)
         _W.bauraWidth = 16
         _W.bwidth = 11
         _W.damage = math.max(_W.damage, _Damage / _NumWeapons)
-        _W.reach = 600
+        _W.reach = 575
         _W.blength = _W.reach
         _W.shieldDamageMultiplier = 1.0
         _W.damageType = DamageType.Energy
@@ -324,19 +320,22 @@ function ShipUtility.addVigShieldCannons(_Craft)
     local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
     local _Generator = SectorTurretGenerator(_Seed)
 
+    local ESCCUtil = include("esccutil")
+    local _Rgen = ESCCUtil.getRand()
+
     local _CannonTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.Cannon, nil)
     _CannonTurret.coaxial = false
     local _CannonWeapons = {_CannonTurret:getWeapons()}
     _CannonTurret:clearWeapons()
 
-    local _Damage = 12000 + _Rgen:getInt(100, 200)
+    local _Damage = 12000 + _Rgen:getInt(500, 1000)
 
     for _, _W in pairs(_CannonWeapons) do
         _W.damage = math.max(_W.damage, _Damage)
         _W.reach = 3800
         _W.fireDelay = 1.2
         _W.pmaximumTime = _W.reach / _W.pvelocity
-        _W.explosionRadius = math.sqrt(_W.damage * 3)
+        _W.explosionRadius = math.sqrt(_W.damage * 3.5)
 
         _CannonTurret:addWeapon(_W)
     end
@@ -410,7 +409,7 @@ function ShipUtility.addHunterRailguns(_Craft)
 
     for _, _W in pairs(_RailgunWeapons) do
         _W.damage = math.max(_W.damage, _Damage)
-        _W.reach = 12000
+        _W.reach = 11000
         _W.fireRate = _BaseFireRate / _NumWeapons
         _W.bouterColor = ColorHSV(240, 0.6, 1.0)
         _W.binnerColor = ColorHSV(240, 1.0, 1.0)
@@ -453,7 +452,7 @@ function ShipUtility.addHunterLightningGuns(_Craft)
 
     for _, _W in pairs(_LightningWeapons) do
         _W.damage = math.max(_W.damage, _Damage)
-        _W.reach = 12000
+        _W.reach = 11000
         _W.fireRate = _BaseFireRate / _NumWeapons
         _W.bouterColor = ColorHSV(240, 0.6, 1.0)
         _W.binnerColor = ColorHSV(240, 1.0, 1.0)

@@ -14,7 +14,7 @@ self._Debug = 0
 self._Data = {}
 --[[
     Some of these values are self-explanatory, but here's a guide to how this thing works:
-        _ROF                    = Time in seconds that a torpedo is fired.
+        _ROF                    = A torpedo is fired once per _ROF seconds.
         _FireCycle              = Keeps track of how much time has passed. Sets to 0 every time a torp fires.
         _TimeToActive           = Time in seconds until this script becomes active.
         _CurrentTarget          = The current target of the script
@@ -27,6 +27,23 @@ self._Data = {}
         _UseEntityDamageMult    = Multiplies the damage of the torpedoes by the attached entity's damage multiplier. Useful for overdrive or avenger enemies.
         _TargetPriority         = 1 = most firepower, 2 = by script value
         _TargetScriptValue      = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
+
+        Example:
+
+        local _TorpSlammerValues = {}
+        _TorpSlammerValues._TimeToActive = 12
+        _TorpSlammerValues._ROF = 2
+        _TorpSlammerValues._UpAdjust = false
+        _TorpSlammerValues._DamageFactor = _TorpedoFactor
+        _TorpSlammerValues._DurabilityFactor = _TorpDuraFactor
+        _TorpSlammerValues._ForwardAdjustFactor = 1
+
+        _Boss:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
+
+        Alternate example:
+
+        local TorpedoUtility = include ("torpedoutility")
+        _Boss:addScriptOnce("torpedoslammer.lua", { _ROF = 1, _TimeToActivate = 5, _PreferWarheadType = TorpedoUtility.WarheadType.EMP, _PreferBodyType = TorpedoUtility.BodyType.Hawk})
 ]]
 self._Data._ROF = nil
 self._Data._FireCycle = nil
@@ -50,6 +67,7 @@ function TorpedoSlammer.initialize(_Values)
 
     --Stuff the player can't mess with.
     self._Data._FireCycle = 0
+    self._Data._CurrentTarget = nil
 
     --Preferred warhead / body type aren't set - if they are nil, that is fine.
 
