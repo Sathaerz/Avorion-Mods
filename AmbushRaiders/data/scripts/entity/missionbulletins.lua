@@ -5,17 +5,28 @@ function MissionBulletins.getPossibleMissions()
 
 	local scripts = AmbushRaiders_getPossibleMissions()
 
-    --Everything but factories.
+    --Everything but factories, basically.
     local _Tokens = {
-        "factory",
-        "Factory",
-        "Military",
-        "Headquarters"
+        "Habitat",
+        "Research Station",
+        "Trading Post",
+        "Shipyard",
+        "Repair Dock",
+        "Smuggler's Market",
+        "Smuggler Hideout",
+        "Equipment Dock",
+        "Casino",
+        "Biotope",
+        "Fighter Factory",
+        "Resource Depot",
+        "Turret Factory",
+        "Mine",
+        "Scrapyard"
     }
-    local _Add = true
+    local _Add = false
     for _k, _v in pairs(_Tokens) do
         if string.find(stationTitle, _v) then
-            _Add = false
+            _Add = true
         end
     end
 
