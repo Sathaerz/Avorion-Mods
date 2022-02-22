@@ -9,8 +9,3 @@ TurretIngredients[WeaponType.HelixCannon] =
     {name = "Steel",                amount = 4,    investable = 15, minimum = 3,},
     {name = "Crystal",              amount = 3,    investable = 15, minimum = 1,},
 }
-
-local _Version = GameVersion()
-if _Version.major <= 1 then
-    table.insert(TurretIngredients[WeaponType.HelixCannon], {name = "Targeting System",     amount = 0,    investable = 2,  minimum = 0, turretStat = "automatic", investFactor = 1, changeType = StatChanges.Flat})
-end

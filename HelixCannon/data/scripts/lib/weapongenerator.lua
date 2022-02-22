@@ -1,5 +1,4 @@
 function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _ROF, _ACC, _COLOR, _RANGE, _VELOCITY, _SIZE, _SEED)
-    local _Version = GameVersion
     local weapon = Weapon()
     weapon:setProjectile()
 
@@ -36,6 +35,10 @@ function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, 
 
     weapon.shotsFired = 5
     weapon.damage = weapon.damage * 2 / weapon.shotsFired --These scale better than normal to make up for the truly horrible accuracy.
+
+    if rand:test(0.05) then
+        WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 1.5, 0.1, 0.15)     
+    end
 
     WeaponGenerator.adaptWeapon(rand, weapon, tech, material, rarity)
 

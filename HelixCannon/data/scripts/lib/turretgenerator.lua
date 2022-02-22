@@ -13,13 +13,7 @@ possibleSpecialties[WeaponType.HelixCannon] = {
     {specialty = Specialty.HighFireRate, probability = 0.1}
 }
 
-local _Version = GameVersion()
-if _Version.major <= 1 then
-    table.insert(possibleSpecialties[WeaponType.HelixCannon], {specialty = Specialty.AutomaticFire, probability = 0.05})
-end
-
 function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, rarity)
-    local _Version = GameVersion()
     local result = TurretTemplate()
 
     -- generate turret
@@ -63,25 +57,15 @@ function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, ra
     TurretGenerator.scale(rand, result, WeaponType.HelixCannon, tech, 0.7)
     local specialties = TurretGenerator.addSpecialties(rand, result, WeaponType.HelixCannon)
 
-    if _Version.major > 1 then
-        result.slotType = TurretSlotType.Armed
-    end
+    result.slotType = TurretSlotType.Armed
 
     result:updateStaticStats()
 
-    if _Version.major > 1 then
-        local name = "Helix Cannon"
+    local name = "Helix Cannon"
 
-        local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
-        --/* [outer-adjective][coax][dmg-adjective][name][serial], e.g. Enduring Dual Coaxial E-Tri-Plasma Cannon T-F */
-        result.title = Format("%1%%2%%3%%4%%5%", outerAdjective, coax, dmgAdjective, name, serial)
-    else
-        if result.coaxial then
-            result.title = "Coaxial Helix Cannon Turret"
-        else
-            result.title = "Helix Cannon Turret"
-        end
-    end
+    local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
+    --/* [outer-adjective][coax][dmg-adjective][name][serial], e.g. Enduring Dual Coaxial E-Tri-Plasma Cannon T-F */
+    result.title = Format("%1%%2%%3%%4%%5%", outerAdjective, coax, dmgAdjective, name, serial)
 
     return result
 end
