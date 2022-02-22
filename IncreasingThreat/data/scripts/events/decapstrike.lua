@@ -369,8 +369,11 @@ if onServer() then
         DecapStrike.Log(_MethodName, "running decap strike update")
         if not DecapStrike.attackersGenerated then return end
 
+        local _PiratesInSector = {Sector():getEntitiesByFaction(piratefaction)}
+        local _PiratesInSectorCt = #_PiratesInSector
+
         local noShips = tablelength(ships)
-        if noShips < 25 then
+        if noShips < 25 and _PiratesInSectorCt < 40 then
             local pirateBatch = {}
             if remaining_executioners > 0 then
                 table.insert(pirateBatch, "Executioner")

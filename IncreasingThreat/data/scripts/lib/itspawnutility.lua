@@ -61,7 +61,7 @@ function ITSpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
 
                 local _TitleArgs = _Ships[_Shipidx]:getTitleArguments()
                 if _TitleArgs then 
-                    _Ship:setTitle("${script} " .. _Ship.title, {toughness = _TitleArgs.toughness, script = _ScriptToAdd._Arg})
+                    _Ship:setTitle("${script} ${toughness}${title}", { toughness = _TitleArgs.toughness, script = _ScriptToAdd._Arg, title = _TitleArgs.title })
                 else
                     _Ship.title = _ScriptToAdd._Arg .. " " .. _Ship.title
                 end

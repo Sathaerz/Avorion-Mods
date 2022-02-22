@@ -273,13 +273,16 @@ if onServer() then
             end
         end
 
+        local _PiratesInSector = {Sector():getEntitiesByFaction(piratefaction)}
+        local _PiratesInSectorCt = #_PiratesInSector
+
         local maxShips = 4
         if hateCountdownTimerFinishedThisUpdate then
             maxShips = 10
         end
         if #pirate_reserves > 0 then
             local noShips = tablelength(ships)
-            if noShips < 25 then
+            if noShips < 25 and _PiratesInSectorCt < 40 then
                 --start spawning in more ships. Don't spawn them more than 4-5 at a time.
                 local shipsToSpawn = 25 - noShips
 

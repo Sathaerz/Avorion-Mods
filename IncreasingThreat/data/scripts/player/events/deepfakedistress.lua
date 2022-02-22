@@ -160,7 +160,9 @@ if onServer() then
 
     function updateServer(timeStep)
 
-        local x, y = Sector():getCoordinates()
+        local _Sector = Sector()
+
+        local x, y = _Sector:getCoordinates()
         if x == target.x and y == target.y then
             if allGenerated then
                 updatePresentShips()
@@ -168,13 +170,16 @@ if onServer() then
                 local piratesLeft = tablelength(pirates)
                 local tradersLeft = tablelength(traders)
 
-                if triggeredambush and groups_remaining > 0 then
+                local _PiratesInSector = {Sector():getEntitiesByFaction(piratefaction)}
+                local _PiratesInSectorCt = #_PiratesInSector
+
+                if triggeredambush and groups_remaining > 0 and _PiratesInSectorCt < 40 then
                     --Spawn another 4-5 ships in. Use the hatred table that the player has accrued.
                     local hatredTable = ITUtil.getHatredTable(hatredlevel)
                     local hatredShips = math.random(4, 5)
                     local pirateBatch = {}
                     local pirateGenerator = AsyncPirateGenerator(nil, onPiratesFinished)
-                    local _Distance = 200
+                    local _Distance = 200 --_#DistAdj
 
                     --Figure out if HET is enabled.
                     local _ActiveMods = Mods()

@@ -223,7 +223,7 @@ function Informant.hireInformant(shipIndex)
     local _VisibleToidx = "_ITTraits_VisibleTo_" .. tostring(player.index)
     targetPirates:setValue(_VisibleToidx, true)
 
-    player:invokeFunction("data/scripts/player/background/informantmails.lua", "onInformantHired", targetPirates.index)
+    player:invokeFunction("data/scripts/player/background/increasingthreatmails.lua", "onInformantHired", targetPirates.index)
 
     -- sync
     invokeClientFunction(player, "onShowWindow")
