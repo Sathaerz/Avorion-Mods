@@ -11,13 +11,7 @@ possibleSpecialties[WeaponType.ShortRangeMissile] = {
     {specialty = Specialty.HighRange, probability = 0.1},
 }
 
-local _Version = GameVersion()
-if _Version.major <= 1 then
-    table.insert(possibleSpecialties[WeaponType.ShortRangeMissile], {specialty = Specialty.AutomaticFire, probability = 0.05})
-end
-
 function TurretGenerator.generateShortRangeMissileTurret(rand, dps, tech, material, rarity)
-    local _Version = GameVersion()
     local result = TurretTemplate()
 
     -- generate turret
@@ -47,38 +41,34 @@ function TurretGenerator.generateShortRangeMissileTurret(rand, dps, tech, materi
         result:addWeapon(weapon)
     end
 
-    local shootingTime = 1.5 * rand:getFloat(0.8, 1.2) --Standard rocket launcher is 20
-    local coolingTime = 9 * rand:getFloat(0.8, 1.2) --Standard rocket launcher is 15
+    local shootingTime = 3 * rand:getFloat(0.8, 1.2) --Standard rocket launcher is 20
+    local coolingTime = 4 * rand:getFloat(0.8, 1.2) --Standard rocket launcher is 15
     TurretGenerator.createStandardCooling(result, coolingTime, shootingTime)
 
     TurretGenerator.scale(rand, result, WeaponType.ShortRangeMissile, tech, 0.6)
     local specialties = TurretGenerator.addSpecialties(rand, result, WeaponType.ShortRangeMissile)
 
-    if _Version.major > 1 then
-        result.slotType = TurretSlotType.Armed
-    end
+    result.slotType = TurretSlotType.Armed
 
     result:updateStaticStats()
 
-    if _Version.major > 1 then
-        local name = "SRM Launcher"
+    local name = "SRM Launcher"
 
-        if result.slots == 3 then 
-            name = "SRM Battery"
-        elseif result.slots == 4 then
-            name = "SRM Phalanx"
-        end
-
-        if specialties[Specialty.HighDamage] and specialties[Specialty.HighRange] then
-            name = "Streak SRM Launcher"
-            specialties[Specialty.HighDamage] = nil
-            specialties[Specialty.HighRange] = nil
-        end
-
-        local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Physical)
-        --/* [outer-adjective][barrel][coax][dmg-adjective][multishot][name][serial], e.g. Enduring Dual Coaxial Anti-Tri-Missile Battery T-F */
-        result.title = Format("%1%%2%%3%%4%%5%%6%%7%", outerAdjective, barrel, coax, dmgAdjective, multishot, name, serial)
+    if result.slots == 3 then 
+        name = "SRM Battery"
+    elseif result.slots == 4 then
+        name = "SRM Phalanx"
     end
+
+    if specialties[Specialty.HighDamage] and specialties[Specialty.HighRange] then
+        name = "Streak " .. name
+        specialties[Specialty.HighDamage] = nil
+        specialties[Specialty.HighRange] = nil
+    end
+
+    local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Physical)
+    --/* [outer-adjective][barrel][coax][dmg-adjective][multishot][name][serial], e.g. Enduring Dual Coaxial Anti-Tri-Missile Battery T-F */
+    result.title = Format("%1%%2%%3%%4%%5%%6%%7%", outerAdjective, barrel, coax, dmgAdjective, multishot, name, serial)
 
     return result
 end

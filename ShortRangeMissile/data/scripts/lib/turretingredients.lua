@@ -8,8 +8,3 @@ TurretIngredients[WeaponType.ShortRangeMissile] =
     {name = "Steel",                amount = 8,    investable = 10, minimum = 3,},
     {name = "Wire",                 amount = 5,    investable = 10, minimum = 3,},
 }
-
-local _Version = GameVersion()
-if _Version.major <= 1 then
-    table.insert(TurretIngredients[WeaponType.ShortRangeMissile], {name = "Targeting System",     amount = 0,    investable = 2,  minimum = 0, turretStat = "automatic", investFactor = 1, changeType = StatChanges.Flat})
-end
