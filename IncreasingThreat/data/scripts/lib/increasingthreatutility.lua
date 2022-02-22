@@ -3,6 +3,10 @@ package.path = package.path .. ";data/scripts/?.lua"
 
 include ("faction")
 
+local _LGDist = 250 --_#DistADj
+local _XLGDist = 300 --Give room for Pillagers to move.
+local _XXLGDist = 350 --Give room for the Devastator to move.
+
 --General rule of thumb -- "shipTable" gives a list of ships to spawn. spawnTable gives a list of ships that it is possible to spawn.
 local pirate_attackTypes = {
     {minHatred = 0, minNotoriety = 0, minChallenge = 0, maxChallenge = 15, reward = 1.0, strength = 3.5, shipTable = {"Pirate", "Bandit", "Bandit"}},
@@ -16,20 +20,20 @@ local pirate_attackTypes = {
     {minHatred = 0, minNotoriety = 0, minChallenge = 50, maxChallenge = 95, reward = 3.0, strength = 10.5, shipTable = {"Ravager", "Bandit", "Pirate"}}, --end of +0.5 tier
     {minHatred = 0, minNotoriety = 0, minChallenge = 60, maxChallenge = 105, reward = 3.35, strength = 12, shipTable = {"Raider", "Marauder", "Disruptor", "Marauder", "Marauder"}}, --start of +0.35 tier
     {minHatred = 0, minNotoriety = 0, minChallenge = 70, maxChallenge = 115, reward = 3.35, strength = 12, shipTable = {"Ravager", "Marauder", "Disruptor"}},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 80, maxChallenge = 125, reward = 3.7, strength = 14, shipTable = {"Prowler", "Bandit", "Bandit"}, dist = 200},
+    {minHatred = 0, minNotoriety = 0, minChallenge = 80, maxChallenge = 125, reward = 3.7, strength = 14, shipTable = {"Prowler", "Bandit", "Bandit"}, dist = _LGDist},
     {minHatred = 0, minNotoriety = 0, minChallenge = 90, maxChallenge = 135, reward = 3.7, strength = 16, shipTable = {"Raider", "Raider", "Raider", "Marauder", "Marauder"}},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 100, maxChallenge = 150, reward = 4.05, strength = 16, shipTable = {"Prowler", "Marauder", "Disruptor"}, dist = 200},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 120, maxChallenge = 170, reward = 4.05, strength = 18, shipTable = {"Prowler", "Pirate", "Pirate", "Pirate", "Pirate"}, dist = 200},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 140, maxChallenge = 190, reward = 4.4, strength = 20, shipTable = {"Prowler", "Marauder", "Disruptor", "Marauder", "Marauder"}, dist = 200},
+    {minHatred = 0, minNotoriety = 0, minChallenge = 100, maxChallenge = 150, reward = 4.05, strength = 16, shipTable = {"Prowler", "Marauder", "Disruptor"}, dist = _LGDist},
+    {minHatred = 0, minNotoriety = 0, minChallenge = 120, maxChallenge = 170, reward = 4.05, strength = 18, shipTable = {"Prowler", "Pirate", "Pirate", "Pirate", "Pirate"}, dist = _LGDist},
+    {minHatred = 0, minNotoriety = 0, minChallenge = 140, maxChallenge = 190, reward = 4.4, strength = 20, shipTable = {"Prowler", "Marauder", "Disruptor", "Marauder", "Marauder"}, dist = _LGDist},
     {minHatred = 0, minNotoriety = 0, minChallenge = 160, maxChallenge = 210, reward = 4.4, strength = 20, shipTable = {"Ravager", "Ravager", "Marauder", "Marauder"}},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 180, maxChallenge = 230, reward = 4.75, strength = 22, shipTable = {"Prowler", "Ravager", "Bandit", "Bandit"}, dist = 200}, --end of +0.35 tier
-    {minHatred = 0, minNotoriety = 0, minChallenge = 200, maxChallenge = 240, reward = 4.95, strength = 24, shipTable = {"Pillager", "Disruptor", "Marauder", "Marauder"}, dist = 250}, --start of +0.2 tier
-    {minHatred = 0, minNotoriety = 0, minChallenge = 220, maxChallenge = 250, reward = 4.95, strength = 26, shipTable = {"Pillager", "Disruptor", "Marauder", "Raider"}, dist = 250},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 240, maxChallenge = 260, reward = 5.15, strength = 26, shipTable = {"Prowler", "Prowler", "Bandit", "Bandit"}, dist = 200},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 260, maxChallenge = -1, reward = 5.15, strength = 28, shipTable = {"Pillager", "Ravager", "Raider"}, dist = 200},
+    {minHatred = 0, minNotoriety = 0, minChallenge = 180, maxChallenge = 230, reward = 4.75, strength = 22, shipTable = {"Prowler", "Ravager", "Bandit", "Bandit"}, dist = _LGDist}, --end of +0.35 tier
+    {minHatred = 0, minNotoriety = 0, minChallenge = 200, maxChallenge = 240, reward = 4.95, strength = 24, shipTable = {"Pillager", "Disruptor", "Marauder", "Marauder"}, dist = _XLGDist}, --start of +0.2 tier
+    {minHatred = 0, minNotoriety = 0, minChallenge = 220, maxChallenge = 250, reward = 4.95, strength = 26, shipTable = {"Pillager", "Disruptor", "Marauder", "Raider"}, dist = _XLGDist},
+    {minHatred = 0, minNotoriety = 0, minChallenge = 240, maxChallenge = 260, reward = 5.15, strength = 26, shipTable = {"Prowler", "Prowler", "Bandit", "Bandit"}, dist = _LGDist},
+    {minHatred = 0, minNotoriety = 0, minChallenge = 260, maxChallenge = -1, reward = 5.15, strength = 28, shipTable = {"Pillager", "Ravager", "Raider"}, dist = _LGDist},
     {minHatred = 0, minNotoriety = 0, minChallenge = 280, maxChallenge = -1, reward = 5.35, strength = 30, shipTable = {"Ravager", "Ravager", "Ravager", "Disruptor", "Raider"}},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 300, maxChallenge = -1, reward = 5.35, strength = 30, shipTable = {"Prowler", "Prowler", "Marauder", "Marauder", "Marauder"}, dist = 200},
-    {minHatred = 0, minNotoriety = 0, minChallenge = 320, maxChallenge = -1, reward = 5.55, strength = 32, shipTable = {"Devastator", "Marauder", "Disruptor"}, dist = 300}
+    {minHatred = 0, minNotoriety = 0, minChallenge = 300, maxChallenge = -1, reward = 5.35, strength = 30, shipTable = {"Prowler", "Prowler", "Marauder", "Marauder", "Marauder"}, dist = _LGDist},
+    {minHatred = 0, minNotoriety = 0, minChallenge = 320, maxChallenge = -1, reward = 5.55, strength = 32, shipTable = {"Devastator", "Marauder", "Disruptor"}, dist = _XXLGDist}
 }
 local hatred_attackTypes = {
     { maxHatred = 400, spawnTable = { "Marauder", "Marauder", "Marauder", "Marauder", "Disruptor", "Disruptor", "Raider", "Raider", "Ravager", "Ravager" } },

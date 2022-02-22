@@ -1,7 +1,6 @@
 ESCCUtil = include("esccutil")
 
 local ITUtil = include("increasingthreatutility")
-local ITSpawnUtility = include("itspawnutility")
 
 local piratefaction = nil
 local shipscalevalue = 0
@@ -146,7 +145,7 @@ if onServer() then
 
         local attackType = ITUtil.getFixedStandardTable(challengeRating, highestHatred, highestNotoriety)
         -- create attacking ships
-        local distance = attackType.dist or 100
+        local distance = attackType.dist or 200 --_#DistADj
         local hasJammer = false
         local attackShipTable = {}
         for _, _Ship in pairs(attackType.shipTable) do
@@ -218,7 +217,7 @@ if onServer() then
         -- add enemy buffs
         SpawnUtility.addEnemyBuffs(generated) --Covered IT Extra Scripts
         local _WilyTrait = piratefaction:getTrait("wily") or 0
-        ITSpawnUtility.addITEnemyBuffs(generated, _WilyTrait, _HatredLevel)
+        SpawnUtility.addITEnemyBuffs(generated, _WilyTrait, _HatredLevel)
     
         -- resolve intersections between generated ships
         Placer.resolveIntersections(generated)

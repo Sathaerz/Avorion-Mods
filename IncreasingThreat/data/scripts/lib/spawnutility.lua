@@ -1,8 +1,3 @@
-package.path = package.path .. ";data/scripts/lib/?.lua"
-include("stringutility")
-include("utility")
-include("randomext")
-
 ESCCUtil = include("esccutil")
 
 local _ScriptValues = {
@@ -15,16 +10,12 @@ local _ScriptValues = {
     { _Script = "avenger.lua", _Arg = "Avenger" }
 }
 
--- namespace ITSpawnUtility
-local ITSpawnUtility = {}
-local self = ITSpawnUtility
+SpawnUtility._Debug = 0
 
-self._Debug = 0
-
-function ITSpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
+function SpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
     local _MethodName = "Add IT Enemy Buffs"
     if _WilyTrait < 0.25 or _HatredLevel <= 700 then
-        self.Log(_MethodName, "Wily trait (" .. tostring(_WilyTrait) .. ") not a significant value OR pirates don't hate player (" .. tostring(_HatredLevel) .. ") enough... returning.")
+        SpawnUtility.Log(_MethodName, "Wily trait (" .. tostring(_WilyTrait) .. ") not a significant value OR pirates don't hate player (" .. tostring(_HatredLevel) .. ") enough... returning.")
         return
     end
     
@@ -32,7 +23,7 @@ function ITSpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
     local _AddScriptDenominator = 3
     local _Denominator = 500
     if _WilyTrait >= 0.75 then
-        self.Log(_MethodName, "Pirate wily trait >= 0.75 - setting extra script denominator to 350.")
+        SpawnUtility.Log(_MethodName, "Pirate wily trait >= 0.75 - setting extra script denominator to 350.")
         _Denominator = 350
     end
 
@@ -43,14 +34,14 @@ function ITSpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
         _AddScriptDenominator = 2
     end
 
-    self.Log(_MethodName, "Accrued " .. tostring(_Rolls) .. " rolls for extra scripts.")
+    SpawnUtility.Log(_MethodName, "Accrued " .. tostring(_Rolls) .. " rolls for extra scripts.")
     local _Rgen = ESCCUtil.getRand()
     local _Shipidx = 1
     for _ = 1, _Rolls do
-        self.Log(_MethodName, "Doing roll " .. tostring(_) .. " of " .. tostring(_Rolls))
+        SpawnUtility.Log(_MethodName, "Doing roll " .. tostring(_) .. " of " .. tostring(_Rolls))
         if _Rgen:getInt(1, _AddScriptDenominator) == 1 then
             local _ScriptToAdd = _ScriptValues[_Rgen:getInt(1, #_ScriptValues)]
-            self.Log(_MethodName, "Roll succeeded - adding script " .. tostring(_ScriptToAdd))
+            SpawnUtility.Log(_MethodName, "Roll succeeded - adding script " .. tostring(_ScriptToAdd))
 
             local _Ship = _Ships[_Shipidx]
             _Ship:addScriptOnce(_ScriptToAdd._Script)
@@ -75,10 +66,8 @@ function ITSpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
     end
 end
 
-function ITSpawnUtility.Log(_MethodName, _Msg)
-    if self._Debug == 1 then
-        print("[IT Spawn Utility] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
+function SpawnUtility.Log(_MethodName, _Msg)
+    if SpawnUtility._Debug == 1 then
+        print("[Spawn Utility] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end
-
-return ITSpawnUtility

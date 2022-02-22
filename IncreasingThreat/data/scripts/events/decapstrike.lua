@@ -12,7 +12,6 @@ ESCCUtil = include("esccutil")
 local Placer = include ("placer")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local SpawnUtility = include ("spawnutility")
-local ITSpawnUtility = include("itspawnutility")
 local EventUT = include ("eventutility")
 local ITUtil = include("increasingthreatutility")
 
@@ -304,7 +303,7 @@ if onServer() then
         -- add enemy buffs
         SpawnUtility.addEnemyBuffs(generated) --Covered IT Extra Scripts
         local _WilyTrait = piratefaction:getTrait("wily") or 0
-        ITSpawnUtility.addITEnemyBuffs(generated, _WilyTrait, decapHatredLevel)
+        SpawnUtility.addITEnemyBuffs(generated, _WilyTrait, decapHatredLevel)
 
         for _, ship in pairs(generated) do
             if valid(ship) then -- this check is necessary because ships could get destroyed before this callback is executed
@@ -331,7 +330,7 @@ if onServer() then
         -- add enemy buffs
         SpawnUtility.addEnemyBuffs(generated) --Covered IT Extra Scripts
         local _WilyTrait = piratefaction:getTrait("wily") or 0
-        ITSpawnUtility.addITEnemyBuffs(generated, _WilyTrait, decapHatredLevel)
+        SpawnUtility.addITEnemyBuffs(generated, _WilyTrait, decapHatredLevel)
 
         for _, ship in pairs(generated) do
             if valid(ship) then -- this check is necessary because ships could get destroyed before this callback is executed

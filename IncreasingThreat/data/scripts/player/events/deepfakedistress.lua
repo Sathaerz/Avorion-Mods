@@ -10,7 +10,6 @@ local AsyncPirateGenerator = include ("asyncpirategenerator")
 local AsyncShipGenerator = include ("asyncshipgenerator")
 local SectorSpecifics = include ("sectorspecifics")
 local SpawnUtility = include ("spawnutility")
-local ITSpawnUtility = include("itspawnutility")
 local ITUtil = include ("increasingthreatutility")
 
 local target = nil
@@ -424,7 +423,7 @@ if onServer() then
         -- add enemy buffs
         SpawnUtility.addEnemyBuffs(ships) --Covered IT Extra Scripts
         local _WilyTrait = piratefaction:getTrait("wily") or 0
-        ITSpawnUtility.addITEnemyBuffs(ships, _WilyTrait, hatredlevel)
+        SpawnUtility.addITEnemyBuffs(ships, _WilyTrait, hatredlevel)
 
         for _, ship in pairs(ships) do
             ship:setValue("_increasingthreat_deepfake_powerup", ship.damageMultiplier)

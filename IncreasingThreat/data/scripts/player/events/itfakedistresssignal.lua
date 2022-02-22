@@ -12,7 +12,6 @@ ESCCBoss = include("esccbossutil")
 local PirateGenerator = include ("pirategenerator")
 local SectorSpecifics = include ("sectorspecifics")
 local SpawnUtility = include ("spawnutility")
-local ITSpawnUtility = include("itspawnutility")
 local ITUtil = include("increasingthreatutility")
 
 local target = nil
@@ -171,7 +170,7 @@ function onSectorEntered(player, x, y)
     -- add enemy buffs
     SpawnUtility.addEnemyBuffs(pirates) --Covered IT Extra Scripts
     local _Wily = _PirateFaction:getTrait("wily") or 0
-    ITSpawnUtility.addITEnemyBuffs(pirates, _Wily, _HatredLevel)
+    SpawnUtility.addITEnemyBuffs(pirates, _Wily, _HatredLevel)
 
     terminate()
 end
