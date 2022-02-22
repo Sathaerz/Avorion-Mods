@@ -1,1 +1,1 @@
-valueWeights[WeaponType.HelixCannon] = 1.25
+valueWeights[WeaponType.HelixCannon] = 1.15

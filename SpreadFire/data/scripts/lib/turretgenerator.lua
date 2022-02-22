@@ -13,13 +13,7 @@ possibleSpecialties[WeaponType.SpreadFire] = {
     {specialty = Specialty.HighFireRate, probability = 0.1}
 }
 
-local _Version = GameVersion()
-if _Version.major <= 1 then
-    table.insert(possibleSpecialties[WeaponType.SpreadFire], {specialty = Specialty.AutomaticFire, probability = 0.05})
-end
-
 function TurretGenerator.generateSpreadFireTurret(rand, dps, tech, material, rarity)
-    local _Version = GameVersion()
     local result = TurretTemplate()
 
     -- generate turret
@@ -56,25 +50,15 @@ function TurretGenerator.generateSpreadFireTurret(rand, dps, tech, material, rar
     TurretGenerator.scale(rand, result, WeaponType.SpreadFire, tech, 0.7)
     local specialties = TurretGenerator.addSpecialties(rand, result, WeaponType.SpreadFire)
 
-    if _Version.major > 1 then
-        result.slotType = TurretSlotType.Armed
-    end
+    result.slotType = TurretSlotType.Armed
 
     result:updateStaticStats()
 
-    if _Version.major > 1 then
-        local name = "Spreadfire Cannon"
+    local name = "Spreadfire Cannon"
 
-        local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
-        --/* [outer-adjective][coax][dmg-adjective][name][serial], e.g. Enduring Dual Coaxial E-Tri-Plasma Cannon T-F */
-        result.title = Format("%1%%2%%3%%4%%5%", outerAdjective, coax, dmgAdjective, name, serial)
-    else
-        if result.coaxial then
-            result.title = "Coaxial Spreadfire Cannon Turret"
-        else
-            result.title = "Spreadfire Cannon Turret"
-        end
-    end
+    local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
+    --/* [outer-adjective][coax][dmg-adjective][name][serial], e.g. Enduring Dual Coaxial E-Tri-Plasma Cannon T-F */
+    result.title = Format("%1%%2%%3%%4%%5%", outerAdjective, coax, dmgAdjective, name, serial)
 
     return result
 end

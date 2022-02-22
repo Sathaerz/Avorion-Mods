@@ -35,6 +35,11 @@ function WeaponGenerator.generateSpreadFire(rand, dps, tech, material, rarity, _
     weapon.shotsFired = 3
     weapon.damage = weapon.damage * 1.5 / weapon.shotsFired
 
+    --5% chance for plasma damage.
+    if rand:test(0.05) then
+        WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 2, 0.15, 0.2)     
+    end
+
     WeaponGenerator.adaptWeapon(rand, weapon, tech, material, rarity)
 
     weapon.recoil = weapon.damage * 4
