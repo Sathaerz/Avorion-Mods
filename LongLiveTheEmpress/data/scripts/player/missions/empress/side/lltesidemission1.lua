@@ -223,9 +223,9 @@ function spawnPirateWave()
 
     local posCounter = 1
     local distance = 100
-    --150 distance allows for Devastators to move comfortably.
+    --200 distance allows for Devastators to move comfortably.
     if mission.data.custom.dangerLevel == 10 then
-        distance = 150
+        distance = 200 --_#DistAdj
     end
     local pirate_positions = generator:getStandardPositions(#waveTable, distance)
     for _, p in pairs(waveTable) do

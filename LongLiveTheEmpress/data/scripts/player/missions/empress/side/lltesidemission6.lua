@@ -409,7 +409,7 @@ function spawnSecondPirateWave()
     _Generator:startBatch()
 
     local posCounter = 1
-    local distance = 150
+    local distance = 200 --_#DistAdj
 
     local pirate_positions = _Generator:getStandardPositions(#_PirateTable, distance)
     for _, _P in pairs(_PirateTable) do

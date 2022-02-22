@@ -3,11 +3,6 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 include("stringutility")
 include("callable")
 
---Add debug info last.
-local WRELog = include("esccdebuglogging")
-WRELog.Debugging = 0
-WRELog.ModName = "LLTE Side Mission 5 - Search Wreckage"
-
 -- if this function returns false, the script will not be listed in the interaction window,
 -- even though its UI may be registered
 function interactionPossible(playerIndex)

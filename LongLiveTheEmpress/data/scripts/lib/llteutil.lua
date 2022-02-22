@@ -1,20 +1,19 @@
 ESCCUtil = include("esccutil")
 
 local ShipUtility = include ("shiputility")
-
---Add debug info.
-local LEULog = include("esccdebuglogging")
-LEULog.Debugging = 0
-LEULog.ModName = "Long Live The Empress Utility"
+local MissionUT = include("missionutility")
+local PirateGenerator = include("pirategenerator")
 
 local LLTEUtil = {}
 local self = LLTEUtil
+
+LLTEUtil._Debug = 0
 
 --region #NAME GENERATION
 
 function LLTEUtil.getFreighterName()
     local _MethodName = "Get Freighter Name"
-    LEULog.Debug(_MethodName, "Beginning...")
+    LLTEUtil.Log(_MethodName, "Beginning...")
 
     local _Prefix = {
         "Ammo",
@@ -91,7 +90,7 @@ end
 
 function LLTEUtil.getCapitalShipName()
     local _MethodName = "Get Capital Ship Name"
-    LEULog.Debug(_MethodName, "Beginning...")
+    LLTEUtil.Log(_MethodName, "Beginning...")
 
     local _Prefix = {
         "Advance and",
@@ -1341,7 +1340,7 @@ end
 
 function LLTEUtil.getAlienName()
     local _MethodName = "Get Alien Name"
-    LEULog.Debug(_MethodName, "Beginning...")
+    LLTEUtil.Log(_MethodName, "Beginning...")
 
     local _Rgen = ESCCUtil.getRand()
     local _Language = Language(Seed(_Rgen:getFloat(0.0, 1000000.0)))
@@ -1354,7 +1353,7 @@ end
 --Should be a 50/50 shot of getting an alien or human name. Comes with a gender because polishing dialogues is worth it.
 function LLTEUtil.getRandomName(_A, _H)
     local _MethodName = "Get Random Name"
-    LEULog.Debug(_MethodName, "Beginning...")
+    LLTEUtil.Log(_MethodName, "Beginning...")
 
     _A = _A or true
     _H = _H or true
@@ -1363,14 +1362,14 @@ function LLTEUtil.getRandomName(_A, _H)
     local _NameTable = {}
     if _A then
         table.insert(_NameTable, self.getAlienName())
-        LEULog.Debug(_MethodName, "Name Table has " .. tostring(#_NameTable) .. " entries")
+        LLTEUtil.Log(_MethodName, "Name Table has " .. tostring(#_NameTable) .. " entries")
     end
     if _H then
         local _HumanNames = self.getHumanNameTable()
         table.insert(_NameTable, _HumanNames[_Rgen:getInt(1, #_HumanNames)])
-        LEULog.Debug(_MethodName, "Name Table has " .. tostring(#_NameTable) .. " entries")
+        LLTEUtil.Log(_MethodName, "Name Table has " .. tostring(#_NameTable) .. " entries")
     end
-    LEULog.Debug(_MethodName, "Number of names in the main name table is: " .. tostring(#_NameTable))
+    LLTEUtil.Log(_MethodName, "Number of names in the main name table is: " .. tostring(#_NameTable))
 
     local _Name = _NameTable[_Rgen:getInt(1, #_NameTable)]
     _Name.pn1 = "they"
@@ -1410,7 +1409,7 @@ end
 --An incredibly strong capital ship that uses a predetermined plan. Cannot be dropped below 2% HP. Withdraws at 15% HP.
 function LLTEUtil.spawnBladeOfEmpress(_DeleteOnLeft)
     local _MethodName = "Spawn the Blade of the Empress"
-    LEULog.Debug(_MethodName, "Beginning...")
+    LLTEUtil.Log(_MethodName, "Beginning...")
 
     local _Faction =  Galaxy():findFaction("The Cavaliers")
     if not _Faction then
@@ -1419,10 +1418,6 @@ function LLTEUtil.spawnBladeOfEmpress(_DeleteOnLeft)
     end
     local _Plan = LoadPlanFromFile("data/plans/cavaliersboss.xml")
     local _Scale = 3.5
-
-    local ShipUtility = include("shiputility")
-    local MissionUT = include("missionutility")
-    local PirateGenerator = include("pirategenerator")
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
@@ -1457,10 +1452,10 @@ function LLTEUtil.spawnBladeOfEmpress(_DeleteOnLeft)
     _EmpressBlade.dockable = false
 
     if _DeleteOnLeft then
-        LEULog.Debug(_MethodName, "Deleting entity on player leaving...")
+        LLTEUtil.Log(_MethodName, "Deleting entity on player leaving...")
         MissionUT.deleteOnPlayersLeft(_EmpressBlade)
     else
-        LEULog.Debug(_MethodName, "Entity will not be deleted on player leaving.")
+        LLTEUtil.Log(_MethodName, "Entity will not be deleted on player leaving.")
     end
     return _EmpressBlade
 end
@@ -1468,7 +1463,7 @@ end
 --An extremely strong capital ship that uses a predetermined plan instead of the randomly genreated ones.
 function LLTEUtil.spawnCavalierSupercap(_DeleteOnLeft)
     local _MethodName = "Spawn Cavaliers Supercap"
-    LEULog.Debug(_MethodName, "Beginning...")
+    LLTEUtil.Log(_MethodName, "Beginning...")
 
     local _Faction =  Galaxy():findFaction("The Cavaliers")
     if not _Faction then
@@ -1478,10 +1473,6 @@ function LLTEUtil.spawnCavalierSupercap(_DeleteOnLeft)
 
     local _Plan = LoadPlanFromFile("data/plans/cavaliersboss.xml")
     local _Scale = 2.2
-
-    local ShipUtility = include("shiputility")
-    local MissionUT = include("missionutility")
-    local PirateGenerator = include("pirategenerator")
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
@@ -1512,10 +1503,10 @@ function LLTEUtil.spawnCavalierSupercap(_DeleteOnLeft)
     _SuperCap.dockable = false
 
     if _DeleteOnLeft then
-        LEULog.Debug(_MethodName, "Deleting entity on player leaving...")
+        LLTEUtil.Log(_MethodName, "Deleting entity on player leaving...")
         MissionUT.deleteOnPlayersLeft(_SuperCap)
     else
-        LEULog.Debug(_MethodName, "Entity will not be deleted on player leaving.")
+        LLTEUtil.Log(_MethodName, "Entity will not be deleted on player leaving.")
     end
     return _SuperCap
 end
@@ -1523,7 +1514,7 @@ end
 --A boss pirate enemy :D
 function LLTEUtil.spawnAnimosity(_PirateLevel, _AddLoot)
     local _MethodName = "Spawn Animosity"
-    LEULog.Debug(_MethodName, "Beginning...")
+    LLTEUtil.Log(_MethodName, "Beginning...")
 
     local _Faction = Galaxy():getPirateFaction(_PirateLevel)
     if not _Faction then
@@ -1533,9 +1524,6 @@ function LLTEUtil.spawnAnimosity(_PirateLevel, _AddLoot)
 
     local _Plan = LoadPlanFromFile("data/plans/animosity.xml")
     local _Scale = 2
-
-    local PirateGenerator = include("pirategenerator")
-    local ShipUtility = include("shiputility")
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
@@ -1748,5 +1736,20 @@ function LLTEUtil.getSpecialRailguns()
     
     return InventoryTurret(_Turret)
 end
+
+--region #LOGGING
+
+function LLTEUtil.Log(_MethodName, _Msg, _OverrideDebug)
+    local _LocalDebug = LLTEUtil._Debug or 0
+    if _OverrideDebug == 1 then
+        _LocalDebug = 1
+    end
+
+    if _LocalDebug == 1 then
+        print("[LLTE Utility] - [" .. _MethodName .. "] - " .. _Msg)
+    end
+end
+
+--endregion
 
 return LLTEUtil
