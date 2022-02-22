@@ -413,7 +413,7 @@ function spawnBackgroundPirates()
     local _AlphaSpawnTable = getWingSpawnTables("_escortcivilians_alpha_wing")
     local generator = AsyncPirateGenerator(nil, onAlphaBackgroundPiratesFinished)
 
-    local distance = 150
+    local distance = 200 --_#DistAdj
 
     generator:startBatch()
 
