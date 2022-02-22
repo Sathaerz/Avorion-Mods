@@ -24,8 +24,8 @@ mission._Tag = "wreckinghavoc_invalidredemption"
 --region #INIT
 
 --Standard mission data.
-mission.data.brief = "Wrecking Havoc"
-mission.data.title = "Wrecking Havoc"
+mission.data.brief = mission._Name
+mission.data.title = mission._Name
 mission.data.icon = "data/textures/icons/scrap-metal.png"
 mission.data.description = {
     "", --Placeholder
@@ -210,7 +210,9 @@ mission.makeBulletin = function(_Station)
     local bulletin =
     {
         -- data for the bulletin board
-        brief = "Wrecking Havoc",
+        brief = mission.data.brief,
+        title = mission.data.title,
+        icon = mission.data.icon,
         description = _Description,
         difficulty = "Variable", --Depends on how you get the wreckages.
         reward = "Variable",
