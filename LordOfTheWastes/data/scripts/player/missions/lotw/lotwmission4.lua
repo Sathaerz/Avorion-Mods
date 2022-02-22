@@ -116,6 +116,22 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].timers = {}
+
+--region #PHASE 1 TIMERS
+
+mission.phases[1].timers[1] = {
+    time = 10, 
+    callback = function() 
+        local _Player = Player()
+        if _Player.numShips > 1 then
+            nextPhase()
+        end
+    end,
+    repeating = true
+}
+
+--endregion
+
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
@@ -129,17 +145,6 @@ mission.phases[1].onBeginServer = function()
     --Start the timer to see if the player has a 2nd ship. If they already have a 2nd one we can just skip this instantly.
     if _Player.numShips > 1 then
         nextPhase()
-    else
-        mission.phases[1].timers[1] = {
-            time = 10, 
-            callback = function() 
-                local _Player = Player()
-                if _Player.numShips > 1 then
-                    nextPhase()
-                end
-            end,
-            repeating = true
-        }
     end
 end
 

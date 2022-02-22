@@ -37,7 +37,7 @@ self._Data._InvulnData = {
     }
 }
 
-self._Debug = 1
+self._Debug = 0
 
 function SwenksSpecial.initialize(_MaxDuration, _MinDurability, _Message)
     if onServer() then
