@@ -25,7 +25,6 @@ include("structuredmission")
 include ("randomext")
 include ("faction")
 
-MissionUT = include("missionutility")
 ESCCUtil = include("esccutil")
 
 local AsyncShipGenerator = include("asyncshipgenerator")
