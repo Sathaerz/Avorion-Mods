@@ -145,7 +145,7 @@ if onServer() then
 
         local attackType = ITUtil.getFixedStandardTable(challengeRating, highestHatred, highestNotoriety)
         -- create attacking ships
-        local distance = attackType.dist or 200 --_#DistADj
+        local distance = attackType.dist or 250 --_#DistADj
         local hasJammer = false
         local attackShipTable = {}
         for _, _Ship in pairs(attackType.shipTable) do

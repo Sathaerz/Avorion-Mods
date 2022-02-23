@@ -178,7 +178,7 @@ if onServer() then
                     local hatredShips = math.random(4, 5)
                     local pirateBatch = {}
                     local pirateGenerator = AsyncPirateGenerator(nil, onPiratesFinished)
-                    local _Distance = 200 --_#DistAdj
+                    local _Distance = 250 --_#DistAdj
 
                     --Figure out if HET is enabled.
                     local _ActiveMods = Mods()
