@@ -247,7 +247,7 @@ mission.phases[3].updateTargetLocationServer = function(_TimeStep)
         _Generator:startBatch()
     
         local posCounter = 1
-        local distance = 200 --_#DistAdj
+        local distance = 250 --_#DistAdj
 
         local pirate_positions = _Generator:getStandardPositions(#_WaveTable, distance)
         for _, p in pairs(_WaveTable) do

@@ -1413,7 +1413,7 @@ function LLTEUtil.spawnBladeOfEmpress(_DeleteOnLeft)
 
     local _Faction =  Galaxy():findFaction("The Cavaliers")
     if not _Faction then
-        LEULog.Error(_MethodName, "Could not find Cavaliers")
+        LLTEUtil.Log(_MethodName, "Could not find Cavaliers", 1)
         return
     end
     local _Plan = LoadPlanFromFile("data/plans/cavaliersboss.xml")
@@ -1467,7 +1467,7 @@ function LLTEUtil.spawnCavalierSupercap(_DeleteOnLeft)
 
     local _Faction =  Galaxy():findFaction("The Cavaliers")
     if not _Faction then
-        LEULog.Error(_MethodName, "Could not find Cavaliers")
+        LLTEUtil.Log(_MethodName, "Could not find Cavaliers", 1)
         return
     end
 
@@ -1518,7 +1518,7 @@ function LLTEUtil.spawnAnimosity(_PirateLevel, _AddLoot)
 
     local _Faction = Galaxy():getPirateFaction(_PirateLevel)
     if not _Faction then
-        LEULog.Error(_MethodName, "Could not initialize Pirate Faction")
+        LLTEUtil.Log(_MethodName, "Could not initialize Pirate Faction", 1)
         return
     end
 
