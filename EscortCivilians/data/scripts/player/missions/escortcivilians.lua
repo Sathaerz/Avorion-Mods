@@ -413,7 +413,7 @@ function spawnBackgroundPirates()
     local _AlphaSpawnTable = getWingSpawnTables("_escortcivilians_alpha_wing")
     local generator = AsyncPirateGenerator(nil, onAlphaBackgroundPiratesFinished)
 
-    local distance = 200 --_#DistAdj
+    local distance = 250 --_#DistAdj
 
     generator:startBatch()
 
@@ -460,16 +460,24 @@ function onAlphaBackgroundPiratesFinished(_Generated)
 end
 
 function onBetaBackgroundPiratesFinished(_Generated)
+    local _Sector = Sector()
+    local _X, _Y = _Sector:getCoordinates()
+
     local _SlamCtMax = 1
     local _Slammers = {Sector():getEntitiesByScript("torpedoslammer.lua")}
     local _SlamCt = #_Slammers
     local _SlamAdded = 0
 
+    local _DmgFactor = 0.5
+    if MissionUT.checkSectorInsideBarrier(_X, _Y) then
+        _DmgFactor = 2
+    end
+
     local _TorpSlammerValues = {}
     _TorpSlammerValues._TimeToActive = 25
     _TorpSlammerValues._ROF = 8
     _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DamageFactor = 0.5
+    _TorpSlammerValues._DamageFactor = _DmgFactor
     _TorpSlammerValues._DurabilityFactor = 8
     _TorpSlammerValues._ForwardAdjustFactor = 2
     _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
