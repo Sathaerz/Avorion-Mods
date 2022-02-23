@@ -17,7 +17,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "Adds a number of new pirate and faction ship types for use in events / missions. This mod does nothing by itself and its functions must specifically be invoked to use the new ships. It also includes a number of quality-of-life functions for easily spawning pirate NPCs.",
+    description = "This used to only add a few extra types of pirates to spawn, but has slowly grown into a large support library that I use for pretty much all of my projects. Includes extra pirate ship classes and all sorts of neat scripts that you can use to make the player's life much more interesting. As always, this mod does nothing by itself and its functions must be invoked by another mod to use the new ships / scripts.\n\nConsult the readme file for a quick overview of what this mod can offer.",
 
     -- Insert all authors into this list
     authors = {"KnifeHeart"},
@@ -26,7 +26,7 @@ meta =
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.7.6",
+    version = "1.7.7",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:

@@ -1,9 +1,6 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
-local ShipUtility = include ("shiputility")
-local SectorTurretGenerator = include ("sectorturretgenerator")
-
 include ("galaxy")
 
 --See pirategenerator.lua for a better description of exactly what these ships do.
@@ -68,9 +65,7 @@ local self = ESCCUtil
 
 self.RandomCalled = 0
 
-local ESCULog = include("esccdebuglogging")
-ESCULog.Debugging = 0
-ESCULog.ModName = "ESCC Utility"
+self._Debug = 0
 
 --If you want to just get the table to do something with it - such as adding a jammer
 function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
@@ -79,7 +74,7 @@ function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
     threatLevel = threatLevel or "Standard"
     _Faction = _Faction or false --Most usages of this will be for pirates.
 
-    ESCULog.Debug(_MethodName, "Grabbing " .. tostring(threatLevel) .. " table for danger level " .. tostring(dangerLevel))
+    ESCCUtil.Log(_MethodName, "Grabbing " .. tostring(threatLevel) .. " table for danger level " .. tostring(dangerLevel))
     --Set which spawn table set we're looking through
     local tbl = {}
     if _Faction then
@@ -100,7 +95,7 @@ function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
 
     for _, lt in pairs(tbl) do
         if lt.Level == dangerLevel then
-            ESCULog.Debug(_MethodName, "Found requested table. Returning value.")
+            ESCCUtil.Log(_MethodName, "Found requested table. Returning value.")
             return lt.Table
         end
     end
@@ -111,7 +106,7 @@ function ESCCUtil.getStandardWave(_DangerLevel, _WaveShips, _ThreatLevel, _Facti
     _ThreatLevel = _ThreatLevel or "Standard"
     _Faction = _Faction or false --This will be used for pirates most of the time.
 
-    ESCULog.Debug(_MethodName, "Getting wave table for " .. tostring(_WaveShips) .. " at danger level " .. tostring(_DangerLevel) .. " at threat level " .. tostring(_ThreatLevel) .. " _Faction is " .. tostring(_Faction))
+    ESCCUtil.Log(_MethodName, "Getting wave table for " .. tostring(_WaveShips) .. " at danger level " .. tostring(_DangerLevel) .. " at threat level " .. tostring(_ThreatLevel) .. " _Faction is " .. tostring(_Faction))
 
     local _SpawnTable = self.getStandardTable(_DangerLevel, _ThreatLevel, _Faction)
     local _EnemyTable = {}
@@ -136,7 +131,7 @@ end
 
 function ESCCUtil.getStandardTemplateBlacklist()
     local _MethodName = "[ESCC] Get Standard Template Blacklist"
-    ESCULog.Debug(_MethodName, "Beginning...")
+    ESCCUtil.Log(_MethodName, "Beginning...")
 
     local templateBlacklist = {
         "sectors/asteroidshieldboss",
@@ -160,7 +155,7 @@ end
 
 function ESCCUtil.getRand()
     local _MethodName = "[ESCC] Get Random Number Generator"
-    ESCULog.Debug(_MethodName, "Beginning...")
+    ESCCUtil.Log(_MethodName, "Beginning...")
 
     self.RandomCalled = self.RandomCalled + random():getInt(1, 720)
     return Random(Seed(os.time() + self.RandomCalled))
@@ -204,7 +199,7 @@ function ESCCUtil.getDistanceToCenter(_X, _Y)
 
     local _Dist = math.sqrt((_X * _X) + (_Y * _Y))
 
-    ESCULog.Debug(_MethodName, "Distance to center is: " .. _Dist)
+    ESCCUtil.Log(_MethodName, "Distance to center is: " .. _Dist)
 
     return _Dist
 end
@@ -255,6 +250,21 @@ function ESCCUtil.compatibleJumpAnimation(_Entity, _Direction, _Color, _Intensit
         _Sector:createHyperspaceJumpAnimation(_Entity, _Direction, _Color, _Intensity)
     else
         _Sector:createHyperspaceAnimation(_Entity, _Direction, _Color, _Intensity)
+    end
+end
+
+--endregion
+
+--region #LOGGING
+
+function ESCCUtil.Log(_MethodName, _Msg, _OverrideDebug)
+    local _LocalDebug = ESCCUtil._Debug or 0
+    if _OverrideDebug == 1 then
+        _LocalDebug = 1
+    end
+
+    if _LocalDebug == 1 then
+        print("[ESCC Utility] - [" .. _MethodName .. "] - " .. _Msg)
     end
 end
 

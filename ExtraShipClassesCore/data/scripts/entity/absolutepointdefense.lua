@@ -17,7 +17,7 @@ self._Data._RangeFactor = nil
 self._Data._MaximumTargets = nil
 self._Data._TimeCycle = nil
 
-self._Debug = 1
+self._Debug = 0
 
 --!!!WARNING!!! 
 --The default values on this script will WRECK fighters and torpedoes. If you want to make this go a bit easier on the player, tone it down some. 

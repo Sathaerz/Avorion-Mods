@@ -1,9 +1,5 @@
 ESCCUtil = include("esccutil")
 
-local ASGLog = include("esccdebuglogging")
-ASGLog.Debugging = 0
-ASGLog.ModName = "ESCC Async Ship Generator"
-
 --GET _AMP
 local _ActiveMods = Mods()
 local _Amp = 1.0
@@ -18,7 +14,7 @@ end
 
 function AsyncShipGenerator:createDefenderByName(faction, position, _Name)
     local _MethodName = "Create defender by Name"
-    ASGLog.Debug(_MethodName, "Beginning...")
+
     _Name = _Name or "M"
 
     local _Ship = nil
@@ -45,7 +41,6 @@ function AsyncShipGenerator:getStandardPositions(_Distance, _Count, _DirMultipli
     _Count = math.floor(_Count)
     _Distance = _Distance or 100
     _DirMultiplier = _DirMultiplier or 1000
-    ASGLog.Debug(_MethodName, "Getting " .. tostring(_Count) .. " at " .. tostring(_Distance))
 
 	local dir = normalize(vec3(getFloat(-1, 1), getFloat(-1, 1), getFloat(-1, 1)))
 	local up = vec3(0, 1, 0)
@@ -75,7 +70,6 @@ end
 
 function AsyncShipGenerator:getGenericPosition()
     local _MethodName = "Get Generic Position"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
 	local _Rgen = ESCCUtil.getRand()
 	local _Pos = _Rgen:getVector(-1000, 1000)
@@ -86,7 +80,6 @@ end
 
 function AsyncShipGenerator:createLightDefender(faction, position)
     local _MethodName = "[ESCC] Create Light Defender"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     position = position or Matrix()
 
@@ -98,7 +91,6 @@ end
 
 local function onLightDefenderPlanFinished(plan, generatorId, position, factionIndex)
     local _MethodName = "[ESCC] Light Defender Plan Finished"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     local self = generators[generatorId] or {}
 
@@ -132,8 +124,7 @@ end
 
 function AsyncShipGenerator:createHeavyDefender(faction, position)
     local _MethodName = "[ESCC] Create Heavy Defender"
-    ASGLog.Debug(_MethodName, "Beginning...")
-    
+
     position = position or Matrix()
 
     --You thought the defender was big? These guys are bigger.
@@ -145,7 +136,6 @@ end
 
 local function onHeavyDefenderPlanFinished(plan, generatorId, position, factionIndex)
     local _MethodName = "[ESCC] Heavy Defender Plan Finished"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     local self = generators[generatorId] or {}
 
@@ -180,10 +170,8 @@ end
 
 function AsyncShipGenerator:createHeavyCarrier(faction, position)
     local _MethodName = "[ESCC] Create Heavy Carrier"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     if not carriersPossible() then
-        ASGLog.Debug(_MethodName, "Carriers not possible.")
         self:createHeavyDefender(faction, position)
         return
     end
@@ -199,7 +187,6 @@ end
 
 local function onHeavyCarrierPlanFinished(plan, generatorId, position, factionIndex, fighters)
     local _MethodName = "[ESCC] Heavy Carrier Plan Finished"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     local self = generators[generatorId] or {}
 
@@ -227,7 +214,6 @@ end
 
 function AsyncShipGenerator:createAWACS(faction, position)
     local _MethodName = "[ESCC] Create AWACS"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     position = position or Matrix()
     --About twice as big as a standard blocker ship.
@@ -239,7 +225,6 @@ end
 
 local function onAWACSPlanFinished(plan, generatorId, position, factionIndex)
     local _MethodName = "[ESCC] AWACS Plan Finished"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     local self = generators[generatorId] or {}
 
@@ -268,7 +253,6 @@ end
 
 function AsyncShipGenerator:createScout(faction, position)
     local _MethodName = "[ESCC] Create Scout"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     position = position or Matrix()
     --Scouts are tiny. Low mass = jump drives recharge quickly.
@@ -280,7 +264,6 @@ end
 
 local function onScoutPlanFinished(plan, generatorId, position, factionIndex)
     local _MethodName = "[ESCC] Scout Plan Finished"
-    ASGLog.Debug(_MethodName, "Beginning...")
 
     local self = generators[generatorId] or {}
 
@@ -346,13 +329,10 @@ end
 local extraShipClassesCore_new = new
 local function new(namespace, onGeneratedCallback)
     local _MethodName = "[ESCC] New Async Ship Generator"
-    
-    ASGLog.Debug(_MethodName, "Running shadowed new method...")
+
     local instance = extraShipClassesCore_new(namespace, onGeneratedCallback)
 
     if namespace then
-        ASGLog.Debug(_MethodName, "Namespace found - " .. tostring(namespace))
-
         namespace._ship_generator_on_light_defender_plan_generated = onLightDefenderPlanFinished
         namespace._ship_generator_on_heavy_defender_plan_generated = onHeavyDefenderPlanFinished
         namespace._ship_generator_on_heavy_carrier_plan_generated = onHeavyCarrierPlanFinished
@@ -360,8 +340,6 @@ local function new(namespace, onGeneratedCallback)
         namespace._ship_generator_on_scout_plan_generated = onScoutPlanFinished
         namespace._ship_generator_on_civiltransport_plan_generated = onCivilTransportPlanFinished
     else
-        ASGLog.Debug(_MethodName, "No namespace found - using generic names")
-
         _ship_generator_on_light_defender_plan_generated = onLightDefenderPlanFinished
         _ship_generator_on_heavy_defender_plan_generated = onHeavyDefenderPlanFinished
         _ship_generator_on_heavy_carrier_plan_generated = onHeavyCarrierPlanFinished

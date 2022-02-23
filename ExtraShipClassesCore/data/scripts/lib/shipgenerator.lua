@@ -1,6 +1,4 @@
-local SGLog = include("esccdebuglogging")
-SGLog.Debugging = 0
-SGLog.ModName = "ESCC Ship Generator"
+ShipGenerator._Debug = 0
 
 --GET _AMP
 local _ActiveMods = Mods()
@@ -30,8 +28,8 @@ function ShipGenerator.createDefenderByName(faction, position, _Name)
 end
 
 function ShipGenerator.createLightDefender(faction, position)
-    local _MethodName = "[ESCC] Create Light Defender"
-    SGLog.Debug(_MethodName, "Beginning...")
+    local _MethodName = "Create Light Defender"
+    ShipGenerator.Log(_MethodName, "Beginning...")
 
     local volume = Balancing_GetSectorShipVolume(Sector():getCoordinates()) * Balancing_GetShipVolumeDeviation() * 3.75 * _Amp
 
@@ -56,8 +54,8 @@ function ShipGenerator.createLightDefender(faction, position)
 end
 
 function ShipGenerator.createHeavyDefender(faction, position)
-    local _MethodName = "[ESCC] Create Heavy Defender"
-    SGLog.Debug(_MethodName, "Beginning...")
+    local _MethodName = "Create Heavy Defender"
+    ShipGenerator.Log(_MethodName, "Beginning...")
 
     --You thought the defender was big? These guys are bigger.
     local volume = Balancing_GetSectorShipVolume(Sector():getCoordinates()) * Balancing_GetShipVolumeDeviation() * 15.0 * _Amp
@@ -85,8 +83,8 @@ function ShipGenerator.createHeavyDefender(faction, position)
 end
 
 function ShipGenerator.createHeavyCarrier(faction, position)
-    local _MethodName = "[ESCC] Create Heavy Carrier"
-    SGLog.Debug(_MethodName, "Beginning...")
+    local _MethodName = "Create Heavy Carrier"
+    ShipGenerator.Log(_MethodName, "Beginning...")
 
     position = position or Matrix()
     fighters = fighters or 12 + random():getInt(6, 12) --at least 18, up to 24 fighters.
@@ -134,8 +132,8 @@ function ShipGenerator.createHeavyCarrier(faction, position)
 end
 
 function ShipGenerator.createAWACS(faction, position)
-    local _MethodName = "[ESCC] Create AWACS"
-    SGLog.Debug(_MethodName, "Beginning...")
+    local _MethodName = "Create AWACS"
+    ShipGenerator.Log(_MethodName, "Beginning...")
 
     position = position or Matrix()
     --About twice as big as a standard blocker ship.
@@ -157,8 +155,8 @@ function ShipGenerator.createAWACS(faction, position)
 end
 
 function ShipGenerator.createScout(faction, position)
-    local _MethodName = "[ESCC] Create Scout"
-    SGLog.Debug(_MethodName, "Beginning...")
+    local _MethodName = "Create Scout"
+    ShipGenerator.Log(_MethodName, "Beginning...")
     
     position = position or Matrix()
     --Scouts are tiny. Low mass = jump drives recharge quickly.
@@ -183,6 +181,9 @@ function ShipGenerator.createScout(faction, position)
 end
 
 function ShipGenerator.createCivilTransport(faction, position, volume)
+    local _MethodName = "Create Civil Transport"
+    ShipGenerator.Log(_MethodName, "Beginning...")
+
     position = position or Matrix()
     volume = volume or Balancing_GetSectorShipVolume(Sector():getCoordinates()) * Balancing_GetShipVolumeDeviation()
 
@@ -212,4 +213,15 @@ function ShipGenerator.createCivilTransport(faction, position, volume)
     ship:setTitle("Civilian Transport", {})
 
     return ship
+end
+
+function ShipGenerator.Log(_MethodName, _Msg, _OverrideDebug)
+    local _LocalDebug = ShipGenerator._Debug or 0
+    if _OverrideDebug == 1 then
+        _LocalDebug = 1
+    end
+
+    if _LocalDebug == 1 then
+        print("[ESCC Ship Generator] - [" .. _MethodName .. "] - " .. _Msg)
+    end
 end

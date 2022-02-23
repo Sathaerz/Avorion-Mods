@@ -1,7 +1,3 @@
-local APGLog = include("esccdebuglogging")
-APGLog.Debugging = 0
-APGLog.ModName = "ESCC Async Pirate Generator"
-
 --GET _AMP
 local _ActiveMods = Mods()
 local _Amp = 1.0
@@ -21,14 +17,14 @@ end
 --Get a number of positions for spawning pirates, so we don't need to do it in our missions / events.
 function AsyncPirateGenerator:getStandardPositions(positionCT, distance)
     local _MethodName = "[ESCC] Get Standard Positions"
-    APGLog.Debug(_MethodName, "Running pass-through function...")
+    PirateGenerator.Log(_MethodName, "Running pass-through function...")
 
     return PirateGenerator.getStandardPositions(positionCT, distance)
 end
 
 function AsyncPirateGenerator:getGenericPosition()
     local _MethodName = "[ESCC] Get Generic Position"
-    APGLog.Debug(_MethodName, "Running pass-through function...")
+    PirateGenerator.Log(_MethodName, "Running pass-through function...")
 
     return PirateGenerator.getGenericPosition()
 end
@@ -38,7 +34,7 @@ end
 
 function AsyncPirateGenerator:createScaledJammer(position)
     local _MethodName = "[ESCC] Create Scaled Jammer"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 1.0 * _Amp * scaling, "Jammer"%_T)
@@ -46,7 +42,7 @@ end
 
 function AsyncPirateGenerator:createScaledStinger(position)
     local _MethodName = "[ESCC] Create Scaled Stinger"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 1.25 * _Amp * scaling, "Stinger"%_T)
@@ -54,7 +50,7 @@ end
 
 function AsyncPirateGenerator:createScaledScorcher(position)
     local _MethodName = "[ESCC] Create Scaled Scorcher"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 6.0 * _Amp * scaling, "Scorcher"%_T)
@@ -62,7 +58,7 @@ end
 
 function AsyncPirateGenerator:createScaledBomber(position)
     local _MethodName = "[ESCC] Create Scaled Bomber"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 6.0 * _Amp * scaling, "Bomber"%_T)
@@ -70,7 +66,7 @@ end
 
 function AsyncPirateGenerator:createScaledSinner(position)
     local _MethodName = "[ESCC] Create Scaled Sinner"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 10.0 * _Amp * scaling, "Sinner"%_T)
@@ -78,7 +74,7 @@ end
 
 function AsyncPirateGenerator:createScaledProwler(position)
     local _MethodName = "[ESCC] Create Scaled Prowler"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 12.0 * _Amp * scaling, "Prowler"%_T)
@@ -86,7 +82,7 @@ end
 
 function AsyncPirateGenerator:createScaledPillager(position)
     local _MethodName = "[ESCC] Create Scaled Pillager"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 18.0 * _Amp * scaling, "Pillager"%_T)
@@ -94,7 +90,7 @@ end
 
 function AsyncPirateGenerator:createScaledDevastator(position)
     local _MethodName = "[ESCC] Create Scaled Devastator"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 28.0 * _Amp * scaling, "Devastator"%_T)
@@ -102,7 +98,7 @@ end
 
 function AsyncPirateGenerator:createScaledDemolisher(position)
     local _MethodName = "[ESCC] Create Scaled Demolisher (Devastator)"
-    APGLog.Debug(_MethodName, "DEMOLISHER COMPATIBILITY CALL - Beginning...")
+    PirateGenerator.Log(_MethodName, "DEMOLISHER COMPATIBILITY CALL - Beginning...")
     
     local scaling = self:getScaling()
     return self:create(position, 28.0 * _Amp * scaling, "Devastator"%_T)
@@ -113,7 +109,7 @@ function AsyncPirateGenerator:createScaledExecutioner(position, specialScale)
 
     specialScale = specialScale or 100
 
-    APGLog.Debug(_MethodName, "Beginning... Special scale value is " .. tostring(specialScale))
+    PirateGenerator.Log(_MethodName, "Beginning... Special scale value is " .. tostring(specialScale))
 
     local specialShipScale = 20 + math.min(30, (math.max(0, specialScale - 200) / 10)) * _Amp
     local scaling = self:getScaling()
@@ -123,7 +119,7 @@ end
 
 function AsyncPirateGenerator:createScaledPirateByName(name, position)
     local _MethodName = "[ESCC] Create Scaled Pirate By Name"
-    APGLog.Debug(_MethodName, "Creating Pirate - name: " .. tostring(name))
+    PirateGenerator.Log(_MethodName, "Creating Pirate - name: " .. tostring(name))
     
     return self["createScaled" .. name](self, position)
 end
@@ -134,63 +130,63 @@ end
 
 function AsyncPirateGenerator:createJammer(position)
     local _MethodName = "[ESCC] Create Jammer"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
     
     return self:create(position, 1.0 * _Amp, "Jammer"%_T)
 end
 
 function AsyncPirateGenerator:createStinger(position)
     local _MethodName = "[ESCC] Create Stinger"
-	APGLog.Debug(_MethodName, "Beginning...")
+	PirateGenerator.Log(_MethodName, "Beginning...")
 
     return self:create(position, 1.25 * _Amp, "Stinger"%_T)
 end
 
 function AsyncPirateGenerator:createScorcher(position)
     local _MethodName = "[ESCC] Create Scorcher"
-	APGLog.Debug(_MethodName, "Beginning...")
+	PirateGenerator.Log(_MethodName, "Beginning...")
 
     return self:create(position, 6.0 * _Amp, "Scorcher"%_T)
 end
 
 function AsyncPirateGenerator:createBomber(position)
     local _MethodName = "[ESCC] Create Bomber"
-    APGLog.Debug(_MethodName, "Beginning...")
+    PirateGenerator.Log(_MethodName, "Beginning...")
 
     return self:create(position, 6.0 * _Amp, "Bomber"%_T)
 end
 
 function AsyncPirateGenerator:createSinner(position)
     local _MethodName = "[ESCC] Create Sinner"
-	APGLog.Debug(_MethodName, "Beginning...")
+	PirateGenerator.Log(_MethodName, "Beginning...")
 
     return self:create(position, 10.0 * _Amp, "Sinner"%_T)
 end
 
 function AsyncPirateGenerator:createProwler(position)
     local _MethodName = "[ESCC] Create Prowler"
-	APGLog.Debug(_MethodName, "Beginning...")
+	PirateGenerator.Log(_MethodName, "Beginning...")
 
     return self:create(position, 12.0 * _Amp, "Prowler"%_T)
 end
 
 function AsyncPirateGenerator:createPillager(position)
     local _MethodName = "[ESCC] Create Pillager"
-	APGLog.Debug(_MethodName, "Beginning...")
+	PirateGenerator.Log(_MethodName, "Beginning...")
 
     return self:create(position, 18.0 * _Amp, "Pillager"%_T)
 end
 
 function AsyncPirateGenerator:createDevastator(position)
     local _MethodName = "[ESCC] Create Devastator"
-	APGLog.Debug(_MethodName, "Beginning...")
+	PirateGenerator.Log(_MethodName, "Beginning...")
 
     return self:create(position, 28.0 * _Amp, "Devastator"%_T)
 end
 
 function AsyncPirateGenerator:createDemolisher(position)
     local _MethodName = "[ESCC] Create Demolisher (Devastator)"
-    APGLog.Debug(_MethodName, "DEMOLISHER COMPATIBILITY CALL - Beginning...")
+    PirateGenerator.Log(_MethodName, "DEMOLISHER COMPATIBILITY CALL - Beginning...")
     
     return self:create(position, 28.0 * _Amp, "Devastator"%_T)
 end
@@ -200,7 +196,7 @@ function AsyncPirateGenerator:createExecutioner(position, specialScale)
 
     specialScale = specialScale or 100
 
-    APGLog.Debug(_MethodName, "Beginning... Special scale value is " .. tostring(specialScale))
+    PirateGenerator.Log(_MethodName, "Beginning... Special scale value is " .. tostring(specialScale))
 
     local specialShipScale = 20 + math.min(30, (math.max(0, specialScale - 200) / 10)) * _Amp
     PirateGenerator["_ESCC_executioner_specialscale"] = specialScale
@@ -209,7 +205,7 @@ end
 
 function AsyncPirateGenerator:createPirateByName(name, position)
     local _MethodName = "[ESCC] Create Pirate By Name"
-    APGLog.Debug(_MethodName, "Creating Pirate - name: " .. tostring(name))
+    PirateGenerator.Log(_MethodName, "Creating Pirate - name: " .. tostring(name))
     
     return self["create" .. name](self, position)
 end

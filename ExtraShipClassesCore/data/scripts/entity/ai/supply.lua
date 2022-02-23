@@ -5,9 +5,7 @@ include ("randomext")
 local DockAI = include ("ai/dock")
 
 --Add debug info.
-local SUPLog = include("esccdebuglogging")
-SUPLog.Debugging = 0
-SUPLog.ModName = "ESCC Supply AI"
+local _Debug = 0
 
 local stationIndex = Uuid()
 local stage
@@ -24,7 +22,7 @@ end
 
 function initialize(stationIndex_in)
     local _MethodName = "Initialize"
-    SUPLog.Debug(_MethodName, "Starting v3 of LLTE Supply AI script.")
+    Log(_MethodName, "Starting v4 of LLTE Supply AI script.")
     stationIndex = stationIndex_in or Uuid()
 end
 
@@ -94,20 +92,20 @@ function updateServer(timeStep)
                 else 
                     _SupplyToTransfer = _SupplyTransfer 
                 end
-                SUPLog.Debug(_MethodName, "Transferring " .. tostring(_SupplyToTransfer) .. " supply.")
+                Log(_MethodName, "Transferring " .. tostring(_SupplyToTransfer) .. " supply.")
                 ship:setValue("_escc_Mission_Supply", _SupplyRemaining - _SupplyToTransfer)
 
                 local _StationSupply = station:getValue("_escc_Mission_Supply") or 0
-                SUPLog.Debug(_MethodName, "Station supply is " .. tostring(_StationSupply))
+                Log(_MethodName, "Station supply is " .. tostring(_StationSupply))
                 _StationSupply = _StationSupply + _SupplyToTransfer
-                SUPLog.Debug(_MethodName, "Station supply is " .. tostring(_StationSupply) .. " after transfer.")
+                Log(_MethodName, "Station supply is " .. tostring(_StationSupply) .. " after transfer.")
                 station:setValue("_escc_Mission_Supply", _StationSupply)
             else
-                SUPLog.Debug(_MethodName, "Successfully transferred supplies. Leaving area.")
+                Log(_MethodName, "Successfully transferred supplies. Leaving area.")
                 stage = 3 
             end
         else
-            SUPLog.Debug(_MethodName, "Successfully transferred supplies. Leaving area.")
+            Log(_MethodName, "Successfully transferred supplies. Leaving area.")
             stage = 3
         end
     end
@@ -156,6 +154,16 @@ function secure()
     DockAI.secure(values)
 
     return values
+end
+
+--endregion
+
+--region #LOGGING
+
+function Log(_MethodName, _Msg)
+    if _Debug == 1 then
+        print("[ESCC Supply AI] - [" .. _MethodName .. "] - " .. _Msg)
+    end
 end
 
 --endregion

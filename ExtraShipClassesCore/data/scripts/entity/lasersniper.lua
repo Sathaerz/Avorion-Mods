@@ -7,7 +7,7 @@ ESCCUtil = include("esccutil")
 LaserSniper = {}
 local self = LaserSniper
 
-self._Debug = 1
+self._Debug = 0
 
 self._Data = {}
 
