@@ -41,6 +41,9 @@ for _, p in pairs(xmods) do
     if p.id == "2422999823" then
         _Dangerous = true
     end
+    if p.id == "2745345613" then
+        _Dangerous = true
+    end
 end
 
 if _Dangerous then
