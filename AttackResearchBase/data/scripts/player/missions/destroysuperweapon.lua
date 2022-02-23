@@ -22,11 +22,9 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
-include("callable")
 include("randomext")
 include("structuredmission")
 
-MissionUT = include("missionutility")
 ESCCUtil = include("esccutil")
 PariahUtility = include("pariahutility")
 

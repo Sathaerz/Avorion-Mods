@@ -305,6 +305,8 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
 
     _Superweapon:setDropsAttachedTurrets(false)
 
+    _Superweapon:setValue("is_gordian_knot", true)
+
     return _Superweapon
 end
 

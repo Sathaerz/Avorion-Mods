@@ -32,11 +32,9 @@ package.path = package.path .. ";data/scripts/?.lua"
 
 local _Version = GameVersion()
 
-include("callable")
 include("randomext")
 include("structuredmission")
 
-MissionUT = include("missionutility")
 ESCCUtil = include("esccutil")
 
 local SectorGenerator = include ("SectorGenerator")
