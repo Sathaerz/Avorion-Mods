@@ -2,6 +2,7 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 
 local MissionUT = include("missionutility")
 local AsyncShipGen = include("asyncshipgenerator")
+local SectorTurretGenerator = include("sectorturretgenerator")
 
 ESCCUtil = include("esccutil")
 LLTEUtil = include("llteutil")
