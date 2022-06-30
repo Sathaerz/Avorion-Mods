@@ -16,7 +16,6 @@ package.path = package.path .. ";data/scripts/?.lua"
 
 include("structuredmission")
 
-MissionUT = include("missionutility")
 ESCCUtil = include("esccutil")
 
 local PlanGenerator = include("plangenerator")
@@ -261,7 +260,7 @@ function spawnPirateAmbush()
     generator:startBatch()
 
     local posCounter = 1
-    local distance = 200 --_#DistAdj
+    local distance = 250 --_#DistAdj
     local pirate_positions = generator:getStandardPositions(#waveTable, distance)
     for _, p in pairs(waveTable) do
         generator:createScaledPirateByName(p, pirate_positions[posCounter])
