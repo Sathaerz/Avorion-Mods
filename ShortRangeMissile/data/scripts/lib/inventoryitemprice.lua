@@ -1,1 +1,1 @@
-valueWeights[WeaponType.ShortRangeMissile] = 2 --Deceptively powerful despite the low DPS.
+valueWeights[WeaponType.ShortRangeMissile] = 1.75 --Deceptively powerful despite the low DPS.
