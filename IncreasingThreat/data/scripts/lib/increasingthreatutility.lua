@@ -35,7 +35,11 @@ local pirate_attackTypes = {
     {minHatred = 0, minNotoriety = 0, minChallenge = 300, maxChallenge = -1, reward = 5.35, strength = 30, shipTable = {"Prowler", "Prowler", "Marauder", "Marauder", "Marauder"}, dist = _LGDist},
     {minHatred = 0, minNotoriety = 0, minChallenge = 320, maxChallenge = -1, reward = 5.55, strength = 32, shipTable = {"Devastator", "Marauder", "Disruptor"}, dist = _XXLGDist}
 }
+--Lower levels are now applicable b/c of background attacks + entity attacks
 local hatred_attackTypes = {
+    { maxHatred = 100, spawnTable = { "Outlaw", "Outlaw", "Outlaw", "Bandit", "Bandit", "Bandit", "Pirate", "Pirate", "Marauder", "Marauder" } },
+    { maxHatred = 200, spawnTable = { "Outlaw", "Bandit", "Bandit", "Pirate", "Pirate", "Marauder", "Marauder", "Marauder", "Raider", "Raider" } },
+    { maxHatred = 300, spawnTable = { "Bandit", "Pirate", "Pirate", "Marauder", "Marauder", "Disruptor", "Disruptor", "Raider", "Raider", "Ravager" } },
     { maxHatred = 400, spawnTable = { "Marauder", "Marauder", "Marauder", "Marauder", "Disruptor", "Disruptor", "Raider", "Raider", "Ravager", "Ravager" } },
     { maxHatred = 500, spawnTable = { "Marauder", "Marauder", "Marauder", "Disruptor", "Disruptor", "Raider", "Raider", "Ravager", "Ravager", "Ravager" } },
     { maxHatred = 600, spawnTable = { "Marauder", "Marauder", "Disruptor", "Disruptor", "Raider", "Scorcher", "Ravager", "Ravager", "Ravager", "Ravager" } },

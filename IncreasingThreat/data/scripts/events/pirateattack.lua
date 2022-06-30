@@ -10,7 +10,7 @@ local pirate_reserves = {}
 local hateCountdownTimer = 0
 local _HatredLevel = 0
 
-PirateAttack._Debug = 0
+PirateAttack._Debug = 1
 
 local _ActiveMods = Mods()
 PirateAttack._HETActive = false
@@ -64,6 +64,9 @@ if onServer() then
         local generator = AsyncPirateGenerator(PirateAttack, PirateAttack.onPiratesGenerated)
         piratefaction = generator:getPirateFaction()
 
+        local notoriousplayers = ITUtil.getSectorPlayersByNotoriety(piratefaction.index)
+        local hatedplayers = ITUtil.getSectorPlayersByHatred(piratefaction.index)
+
         -- no pirate attacks at the very edge of the galaxy
         local x, y = sector:getCoordinates()
         if length(vec2(x, y)) > 560 then
@@ -73,10 +76,39 @@ if onServer() then
             return
         end
 
-        --TODO: add not _loading maybe?
         if not EventUT.attackEventAllowed() then
             PirateAttack.Log(_MethodName, "Attack event not allowed. Terminating event.")
             ITUtil.unpauseEvents()
+
+            --Pick a random player. If that player is hated enough, initiate an attack against them elsewhere.
+            if #hatedplayers > 0 then
+                local _RandomPlayer = randomEntry(hatedplayers)
+                local _xPlayer = _RandomPlayer.player
+
+                if _RandomPlayer.hatred > 600 then
+                    --50/50 shot until hatred level 800 - then it's a 70/30 shot in their favor.
+                    local _Chance = 50
+                    if _RandomPlayer.hatred > 800 then
+                        _Chance = _Chance + 20
+                    end
+    
+                    local _Rgen = ESCCUtil.getRand()
+                    local _Roll = _Rgen:getInt(1, 100)
+    
+                    PirateAttack.Log(_MethodName, "maybe attacking elsewhere. Chance is : " .. tostring(_Chance) .. " and roll is : " .. tostring(_Roll))
+                    
+                    if _Roll < _Chance then
+                        PirateAttack.Log(_MethodName, "Attack event not allowed. Attacking the player elsewhere.")
+                        local _Interdict = { x = x, y = y }
+                        _xPlayer:addScriptOnce("events/passiveplayerattackstarter.lua", _Interdict)
+                    end
+                end
+            else
+                --No players in sector - running alt attack method
+                PirateAttack.Log(_MethodName, "No players found - running alt attack method.")
+                PirateAttack.runAltAttack(piratefaction.index)
+            end
+
             terminate()
             return
         end
@@ -114,12 +146,10 @@ if onServer() then
 
         --Get challenge rating of attack
         --Challenge rating of attack is calculated by adding notoriety + hatred of all players, then averaging it.
+        
         local totalNotoriety = 0
         local totalHatred = 0
         local players = {Sector():getPlayers()}
-        
-        local notoriousplayers = ITUtil.getSectorPlayersByNotoriety(piratefaction.index)
-        local hatedplayers = ITUtil.getSectorPlayersByHatred(piratefaction.index)
 
         for _,p in pairs(notoriousplayers) do
             local xhatred = p.hatred or 0
@@ -445,6 +475,90 @@ if onClient() then
     end
     
 end
+
+--region #RUN ALT ATTACK CALL
+
+function PirateAttack.runAltAttack(_index)
+    local _MethodName = "Run Alt Attack"
+    --This can't be done via hated players because of limitations on creating factions OOS, so instead...
+    local sector = Sector()
+    local _Ships = {sector:getEntitiesByType(EntityType.Ship)}
+    local _Stations = {sector:getEntitiesByType(EntityType.Station)}
+    local _Factions = {}
+    
+    for _, _ship in pairs(_Ships) do
+        local _fidx = _ship.factionIndex
+        local _Faction = Faction(_fidx)
+        if _Faction.isPlayer then
+            table.insert(_Factions, _fidx)
+        end
+        if _Faction.isAlliance then
+            --As always, we have to do some wacky shit here. Get all online players.
+            local _Alliance = Alliance(_fidx)
+            local _OnlinePlayers = {_Alliance:getOnlineMembers()}
+            for _, _pidx in pairs(_OnlinePlayers) do
+                table.insert(_Factions, _pidx)
+            end
+        end
+    end
+
+    for _, _station in pairs(_Stations) do
+        local _fidx = _station.factionIndex
+        local _Faction = Faction(_fidx)
+        if _Faction.isPlayer then
+            table.insert(_Factions, _fidx)
+        end
+        if _Faction.isAlliance then
+            --Get all online players
+            local _Alliance = Alliance(_fidx)
+            local _OnlinePlayers = {_Alliance:getOnlineMembers()}
+            for _, _pidx in pairs(_OnlinePlayers) do
+                table.insert(_Factions, _pidx)
+            end
+        end
+    end
+    local _UniqueFactions = {}
+    table.sort(_Factions)
+    --Eliminate duplicates.
+    for k, v in ipairs(_Factions) do
+        if v ~= _Factions[k+1] then
+            table.insert(_UniqueFactions, v)
+        end
+    end
+    for k, v in pairs(_UniqueFactions) do
+        PirateAttack.Log(_MethodName, "Running alt attack code for " .. tostring(v))
+        --Run an attack vs. each player if we hate them enough. Don't interdict this sector since we don't know if OOS attack events are allowed or not
+        --It was likely cancelled just due to no players being this sector.
+        local _runFunction = [[
+            function run(idx)
+                local _Player = Player()
+                local _HatredIndex = "_increasingthreat_hatred_" .. tostring(idx)
+                local _HatredValue = _Player:getValue(_HatredIndex) or 0
+                local _Time = Server().unpausedRuntime
+                local _NextTime = _Player:getValue("_increasingthreat_alt_oos_attack") or 0
+
+                if _NextTime < _Time then
+                    if _HatredValue > 600 then
+                        local _Chance = 50
+                        if _HatredValue > 800 then
+                            _Chance = _Chance + 20
+                        end
+                        
+                        local _Roll = math.random(1, 100)
+                        if _Roll < _Chance then
+                            _Player:addScriptOnce("events/passiveplayerattackstarter.lua")
+                            _Player:setValue("_increasingthreat_alt_oos_attack", _Time + (20*60))
+                        end
+                    end
+                end
+            end
+        ]]
+
+        runFactionCode(v, true, _runFunction, "run", _index)
+    end
+end
+
+--endregion
 
 --region #CLIENT / SERVER CALLS
 

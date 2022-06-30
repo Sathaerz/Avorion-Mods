@@ -106,15 +106,32 @@ if onServer() then
             local _Sector = Sector()
             DecapStrike.Log(_MethodName, "Initializing.")
 
+            local generator = AsyncPirateGenerator(DecapStrike, DecapStrike.onPiratesGenerated)
+            piratefaction = generator:getPirateFaction()
+
+            local ITPlayers = ITUtil.getSectorPlayersByHatred(piratefaction.index)
+
             if not EventUT.attackEventAllowed() then
                 DecapStrike.Log(_MethodName, "event not allowed - cancelling decapitation strike")
                 ITUtil.unpauseEvents()
+
+                --Pick a random player. If that player is hated enough, initiate an attack against them elsewhere.
+                --I JUST REALIZED I DON'T NEED TO ACCOUNT FOR 0 PLAYERS BECAUSE THIS IS PLAYER BASED EVENT! YEAH
+                local _RandomPlayer = randomEntry(ITPlayers)
+                local _xPlayer = _RandomPlayer.player
+                local _Attempts = _xPlayer:getValue("_increasingthreat_oos_attack_attempts")
+                local x, y = _Sector:getCoordinates()
+
+                if _Attempts == 0 then
+                    --Unlike the normal pirate attacks, decapitation strikes will always launch an attack against another sector.
+                    DecapStrike.Log(_MethodName, "Attack event not allowed. Attacking the player elsewhere.")
+                    local _Interdict = { x = x, y = y }
+                    _xPlayer:addScriptOnce("events/passiveplayerattackstarter.lua", _Interdict)
+                end
+
                 terminate()
                 return
             end
-
-            local generator = AsyncPirateGenerator(DecapStrike, DecapStrike.onPiratesGenerated)
-            piratefaction = generator:getPirateFaction()
 
             --If the pirate faction is craven, add a chance to abort the attack if there's AI defenders.
             local _Craven = piratefaction:getTrait("craven")
@@ -144,7 +161,7 @@ if onServer() then
             --Executioner strength is based on the hatred value of the targeted player.
             --Number of executioners spawn based on the number of ships that the targeted player owns in the sector. It is 1 ex per 3 ships up to 16, then 1 per 2 afterwards.
             --BUT the pirates aren't stupid. They will add one standard ship to the list of ships for each ship owned by a player who is NOT the targeted player.
-            local ITPlayers = ITUtil.getSectorPlayersByHatred(piratefaction.index)
+            --Update 2/26/2022 - Moved the spot where the player is retrieved up to line 112 in order to launch passive attacks against them somewhere else.
             local triggerDecapStrike = false
             local serverTime = Server().unpausedRuntime
             for _, p in pairs(ITPlayers) do
@@ -252,6 +269,17 @@ if onServer() then
                 local highThreatTable = ITUtil.getHatredTable(decapHatredLevel)
                 for _ = 1, numberOfOtherShips do
                     table.insert(pirate_reserves, highThreatTable[math.random(#highThreatTable)])
+                end
+
+                --If the player is at less than 400 hatred, cap # of executioners at 5
+                --After that, go nuts.
+                if decapHatredLevel <= 400 then
+                    remaining_executioners = math.min(remaining_executioners, 5)
+                end
+
+                --If they hate you enough and less than 5 executioners are coming, bump up the # by 2, but not to more than 5.
+                if decapHatredLevel > 1000 and remaining_executioners < 5 then
+                    remaining_executioners = math.min(remaining_executioners + 2, 5)
                 end
 
                 --Create the first wave. It always consists of an executioner.

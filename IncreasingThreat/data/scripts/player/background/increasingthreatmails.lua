@@ -1,6 +1,7 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include("stringutility")
+include("randomext")
 
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace IncreasingThreatMails
@@ -19,6 +20,15 @@ if onServer() then
         if not faction then return end
 
         local player = Player()
+        local _Time = Server().unpausedRuntime
+        local _DecapTime = player:getValue("_increasingthreat_next_decap")
+        local _TimeUntilDecap = _DecapTime - _Time
+        --Don't give the player an exact number - fudge by +/- 20 minutes.
+        local _FudgeTime = 1200 - random():getInt(0, 2400)
+        local _ReportTimeUntilDecap = _TimeUntilDecap + _FudgeTime
+        local _MinutesUntilDecap = math.floor(_ReportTimeUntilDecap / 60)
+        local _HoursUntilDecap = math.floor(_MinutesUntilDecap / 60)
+        local _ReportMinutesUntilDecap = _MinutesUntilDecap - (_HoursUntilDecap * 60)
 
         -- faction name
         -- notoriety
@@ -53,11 +63,25 @@ if onServer() then
             hatredMsg
         }
 
+        if hatred > 200 then
+            message = "To whom it may concern,\n\nWe have infiltrated '%1%'.\n%2%\n%3%\n%4%\n\nRegards"%_T
+            if _TimeUntilDecap > 0 then
+                table.insert(arguments, "These pirates may launch a decapitation strike against you! Their preparations will be finished in approximately " .. tostring(_HoursUntilDecap) .. " hours and " .. tostring(_ReportMinutesUntilDecap) .. " minutes." )
+            else
+                table.insert(arguments, "These pirates may launch a decapitation strike against you! Their preparations are finished and an attack can be launched at any time." )
+            end
+        end
+
+        if hatred > 600 then
+            message = "To whom it may concern,\n\nWe have infiltrated '%1%'.\n%2%\n%3%\n%4%\n%5%\n\nRegards"%_T
+            table.insert(arguments, "If you have an energy suppression satellite running when these pirates attack, they may attempt to attack another location.")
+        end
+
         local mail = Mail()
         mail.sender = "Hidden Sender"%_T
         mail.receiver = player.id
         --    mail.header = Format("Surveillance Report of Faction '%1%'"%_T, faction.unformattedName)
-        mail.header = Format("Surveillance Report, '%1%'"%_T, faction.name)
+        mail.header = Format("Infiltration Report, '%1%'"%_T, faction.name)
         mail.text = Format(message, unpack(arguments))
 
         player:addMail(mail)

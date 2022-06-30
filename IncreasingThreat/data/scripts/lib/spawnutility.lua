@@ -7,10 +7,11 @@ local _ScriptValues = {
     { _Script = "adaptivedefense.lua", _Arg = "Adaptive" },
     { _Script = "overdrive.lua", _Arg = "Berserk" },
     { _Script = "afterburn.lua", _Arg = "Fleeting" },
-    { _Script = "avenger.lua", _Arg = "Avenger" }
+    { _Script = "avenger.lua", _Arg = "Avenger" },
+    { _Script = "frenzy.lua", _Arg = "Frenzied" }
 }
 
-SpawnUtility._Debug = 0
+SpawnUtility._Debug = 1
 
 function SpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
     local _MethodName = "Add IT Enemy Buffs"
