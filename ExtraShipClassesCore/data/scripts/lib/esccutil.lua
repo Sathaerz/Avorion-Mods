@@ -1,8 +1,6 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
-include ("galaxy")
-
 --See pirategenerator.lua for a better description of exactly what these ships do.
 --fairly standard table of spawns by danger level. Scorchers (very dangerous shield-killing ships) don't start showing up until danger level 6.
 --Devastators (the ultimate bullet sponge) don't show up until danger level 10.
@@ -69,7 +67,7 @@ self._Debug = 0
 
 --If you want to just get the table to do something with it - such as adding a jammer
 function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
-    local _MethodName = "[ESCC] Get Standardized Spawn Table"
+    local _MethodName = "Get Standardized Spawn Table"
     --Get standard if not specified.
     threatLevel = threatLevel or "Standard"
     _Faction = _Faction or false --Most usages of this will be for pirates.
@@ -78,8 +76,10 @@ function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
     --Set which spawn table set we're looking through
     local tbl = {}
     if _Faction then
+        ESCCUtil.Log(_MethodName, "Getting faction table.")
         tbl = dangerLevel_factionStandardSpawnTable
     else
+        ESCCUtil.Log(_MethodName, "Getting non-faction table.")
         if threatLevel == "Low" then
             tbl = dangerLevel_LowThreatSpawnTables
         elseif threatLevel == "High" then
@@ -90,7 +90,7 @@ function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
     end
 
     if not tbl then
-        ESCULog.Error(_MethodName, "Could not set tbl - function will likely error on return.")
+        ESCCUtil.Log(_MethodName, "Could not set tbl - function will likely error on return.", 1)
     end
 
     for _, lt in pairs(tbl) do
@@ -102,7 +102,7 @@ function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
 end
 
 function ESCCUtil.getStandardWave(_DangerLevel, _WaveShips, _ThreatLevel, _Faction)
-    local _MethodName = "[ESCC] Get Standard Pirate Wave"
+    local _MethodName = "Get Standard Pirate Wave"
     _ThreatLevel = _ThreatLevel or "Standard"
     _Faction = _Faction or false --This will be used for pirates most of the time.
 
@@ -130,7 +130,7 @@ function ESCCUtil.countEntitiesByValue(_Value)
 end
 
 function ESCCUtil.getStandardTemplateBlacklist()
-    local _MethodName = "[ESCC] Get Standard Template Blacklist"
+    local _MethodName = "Get Standard Template Blacklist"
     ESCCUtil.Log(_MethodName, "Beginning...")
 
     local templateBlacklist = {
@@ -154,7 +154,7 @@ function ESCCUtil.getStandardTemplateBlacklist()
 end
 
 function ESCCUtil.getRand()
-    local _MethodName = "[ESCC] Get Random Number Generator"
+    local _MethodName = "Get Random Number Generator"
     ESCCUtil.Log(_MethodName, "Beginning...")
 
     self.RandomCalled = self.RandomCalled + random():getInt(1, 720)
@@ -171,9 +171,9 @@ function ESCCUtil.clampToNearest(_Value, _Clamp, _Round)
 end
 
 function ESCCUtil.getIndex(_Table, _Element)
-    local _MethodName = "[ESCC] Get Index of Table"
+    local _MethodName = "Get Index of Table"
     if not _Table or not _Element then
-        ESCULog.Error(_MethodName, "Cannot get random element - either the table or the element was not provided")
+        ESCCUtil.Log(_MethodName, "Cannot get random element - either the table or the element was not provided", 1)
         return
     end
     for _IDX, _VAL in pairs(_Table) do
@@ -195,7 +195,7 @@ function ESCCUtil.getSaneColor(_R, _G, _B)
 end
 
 function ESCCUtil.getDistanceToCenter(_X, _Y)
-    local _MethodName = "[ESCC] Get Distance to Center"
+    local _MethodName = "Get Distance to Center"
 
     local _Dist = math.sqrt((_X * _X) + (_Y * _Y))
 
@@ -240,20 +240,6 @@ function ESCCUtil.allXsotanDepart()
         _S:addScriptOnce("entity/utility/delayeddelete.lua", _Rgen:getFloat(2, 5))
     end
 end
-
---region #CLIENT CALLS
-
-function ESCCUtil.compatibleJumpAnimation(_Entity, _Direction, _Color, _Intensity)
-    local _Sector = Sector()
-    local _Version = GameVersion()
-    if _Version.major > 1 then
-        _Sector:createHyperspaceJumpAnimation(_Entity, _Direction, _Color, _Intensity)
-    else
-        _Sector:createHyperspaceAnimation(_Entity, _Direction, _Color, _Intensity)
-    end
-end
-
---endregion
 
 --region #LOGGING
 

@@ -404,11 +404,6 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 			craft.damageMultiplier = (craft.damageMultiplier or 1) * 1.1
 
-			--just a little extra loot since it is significantly tougher than a marauder.
-			turretDrops = 1
-			rarities[-1] = 0 -- no petty turrets
-			rarities[0] = 0 -- no common turrets
-
 			craft:setValue("is_prowler", true)
 		elseif title == "Pillager" then
 			--A heavy combat ship armed similarly to a Raider - special loot similar to a raider.
@@ -424,14 +419,10 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 			craft.damageMultiplier = (craft.damageMultiplier or 1) * 1.2
 
-			turretDrops = 3
+			turretDrops = 2
 			rarities[-1] = 0 -- no petty turrets
 			rarities[0] = 0 -- no common turrets
 			rarities[1] = 0 -- no uncommon turrets
-
-			systemDrops = 1
-			sysrarities[-1] = 0 --no petty systems
-			sysrarities[0] = 0 --no common systems
 
 			craft:setValue("is_pillager", true)
 		elseif title == "Devastator" then
@@ -448,7 +439,7 @@ function PirateGenerator.addPirateEquipment(craft, title)
 			--Yeah I don't think these guys are threatening enough even with all of that, so they also get a damage bonus.
 			craft.damageMultiplier = (craft.damageMultiplier or 1) * 1.5 * _HighAmp --Double dip on the bonus for extra scariness
 
-			turretDrops = 3
+			turretDrops = 2
 			rarities[-1] = 0 -- no petty turrets
 			rarities[0] = 0 -- no common turrets
 			rarities[1] = 0 -- no uncommon turrets
@@ -517,7 +508,7 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 			craft.damageMultiplier = (craft.damageMultiplier or 1) * finalDamageMultiplier * _HighAmp  --Double dip on the bonus for extra scariness
 
-			turretDrops = 4
+			turretDrops = 3
 			rarities[-1] = 0 -- no petty turrets
 			rarities[0] = 0 -- no common turrets
 			rarities[1] = 0 -- no uncommon turrets

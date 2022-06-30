@@ -68,7 +68,8 @@ function AllyBooster.boost()
         "adaptivedefense.lua",
         "overdrive.lua",
         "afterburn.lua",
-        "avenger.lua"
+        "avenger.lua",
+        "frenzy.lua"
     }   
 
     local _Rgen = ESCCUtil.getRand()

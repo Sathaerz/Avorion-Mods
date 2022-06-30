@@ -2,8 +2,6 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include ("randomext")
 
-ESCCUtil = include("esccutil")
-
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace Afterburn
 Afterburn = {}
@@ -60,7 +58,7 @@ function Afterburn.updateServer(_TimeStep)
 end
 
 function Afterburn.animation(direction)
-    ESCCUtil.compatibleJumpAnimation(Entity(), direction, ColorRGB(1.0, 1.0, 0.0), 0.2)
+    Sector():createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(1.0, 1.0, 0.0), 0.2)
 end
 
 --region #CLIENT / SERVER functions

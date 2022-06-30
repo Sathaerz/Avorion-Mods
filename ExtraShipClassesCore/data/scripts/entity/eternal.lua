@@ -2,8 +2,6 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include ("randomext")
 
-ESCCUtil = include("esccutil")
-
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace Eternal
 Eternal = {}
@@ -73,7 +71,7 @@ function Eternal.onDamaged()
 end
 
 function Eternal.animation(direction)
-    ESCCUtil.compatibleJumpAnimation(Entity(), direction, ColorRGB(0.0, 1.0, 0.6), 0.2)
+    Sector():createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(0.0, 1.0, 0.6), 0.2)
 end
 
 function Eternal.Log(_MethodName, _Msg)

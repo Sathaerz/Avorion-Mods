@@ -2,8 +2,6 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include ("randomext")
 
-ESCCUtil = include("esccutil")
-
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace Avenger
 Avenger = {}
@@ -70,9 +68,9 @@ end
 
 function Avenger.animation(direction, direction2, direction3)
     local _Sector = Sector()
-    ESCCUtil.compatibleJumpAnimation(Entity(), direction, ColorRGB(1.0, 0.4, 0.0), 0.3)
-    ESCCUtil.compatibleJumpAnimation(Entity(), direction2, ColorRGB(1.0, 0.6, 0.0), 0.3)
-    ESCCUtil.compatibleJumpAnimation(Entity(), direction3, ColorRGB(1.0, 0.6, 0.0), 0.3)
+    _Sector:createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(1.0, 0.4, 0.0), 0.3)
+    _Sector:createHyperspaceJumpAnimation(Entity(), direction2, ColorRGB(1.0, 0.6, 0.0), 0.3)
+    _Sector:createHyperspaceJumpAnimation(Entity(), direction3, ColorRGB(1.0, 0.6, 0.0), 0.3)
 end
 
 --endregion

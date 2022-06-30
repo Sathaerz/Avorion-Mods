@@ -49,6 +49,7 @@ function updateServer(timeStep)
 
         for _, entity in pairs(entities) do
             entity:blockHyperspace(11)
+            HyperspaceEngine(entity):exhaust() -- :3
         end
     end
 end

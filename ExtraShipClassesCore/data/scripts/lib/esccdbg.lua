@@ -1,6 +1,7 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
+include("galaxy")
 include("callable")
 include("productions")
 local Placer = include("placer")
@@ -82,6 +83,7 @@ function initUI()
     tab:createButton(ButtonRect(), "Booster", "onSpawnBoosterButtonPressed")
     tab:createButton(ButtonRect(), "Booster Healer", "onSpawnBoosterHealerButtonPressed")
     tab:createButton(ButtonRect(), "Phaser", "onSpawnPhaserButtonPressed")
+    tab:createButton(ButtonRect(), "Frenzied", "onSpawnFrenziedButtonPressed")
 
     local tab3 = tabbedWindow:createTab("Entity", "data/textures/icons/edge-crack.png", "Boss Ships")
     numButtons = 0
@@ -130,6 +132,7 @@ function initUI()
     tab6:createButton(ButtonRect(), "Station List Dump", "onStationListDumpButtonPressed")
     tab6:createButton(ButtonRect(), "Server Value Dump", "onServerValueDumpButtonPressed")
     tab6:createButton(ButtonRect(), "Player Value Dump", "onPlayerValueDumpButtonPressed")
+    tab6:createButton(ButtonRect(), "Material Value Dump", "onMaterialDumpButtonPressed")
 
     local tab7 = tabbedWindow:createTab("Entity", "data/textures/icons/papers.png", "Other")
     numButtons = 0
@@ -142,6 +145,7 @@ function initUI()
     tab7:createButton(ButtonRect(), "Center Position", "onCenterPositionPressed")
     tab7:createButton(ButtonRect(), "Get Distance", "onDistanceButtonPressed")
     tab7:createButton(ButtonRect(), "Test CDS Bombers", "onTestCDSBombersButtonPressed")
+    tab7:createButton(ButtonRect(), "Test OOS Attack", "onTestOOSButtonPressed")
 
     if _ai == 1 then
         local tab4 = tabbedWindow:createTab("Entity", "data/textures/icons/computation-mainframe.png", "AI Test")
@@ -375,6 +379,14 @@ function onPhaserEnemyGenerated(_Generated)
     for _, _S in pairs(_Generated) do
         _S:addScript("phasemode.lua")
     end   
+end
+
+function onFrenziedEnemyGenerated(_Generated)
+    onPiratesGenerated(_Generated)
+    print("adding frenzy script to enemy.")
+    for _, _S in pairs(_Generated) do
+        _S:addScript("frenzy.lua")
+    end
 end
 
 --endregion
@@ -681,6 +693,21 @@ function onSpawnPhaserButtonPressed()
     generator:endBatch()    
 end
 callable(nil, "onSpawnPhaserButtonPressed")
+
+function onSpawnFrenziedButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnFrenziedButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onFrenziedEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()    
+end
+callable(nil, "onSpawnFrenziedButtonPressed")
 
 --endregion
 
@@ -1279,6 +1306,19 @@ function onPlayerValueDumpButtonPressed()
 end
 callable(nil, "onPlayerValueDumpButtonPressed")
 
+function onMaterialDumpButtonPressed()
+    if onClient() then
+        invokeServerFunction("onMaterialDumpButtonPressed")
+        return
+    end
+
+    local _MatlTable = Balancing_GetTechnologyMaterialProbability(Sector():getCoordinates())
+    for _k, _v in pairs(_MatlTable) do
+        print("key : " .. tostring(_k) .. " value : " .. tostring(_v))
+    end
+end
+callable(nil, "onMaterialDumpButtonPressed")
+
 --endregion
 
 --region #TAB7
@@ -1428,6 +1468,18 @@ function onTestCDSBombersButtonPressed()
     Sector():addScriptOnce("sector/cdssiegeevent.lua")
 end
 callable(nil, "onTestCDSBombersButtonPressed")
+
+function onTestOOSButtonPressed()
+    if onClient() then
+        invokeServerFunction("onTestOOSButtonPressed")
+        return
+    end
+
+    print("Testing OOS attack")
+    local _Player = Player(callingPlayer)
+    _Player:addScriptOnce("events/passiveplayerattackstarter.lua")
+end
+callable(nil, "onTestOOSButtonPressed")
 
 --endregion
 

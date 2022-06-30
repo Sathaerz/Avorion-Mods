@@ -2,8 +2,6 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include ("randomext")
 
-ESCCUtil = include("esccutil")
-
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace Overdrive
 Overdrive = {}
@@ -76,8 +74,13 @@ function Overdrive.avengerBuff(_Multiplier)
     self._Data._HighDamageMultiplier = self._Data._HighDamageMultiplier * _Multiplier
 end
 
+function Overdrive.frenzyBuff(_Adder)
+    self._Data._LowDamageMultiplier = self._Data._LowDamageMultiplier + _Adder
+    self._Data._HighDamageMultiplier = self._Data._HighDamageMultiplier + _Adder
+end
+
 function Overdrive.animation(direction)
-    ESCCUtil.compatibleJumpAnimation(Entity(), direction, ColorRGB(1.0, 0.0, 0.0), 0.2)
+    Sector():createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(1.0, 0.0, 0.0), 0.2)
 end
 
 --region #CLIENT / SERVER functions

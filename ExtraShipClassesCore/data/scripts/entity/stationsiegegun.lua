@@ -35,6 +35,7 @@ self._Data = {}
         _FragileShots           ==  Setting this to true changes it so that the shot will self-terminate when hitting a wreckage or asteroid. False means it plows through them.
         _TargetTag              ==  When _TargetPriority is set to 6, entities with this script value / tag will be targeted.
         _UseEntityDmgMult       ==  Multiply the damage of the outgoing shot by the damage multiplier of the entity this script is attached to. Defaults to false.
+        _TimeToActive           ==  Sets the amount of time until this script becomes active. Defaults to 0.
 
     * - This value is set in the initialize call if it is not included.
 ]]
@@ -83,6 +84,7 @@ self._Data._TargetPriority = nil
 self._Data._FragileShots = nil
 self._Data._TargetTag = nil
 self._Data._UseEntityDmgMult = nil
+self._Data._TimeToActive = nil
 --All of these values can be generated on the fly / defaulted internally and do not need to be passed.
 self._NextTarget = nil --This will be an issue on the unlikely chance the player manages to unload the script in the 5 seconds between the pick + shot.
 self._CanShoot = nil
@@ -97,6 +99,7 @@ function StationSiegeGun.initialize(_Values)
             --Set values
             self._Data = _Values
             --We can reasonably set some of these.
+            self._Data._TimeToActive = self._Data._TimeToActive or 0
             self._Data._ShotCycleTimer = self._Data._ShotCycleTimer or 0
             self._Data._TargetPriority = self._Data._TargetPriority or 1 --Choose a random enemy if we haven't specified this.
             self._Data._ShotCycleSupply = self._Data._ShotCycleSupply or 0 --Set this to 0 if the user doesn't specify.
@@ -123,6 +126,11 @@ end
 
 function StationSiegeGun.updateServer(_TimeStep)
     local _MethodName = "Update Server"
+    if self._Data._TimeToActive >= 0 then
+        self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
+        return
+    end
+
     --Had frequent memory issues while dealing with this script. Added an emergency killswitch because of that.
     local _EmergencyKill = 0
     if _EmergencyKill == 1 then

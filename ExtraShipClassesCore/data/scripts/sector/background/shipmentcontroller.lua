@@ -2,9 +2,7 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 
 --Run the rest of the includes.
 local AsyncShipGenerator = include("asyncshipgenerator")
-local AsyncPirateGenerator = include ("asyncpirategenerator")
 local PirateGenerator = include("pirategenerator")
-local SpawnUtility = include ("spawnutility")
 
 include ("galaxy")
 include ("stringutility")

@@ -56,6 +56,7 @@ function updateServer(timeStep)
 
             if d <= threshold then
                 entity:blockHyperspace(11)
+                HyperspaceEngine(entity):exhaust()
             end
         end
     end

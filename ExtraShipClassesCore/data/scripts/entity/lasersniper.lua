@@ -51,6 +51,7 @@ function LaserSniper.initialize(_Values)
     self._Data._IncreaseDamageOT = self._Data._IncreaseDamageOT or false
     self._Data._IncreaseDOTCycle = self._Data._IncreaseDOTCycle or 0
     self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
+    self._Data._TimeToActive = self._Data._TimeToActive or 0
 
     Entity():registerCallback("onDestroyed", "onDestroyed")
 end
@@ -61,6 +62,11 @@ end
 
 function LaserSniper.update(_TimeStep)
     local _MethodName = "Update"
+    if self._Data._TimeToActive >= 0 then
+        self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
+        return
+    end
+
     if self._Data._LookConstantOverride then
         _LookConstant = self._Data._LookConstantOverride
     end
