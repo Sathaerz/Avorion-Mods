@@ -7,12 +7,13 @@ include ("randomext")
 local PlanGenerator = include ("plangenerator")
 local ShipUtility = include ("shiputility")
 local SectorTurretGenerator = include ("sectorturretgenerator")
+local SectorUpgradeGenerator = include ("upgradegenerator")
 
 local DestroyProtoGenerator = {}
 
 --Create the Prototype Battleship.
 --We pass the faction to this in order to make sure that ships from two different pirate factions don't spawn.
-function DestroyProtoGenerator.create(position, giverFaction, pirateFaction, dangerValue)
+function DestroyProtoGenerator.create(position, giverFaction, pirateFaction, dangerValue, scaleOverride)
 	--Base scale is 40. 6+ = 50, 8+ = 60, 10 = 70
 	local bshipScale = 40
 	if dangerValue > 5 then
@@ -24,6 +25,10 @@ function DestroyProtoGenerator.create(position, giverFaction, pirateFaction, dan
 	if dangerValue == 10 then
 		bshipScale = bshipScale + 10
 	end
+
+	if scaleOverride then
+		bshipScale = scaleOverride
+	end
 	
 	--I don't see this ever going above 1, but we'll see what happens.
 	local playerScaleFactor = DestroyProtoGenerator.getPlayerScaleFactor()
@@ -33,7 +38,22 @@ function DestroyProtoGenerator.create(position, giverFaction, pirateFaction, dan
 
     local volume = Balancing_GetSectorShipVolume(x, y) * bshipScale * playerScaleFactor;
 
-    local plan = PlanGenerator.makeShipPlan(giverFaction, volume)
+	--Use highest available material level.
+	local availableMaterials = Balancing_GetTechnologyMaterialProbability(x, y)
+	local _m = 0
+	for _k, _v in pairs(availableMaterials) do
+		if _v > 0 and _k > _m then
+			_m = _k
+		end
+	end
+
+	--No Avorion outside of the core.
+	local distFromCenter = length(vec2(x, y))
+	if _m == 6 and distFromCenter > Balancing_GetBlockRingMin() then
+		_m = 5
+	end
+
+    local plan = PlanGenerator.makeShipPlan(giverFaction, volume, nil, Material(_m))
     local ship = Sector():createShip(pirateFaction, "", plan, position)
 
     DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
@@ -46,10 +66,13 @@ end
 
 function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	local turretDrops = 0
+	local systemDrops = 0
 
     local x, y = Sector():getCoordinates()
     local turretGenerator = SectorTurretGenerator()
     local rarities = turretGenerator:getSectorRarityDistribution(x, y)
+	local upgradeGenerator = SectorUpgradeGenerator()
+	local sysrarities = upgradeGenerator:getSectorRarityDistribution(x, y)
 	
 	local turretFactor = 3
 	local damageFactor = 3
@@ -69,7 +92,7 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	ShipUtility.addMilitaryEquipment(ship, turretFactor, 0)
 	ShipUtility.addMilitaryEquipment(ship, turretFactor, 0)
 	ShipUtility.addDisruptorEquipment(ship)
-	ShipUtility.addArtilleryEquipment(ship)
+	ShipUtility.addScalableArtilleryEquipment(ship, turretFactor)
 	
 	--Finally, increase the ship's damage multiplier by a random amount depending on the danger level of the mission.
 	local forceMultiplier = 1 + (random():getInt(0, dangerValue) / 50)
@@ -79,26 +102,44 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	--Make it unboardable because I don't want to account for what happens if the player boards it.
 	Boarding(ship).boardable = false
 
-	turretDrops = 3
+	turretDrops = 4
+	systemDrops = 2
 	if dangerValue == 10 then
-		turretDrops = 4
+		turretDrops = 7
+		systemDrops = 4
 	end
     rarities[-1] = 0 -- no petty turrets
     rarities[0] = 0 -- no common turrets
     rarities[1] = 0 -- no uncommon turrets
-    rarities[2] = rarities[2] * 0.5 -- reduce rates for rare turrets to have higher chance for the others
+	rarities[2] = 0 -- no rare turrets - exceptional + only!
+    rarities[3] = rarities[3] * 0.25 -- reduce rates for rare turrets to have higher chance for the others
+
+	sysrarities[-1] = 0
+	sysrarities[0] = 0
+	sysrarities[1] = 0
+	sysrarities[2] = 0
+	sysrarities[3] = sysrarities[3] * 0.25
 
     turretGenerator.rarities = rarities
     for i = 1, turretDrops do
         Loot(ship):insert(InventoryTurret(turretGenerator:generate(x, y)))
     end
+	for i = 1, systemDrops do
+		Loot(ship):insert(upgradeGenerator:generateSectorSystem(x, y, getValueFromDistribution(sysrarities)))
+	end
 
     ShipAI(ship.index):setAggressive()
     ship:setTitle("${toughness}Prototype Battleship"%_T, {toughness = ""})
-	ship:addScript("icon.lua", "data/textures/icons/pixel/flagship.png")
+	ship:removeScript("icon.lua")
+	ship:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
+	if dangerValue > 5 then
+		ship:addScriptOnce("utility/buildingknowledgeloot.lua")
+	end
+	ship:addScript("internal/common/entity/background/legendaryloot.lua")
     ship.shieldDurability = ship.shieldMaxDurability
 
     ship:setValue("is_pirate", true)
+	ship:setValue("is_prototype", true)
 end
 
 function DestroyProtoGenerator.getPlayerScaleFactor()

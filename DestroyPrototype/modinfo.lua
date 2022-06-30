@@ -17,7 +17,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "Adds a new, rarely-encountered mission to Military Outposts, Shipyards, and Research Stations that tasks you with destroying a prototype battleship that has been hijacked by pirates. Watch your back - the prototype is quite dangerous, and the pirates may have a surprise waiting for you.",
+    description = "Adds a new, rarely-encountered mission to Military Outposts, Shipyards, and Research Stations that tasks you with destroying a prototype battleship that has been hijacked by pirates. Watch your back - the prototype is quite dangerous, and the pirates may have a surprise waiting for you. This mission is extremely difficult but offers a substantial reward.",
 
     -- Insert all authors into this list
     authors = {"KnifeHeart"},
@@ -26,7 +26,7 @@ meta =
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.3.1",
+    version = "1.3.2",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
@@ -44,8 +44,8 @@ meta =
     --      {id = "OptionalMod", min = "0.2", optional = true}, -- we support OptionalMod optionally, starting at version 0.2
     -- },
     dependencies = {
-        {id = "2207469437", min = "1.5"},
-        {id = "Avorion", min = "1.1", max = "*.*"}
+        {id = "2207469437", min = "1.7.8"},
+        {id = "Avorion", min = "2.0", max = "*.*"}
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves
