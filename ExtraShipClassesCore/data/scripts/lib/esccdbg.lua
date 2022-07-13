@@ -13,6 +13,7 @@ local SpawnUtility = include("spawnutility")
 local ShipUtility = include("shiputility")
 local EventUT = include("eventutility")
 local TorpedoGenerator = include("torpedogenerator")
+local Xsotan = include ("story/xsotan")
 
 local _ai = 1
 
@@ -84,6 +85,11 @@ function initUI()
     tab:createButton(ButtonRect(), "Booster Healer", "onSpawnBoosterHealerButtonPressed")
     tab:createButton(ButtonRect(), "Phaser", "onSpawnPhaserButtonPressed")
     tab:createButton(ButtonRect(), "Frenzied", "onSpawnFrenziedButtonPressed")
+    tab:createButton(ButtonRect(), "Xsotan Infestor", "onSpawnXsotanInfestorButtonPressed")
+    tab:createButton(ButtonRect(), "Xsotan Oppressor", "onSpawnXsotanOppressorButtonPressed")
+    tab:createButton(ButtonRect(), "Xsotan Sunmaker", "onSpawnXsotanSunmakerButtonPressed")
+    tab:createButton(ButtonRect(), "Xsotan Ballistyx", "onSpawnXsotanBallistyxButtonPressed")
+    tab:createButton(ButtonRect(), "Xsotan Longinus", "onSpawnXsotanLonginusButtonPressed")
 
     local tab3 = tabbedWindow:createTab("Entity", "data/textures/icons/edge-crack.png", "Boss Ships")
     numButtons = 0
@@ -146,6 +152,7 @@ function initUI()
     tab7:createButton(ButtonRect(), "Get Distance", "onDistanceButtonPressed")
     tab7:createButton(ButtonRect(), "Test CDS Bombers", "onTestCDSBombersButtonPressed")
     tab7:createButton(ButtonRect(), "Test OOS Attack", "onTestOOSButtonPressed")
+    tab7:createButton(ButtonRect(), "Reset XWG", "onLLTEResetXWGButtonPressed")
 
     if _ai == 1 then
         local tab4 = tabbedWindow:createTab("Entity", "data/textures/icons/computation-mainframe.png", "AI Test")
@@ -207,7 +214,6 @@ function initUI()
         tab5:createButton(ButtonRect(), "Side Mission 4", "onLLTESideMission4ButtonPressed")
         tab5:createButton(ButtonRect(), "Side Mission 5", "onLLTESideMission5ButtonPressed")
         tab5:createButton(ButtonRect(), "Side Mission 6", "onLLTESideMission6ButtonPressed")
-        tab5:createButton(ButtonRect(), "Reset XWG", "onLLTEResetXWGButtonPressed")
         tab5:createButton(ButtonRect(), "Cav Reinforcement Caller", "onCavReinforcementsCallerButtonPressed")
         tab5:createButton(ButtonRect(), "Cav Merchant", "onCavMerchantButtonPressed")
         tab5:createButton(ButtonRect(), "Get Excalibur", "onGetExcaliburButtonPressed")
@@ -708,6 +714,81 @@ function onSpawnFrenziedButtonPressed()
     generator:endBatch()    
 end
 callable(nil, "onSpawnFrenziedButtonPressed")
+
+function onSpawnXsotanInfestorButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanInfestorButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createInfestor(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanInfestorButtonPressed")
+
+function onSpawnXsotanOppressorButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanOppressorButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createOppressor(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanOppressorButtonPressed")
+
+function onSpawnXsotanSunmakerButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanSunmakerButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createSunmaker(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanSunmakerButtonPressed")
+
+function onSpawnXsotanBallistyxButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanBallistyxButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createBallistyx(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanBallistyxButtonPressed")
+
+function onSpawnXsotanLonginusButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanLonginusButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createLonginus(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanLonginusButtonPressed")
 
 --endregion
 

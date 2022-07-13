@@ -52,6 +52,7 @@ function LaserSniper.initialize(_Values)
     self._Data._IncreaseDOTCycle = self._Data._IncreaseDOTCycle or 0
     self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
     self._Data._TimeToActive = self._Data._TimeToActive or 0
+    self._Data._TargetPriority = self._Data._TargetPriority or 1
 
     Entity():registerCallback("onDestroyed", "onDestroyed")
 end
@@ -191,20 +192,23 @@ function LaserSniper.pickNewTarget()
     --local _Enemies = {}
     local _TargetCandidates = {Sector():getEnemies(_Factionidx)}
 
-    --[[
-    local _TargetValue = 0
-    for _, _Candidate in pairs(_Enemies) do
-        if _Candidate.firePower > _TargetValue then
-            _TargetValue = _Candidate.firePower
-        end
-    end
+    if self._Data._TargetPriority == 2 then --Reset target candidates and add all ships / stations that are not Xsotan.
+        _TargetCandidates = {}
+        local _Ships = {Sector():getEntitiesByType(EntityType.Ship)}
+        local _Stations = {Sector():getEntitiesByType(EntityType.Station)}
 
-    for _, _Candidate in pairs(_Enemies) do
-        if _Candidate.firePower == _TargetValue then
-            table.insert(_TargetCandidates, _Candidate)
+        for _, _Candidate in pairs(_Ships) do
+            if not _Candidate:getValue("is_xsotan") then
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end
+
+        for _, _Candidate in pairs(_Stations) do
+            if not _Candidate:getValue("is_xsotan") then
+                table.insert(_TargetCandidates, _Candidate)
+            end
         end
     end
-    ]]
 
     if #_TargetCandidates > 0 then
         self.Log(_MethodName, "Found at least one suitable target. Picking a random one.")

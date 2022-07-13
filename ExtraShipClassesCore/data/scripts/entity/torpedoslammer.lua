@@ -9,7 +9,7 @@ local TorpedoGenerator = include ("torpedogenerator")
 TorpedoSlammer = {}
 local self = TorpedoSlammer
 
-self._Debug = 0
+self._Debug = 1
 
 self._Data = {}
 --[[
@@ -25,7 +25,7 @@ self._Data = {}
         _ForwardAdjustFactor    = Adjusts how far forward a torpedo spawns relative to the attached entity. Used for not spawning a torpedo in the ship's bounding box which does weird shit to the AI.
         _DurabilityFactor       = Multiplies the durability of torpedoes by this amount. Useful for making torpedoes that are hard to shoot down.
         _UseEntityDamageMult    = Multiplies the damage of the torpedoes by the attached entity's damage multiplier. Useful for overdrive or avenger enemies.
-        _TargetPriority         = 1 = most firepower, 2 = by script value
+        _TargetPriority         = 1 = most firepower, 2 = by script value, 3 = random non-xsotan
         _TargetScriptValue      = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
 
         Example:
@@ -131,6 +131,21 @@ function TorpedoSlammer.pickNewTarget()
     elseif _TargetPriority == 2 then --Go through and find all enemies with a specific script value - those go in the table.
         for _, _Candidate in pairs(_Enemies) do
             if _Candidate:getValue(self._Data._TargetScriptValue) then
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end
+    elseif _TargetPriority == 3 then --Pick a random non-xsotan.
+        local _Ships = {Sector():getEntitiesByType(EntityType.Ship)}
+        local _Stations = {Sector():getEntitiesByType(EntityType.Station)}
+
+        for _, _Candidate in pairs(_Ships) do
+            if not _Candidate:getValue("is_xsotan") then
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end
+
+        for _, _Candidate in pairs(_Stations) do
+            if not _Candidate:getValue("is_xsotan") then
                 table.insert(_TargetCandidates, _Candidate)
             end
         end

@@ -31,10 +31,10 @@ self._Data = {}
                                 ==      - For both of the above values (_ShotCycleSupply / _ShotCycleSupplyConsumed), look at shipmentcontroller.lua to see how a station gets supply.
         _SupplyPerLevel         ==  How many supplies constitute a "level" - default is 500.
         _SupplyFactor           ==  How much each supply level buffs base damage.
-        _TargetPriority*        ==  Targeting priority - 1 = random, 2 = most max shield + hp, 3 = most firepower, 4 = lowest % health, 5 = highest % health, 6 = script value / tag
+        _TargetPriority*        ==  Targeting priority - 1 = random, 2 = most max shield + hp, 3 = most firepower, 4 = lowest % health, 5 = highest % health, 6 = script value / tag, 7 = station, 8 = random non-xsotan
         _FragileShots           ==  Setting this to true changes it so that the shot will self-terminate when hitting a wreckage or asteroid. False means it plows through them.
         _TargetTag              ==  When _TargetPriority is set to 6, entities with this script value / tag will be targeted.
-        _UseEntityDmgMult       ==  Multiply the damage of the outgoing shot by the damage multiplier of the entity this script is attached to. Defaults to false.
+        _UseEntityDamageMult       ==  Multiply the damage of the outgoing shot by the damage multiplier of the entity this script is attached to. Defaults to false.
         _TimeToActive           ==  Sets the amount of time until this script becomes active. Defaults to 0.
 
     * - This value is set in the initialize call if it is not included.
@@ -83,7 +83,7 @@ self._Data._SupplyFactor = nil
 self._Data._TargetPriority = nil
 self._Data._FragileShots = nil
 self._Data._TargetTag = nil
-self._Data._UseEntityDmgMult = nil
+self._Data._UseEntityDamageMult = nil
 self._Data._TimeToActive = nil
 --All of these values can be generated on the fly / defaulted internally and do not need to be passed.
 self._NextTarget = nil --This will be an issue on the unlikely chance the player manages to unload the script in the 5 seconds between the pick + shot.
@@ -104,7 +104,7 @@ function StationSiegeGun.initialize(_Values)
             self._Data._TargetPriority = self._Data._TargetPriority or 1 --Choose a random enemy if we haven't specified this.
             self._Data._ShotCycleSupply = self._Data._ShotCycleSupply or 0 --Set this to 0 if the user doesn't specify.
             self._Data._ShotSupplyConsumed = self._Data._ShotSupplyConsumed or 0 --Obviously we have consumed 0 supply.
-            self._Data._UseEntityDmgMult = self._Data._UseEntityDmgMult or false --Set this to false unless otherwise specified.
+            self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false --Set this to false unless otherwise specified.
             if self._Data._UseSupply == nil then
                 --We have to specifically do a nil check here - it could be false.
                 self._Data._UseSupply = self._Data._SupplyPerLevel > 0
@@ -255,6 +255,21 @@ function StationSiegeGun.getNextTarget()
                 table.insert(_TargetCandidates, _Candidate)
             end 
         end
+    elseif _TargetPriority == 8 then --random non-xsotan.
+        local _Ships = {Sector():getEntitiesByType(EntityType.Ship)}
+        local _Stations = {Sector():getEntitiesByType(EntityType.Station)}
+
+        for _, _Candidate in pairs(_Ships) do
+            if not _Candidate:getValue("is_xsotan") then
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end
+
+        for _, _Candidate in pairs(_Stations) do
+            if not _Candidate:getValue("is_xsotan") then
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end
     end
 
     if #_TargetCandidates > 0 then
@@ -334,7 +349,7 @@ function StationSiegeGun.fireMainGun()
     end
 
     local _EntityDamageMultiplier = 1
-    if self._Data._UseEntityDmgMult then
+    if self._Data._UseEntityDamageMult then
         _EntityDamageMultiplier = (_Station.damageMultiplier or 1)
     end
 

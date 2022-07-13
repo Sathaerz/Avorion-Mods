@@ -81,7 +81,7 @@ function TankemSpecial.addSG()
     _SGD._UseSupply = false
     _SGD._FragileShots = false
     _SGD._TargetPriority = 1 --Target a random enemy.
-    _SGD._UseEntityDmgMult = true --Use the entity damage multiplier. Fun with the overdrive / avenger scripts :)
+    _SGD._UseEntityDamageMult = true --Use the entity damage multiplier. Fun with the overdrive / avenger scripts :)
 
     local _Damage = 65000 * self._Data._DamageFactor
     _SGD._BaseDamagePerShot = _Damage
