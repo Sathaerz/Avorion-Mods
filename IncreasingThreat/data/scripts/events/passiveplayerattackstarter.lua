@@ -1,6 +1,6 @@
 if onServer() then
 
-local _Debug = 1
+local _Debug = 0
 
 local IncreasingThreat_initialize = PlayerStationAttack.initialize
 function PlayerStationAttack.initialize(_Interdict)

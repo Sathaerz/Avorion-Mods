@@ -1,4 +1,4 @@
-local _Debug = 1
+local _Debug = 0
 
 local IncreasingThreat_generateShipyardSector = SectorTemplate.generate
 function SectorTemplate.generate(player, seed, x, y)

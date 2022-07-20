@@ -2,7 +2,7 @@ local ITUtil = include("increasingthreatutility")
 local EventUT = include ("eventutility")
 
 local _PlayerIndex = 0
-local _Debug = 1
+local _Debug = 0
 
 if onServer() then
 

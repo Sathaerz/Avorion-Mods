@@ -1,6 +1,6 @@
 local ITUtil = include("increasingthreatutility")
 
-WaveUtility._Debug = 1
+WaveUtility._Debug = 0
 
 local IncreasingThreat_createPirateBossWave = WaveUtility.createPirateBossWave
 function WaveUtility.createPirateBossWave(callback)

@@ -7,7 +7,7 @@ include("galaxy")
 ITBackground = {}
 local self = ITBackground
 
-self._Debug = 1
+self._Debug = 0
 self._OverallDecayTime = (24 * 60 * 60)
 self._UnpauseFrames = 0
 self._OOSResetTicks = 0

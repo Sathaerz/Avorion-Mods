@@ -10,7 +10,7 @@ local pirate_reserves = {}
 local hateCountdownTimer = 0
 local _HatredLevel = 0
 
-PirateAttack._Debug = 1
+PirateAttack._Debug = 0
 
 local _ActiveMods = Mods()
 PirateAttack._HETActive = false

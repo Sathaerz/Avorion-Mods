@@ -11,7 +11,7 @@ local _ScriptValues = {
     { _Script = "frenzy.lua", _Arg = "Frenzied" }
 }
 
-SpawnUtility._Debug = 1
+SpawnUtility._Debug = 0
 
 function SpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
     local _MethodName = "Add IT Enemy Buffs"
