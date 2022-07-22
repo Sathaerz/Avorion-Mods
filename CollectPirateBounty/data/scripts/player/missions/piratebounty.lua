@@ -75,7 +75,7 @@ function initialize(_Data_in)
             local _TargetFaction = Faction(mission.data.custom.pirateFaction)
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.description
+            mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = { targets = tostring(mission.data.custom.targets), targetFaction = _TargetFaction.name }
             mission.data.description[3].arguments = { targetFaction = _TargetFaction.name, targets = tostring(mission.data.custom.targets), killedTargets = "0" }
 
@@ -372,7 +372,7 @@ mission.makeBulletin = function(_Station)
             location = nil,
             reward = {credits = reward, relations = 6000},
             dangerLevel = _DangerLevel,
-            description = _Description,
+            initialDesc = _Description,
             targetFaction = _TargetFaction.index,
             targets = _Targets
         }},
