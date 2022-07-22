@@ -52,7 +52,7 @@ local AsyncPirateGenerator = include ("asyncpirategenerator")
 local PirateGenerator = include("pirategenerator")
 local SpawnUtility = include ("spawnutility")
 
-mission._Debug = 1
+mission._Debug = 0
 mission._Name = "Destroy Prototype Battleship"
 
 --region #INIT
@@ -98,7 +98,7 @@ function initialize(_Data_in)
             mission.data.custom.battleshipName = ""
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.description
+            mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
 
             mission.data.icon = _Data_in.iconIn
@@ -601,7 +601,7 @@ mission.makeBulletin = function(_Station)
     end
     if _DangerLevel == 10 then
         _IconIn = "data/textures/icons/hazard-sign.png"
-        _Difficulty = "Anathema"
+        _Difficulty = "Death Sentence"
     end
     
     local _Description = formatDescription(_Station)
@@ -651,7 +651,7 @@ mission.makeBulletin = function(_Station)
             reward = {credits = reward, relations = reputation},
             punishment = {relations = 8000 },
             dangerLevel = _DangerLevel,
-            description = _Description,
+            initialDesc = _Description,
             winMsg = _WinMsg,
             loseMsg = _LoseMsg,
             iconIn = _IconIn
