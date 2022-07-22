@@ -356,7 +356,10 @@ function spawnPrototype()
 
     if _Danger == 10 then
         local _X, _Y = Sector():getCoordinates()
+        
+        --local _Type = 3
         local _Type = _Rgen:getInt(1, 3)
+        
         if _Type == 1 then
             mission.Log(_MethodName, "Torpedo type chosen.")
             --Torpedo
@@ -378,7 +381,7 @@ function spawnPrototype()
                 _UseSupply = false,
                 _FragileShots = false,
                 _TargetPriority = 1,
-                _BaseDamagePerShot = Balancing_GetSectorWeaponDPS(_X, _Y) * 2000,
+                _BaseDamagePerShot = Balancing_GetSectorWeaponDPS(_X, _Y) * 1500,
                 _TimeUntilActive = 30,
                 _UseEntityDamageMult = true
             }
@@ -387,7 +390,7 @@ function spawnPrototype()
             mission.Log(_MethodName, "Laser Sniper type chosen.")
             --Laser sniper
             local _LaserSniperValues = {
-                _DamagePerFrame = Balancing_GetSectorWeaponDPS(_X, _Y) * 1000,
+                _DamagePerFrame = Balancing_GetSectorWeaponDPS(_X, _Y) * 500,
                 _TimeToActive = 30,
                 _UseEntityDamageMult = true
             }
