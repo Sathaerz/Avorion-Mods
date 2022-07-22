@@ -71,7 +71,7 @@ function initialize(_Data_in)
             end
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.description
+            mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
 
             _Data_in.reward.paymentMessage = "Earned %1% credits for transferring the satellite."
@@ -383,7 +383,7 @@ mission.makeBulletin = function(_Station)
             reward = {credits = reward, relations = 4000}, --This is a very easy mission unless you get attacked.
             punishment = {relations = 4000 },
             dangerLevel = _DangerLevel,
-            description = _Description,
+            initialDesc = _Description,
             playerAttacked = _PlayerAttacked
         }},
     }
