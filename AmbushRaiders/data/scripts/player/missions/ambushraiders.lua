@@ -75,7 +75,7 @@ function initialize(_Data_in)
             mission.data.custom.timerAdvance = false
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.description
+            mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
 
             _Data_in.reward.paymentMessage = "Earned %1% credits for eliminating raiders."
@@ -461,7 +461,7 @@ mission.makeBulletin = function(_Station)
             reward = {credits = reward, relations = 4000}, --This is such a common mission. It's like free the slaves all over again!
             punishment = { relations = 4000 },
             dangerLevel = _DangerLevel,
-            description = _Description
+            initialDesc = _Description
         }},
     }
 
