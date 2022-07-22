@@ -4,6 +4,8 @@ local noCoreSpawnTimer = 0
 
 self._Debug = 0
 
+if onServer() then
+
 local CoreEncounters_onSectorEntered = SpawnRandomBosses.onSectorEntered
 function SpawnRandomBosses.onSectorEntered(_Player, _X, _Y, _ChangeType)
     CoreEncounters_onSectorEntered(_Player, _X, _Y, _ChangeType)
@@ -28,7 +30,6 @@ function SpawnRandomBosses.updateServer(timeStep)
 end
 
 function SpawnRandomBosses.trySpawningCoreBoss(_Player, _X, _Y)
-    local _Dist = length(vec2(_X, _Y))
     local _Spawn
     local _Sector = Sector()
     local _PlayerObj = Player(_Player)
@@ -85,11 +86,12 @@ function SpawnRandomBosses.spawnCoreBoss(_Player, _X, _Y)
 end
 
 function SpawnRandomBosses.onCoreBossDestroyed()
-    --You really don't want these guys to spawn more often, trust me.
     noSpawnTimer = 30 * 60
     noCoreSpawnTimer = 180 * 60
 
     if self._Debug == 1 then
         print("Core boss destroyed - setting noSpawnTimer : " .. tostring(noSpawnTimer) .. " / noCoreSpawnTimer : " .. tostring(noCoreSpawnTimer))
     end
+end
+
 end
