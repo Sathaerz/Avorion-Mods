@@ -117,7 +117,7 @@ function initialize(_Data_in)
             mission.data.custom.betaWingThreat = _BetaThreat
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.description
+            mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
 
             _Data_in.reward.paymentMessage = "Earned %1% credits for escorting civilians."
@@ -626,7 +626,7 @@ mission.makeBulletin = function(_Station)
             reward = {credits = reward, relations = 1000}, --Why is this so low? Becasue you get a ton of extra rep from killing the pirates w/ the civil transports active.
             punishment = {relations = 16000}, --This is so high for the same reason the above is so low.
             dangerLevel = _DangerLevel,
-            description = _Description
+            initialDesc = _Description
         }},
     }
 
