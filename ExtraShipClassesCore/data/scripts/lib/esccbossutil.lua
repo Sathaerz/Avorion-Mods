@@ -2,7 +2,6 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
 local ShipUtility = include ("shiputility")
-local SectorTurretGenerator = include ("sectorturretgenerator")
 
 include ("galaxy")
 
@@ -40,6 +39,19 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
         { _PlanFile = "data/plans/Katana.xml", _Title = "Baleful Katana", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
             _Boss:addScriptOnce("adaptivedefense.lua")
             _Boss:addScriptOnce("overdrive.lua")
+            _Boss:addScriptOnce("frenzy.lua")
+
+            local _SecondaryWeaponValues = {}
+            _SecondaryWeaponValues._OnlyBolters = true
+            _SecondaryWeaponValues._Threshold = 0.30
+            _SecondaryWeaponValues._TurretMultiplier = 10
+            _SecondaryWeaponValues._CustomizeWeapons = true
+            _SecondaryWeaponValues._WeaponDamageMultiplier = 2
+            _SecondaryWeaponValues._WeaponRange = 1850
+            _SecondaryWeaponValues._MinimumWeaponDamage = 1200         
+
+            _Boss:addScriptOnce("secondaryweapons.lua", _SecondaryWeaponValues)
+
             _Boss:addScriptOnce("dialogs/encounters/balefulkatana.lua")
             _ShipUtil.addKatanaRailguns(_Boss)
             _ShipUtil.addKatanaMortars(_Boss)

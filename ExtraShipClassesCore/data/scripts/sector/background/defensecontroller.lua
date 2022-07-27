@@ -23,10 +23,13 @@ self._Data = {}
 --[[
     Some of these values are fairly self-explanatory, but for a handy guide for setting this thing up:
     THESE VALUES ARE REQUIRED - YOU SHOULD BE SETTING ALL OF THEM IN THE FIRST INITIALIZE CALL, OTHERWISE THE SCRIPT MAY NOT WORK CORRECTLY
+        Unless it has an asterisk - * - This value is set in the initialize call if it is not included.
+        ** - this value will function equally well as nil or false
+
         _DefenseLeader              ==  The ID of the entity that is the "leader" of the defenders - this will broadcast. If this is destroyed, the script will pick another.
         _CanTransfer*               ==  Determines whether or not the defense leader can jump to another entity after the initial defense leader is destroyed. Defaults to true.
         _CanTransferToShip*         ==  Determines whether or not the defense leader can jump to a ship after the initial defense leader is destroyed. Defaults to false.
-        _CodesCracked               ==  Whether hints are broadcast from the leader.
+        _CodesCracked**             ==  Whether hints are broadcast from the leader.
         _CanBroadcast*              ==  Sets whether or not the main station can broadcast a message. Used to prevent repeatedly broadcasting. There's no need to set this. The script manages it itself.
         _DefenderCycleTime          ==  The cycle time of the defenders. i.e. setting this to 120 will cause defenders to cycle ever 2 minutes.
         _DefenderCycleTimer*        ==  Keeps track of how many seconds have elapsed for the purpose of starting a defender wave cycle.
@@ -63,8 +66,6 @@ self._Data = {}
         _ForceDebug*                ==  Forces debug mode on for this defense controller. Set to nil by default.
         _AbsoluteFactionLimit*      ==  If set, makes it so that no more than this number of ships will spawn for the current faction. For example, if this is set to 20, this will not spawn more than 20 ships from that faction, even if the ships aren't from this script. Set to nil by default.
         _NoHazard*                  ==  If set, ships spawned by this script will not cause a hazard zone when destroyed. Defaults to false.
-
-    * - This value is set in the initialize call if it is not included.
 ]]
 
 --//********** EXAMPLE SETUP OF A DEFENSE CONTROLLER FROM LONG LIVE THE EMPRESS **********

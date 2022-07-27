@@ -34,8 +34,8 @@ self._Data = {}
         _TargetPriority*        ==  Targeting priority - 1 = random, 2 = most max shield + hp, 3 = most firepower, 4 = lowest % health, 5 = highest % health, 6 = script value / tag, 7 = station, 8 = random non-xsotan
         _FragileShots           ==  Setting this to true changes it so that the shot will self-terminate when hitting a wreckage or asteroid. False means it plows through them.
         _TargetTag              ==  When _TargetPriority is set to 6, entities with this script value / tag will be targeted.
-        _UseEntityDamageMult       ==  Multiply the damage of the outgoing shot by the damage multiplier of the entity this script is attached to. Defaults to false.
-        _TimeToActive           ==  Sets the amount of time until this script becomes active. Defaults to 0.
+        _UseEntityDamageMult*   ==  Multiply the damage of the outgoing shot by the damage multiplier of the entity this script is attached to. Defaults to false.
+        _TimeToActive*          ==  Sets the amount of time until this script becomes active. Defaults to 0.
 
     * - This value is set in the initialize call if it is not included.
 ]]
@@ -97,11 +97,18 @@ function StationSiegeGun.initialize(_Values)
         if not _restoring then
             self.Log(_MethodName, "Beginning on Sever")
             --Set values
-            self._Data = _Values
+            self._Data = _Values or {}
+
+            local self_is_xsotan = Entity():getValue("is_xsotan")
+            local defaultTargetPriority = 1
+            if self_is_xsotan then
+                defaultTargetPriority = 8
+            end
+
             --We can reasonably set some of these.
             self._Data._TimeToActive = self._Data._TimeToActive or 0
             self._Data._ShotCycleTimer = self._Data._ShotCycleTimer or 0
-            self._Data._TargetPriority = self._Data._TargetPriority or 1 --Choose a random enemy if we haven't specified this.
+            self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority --Random enemy / random non-xsotan if not specified.
             self._Data._ShotCycleSupply = self._Data._ShotCycleSupply or 0 --Set this to 0 if the user doesn't specify.
             self._Data._ShotSupplyConsumed = self._Data._ShotSupplyConsumed or 0 --Obviously we have consumed 0 supply.
             self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false --Set this to false unless otherwise specified.
@@ -364,6 +371,10 @@ end
 
 function StationSiegeGun.setCodesCracked(_Val)
     self._Data._CodesCracked = _Val
+end
+
+function StationSeigeGun.resetTimeToActive(_Time)
+    self._Data._TimeToActive = _Time
 end
 
 --endregion

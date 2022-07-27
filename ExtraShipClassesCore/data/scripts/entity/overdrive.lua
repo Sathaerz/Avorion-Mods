@@ -76,7 +76,7 @@ end
 
 function Overdrive.frenzyBuff(_Adder)
     self._Data._LowDamageMultiplier = self._Data._LowDamageMultiplier + _Adder
-    self._Data._HighDamageMultiplier = self._Data._HighDamageMultiplier + _Adder
+    self._Data._HighDamageMultiplier = self._Data._HighDamageMultiplier + (_Adder * self._Data._OverdriveMultiplier)
 end
 
 function Overdrive.animation(direction)

@@ -241,6 +241,26 @@ function ESCCUtil.allXsotanDepart()
     end
 end
 
+function ESCCUtil.allEntityTypes()
+    return {
+        EntityType.None,
+        EntityType.Ship,
+        EntityType.Drone,
+        EntityType.Station,
+        EntityType.Turret,
+        EntityType.Asteroid,
+        EntityType.Wreckage,
+        EntityType.Anomaly,
+        EntityType.Loot,
+        EntityType.WormHole,
+        EntityType.Torpedo,
+        EntityType.Fighter,
+        EntityType.Container,
+        EntityType.Unknown,
+        EntityType.Other
+    }
+end
+
 --region #LOGGING
 
 function ESCCUtil.Log(_MethodName, _Msg, _OverrideDebug)

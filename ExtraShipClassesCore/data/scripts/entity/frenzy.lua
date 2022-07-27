@@ -12,7 +12,7 @@ self._Data._DamageThreshold = nil
 self._Data._IncreasePerUpdate = nil
 self._Data._UpdateCycle = nil
 
-self._Debug = 1
+self._Debug = 0
 
 function Frenzy.initialize(_Values)
     self._Data = _Values or {}

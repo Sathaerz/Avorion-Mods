@@ -7,10 +7,11 @@ include ("randomext")
 Oppressor = {}
 local self = Oppressor
 
-self._Debug = 1
+self._Debug = 0
 
 self._Data = {}
 self._Data._Multiplier = nil
+self._Data._Adder = nil
 self._Data._Ticks = nil
 self._Data._MaxTicks = nil
 
@@ -21,6 +22,7 @@ function Oppressor.initialize(_Values)
     self._Data = _Values or {}
 
     self._Data._Multiplier = self._Data._Multiplier or 1.25
+    self._Data._Adder = self._Data._Adder or 0.5 --This seems like a lot, but we're already at 30 ticks of an exponential 1.25 buff.
     self._Data._MaxTicks = self._Data._MaxTicks or 30
     self._Data._Ticks = 0
 end
@@ -43,7 +45,7 @@ function Oppressor.OppressorBuff()
         _DamageMultiplier = _DamageMultiplier * self._Data._Multiplier
     else
         --Go additive after a while.
-        _DamageMultiplier = _DamageMultiplier + self._Data._Multiplier
+        _DamageMultiplier = _DamageMultiplier + self._Data._Adder
     end
     self._Data._Ticks = self._Data._Ticks + 1
 

@@ -23,9 +23,15 @@ self._LaserData._TargetPoint = nil
 
 function LaserSniper.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Laser Sniper v53 script on entity.")
+    self.Log(_MethodName, "Initializing Laser Sniper v62 script on entity.")
 
     self._Data = _Values or {}
+
+    local self_is_xsotan = Entity():getValue("is_xsotan")
+    local defaultTargetPriority = 1
+    if self_is_xsotan then
+        defaultTargetPriority = 2
+    end
 
     --Values the player isn't meant to adjust.
     self._Data._TargetLaserActive = false
@@ -52,7 +58,7 @@ function LaserSniper.initialize(_Values)
     self._Data._IncreaseDOTCycle = self._Data._IncreaseDOTCycle or 0
     self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
     self._Data._TimeToActive = self._Data._TimeToActive or 0
-    self._Data._TargetPriority = self._Data._TargetPriority or 1
+    self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
 
     Entity():registerCallback("onDestroyed", "onDestroyed")
 end
@@ -219,12 +225,19 @@ function LaserSniper.pickNewTarget()
     end
 end
 
+function LaserSniper.resetTimeToActive(_Time)
+    self._Data._TimeToActive = _Time
+end
+
 --region #CLIENT CALLS
 
 function LaserSniper.updateLaser()
     local _MethodName = "Update Laser"
     if onClient() then
-        if not laser then
+        local _Entity = Entity()
+        if not laser or not valid(laser) or not _Entity or not valid(_Entity) then
+            --Highly suggest keeping the next line commented out. The spam is unreal.
+            --self.Log(_MethodName, "Laser not valid!!! Returning immediately.")
             return
         end
 
@@ -239,9 +252,13 @@ function LaserSniper.updateLaser()
             end
 
             local _Target = self._Data._CurrentTarget
+            if not valid(_Target) then
+                self.Log(_MethodName, "Target is not valid!!! Returning immediately.")
+                return
+            end
             local _TargetLoc = _Target.translationf
-
             local _Dir = _TargetLoc - self._LaserData._TargetPoint
+
             local _Direction = normalize(_Dir) * _CreepSpeed
             self._LaserData._TargetPoint = self._LaserData._TargetPoint + _Direction
         end
@@ -297,6 +314,7 @@ function LaserSniper.createTargetingLaser()
     LaserSniper.createLaser(1, ColorRGB(0, 1, 0), true, _Entity.translationf, self._Data._TargetPoint)
 end
 
+--Creating the shot laser
 function LaserSniper.createShotLaser()
     local _MethodName = "Create Shot Laser"
     if onServer() then
@@ -317,6 +335,7 @@ function LaserSniper.createShotLaser()
     LaserSniper.createLaser(20, ColorRGB(1, 0, 0), false, _Entity.translationf, _TargetPoint)
 end
 
+--Creating the laser
 function LaserSniper.createLaser(_Width, _Color, _Collision, _From, _TargetPoint)
     local _MethodName = "Create Laser"
     if onServer() then
@@ -328,7 +347,6 @@ function LaserSniper.createLaser(_Width, _Color, _Collision, _From, _TargetPoint
     end
 
     local _Color = _Color or ColorRGB(0.1, 0.1, 0.1)
-    local _TargetColor = _Color or ColorRGB(0.1, 0.1, 0.1)
 
     local _Dir = _TargetPoint - _From
     local _Direction = normalize(_Dir)
@@ -372,22 +390,24 @@ function LaserSniper.createLaser(_Width, _Color, _Collision, _From, _TargetPoint
     targetlaser.maxAliveTime = 5
 end
 
+--Shows a glow effect - size corresponds to how long the laser has been charging for.
 function LaserSniper.showChargeEffect()
     if onServer() then
         broadcastInvokeClientFunction("showChargeEffect", entity)
         return
     end
 
-    if not laser then return end
+    if not laser or not valid(laser) then return end
     local from = laser.from
-    local look = laser.to
     local size = 75 + (75 * self._Data._TargetBeamActiveTime)
 
+    if not from then return end
     Sector():createGlow(from, size, ColorRGB(0.2,0.2,1))
     Sector():createGlow(from, size, ColorRGB(0.2,0.2,1))
     Sector():createGlow(from, size, ColorRGB(0.2,0.2,1))
 end
 
+--Shows a large explosion. Broadcast invokes the client function if it is called on the server.
 function LaserSniper.showExplosion(entity)
     if onServer() then
         broadcastInvokeClientFunction("showExplosion", entity)
@@ -400,6 +420,7 @@ function LaserSniper.showExplosion(entity)
     Sector():createExplosion(position, math.max(_Bounds.radius, 200), false)
 end
 
+--Removes laser and targetlaser. Broadcast invokes the client function if it is called on the server.
 function LaserSniper.deleteCurrentLasers()
     local _MethodName = "Delete Current Lasers"
     if onServer() then
@@ -414,6 +435,7 @@ function LaserSniper.deleteCurrentLasers()
     if valid(targetlaser) then Sector():removeLaser(targetlaser) end
 end
 
+--Sends _Data from the server to the client. If this is called on the client it will either set _Data, OR it will attempt to get _Data again.
 function LaserSniper.sync(_Data_In)
     if onServer() then
         broadcastInvokeClientFunction("sync", self._Data)
@@ -427,6 +449,7 @@ function LaserSniper.sync(_Data_In)
 end
 callable(LaserSniper, "sync")
 
+--Sends _LaserData from the client to the server.
 function LaserSniper.syncLaserData(_Data_In)
     if onClient() then
         invokeServerFunction("syncLaserData", self._LaserData)
@@ -436,6 +459,7 @@ function LaserSniper.syncLaserData(_Data_In)
 end
 callable(LaserSniper, "syncLaserData")
 
+--Log function
 function LaserSniper.Log(_MethodName, _Msg)
     if self._Debug == 1 then
         print("[LaserSniper] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))

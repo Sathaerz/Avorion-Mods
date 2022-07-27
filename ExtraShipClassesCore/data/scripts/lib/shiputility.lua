@@ -469,3 +469,42 @@ function ShipUtility.addHunterLightningGuns(_Craft)
 end
 
 --endregion
+
+--region #XSOTAN
+
+function ShipUtility.addPulverizerCannons(_Craft)
+    local _Sector = Sector()
+    local _X, _Y = _Sector:getCoordinates()
+    local _Seed = SectorSeed(_X, _Y)
+
+    local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * 0.75
+    local _Generator = SectorTurretGenerator(_Seed)
+
+    local _CannonTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.Cannon, nil)
+    _CannonTurret.coaxial = false
+    local _CannonWeapons = {_CannonTurret:getWeapons()}
+    _CannonTurret:clearWeapons()
+
+    for _, _W in pairs(_CannonWeapons) do
+        _W.damage = _W.damage / 5
+        _W.pvelocity = _W.pvelocity / 2
+        _W.pmaximumTime = _W.reach / _W.pvelocity
+        _W.otherForce = _W.damage * 85000
+
+        _CannonTurret:addWeapon(_W)
+    end
+
+    ShipUtility.addTurretsToCraft(_Craft, _CannonTurret, _TurretCount)
+end
+
+function ShipUtility.addRevenantArtillery(_Craft)
+    local weaponTypes = ArtilleryWeapons
+    local torpedoTypes = NormalTorpedoes
+
+    --Only half as many turrets as usual + very long range + no torpedoes.
+    ShipUtility.addSpecializedEquipment(_Craft, weaponTypes, torpedoTypes, 0.5, 0, 5000)
+
+    _Craft:setValue("is_armed", true)
+end
+
+--endregion

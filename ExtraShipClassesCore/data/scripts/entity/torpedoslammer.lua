@@ -9,7 +9,7 @@ local TorpedoGenerator = include ("torpedogenerator")
 TorpedoSlammer = {}
 local self = TorpedoSlammer
 
-self._Debug = 1
+self._Debug = 0
 
 self._Data = {}
 --[[
@@ -61,9 +61,15 @@ self._Data._TargetScriptValue = nil
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v4 script on entity.")
+    self.Log(_MethodName, "Initializing Torpedo Slammer v5 script on entity.")
 
     self._Data = _Values or {}
+
+    local self_is_xsotan = Entity():getValue("is_xsotan")
+    local defaultTargetPriority = 1
+    if self_is_xsotan then
+        defaultTargetPriority = 3
+    end
 
     --Stuff the player can't mess with.
     self._Data._FireCycle = 0
@@ -78,7 +84,7 @@ function TorpedoSlammer.initialize(_Values)
     self._Data._ForwardAdjustFactor = self._Data._ForwardAdjustFactor or 1
     self._Data._DurabilityFactor = self._Data._DurabilityFactor or 1
     self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
-    self._Data._TargetPriority = self._Data._TargetPriority or 1
+    self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
 
     self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust))
 end
@@ -114,6 +120,12 @@ function TorpedoSlammer.pickNewTarget()
 
     local _Enemies = {Sector():getEnemies(_Factionidx)}
     local _TargetCandidates = {}
+
+    if self._Debug == 1 then
+        for _, _Enemy in pairs(_Enemies) do
+            self.Log(_MethodName, "Enemy is a : " .. tostring(_Enemy.typename))
+        end
+    end
 
     if _TargetPriority == 1 then --Go through and find the highest firepower total of all enemies, then put any enemies that match that into a table.
         local _TargetValue = 0
@@ -242,6 +254,10 @@ function TorpedoSlammer.generateTorpedo()
     end
 
     return _Generator:generate(_Coordinates.x, _Coordinates.y, 0, Rarity(RarityType.Exotic), _WarheadType, _BodyType)
+end
+
+function TorpedoSlammer.resetTimeToActive(_Time)
+    self._Data._TimeToActive = _Time
 end
 
 --region #CLIENT / SERVER CALLS

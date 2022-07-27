@@ -85,11 +85,14 @@ function initUI()
     tab:createButton(ButtonRect(), "Booster Healer", "onSpawnBoosterHealerButtonPressed")
     tab:createButton(ButtonRect(), "Phaser", "onSpawnPhaserButtonPressed")
     tab:createButton(ButtonRect(), "Frenzied", "onSpawnFrenziedButtonPressed")
+    tab:createButton(ButtonRect(), "Secondaries", "onSpawnSecondariesButtonPressed")
     tab:createButton(ButtonRect(), "Xsotan Infestor", "onSpawnXsotanInfestorButtonPressed")
     tab:createButton(ButtonRect(), "Xsotan Oppressor", "onSpawnXsotanOppressorButtonPressed")
     tab:createButton(ButtonRect(), "Xsotan Sunmaker", "onSpawnXsotanSunmakerButtonPressed")
     tab:createButton(ButtonRect(), "Xsotan Ballistyx", "onSpawnXsotanBallistyxButtonPressed")
     tab:createButton(ButtonRect(), "Xsotan Longinus", "onSpawnXsotanLonginusButtonPressed")
+    tab:createButton(ButtonRect(), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
+    tab:createButton(ButtonRect(), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
 
     local tab3 = tabbedWindow:createTab("Entity", "data/textures/icons/edge-crack.png", "Boss Ships")
     numButtons = 0
@@ -134,11 +137,13 @@ function initUI()
     local tab6 = tabbedWindow:createTab("Entity", "data/textures/icons/solar-cell.png", "Data Dumps")
     numButtons = 0
     tab6:createButton(ButtonRect(), "Turret Data Dump", "onTurretDataDumpButtonPressed")
+    tab6:createButton(ButtonRect(), "Upgrade Data Dump", "onUpgradeDataDumpButtonPressed")
     tab6:createButton(ButtonRect(), "Trait Data Dump", "onTraitDataDumpButtonPressed")
     tab6:createButton(ButtonRect(), "Station List Dump", "onStationListDumpButtonPressed")
     tab6:createButton(ButtonRect(), "Server Value Dump", "onServerValueDumpButtonPressed")
     tab6:createButton(ButtonRect(), "Player Value Dump", "onPlayerValueDumpButtonPressed")
     tab6:createButton(ButtonRect(), "Material Value Dump", "onMaterialDumpButtonPressed")
+    tab6:createButton(ButtonRect(), "Sector DPS Dump", "onSectorDPSDumpButtonPressed")
 
     local tab7 = tabbedWindow:createTab("Entity", "data/textures/icons/papers.png", "Other")
     numButtons = 0
@@ -153,6 +158,7 @@ function initUI()
     tab7:createButton(ButtonRect(), "Test CDS Bombers", "onTestCDSBombersButtonPressed")
     tab7:createButton(ButtonRect(), "Test OOS Attack", "onTestOOSButtonPressed")
     tab7:createButton(ButtonRect(), "Reset XWG", "onLLTEResetXWGButtonPressed")
+    tab7:createButton(ButtonRect(), "Run Scratch Script", "onRunScratchScriptButtonPressed")
 
     if _ai == 1 then
         local tab4 = tabbedWindow:createTab("Entity", "data/textures/icons/computation-mainframe.png", "AI Test")
@@ -392,6 +398,14 @@ function onFrenziedEnemyGenerated(_Generated)
     print("adding frenzy script to enemy.")
     for _, _S in pairs(_Generated) do
         _S:addScript("frenzy.lua")
+    end
+end
+
+function onSecondariedEnemyGenerated(_Generated)
+    onPiratesGenerated(_Generated)
+    print("adding secondary weapon script to enemy.")
+    for _, _S in pairs(_Generated) do
+        _S:addScript("secondaryweapons.lua")
     end
 end
 
@@ -715,6 +729,21 @@ function onSpawnFrenziedButtonPressed()
 end
 callable(nil, "onSpawnFrenziedButtonPressed")
 
+function onSpawnSecondariesButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnSecondariesButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onSecondariedEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()   
+end
+callable(nil, "onSpawnSecondariesButtonPressed")
+
 function onSpawnXsotanInfestorButtonPressed()
     if onClient() then
         invokeServerFunction("onSpawnXsotanInfestorButtonPressed")
@@ -789,6 +818,36 @@ function onSpawnXsotanLonginusButtonPressed()
     Xsotan.createLonginus(MatrixLookUpPosition(-dir, up, pos))
 end
 callable(nil, "onSpawnXsotanLonginusButtonPressed")
+
+function onSpawnXsotanPulverizerButtonPressed()
+    if onClient() then 
+        invokeServerFunction("onSpawnXsotanPulverizerButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createPulverizer(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanPulverizerButtonPressed")
+
+function onSpawnXsotanWarlockButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanWarlockButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createWarlock(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanWarlockButtonPressed")
 
 --endregion
 
@@ -1226,22 +1285,6 @@ function onLLTESideMission6ButtonPressed()
 end
 callable(nil, "onLLTESideMission6ButtonPressed")
 
-function onLLTEResetXWGButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTEResetXWGButtonPressed")
-        return
-    end
-
-    print("Resetting XWG! It will spawn in 1 second.")
-    local _Server = Server()
-    _Server:setValue("guardian_respawn_time", 1)
-    _Server:setValue("xsotan_swarm_active", nil)
-    _Server:setValue("xsotan_swarm_success", nil)
-    _Server:setValue("xsotan_swarm_time", nil)
-    _Server:setValue("xsotan_swarm_duration", nil)
-end
-callable(nil, "onLLTEResetXWGButtonPressed")
-
 function onCavReinforcementsCallerButtonPressed()
     if onClient() then
         invokeServerFunction("onCavReinforcementsCallerButtonPressed")
@@ -1321,6 +1364,29 @@ function onTurretDataDumpButtonPressed()
 end
 callable(nil, "onTurretDataDumpButtonPressed")
 
+function onUpgradeDataDumpButtonPressed()
+    if onClient() then
+        invokeServerFunction("onUpgradeDataDumpButtonPressed")
+        return
+    end
+
+    local _Ship = Entity()
+    local _Faction = Faction(_Ship.factionIndex)
+
+    local _UpgradeTemplates = _Faction:getInventory():getItemsByType(InventoryItemType.SystemUpgrade)
+    local _Items = {}
+    for _, _Itm in pairs(_UpgradeTemplates) do
+        local _Upgrade = _Itm.item
+        table.insert(_Items, _Upgrade)
+    end
+
+    for _, _UpgradeItem in pairs(_Items) do
+        print("=== NEW UPGRADE ===")
+        print("script : " .. tostring(_UpgradeItem.script))
+    end
+end
+callable(nil, "onUpgradeDataDumpButtonPressed")
+
 function onTraitDataDumpButtonPressed()
     if onClient() then
         invokeServerFunction("onTraitDataDumpButtonPressed")
@@ -1399,6 +1465,19 @@ function onMaterialDumpButtonPressed()
     end
 end
 callable(nil, "onMaterialDumpButtonPressed")
+
+function onSectorDPSDumpButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSectorDPSDumpButtonPressed")
+        return
+    end
+
+    for idx = 499, 0, -1 do
+        local _dps = Balancing_GetSectorWeaponDPS(0, idx) --Just do 0, idx
+        print("distance : " .. tostring(idx) .. " dps : " .. tostring(_dps))
+    end
+end
+callable(nil, "onSectorDPSDumpButtonPressed")
 
 --endregion
 
@@ -1561,6 +1640,34 @@ function onTestOOSButtonPressed()
     _Player:addScriptOnce("events/passiveplayerattackstarter.lua")
 end
 callable(nil, "onTestOOSButtonPressed")
+
+function onLLTEResetXWGButtonPressed()
+    if onClient() then
+        invokeServerFunction("onLLTEResetXWGButtonPressed")
+        return
+    end
+
+    print("Resetting XWG! It will spawn in 1 second.")
+    local _Server = Server()
+    _Server:setValue("guardian_respawn_time", 1)
+    _Server:setValue("xsotan_swarm_active", nil)
+    _Server:setValue("xsotan_swarm_success", nil)
+    _Server:setValue("xsotan_swarm_time", nil)
+    _Server:setValue("xsotan_swarm_duration", nil)
+end
+callable(nil, "onLLTEResetXWGButtonPressed")
+
+function onRunScratchScriptButtonPressed()
+    if onClient() then
+        --Put client script here.
+
+        invokeServerFunction("onRunScratchScriptButtonPressed")
+        return
+    end
+
+    --Put server script here.
+end
+callable(nil, "onRunScratchScriptButtonPressed")
 
 --endregion
 
