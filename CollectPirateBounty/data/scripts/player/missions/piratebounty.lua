@@ -45,6 +45,9 @@ mission.data.description = {
     {text = "..." },
     { text = "${killedTargets} / ${targets} targets killed", bulletPoint = true, fulfilled = false },
 }
+mission.data.timeLimit = 60 * 60 * 4 --You got 4 hours.
+mission.data.timeLimitInDescription = true --Show the player how much time is left.
+mission.data.failMessage = "The bounty contract has expired. Thank you for your hard work."
 
 mission.data.accomplishMessage = "Thank you for fulfilling the bounty contract. We transferred the reward to your account."
 
@@ -53,7 +56,7 @@ function initialize(_Data_in)
     local _MethodName = "initialize"
     mission.Log(_MethodName, "Beginning...")
 
-    if onServer()then
+    if onServer() then
         if not _restoring then
             mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel) .. " - enemy : " .. tostring(_Data_in.targetFaction))
 
@@ -66,11 +69,13 @@ function initialize(_Data_in)
                 .targets
                 .killedTargets
                 .blockHunters
+                .timePassed
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.pirateFaction = _Data_in.targetFaction
             mission.data.custom.targets = _Data_in.targets
             mission.data.custom.killedTargets = 0
+            mission.data.custom.timePassed = 0
 
             local _TargetFaction = Faction(mission.data.custom.pirateFaction)
 
@@ -152,6 +157,12 @@ mission.phases[1].onSectorArrivalConfirmed = function(_X, _Y)
                 --50% chance instead of 25%
                 _HunterChance = 2
             end
+
+            local _TimePassed = mission.data.custom.timePassed
+            local _Hours = math.max(math.floor(_TimePassed / 3600), 1)
+
+            _HunterChance = _HunterChance * _Hours --cuts spawn rate by doubling the denominator on hour 2, tripling on hour 3. The mission expires afer hour 4 so it is irrelevant.
+
             mission.Log(_MethodName, "No pirates found. Calcuating headhunter chance as 1 in " .. tostring(_HunterChance))
             local _SpawnHunters = _Rgen:getInt(1, _HunterChance) == 1
 
@@ -178,6 +189,10 @@ mission.phases[1].onSectorArrivalConfirmed = function(_X, _Y)
             end
         end
     end
+end
+
+mission.phases[1].update = function(_TimeStep)
+    mission.data.custom.timePassed = (mission.data.custom.timePassed or 0) + _TimeStep
 end
 
 --endregion
@@ -323,13 +338,14 @@ mission.makeBulletin = function(_Station)
     local _Description = formatDescription(_Station)
 
     local _DangerLevel = _Rgen:getInt(1, 10)
+    local _MaxTargets = 22
     local _Difficulty = "Easy"
-    local _Targets = _Rgen:getInt(5, 25)
+    local _Targets = _Rgen:getInt(5, _MaxTargets)
 
     local _BaseReward = 4000
     if _DangerLevel == 10 then
         _BaseReward = _BaseReward + 1000
-        _Targets = math.min(_Targets + 5, 25) --Add a bias towards a higher target count, but don't push it over the maximum.
+        _Targets = math.min(_Targets + 5, _MaxTargets) --Add a bias towards a higher target count, but don't push it over the maximum.
     end
     if insideBarrier then
         _BaseReward = _BaseReward * 2
