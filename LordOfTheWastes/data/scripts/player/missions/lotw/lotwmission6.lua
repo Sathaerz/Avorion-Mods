@@ -84,7 +84,7 @@ function initialize(_Data_in)
             mission.data.custom.pirateSpawnTimer = _SpawnTimer
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.description
+            mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = mission.data.location.x, y = mission.data.location.y }
             mission.data.description[3].arguments = {x = mission.data.location.x, y = mission.data.location.y } --Not sure if this is needed but eh
 
@@ -530,7 +530,7 @@ mission.makeBulletin = function(_Station)
             giver = _Station.index,
             location = target,
             reward = {credits = reward, relations = 6000},
-            description = _Description,
+            initialDesc = _Description,
             dangerLevel = _DangerLevel
         }},
     }

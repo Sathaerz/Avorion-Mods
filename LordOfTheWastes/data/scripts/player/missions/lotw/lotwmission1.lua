@@ -79,7 +79,7 @@ function initialize(_Data_in)
             mission.data.custom.friendlyFaction = _Giver.factionIndex
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.description
+            mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y, enemyName = mission.data.custom.enemyName }
 
             _Data_in.reward.paymentMessage = "Earned %1% credits for destroying the pirate fleet."
@@ -522,7 +522,7 @@ mission.makeBulletin = function(_Station)
             giver = _Station.index,
             location = target,
             reward = {credits = reward, relations = 12000},
-            description = _Description,
+            initialDesc = _Description,
             dangerLevel = _DangerLevel
         }},
     }
