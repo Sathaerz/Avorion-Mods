@@ -373,7 +373,7 @@ function StationSiegeGun.setCodesCracked(_Val)
     self._Data._CodesCracked = _Val
 end
 
-function StationSeigeGun.resetTimeToActive(_Time)
+function StationSiegeGun.resetTimeToActive(_Time)
     self._Data._TimeToActive = _Time
 end
 
