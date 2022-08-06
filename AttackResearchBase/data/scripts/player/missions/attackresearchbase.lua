@@ -133,7 +133,7 @@ function initialize(_Data_in)
             end
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.description
+            mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y, enemyName = mission.data.custom.enemyName }
 
             _Data_in.reward.paymentMessage = "Earned %1% credits for destroying the research base."
@@ -244,7 +244,7 @@ mission.phases[1].onAbandon = function()
     local _X, _Y = Sector():getCoordinates()
     if _X == mission.data.location.x and _Y == mission.data.location.y then
         --Abandoned in-sector.
-        local _EntityTypes = { EntityType.Ship, EntityType.Station, EntityType.Torpedo, EntityType.Fighter, EntityType.Wreckage, EntityType.Asteroid, EntityType.Unknown, EntityType.Other, EntityType.Loot }
+        local _EntityTypes = ESCCUtil.allEntityTypes()
         Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
     end
 end
@@ -582,7 +582,7 @@ mission.makeBulletin = function(_Station)
             location = target,
             reward = {credits = reward, relations = 6000},
             dangerLevel = _DangerLevel,
-            description = _Description,
+            initialDesc = _Description,
             pirates = _Pirates,
             enemyFaction = _EnemyFaction
         }},
