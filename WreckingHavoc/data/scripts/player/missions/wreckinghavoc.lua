@@ -239,7 +239,7 @@ mission.makeBulletin = function(_Station)
             giver = _Station.index,
             location = target,
             reward = {credits = reward, relations = 0},
-            description = _Description
+            initialDesc = _Description
         }},
     }
 
