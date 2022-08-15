@@ -31,6 +31,7 @@ local AsyncShipGenerator = include("asyncshipgenerator")
 local Placer = include ("placer")
 local Balancing = include("galaxy")
 local SpawnUtility = include ("spawnutility")
+local EventUT = include("eventutility")
 
 mission._Debug = 0
 mission._Name = "Collect Pirate Bounty"
@@ -134,6 +135,11 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _DestroyedEntity = Entity(_ID)
     local _EntityDestroyer = Entity(_LastDamageInflictor)
 
+    if not _EntityDestroyer or not valid(_EntityDestroyer) or not _DestroyedEntity or not valid(_DestroyedEntity) then
+        mission.Log(_MethodName, "Destroyed entity / destroyer entity is null - returning.")
+        return
+    end
+
     if (_DestroyedEntity.type == EntityType.Ship or _DestroyedEntity.type == EntityType.Station) and (_EntityDestroyer.type == EntityType.Ship or _EntityDestroyer.type == EntityType.Station) then
         mission.Log(_MethodName, "Both destroyer / destroyed were ships / stations - checking faction indexes.")
         if _DestroyedEntity.factionIndex == mission.data.custom.pirateFaction and _EntityDestroyer.factionIndex == Player().index then
@@ -173,6 +179,11 @@ mission.phases[1].onSectorArrivalConfirmed = function(_X, _Y)
                 mission.Log(_MethodName, "Don't spawn headhunters in the player's home sector.")
             end
 
+            if not EventUT.persecutorEventAllowed() then
+                _SpawnHunters = false
+                mission.Log(_MethodName, "Event utility says no persecutor event - setting hunter spawn to false.")
+            end
+
             if mission.data.custom.blockHunters then
                 mission.Log(_MethodName, "Headhunters have spawned recently. Blocking spawn.")
                 mission.data.custom.blockHunters = false
@@ -200,31 +211,9 @@ end
 --region #SERVER CALLS
 
 function getHeadHunterFaction()
-    local name = "The Galactic Headhunters Guild"%_T
+    local _X, _Y = Sector():getCoordinateS()
 
-    local galaxy = Galaxy()
-    local faction = galaxy:findFaction(name)
-    if faction == nil then
-        faction = galaxy:createFaction(name, 0, 0)
-        faction.initialRelations = 0
-        faction.initialRelationsToPlayer = 0
-        faction.staticRelationsToPlayers = true
-
-        SetFactionTrait(faction, "aggressive"%_T, "peaceful"%_T, 0.6)
-        SetFactionTrait(faction, "careful"%_T, "brave"%_T, 0.75)
-        SetFactionTrait(faction, "greedy"%_T, "generous"%_T, 0.75)
-        SetFactionTrait(faction, "opportunistic"%_T, "honorable"%_T, 1.0)
-    end
-
-    faction.initialRelationsToPlayer = 0
-    faction.staticRelationsToPlayers = true
-    faction.homeSectorUnknown = true
-
-    -- set home sector to wherever it's needed to avoid head hunters being completely over the top
-    local x, y = Sector():getCoordinates()
-    faction:setHomeSectorCoordinates(x, y)
-
-    return faction
+    return EventUT.getHeadHunterFaction(_X, _Y)
 end
 
 function spawnHunters()
@@ -263,13 +252,16 @@ function onHuntersFinished(_Generated)
         _AI:setAggressive()
         _AI:registerEnemyFaction(_Player.index)
         _AI:registerFriendFaction(mission.data.custom.targetFaction) --Very unlikely that this comes into play.
+        if _Player.allianceIndex then
+            _AI:registerEnemyFaction(_Player.allianceIndex)
+        end
 
         _Ship:setValue("secret_contractor", mission.data.custom.targetFaction)
         MissionUT.deleteOnPlayersLeft(_Ship)
         _Ship:setValue("is_persecutor", true)
 
-        if string.match(_Ship.title, "Persecutor") then
-            _Ship.title = "Head Hunter"%_T
+        if string.match() then
+            _Ship.title = "Bounty Hunter"%_T
         end
     end
 
