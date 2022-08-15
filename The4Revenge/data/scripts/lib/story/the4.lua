@@ -19,7 +19,7 @@ function The4.createChaingunTurret()
     return turret
 end
 
-function The4.spawnFlare(_X, _Y, _Factor)
+function The4.spawnFlare(_X, _Y, _Factor, _BigFactor)
     local faction = The4.getFaction()
     local volume = Balancing_GetSectorShipVolume(faction:getHomeSectorCoordinates()) * 10
 
@@ -38,20 +38,30 @@ function The4.spawnFlare(_X, _Y, _Factor)
     _Boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
 
     --Add offensive script
-    local _LaserDamage = 77000
+    local _LaserDamage = 12000
+
+    if _BigFactor > 0 then
+        _LaserDamage = _LaserDamage * 2
+    end
+
     _Boss:addScriptOnce("lasersniper.lua", {_DamagePerFrame = _LaserDamage, _UseEntityDamageMult = true})
 
     if _Factor >= 10 then
         _Boss:addScriptOnce("overdrive.lua")
     end
 
-    Loot(_Boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(_X, _Y, -16, Rarity(RarityType.Exotic), WeaponType.Laser)))
+    local _LootOffset = -24
+    if _BigFactor > 0 then
+        _LootOffset = -30
+    end
+
+    Loot(_Boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(_X, _Y, _LootOffset, Rarity(RarityType.Exotic), WeaponType.Laser)))
     _Boss:setDropsAttachedTurrets(false)
 
     return _Boss
 end
 
-function The4.spawnWastelayer(_X, _Y, _Factor)
+function The4.spawnWastelayer(_X, _Y, _Factor, _BigFactor)
     local faction = The4.getFaction()
     local volume = Balancing_GetSectorShipVolume(faction:getHomeSectorCoordinates()) * 10
 
@@ -68,13 +78,20 @@ function The4.spawnWastelayer(_X, _Y, _Factor)
 
     _Boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
 
+    local _TorpedoDamage = 2
+    local _TorpedoDurability = 2
+    if _BigFactor > 0 then
+        _TorpedoDamage = _TorpedoDamage * 4
+        _TorpedoDurability = _TorpedoDurability * 2
+    end
+
     --Add offensive script
     local _TorpSlammerValues = {}
     _TorpSlammerValues._TimeToActive = 12
     _TorpSlammerValues._ROF = 4
     _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DamageFactor = 16
-    _TorpSlammerValues._DurabilityFactor = 4
+    _TorpSlammerValues._DamageFactor = _TorpedoDamage
+    _TorpSlammerValues._DurabilityFactor = _TorpedoDurability
     _TorpSlammerValues._ForwardAdjustFactor = 1
     _TorpSlammerValues._UseEntityDamageMult = true
 
@@ -84,13 +101,18 @@ function The4.spawnWastelayer(_X, _Y, _Factor)
         _Boss:addScriptOnce("overdrive.lua")
     end
 
-    Loot(_Boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(_X, _Y, -16, Rarity(RarityType.Exotic), WeaponType.ChainGun)))
+    local _LootOffset = -24
+    if _BigFactor > 0 then
+        _LootOffset = -30
+    end
+
+    Loot(_Boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(_X, _Y, _LootOffset, Rarity(RarityType.Exotic), WeaponType.ChainGun)))
     _Boss:setDropsAttachedTurrets(false)
 
     return _Boss
 end
 
-function The4.spawnRevengeTank(x, y, _Factor)
+function The4.spawnRevengeTank(x, y, _Factor, _BigFactor)
     local faction = The4.getFaction()
     local volume = Balancing_GetSectorShipVolume(faction:getHomeSectorCoordinates()) * 20
 
@@ -121,13 +143,18 @@ function The4.spawnRevengeTank(x, y, _Factor)
         boss.damageMultiplier = (boss.damageMultiplier or 1) * 1.5
     end
 
-    Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, -16, Rarity(RarityType.Exotic), WeaponType.Laser)))
+    local _LootOffset = -24
+    if _BigFactor > 0 then
+        _LootOffset = -30
+    end
+
+    Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, _LootOffset, Rarity(RarityType.Exotic), WeaponType.Laser)))
     boss:setDropsAttachedTurrets(false)
 
     return boss
 end
 
-function The4.spawnRevengeHealer(x, y, _Factor)
+function The4.spawnRevengeHealer(x, y, _Factor, _BigFactor)
     local faction = The4.getFaction()
     local volume = Balancing_GetSectorShipVolume(faction:getHomeSectorCoordinates()) * 8
 
@@ -153,13 +180,18 @@ function The4.spawnRevengeHealer(x, y, _Factor)
         boss:addScriptOnce("eternal.lua")
     end
 
-    Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, -16, Rarity(RarityType.Exotic), WeaponType.RepairBeam)))
+    local _LootOffset = -24
+    if _BigFactor > 0 then
+        _LootOffset = -30
+    end
+
+    Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, _LootOffset, Rarity(RarityType.Exotic), WeaponType.RepairBeam)))
     boss:setDropsAttachedTurrets(false)
 
     return boss
 end
 
-function The4.spawnRevengeShieldbreaker(x, y, _Factor)
+function The4.spawnRevengeShieldbreaker(x, y, _Factor, _BigFactor)
     local faction = The4.getFaction()
     local volume = Balancing_GetSectorShipVolume(faction:getHomeSectorCoordinates()) * 10
 
@@ -180,13 +212,18 @@ function The4.spawnRevengeShieldbreaker(x, y, _Factor)
         boss.damageMultiplier = (boss.damageMultiplier or 1) * 1.25
     end
 
-    Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, -16, Rarity(RarityType.Exotic), WeaponType.PlasmaGun)))
+    local _LootOffset = -24
+    if _BigFactor > 0 then
+        _LootOffset = -30
+    end
+
+    Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, _LootOffset, Rarity(RarityType.Exotic), WeaponType.PlasmaGun)))
     boss:setDropsAttachedTurrets(false)
 
     return boss
 end
 
-function The4.spawnRevengeHullbreaker(x, y, _Factor)
+function The4.spawnRevengeHullbreaker(x, y, _Factor, _BigFactor)
     local faction = The4.getFaction()
     local volume = Balancing_GetSectorShipVolume(faction:getHomeSectorCoordinates()) * 10
 
@@ -207,7 +244,12 @@ function The4.spawnRevengeHullbreaker(x, y, _Factor)
         boss.damageMultiplier = (boss.damageMultiplier or 1) * 1.25
     end
 
-    Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, -16, Rarity(RarityType.Exotic), WeaponType.RailGun)))
+    local _LootOffset = -24
+    if _BigFactor > 0 then
+        _LootOffset = -30
+    end
+
+    Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, _LootOffset, Rarity(RarityType.Exotic), WeaponType.RailGun)))
     boss:setDropsAttachedTurrets(false)
 
     return boss
@@ -235,6 +277,9 @@ function The4.spawn(x, y)
     local _Players = {Sector():getPlayers()}
     local _SpawnRevenge = true
     local _Factor = 0
+    local _BigFactor = 0
+    local _MaxFactor = 10
+    local _MaxBigFactor = 15
 
     for _, _Player in pairs(_Players) do
         --All players must have killed the4 to get the nasty version.
@@ -250,7 +295,9 @@ function The4.spawn(x, y)
 
     --Drop the factor by so it doesn't start coming into play until after the 2nd kill.
     _Factor = math.max(_Factor - 1, 0)
-    _Factor = math.min(_Factor, 20) --In a first for me, we'll cap it at 20.
+    _Factor = math.min(_Factor, _MaxFactor) --In a first for me, we'll cap it.
+    _BigFactor = math.max(0, _Factor - _MaxFactor) --Scale more rapidly after 15 kills
+    _BigFactor = math.min(_BigFactor, _MaxBigFactor)
 
     if _SpawnRevenge then
         local ships = {Sector():getEntitiesByFaction(The4.getFaction().index)}
@@ -278,12 +325,12 @@ function The4.spawn(x, y)
             player:setValue("last_spawned_the4", runtime)
         end
 
-        local _Healer = The4.spawnRevengeHealer(x, y, _Factor)
-        local _DD1 = The4.spawnRevengeShieldbreaker(x, y, _Factor)
-        local _DD2 = The4.spawnRevengeHullbreaker(x, y, _Factor)
-        local _DD3 = The4.spawnFlare(x, y, _Factor)
-        local _DD4 = The4.spawnWastelayer(x, y, _Factor)
-        local _Tank = The4.spawnRevengeTank(x, y, _Factor)
+        local _Healer = The4.spawnRevengeHealer(x, y, _Factor, _BigFactor)
+        local _DD1 = The4.spawnRevengeShieldbreaker(x, y, _Factor, _BigFactor)
+        local _DD2 = The4.spawnRevengeHullbreaker(x, y, _Factor, _BigFactor)
+        local _DD3 = The4.spawnFlare(x, y, _Factor, _BigFactor)
+        local _DD4 = The4.spawnWastelayer(x, y, _Factor, _BigFactor)
+        local _Tank = The4.spawnRevengeTank(x, y, _Factor, _BigFactor)
 
         enemies = {}
         table.insert(enemies, _Healer)
@@ -298,6 +345,7 @@ function The4.spawn(x, y)
         for _, boss in pairs(enemies) do
             ShipAI(boss.index):setAggressive()
             boss:addScriptOnce("avenger.lua") --All of them are avengers
+            boss:setValue("_escc_booster_append_title_direct", true) --Append directly to the title when boosting.
             local _AddBlocker = false
             local _AddMegaBlocker = false
 
@@ -317,16 +365,16 @@ function The4.spawn(x, y)
                 boss:addScriptOnce("megablocker.lua", 1) --All are megablockers
             end
 
-            local _DuraFactor = 2 + (_Factor / 2)
-            local _ShieldDuraFactor = 2 + (_Factor / 2)
-            local _DamageFactor = 4 + (_Factor / 2)
+            local _DuraFactor = 1.5 + (_Factor / 4) + _BigFactor
+            local _ShieldDuraFactor = 1.5 + (_Factor / 4) + _BigFactor
+            local _DamageFactor = 2 + (_Factor / 4) + _BigFactor
             --Tankem has bad stats so they get a better multiplier on stuff.
             if boss.title == "Tankem" then
-                _DamageFactor = 6 + (_Factor / 2)
-                _DuraFactor = 3 + (_Factor / 2)
+                _DuraFactor = 1.5 + (_Factor / 3) + _BigFactor
+                _DamageFactor = 2.5 + (_Factor / 3) + _BigFactor
             end
             if boss.title == "Reconstructo" and _Factor >= 5 then
-                _DuraFactor = 3 + (_Factor / 2)
+                _DuraFactor = 1.5 + (_Factor / 3) + _BigFactor
             end
 
             boss.damageMultiplier = (boss.damageMultiplier or 1) * _DamageFactor
