@@ -195,7 +195,7 @@ function ShipUtility.addKatanaRailguns(_Craft)
 
     local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
     local _Generator = SectorTurretGenerator(_Seed)
-    local _BaseTurretGen = include("TurretGenerator")
+    local _BaseTurretGen = include("turretgenerator")
 
     local ESCCUtil = include("esccutil")
     local _Rgen = ESCCUtil.getRand()
@@ -240,11 +240,10 @@ function ShipUtility.addKatanaMortars(_Craft)
     local _Sector = Sector()
     local _X, _Y = _Sector:getCoordinates()
     local _Seed = SectorSeed(_X, _Y)
-    local rand = Random()
 
     local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
     local _Generator = SectorTurretGenerator(_Seed)
-    local _BaseTurretGen = include("TurretGenerator")
+    local _BaseTurretGen = include("turretgenerator")
 
     local ESCCUtil = include("esccutil")
     local _Rgen = ESCCUtil.getRand()
@@ -353,7 +352,7 @@ function ShipUtility.addPhoenixCannons(_Craft)
 
     local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
     local _Generator = SectorTurretGenerator(_Seed)
-    local _BaseTurretGen = include("TurretGenerator")
+    local _BaseTurretGen = include("turretgenerator")
 
     local ESCCUtil = include("esccutil")
     local _Rgen = ESCCUtil.getRand()
@@ -393,7 +392,7 @@ function ShipUtility.addHunterRailguns(_Craft)
 
     local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
     local _Generator = SectorTurretGenerator(_Seed)
-    local _BaseTurretGen = include("TurretGenerator")
+    local _BaseTurretGen = include("turretgenerator")
 
     local ESCCUtil = include("esccutil")
     local _Rgen = ESCCUtil.getRand()
@@ -436,7 +435,7 @@ function ShipUtility.addHunterLightningGuns(_Craft)
 
     local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
     local _Generator = SectorTurretGenerator(_Seed)
-    local _BaseTurretGen = include("TurretGenerator")
+    local _BaseTurretGen = include("turretgenerator")
 
     local ESCCUtil = include("esccutil")
     local _Rgen = ESCCUtil.getRand()

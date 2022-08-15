@@ -22,7 +22,7 @@ self._Data._MaxBoostCharges = nil
 
 function AllyBooster.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Ally Booster v13 script on entity.")
+    self.Log(_MethodName, "Initializing Ally Booster v16 script on entity.")
 
     self._Data = _Values or {}
 
@@ -106,7 +106,6 @@ function AllyBooster.boost()
                     self.Log(_MethodName, "Target ally not invincible!")
                     if _TargetAlly.durability < _TargetAlly.maxDurability then
                         local _HealPct = self._Data._HealPctWhenBoosting / 100
-                        local _AllyHull = _TargetAlly.durability
                         local _AllyMaxHull = _TargetAlly.maxDurability
         
                         self.Log(_MethodName, "Healing " .. tostring(_HealPct) .. "%!")
@@ -121,10 +120,12 @@ function AllyBooster.boost()
             end
 
             local _TitleArgs = _TargetAlly:getTitleArguments()
-            if _TitleArgs then 
-                _TargetAlly:setTitle("${script}${toughness}${title}", {toughness = _TitleArgs.toughness, title = _TitleArgs.title, script = "Boosted "})
-            else
+            local _AppendDirectlyToTitle = _TargetAlly:getValue("_escc_booster_append_title_direct")
+            self.Log(_MethodName, "Title args are " .. tostring(_TitleArgs))
+            if _AppendDirectlyToTitle then 
                 _TargetAlly.title = "Boosted " .. _TargetAlly.title
+            else
+                _TargetAlly:setTitle("${script}${toughness}${title}", {toughness = _TitleArgs.toughness, title = _TitleArgs.title, script = "Boosted "})
             end
         end
         self.Log(_MethodName, "Consuming boost charge.")

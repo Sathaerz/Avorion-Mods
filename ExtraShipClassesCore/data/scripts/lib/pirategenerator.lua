@@ -26,8 +26,6 @@ include ("utility")
 
 ESCCUtil = include("esccutil")
 
-local SectorUpgradeGenerator = include ("upgradegenerator")
-
 --Add debug information last.
 
 PirateGenerator._Debug = 0
@@ -318,15 +316,16 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 	if IsExtraShipClass then
 		PirateGenerator.Log(_MethodName, "Extra ship class found. Adding appropriate equipment for an extra ship class.")
-		local turretDrops = 0
-		local systemDrops = 0
+		local _Drops = 0
 
 		PirateGenerator.Log(_MethodName, "Initializing sector / turret generator / rarities / upgrade generator / system rarities for loot purposes")
 		local x, y = Sector():getCoordinates()
+
 		local turretGenerator = SectorTurretGenerator()
-		local rarities = turretGenerator:getSectorRarityDistribution(x, y)
-		local upgradeGenerator = SectorUpgradeGenerator()
-		local sysrarities = upgradeGenerator:getSectorRarityDistribution(x, y)
+		local turretRarities = turretGenerator:getSectorRarityDistribution(x, y)
+
+		local upgradeGenerator = UpgradeGenerator()
+		local upgradeRarities = upgradeGenerator:getSectorRarityDistribution(x, y)
 
 		if title == "Jammer" then
 			--A tiny ship that focuses on disrupting the player. Blocks hyperspace
@@ -419,10 +418,13 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 			craft.damageMultiplier = (craft.damageMultiplier or 1) * 1.2
 
-			turretDrops = 2
-			rarities[-1] = 0 -- no petty turrets
-			rarities[0] = 0 -- no common turrets
-			rarities[1] = 0 -- no uncommon turrets
+			_Drops = 2
+			turretRarities[-1] = 0 -- no petty turrets
+			turretRarities[0] = 0 -- no common turrets
+			turretRarities[1] = 0 -- no uncommon turrets
+
+			upgradeRarities[-1] = 0 --no petty systems
+			upgradeRarities[0] = 0 --no common systems
 
 			craft:setValue("is_pillager", true)
 		elseif title == "Devastator" then
@@ -439,16 +441,15 @@ function PirateGenerator.addPirateEquipment(craft, title)
 			--Yeah I don't think these guys are threatening enough even with all of that, so they also get a damage bonus.
 			craft.damageMultiplier = (craft.damageMultiplier or 1) * 1.5 * _HighAmp --Double dip on the bonus for extra scariness
 
-			turretDrops = 2
-			rarities[-1] = 0 -- no petty turrets
-			rarities[0] = 0 -- no common turrets
-			rarities[1] = 0 -- no uncommon turrets
-			rarities[2] = rarities[2] * 0.75 -- reduce rates for rare turrets slightly to have higher chance for the others
+			_Drops = 3
+			turretRarities[-1] = 0 -- no petty turrets
+			turretRarities[0] = 0 -- no common turrets
+			turretRarities[1] = 0 -- no uncommon turrets
+			turretRarities[2] = turretRarities[2] * 0.75 -- reduce rates for rare turrets slightly to have higher chance for the others
 
-			systemDrops = 1
-			sysrarities[-1] = 0 --no petty systems
-			sysrarities[0] = 0 --no common systems
-			sysrarities[1] = 0.75 --uncommon slightly less likely
+			upgradeRarities[-1] = 0 --no petty systems
+			upgradeRarities[0] = 0 --no common systems
+			upgradeRarities[1] = upgradeRarities[1] * 0.75 --uncommon slightly less likely
 
 			craft:setValue("is_devastator", true)
 		elseif title == "Executioner" then
@@ -508,17 +509,16 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 			craft.damageMultiplier = (craft.damageMultiplier or 1) * finalDamageMultiplier * _HighAmp  --Double dip on the bonus for extra scariness
 
-			turretDrops = 3
-			rarities[-1] = 0 -- no petty turrets
-			rarities[0] = 0 -- no common turrets
-			rarities[1] = 0 -- no uncommon turrets
-			rarities[2] = rarities[2] * 0.5 -- reduce rates for rare turrets slightly to have higher chance for the others
+			_Drops = 4
+			turretRarities[-1] = 0 -- no petty turrets
+			turretRarities[0] = 0 -- no common turrets
+			turretRarities[1] = 0 -- no uncommon turrets
+			turretRarities[2] = turretRarities[2] * 0.5 -- reduce rates for rare turrets slightly to have higher chance for the others
 
-			systemDrops = 1
-			sysrarities[-1] = 0
-			sysrarities[0] = 0
-			sysrarities[1] = 0
-			sysrarities[2] = sysrarities[2] * 0.5
+			upgradeRarities[-1] = 0
+			upgradeRarities[0] = 0
+			upgradeRarities[1] = 0
+			upgradeRarities[2] = upgradeRarities[2] * 0.5
 
 			craft:removeScript("icon.lua")
 			craft:addScript("icon.lua", "data/textures/icons/pixel/executioner.png")
@@ -532,14 +532,14 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 		craft.damageMultiplier = (craft.damageMultiplier or 1) * _HighAmp
 
-		PirateGenerator.Log(_MethodName, "Adding extra turret loot.")
-		turretGenerator.rarities = rarities
-		for _ = 1, turretDrops do
-			Loot(craft):insert(InventoryTurret(turretGenerator:generate(x, y)))
-		end
-		PirateGenerator.Log(_MethodName, "Adding extra system loot.")
-		for _ = 1, systemDrops do
-			Loot(craft):insert(upgradeGenerator:generateSectorSystem(x, y, getValueFromDistribution(sysrarities)))
+		PirateGenerator.Log(_MethodName, "Adding " .. _Drops .. " extra drops to loot.")
+		turretGenerator.rarities = turretRarities
+		for idx = 1, _Drops do
+			if random():test(0.5) then
+				Loot(craft):insert(upgradeGenerator:generateSectorSystem(x, y, nil, upgradeRarities))
+			else
+				Loot(craft):insert(InventoryTurret(turretGenerator:generate(x, y)))
+			end
 		end
 
 		PirateGenerator.Log(_MethodName, "Setting ship title / toughness argument, increasing shields to max.")

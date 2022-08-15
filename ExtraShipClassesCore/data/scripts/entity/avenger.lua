@@ -11,19 +11,59 @@ self._Debug = 0
 
 self._Data = {}
 self._Data._Multiplier = nil
+self._Data._Invoked = nil
+self._Data._AllowMultiProc = nil
 
 function Avenger.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Adding v3 of avenger.lua to entity.")
+    self.Log(_MethodName, "Adding v7 of avenger.lua to entity.")
 
     self._Data = _Values or {}
 
     self._Data._Multiplier = self._Data._Multiplier or 1.2
+    self._Data._AllowMultiProc = self._Data._AllowMultiProc or false
+    --Cannot be set by the player.
+    self._Data._Invoked = false
 
     if onServer() then
         if Sector():registerCallback("onDestroyed", "onDestroyed") == 1 then
             self.Log(_MethodName, "Could not register onEntityDestroyed callback.")
         end
+    end
+end
+
+--region #SERVER functions
+
+function Avenger.getUpdateInterval()
+    return 1
+end
+
+function Avenger.updateServer(_TimeStamp)
+    self._Data._Invoked = false
+end
+
+function Avenger.avengerBuff()
+    local _MethodName = "AvengerBuff"
+    if not self._Data._Invoked then
+        --If multiple procs in a second are allowed, don't set this to true so it can keep going off.
+        if not self._Data._AllowMultiProc then
+            self._Data._Invoked = true
+        end
+
+        local _CurrentDamageMultiplier = Entity().damageMultiplier
+        self.Log(_MethodName, "Current damage multiplier is " .. tostring(_CurrentDamageMultiplier))
+    
+        local _DamageMultiplier = (Entity().damageMultiplier or 1) * self._Data._Multiplier
+        Entity().damageMultiplier = _DamageMultiplier
+    
+        self.Log(_MethodName, "Damage multiplier is now " .. tostring(_DamageMultiplier))
+    
+        local direction = random():getDirection()
+        local direction2 = random():getDirection()
+        local direction3 = random():getDirection()
+        broadcastInvokeClientFunction("animation", direction, direction2, direction3)
+    else
+        self.Log(_MethodName, "Avenger has been invoked recently - waiting 1 second to clear.")
     end
 end
 
@@ -51,18 +91,7 @@ function Avenger.onDestroyed(_Entityidx, _LastDamageInflictor)
     end
 end
 
-function Avenger.avengerBuff()
-    local _MethodName = "AvengerBuff"
-    local _DamageMultiplier = (Entity().damageMultiplier or 1) * self._Data._Multiplier
-    Entity().damageMultiplier = _DamageMultiplier
-
-    self.Log(_MethodName, "Damage multiplier is now " .. tostring(_DamageMultiplier))
-
-    local direction = random():getDirection()
-    local direction2 = random():getDirection()
-    local direction3 = random():getDirection()
-    broadcastInvokeClientFunction("animation", direction, direction2, direction3)
-end
+--endregion
 
 --region #CLIENT functions
 

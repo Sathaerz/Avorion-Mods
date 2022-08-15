@@ -150,8 +150,13 @@ function ShipGenerator.createAWACS(faction, position)
 
     ship.title = "AWACS Ship"%_t
 
+    ship:addScript("ai/patrol.lua")
     ship:setValue("is_armed", true)
     ship:setValue("is_awacs", true)
+
+    ship:addScript("icon.lua", "data/textures/icons/pixel/block.png")
+
+    return ship
 end
 
 function ShipGenerator.createScout(faction, position)
@@ -171,13 +176,39 @@ function ShipGenerator.createScout(faction, position)
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
     ship.title = "Scout Ship"%_t
 
+    ship:addScript("ai/patrol.lua")
     ship:setValue("is_armed", true)
     ship:setValue("is_scout", true)
 
     ship:addScript("icon.lua", "data/textures/icons/pixel/fighter.png")
 
-    finalizeShip(ship)
-    onShipCreated(generatorId, ship)
+    return ship
+end
+
+function ShipGenerator.createRevenant(faction, wreckage)
+    local _MethodName = "Create Revenant"
+    ShipGenerator.Log(_MethodName, "Beginning...")
+
+    local _Sector = Sector()
+    local plan = wreckage:getMovePlan()
+    local position = wreckage.position
+
+    local ship = _Sector:createShip(faction, "", plan, position, EntityArrivalType.Default)
+
+    ShipUtility.addRevenantArtillery(ship)
+
+    local name, type = ShipUtility.getMilitaryNameByVolume(ship.volume)
+    name = "Revenant"
+    ship:setTitle("${toughness}${ship}", { toughness = "", ship = name})
+    ship.crew = ship.idealCrew
+    ship.shieldDurability = ship.shieldMaxDurability
+
+    ship:setValue("is_armed", true)
+    ship:setValue("is_defender", true)
+
+    ship:addScript("icon.lua", "data/textures/icons/pixel/defender.png")
+
+    return ship
 end
 
 function ShipGenerator.createCivilTransport(faction, position, volume)
