@@ -197,7 +197,17 @@ mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].noPlayerEventsTargetSector = true
 mission.phases[2].noLocalPlayerEventsTargetSector = true
 mission.phases[2].sectorCallbacks = {}
+mission.phases[2].onTargetLocationEntered = function(_X, _Y)
+    local _func = "resetTimeToActive"
+    local _time = 30 --Give the player a grace period before the battleship starts blasting again.
+    local _BattleShips = {Sector():getEntitiesByScriptValue("is_prototype")}
+    local _BattleShip = _BattleShips[1]
 
+    if _BattleShip and valid(_BattleShip) and _BattleShip:getValue("_prototype_superweapon_script") then
+        local _script = _BattleShip:getValue("_prototype_superweapon_script")
+        _BattleShip:invokeFunction(_script, _func, _time)
+    end
+end
 --region #PHASE 2 SECTOR CALLBACKS
 
 if onServer() then
@@ -207,6 +217,11 @@ mission.phases[2].sectorCallbacks[1] = {
     func = function(_Entityidx, _Amount, _Inflictor, _DmgSrc, _DmgType)
         if mission.data.custom.dangerLevel >= 8 and not mission.data.custom.spawnedSecondWave then
             local _DamagedEntity = Entity(_Entityidx)
+
+            if not _DamagedEntity or not valid(_DamagedEntity) then
+                return
+            end
+
             if _DamagedEntity:getValue("is_prototype") then
                 local _Hull = _DamagedEntity.durability
                 local _HullThreshold = _DamagedEntity.maxDurability / 2
@@ -370,6 +385,7 @@ function spawnPrototype()
                 _UseEntityDamageMult = true
             }
             _BattleShip:addScriptOnce("torpedoslammer.lua", _TorpValues)
+            _BattleShip:setValue("_prototype_superweapon_script", "torpedoslammer.lua")
         elseif _Type == 2 then
             mission.Log(_MethodName, "Siege Gun type chosen.")
             --Siege Gun
@@ -382,10 +398,11 @@ function spawnPrototype()
                 _FragileShots = false,
                 _TargetPriority = 1,
                 _BaseDamagePerShot = Balancing_GetSectorWeaponDPS(_X, _Y) * 1500,
-                _TimeUntilActive = 30,
+                _TimeToActive = 30,
                 _UseEntityDamageMult = true
             }
             _BattleShip:addScriptOnce("stationsiegegun.lua", _SiegeGunValues)
+            _BattleShip:setValue("_prototype_superweapon_script", "stationsiegegun.lua")
         elseif _Type == 3 then
             mission.Log(_MethodName, "Laser Sniper type chosen.")
             --Laser sniper
@@ -395,6 +412,7 @@ function spawnPrototype()
                 _UseEntityDamageMult = true
             }
             _BattleShip:addScriptOnce("lasersniper.lua", _LaserSniperValues)
+            _BattleShip:setValue("_prototype_superweapon_script", "lasersniper.lua")
         end
     end
 
