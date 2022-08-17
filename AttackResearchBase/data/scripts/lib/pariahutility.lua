@@ -67,6 +67,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
 
     local _AmpTable = {
         ["2017677089"] = 0.0,     --Weapon Engineering is _Amp + 3 - Just want to note that it is on the list here. We have a special set of detection triggers for this later in the file.
+        ["2849203442"] = 4,     --Overpowerinator. I mean, it's deliberately designed to be overpowered.
         ["2191291553"] = 2,    --HarderEnemys - Your wish has been granted.
         ["2442089978"] = 2,    --Amped UP DPS - Sure, it makes the Gordian Knot hit harder, but we need to compensate with HP.
         ["2674515274"] = 2,    --Voidspark upgrade
