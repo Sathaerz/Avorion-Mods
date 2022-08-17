@@ -211,7 +211,7 @@ end
 --region #SERVER CALLS
 
 function getHeadHunterFaction()
-    local _X, _Y = Sector():getCoordinateS()
+    local _X, _Y = Sector():getCoordinates()
 
     return EventUT.getHeadHunterFaction(_X, _Y)
 end
