@@ -31,6 +31,7 @@ LLTEUtil = include("llteutil")
 local SectorGenerator = include ("sectorgenerator")
 local PirateGenerator = include("pirategenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
+local ShipGenerator = include("shipgenerator")
 local AsyncShipGenerator = include ("asyncshipgenerator")
 local SectorSpecifics = include ("sectorspecifics")
 local Balancing = include ("galaxy")
@@ -39,6 +40,7 @@ local SpawnUtility = include ("spawnutility")
 local Placer = include("placer")
 
 mission._Debug = 0
+mission.tracing = false
 mission._Name = "Steel in the Twilight"
 
 mission.data.custom.containerIds = {}
@@ -125,6 +127,7 @@ mission.globalPhase = {}
 mission.globalPhase.updateServer = function(_TimeStep)
     local _MethodName = "Global Phase On Update Server"
     if (mission.currentPhase == mission.phases[5] or mission.currentPhase == mission.phases[6]) and mission.data.custom.shipmentJumps > 5 then
+        mission.Log(_MethodName, "Failing")
         Player():sendChatMessage("Nav Computer", 0, "Hyperspace Signature of the target freighters has been lost.")
         fail()
     end
@@ -135,7 +138,7 @@ mission.globalPhase.onAbandon = function()
     registerMarkContainers(false)
     if _X == mission.data.location.x and _Y == mission.data.location.y then
         --Abandoned in-sector.
-        local _EntityTypes = { EntityType.Ship, EntityType.Station, EntityType.Torpedo, EntityType.Fighter, EntityType.Asteroid, EntityType.Wreckage, EntityType.Unknown, EntityType.Other, EntityType.Loot }
+        local _EntityTypes = ESCCUtil.allEntityTypes()
         Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
     else
         --The container sector is deleted and regenerated each time the player comes and goes, so it is not necessary to do anything with it here.

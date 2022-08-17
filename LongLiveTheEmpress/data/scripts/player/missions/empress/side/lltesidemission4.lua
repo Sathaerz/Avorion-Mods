@@ -231,7 +231,7 @@ mission.phases[1].onAbandon = function()
     local _X, _Y = Sector():getCoordinates()
     if _X == mission.data.location.x and _Y == mission.data.location.y then
         --Abandoned in-sector.
-        local _EntityTypes = { EntityType.Ship, EntityType.Station, EntityType.Torpedo, EntityType.Fighter, EntityType.Wreckage, EntityType.Asteroid, EntityType.Unknown, EntityType.Other, EntityType.Loot }
+        local _EntityTypes = ESCCUtil.allEntityTypes()
         Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
     else
         --Abandoned out-of-sector.

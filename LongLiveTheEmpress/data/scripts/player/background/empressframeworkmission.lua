@@ -174,7 +174,7 @@ function EmpressFrameworkMission.updateServer(_TimeStep)
         }
         for _, _Script in pairs(_Scripts) do
             if player:hasScript(_Script) then
-                self.Log(_MethodName, "Invoking fail method of " .. _Script)
+                self.Log(_MethodName, "Invoking fail method of " .. _Script, 1)
                 player:invokeFunction(_Script, "fail")
             end
         end

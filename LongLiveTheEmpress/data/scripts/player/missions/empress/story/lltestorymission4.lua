@@ -822,7 +822,7 @@ end
 function runFullSectorCleanup()
 	local _Sector = Sector()
 	local _X, _Y = Sector():getCoordinates()
-	local _EntityTypes = { EntityType.Ship, EntityType.Station, EntityType.Torpedo, EntityType.Fighter, EntityType.Asteroid, EntityType.Wreckage, EntityType.Unknown, EntityType.Other, EntityType.Loot }
+	local _EntityTypes = ESCCUtil.allEntityTypes()
 	_Sector:addScriptOnce("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
 
     if _X == mission.data.location.x and _Y == mission.data.location.y then

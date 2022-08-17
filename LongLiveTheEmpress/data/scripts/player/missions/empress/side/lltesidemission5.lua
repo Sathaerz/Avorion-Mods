@@ -497,7 +497,7 @@ mission.phases[1].onAbandon = function()
         local _StationBay = CargoBay(_Station)
         _StationBay:clear()
 
-        local _EntityTypes = { EntityType.Ship, EntityType.Station, EntityType.Torpedo, EntityType.Fighter, EntityType.Wreckage, EntityType.Asteroid, EntityType.Unknown, EntityType.Other, EntityType.Loot }
+        local _EntityTypes = ESCCUtil.allEntityTypes()
         Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
     else
         --Abandoned out-of-sector.
