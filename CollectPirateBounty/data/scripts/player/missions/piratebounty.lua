@@ -213,10 +213,11 @@ end
 function getHeadHunterFaction()
     local _X, _Y = Sector():getCoordinates()
 
-    return EventUT.getHeadHunterFaction(_X, _Y)
+    return EventUT.getHeadhunterFaction(_X, _Y)
 end
 
 function spawnHunters()
+    local _MethodName = "Spawn Hunters"
     local _HeadHunterFaction = getHeadHunterFaction()
     local _Rgen = ESCCUtil.getRand()
 
@@ -245,6 +246,7 @@ function spawnHunters()
 end
 
 function onHuntersFinished(_Generated)
+    local _MethodName = "On Hunters Finished"
     local _Player = Player()
 
     for _, _Ship in pairs(_Generated) do
@@ -260,7 +262,9 @@ function onHuntersFinished(_Generated)
         MissionUT.deleteOnPlayersLeft(_Ship)
         _Ship:setValue("is_persecutor", true)
 
-        if string.match() then
+        mission.Log(_MethodName, "Ship title is " .. _Ship.title)
+
+        if string.match(_Ship.title, "Persecutor") then
             _Ship.title = "Bounty Hunter"%_T
         end
     end
@@ -330,6 +334,7 @@ mission.makeBulletin = function(_Station)
     local _Description = formatDescription(_Station)
 
     local _DangerLevel = _Rgen:getInt(1, 10)
+    --local _DangerLevel = 10
     local _MaxTargets = 22
     local _Difficulty = "Easy"
     local _Targets = _Rgen:getInt(5, _MaxTargets)
