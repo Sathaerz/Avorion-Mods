@@ -2,8 +2,8 @@ if onServer() then
 
 local _Debug = 0
 
-local IncreasingThreat_initialize = PlayerStationAttack.initialize
-function PlayerStationAttack.initialize(_Interdict)
+local IncreasingThreat_initialize = PassivePlayerAttackStarter.initialize
+function PassivePlayerAttackStarter.initialize(_Interdict)
     _Interdict = _Interdict or { x = -1, y = -1 }
 
     local entityInfos = {}

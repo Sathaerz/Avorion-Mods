@@ -28,6 +28,7 @@ function PiratesAttackEntity.spawnAttackers()
             end
         end
     end
+    _Hatred = _Hatred or 0
 
     local _Dir = random():getDirection()
     local _Up = vec3(0,1,0)
