@@ -39,7 +39,7 @@ include("stringutility")
 ESCCUtil = include("esccutil")
 LLTEUtil = include("llteutil")
 
-local SectorGenerator = include ("sectorgenerator")
+local SectorGenerator = include ("SectorGenerator")
 local PirateGenerator = include("pirategenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local AsyncShipGenerator = include ("asyncshipgenerator")
@@ -85,7 +85,6 @@ function initialize()
                 .pirateSector
                 .militaryStationid
                 .builtMainSector
-                .militaryStationid
                 .firstStationDestroyed
                 .empressBladeRespawning
                 .missionStarted
@@ -365,9 +364,9 @@ mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
         mission.Log(_MethodName, "Adding extra casualty allowance.")
 
         if mission.data.custom.sendExtraCavaliers then
-            local _ExtraReinforcements = 3
+            _ExtraReinforcements = 3
             if mission.data.custom._HETActive then
-                local _ExtraReinforcements = 4
+                _ExtraReinforcements = 4
             end
         end
 
@@ -452,6 +451,7 @@ function buildPirateSector(_X, _Y)
         mission.Log(_MethodName, "Building sector for pirate level faction: " .. tostring(_Faction.name) .. " level " .. tostring(mission.data.custom.pirateLevel) .. " pirates")
         local _MilitaryOutpost = _Generator:createMilitaryBase(_Faction)
         mission.data.custom.militaryStationid = _MilitaryOutpost.index
+        _MilitaryOutpost:setValue("_llte_story2_militaryoutpost", true)
         local _Shipyard = _Generator:createShipyard(_Faction)
         local _RepairDock = _Generator:createRepairDock(_Faction)
         local _ResearchOutpost = _Generator:createResearchStation(_Faction)

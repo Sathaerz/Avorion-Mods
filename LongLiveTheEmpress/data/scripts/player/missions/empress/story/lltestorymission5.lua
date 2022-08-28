@@ -33,7 +33,6 @@ include("structuredmission")
 ESCCUtil = include("esccutil")
 LLTEUtil = include("llteutil")
 
-local SectorGenerator = include ("sectorgenerator")
 local PirateGenerator = include("pirategenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local AsyncShipGenerator = include ("asyncshipgenerator")
