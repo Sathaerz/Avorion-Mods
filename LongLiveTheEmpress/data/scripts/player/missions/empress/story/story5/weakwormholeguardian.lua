@@ -3,7 +3,7 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 include ("randomext")
 include ("stringutility")
 include ("callable")
-local SectorGenerator = include ("sectorgenerator")
+local SectorGenerator = include ("SectorGenerator")
 local Xsotan = include ("story/xsotan")
 local Placer = include ("placer");
 local AsyncShipGenerator = include("asyncshipgenerator")
