@@ -1,3 +1,5 @@
+package.path = package.path .. ";data/scripts/lib/?.lua"
+
 ESCCUtil = include("esccutil")
 
 local ShipUtility = include ("shiputility")
