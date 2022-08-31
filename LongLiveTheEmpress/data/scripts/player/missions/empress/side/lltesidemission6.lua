@@ -216,6 +216,8 @@ mission.phases[3].onBeginServer = function()
     local _CommanderName = mission.data.custom.commanderName
     local _X, _Y = mission.data.custom.deliveryLocation.x, mission.data.custom.deliveryLocation.y
 
+    mission.Log(_MethodName, "Args - rank : " .. tostring(_Rank) .. " name : " .. tostring(_Player.name) .. " _X : " .. tostring(_X) .. " _Y : " .. tostring(_Y) .. " Commander : " .. tostring(_CommanderName))
+
     local _Mail = Mail()
 	_Mail.text = Format("%1% %2%,\n\nWe're ready to pick up the shipment whenever you're ready to deliver it. Bring it to (%3%:%4%) and we'll meet you there.\nLong live the Empress!\n\nCommander %5%", _Rank, _Player.name, _X, _Y, _CommanderName)
 	_Mail.header = "Pickup Location"
@@ -539,12 +541,17 @@ function getNextLocation(_FirstLocation)
     mission.Log(_MethodName, "Getting a location.")
     local x, y = Sector():getCoordinates()
     local target = {}
+    local _inBarrier = MissionUT.checkSectorInsideBarrier(x, y)
+    local _stayInBarrier = false --Go outside the barrier by default, but if we're already inside we don't care anymore.
+    if _inBarrier then
+        _stayInBarrier = nil
+    end
 
     if _FirstLocation then
         --Get a sector that's a ways away from where we are now.
-        target.x, target.y = MissionUT.getSector(x, y, 12, 20, false, false, false, false, false)
+        target.x, target.y = MissionUT.getSector(x, y, 12, 20, false, false, false, false, _stayInBarrier)
     else
-        target.x, target.y = MissionUT.getSector(x, y, 3, 5, false, false, false, false, false)
+        target.x, target.y = MissionUT.getSector(x, y, 3, 5, false, false, false, false, _stayInBarrier)
     end
 
     return target
