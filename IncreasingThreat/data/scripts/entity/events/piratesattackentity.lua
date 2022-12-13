@@ -22,7 +22,7 @@ function PiratesAttackEntity.spawnAttackers()
         local _Server = Server()
         for _, _Member in pairs(_Players) do
             local _AlliancePlayer = Player(_Member)
-            local _AllianceHatred = _AlliancePlayer:getValue(_HatredIndex)
+            local _AllianceHatred = _AlliancePlayer:getValue(_HatredIndex) or 0
             if _AllianceHatred > _Hatred then
                 _Hatred = _AllianceHatred
             end
