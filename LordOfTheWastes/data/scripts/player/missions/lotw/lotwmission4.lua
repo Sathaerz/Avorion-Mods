@@ -348,7 +348,20 @@ function buildSector(_X, _Y)
     _StationBay:clear()
     _Station:setDropsLoot(false)
 
-    local _DuraFactor = 1.0 + (0.2 * mission.data.custom.missionsFailed)
+    local _DuraFactor = 1.0
+    --Anti-frustration feature.
+    if mission.data.custom.missionsFailed > 0 then
+        local _Factor1 = 0.2 * mission.data.custom.missionsFailed
+        local _Factor2 = 0
+
+        --If you get a really bad seed and the outpost is made of tissue paper, start exponentially increasing it after failure #5
+        if mission.data.custom.missionsFailed > 5 then
+            local _ExpFactor = math.max(1, mission.data.custom.missionsFailed - 5)
+            _Factor2 = 0.2 * (_ExpFactor * _ExpFactor)
+        end
+
+        _DuraFactor = _DuraFactor + _Factor1 + _Factor2
+    end
     local _Dura = Durability(_Station)
     if _Dura then
         _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * _DuraFactor
