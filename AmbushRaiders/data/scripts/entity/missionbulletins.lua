@@ -2,6 +2,7 @@ local AmbushRaiders_getPossibleMissions = MissionBulletins.getPossibleMissions
 function MissionBulletins.getPossibleMissions()
 	local station = Entity()
 	local stationTitle = station.title
+    local stationFaction = Faction(station.factionIndex)
 
 	local scripts = AmbushRaiders_getPossibleMissions()
 
@@ -28,6 +29,11 @@ function MissionBulletins.getPossibleMissions()
         if string.find(stationTitle, _v) then
             _Add = true
         end
+    end
+
+    --Don't add this mission to player / alliance stations.
+    if stationFaction.isPlayer or stationFaction.isAlliance then
+        _Add = false
     end
 
     if _Add then
