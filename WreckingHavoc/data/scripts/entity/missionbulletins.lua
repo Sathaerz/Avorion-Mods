@@ -3,22 +3,19 @@ function MissionBulletins.getPossibleMissions()
 	--print("getting possible missions")
 	local station = Entity()
 	local stationTitle = station.title
+	local stationFaction = Faction(station.factionIndex)
 
 	local scripts = WreckingHavoc_getPossibleMissions()
 
-	local _Version = GameVersion()
-	local _Probability = 0
-	if _Version.major <= 1 then
-		--1.3.8 and lower probability.
-		_Probability = 0.9
-	else
-		--2.0 and higher probability.
-		_Probability = 15
-	end
+	local _Add = true
+    --Don't add this mission to player / alliance stations.
+    if stationFaction.isPlayer or stationFaction.isAlliance then
+        _Add = false
+    end
 
-	if stationTitle == "Scrapyard" then
+	if _Add and stationTitle == "Scrapyard" then
 		print("inserting new mission")
-		table.insert(scripts, {path = "data/scripts/player/missions/wreckinghavoc.lua", prob = _Probability})
+		table.insert(scripts, {path = "data/scripts/player/missions/wreckinghavoc.lua", prob = 15})
 	end
 
 	return scripts
