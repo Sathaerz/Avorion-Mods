@@ -159,9 +159,6 @@ end
 mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].onBeginServer = function()
-
-end
 
 if onServer() then
 
