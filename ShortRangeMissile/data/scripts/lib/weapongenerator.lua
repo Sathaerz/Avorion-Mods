@@ -5,7 +5,7 @@ function WeaponGenerator.generateShortRangeMissile(rand, dps, tech, material, ra
 
     local fireDelay = rand:getFloat(0.18, 0.25) --Standard Rocket is 0.5 to 1.5
     local reach = rand:getFloat(375, 525)       --Standard Rocket is 1300 - 1800
-    local damage = dps * fireDelay * 1.33        --Dropping 1.3.8 support anyways.
+    local damage = dps * fireDelay * 1.25        --Dropping 1.3.8 support anyways.
     local speed = rand:getFloat(190, 250)       --Standard Rocket is 50-80
     local existingTime = reach / speed
 
