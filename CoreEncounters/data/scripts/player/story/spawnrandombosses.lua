@@ -102,10 +102,11 @@ function SpawnRandomBosses.spawnCoreBoss(_Player, _X, _Y)
 end
 
 function SpawnRandomBosses.onCoreBossDestroyed()
+    noSpawnTimer = 30 * 60
     noCoreSpawnTimer = 180 * 60
 
     if self._Debug == 1 then
-        print("Core boss destroyed - setting noSpawnTimer : noCoreSpawnTimer : " .. tostring(noCoreSpawnTimer))
+        print("Core boss destroyed - setting noSpawnTimer : " .. tostring(noSpawnTimer) .. " / noCoreSpawnTimer : " .. tostring(noCoreSpawnTimer))
     end
 end
 
