@@ -37,6 +37,22 @@ function SpawnRandomBosses.trySpawningCoreBoss(_Player, _X, _Y)
 
     --Don't do anything here unless the player has already completed the story.
     if ESCCUtil.playerBeatStory(_PlayerObj) then
+        if not _PlayerObj:getValue("_coreencounters_intromail_sent") then
+            local MissionUT = include("missionutility")
+        
+            local _mail = Mail()
+    
+            _mail.header = "Weapons of War"
+            _mail.sender = Format("%1%, the Adventurer"%_T, MissionUT.getAdventurerName())
+            _mail.text = Format("Hello!\n\nMy friend, what you have managed to accomplish is truly the stuff of legends! When we met so long ago, never in my wildest dreams did I imagine that we would come so far together and accomplish so much.\n\nHowever, there's no rest for the weary. With the Xsotan presence in the galaxy significantly weakened, the pirates have been getting bolder. I've heard rumors of them constructing some nasty new ships that are far more powerful than what you've dealt with so far.\n\nKeep your eyes open. It would be a shame to come so far, only to fall.\n\nGood luck!\n%1%", MissionUT.getAdventurerName())
+            _mail.id = "coreencounters_intromail"
+    
+            _PlayerObj:addMail(_mail)
+    
+            _PlayerObj:setValue("_coreencounters_intromail_sent", true)
+            return
+        end
+
         --Check to see if the player is inside the barrier.
         local MissionUT = include("missionutility")
         if MissionUT.checkSectorInsideBarrier(_X, _Y) then
