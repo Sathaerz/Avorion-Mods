@@ -223,6 +223,10 @@ function initUI()
         tab5:createButton(ButtonRect(), "Cav Reinforcement Caller", "onCavReinforcementsCallerButtonPressed")
         tab5:createButton(ButtonRect(), "Cav Merchant", "onCavMerchantButtonPressed")
         tab5:createButton(ButtonRect(), "Get Excalibur", "onGetExcaliburButtonPressed")
+        tab5:createButton(ButtonRect(), "Reset LLTE Vars", "onResetLLTEVarsButtonPressed")
+        tab5:createButton(ButtonRect(), "Set Rep Level 1", "onLLTERep1Pressed")
+        tab5:createButton(ButtonRect(), "Set Rep Level 3", "onLLTERep3Pressed")
+        tab5:createButton(ButtonRect(), "Set Rep Level 5", "onLLTERep5Pressed")
     end
 
     if hasRetrogradeCampaign then
@@ -1327,6 +1331,103 @@ function onGetExcaliburButtonPressed()
     _Player:getInventory():addOrDrop(LLTEUtil.getSpecialRailguns())
 end
 callable(nil, "onGetExcaliburButtonPressed")
+
+function onResetLLTEVarsButtonPressed()
+    if onClient() then
+        invokeServerFunction("onResetLLTEVarsButtonPressed")
+        return
+    end
+
+    print("Resetting LLTE Vars")
+
+    local player = Player(callingPlayer)
+
+    player:setValue("_llte_cavaliers_ranklevel", nil)
+    player:setValue("_llte_cavaliers_rank", nil)
+    player:setValue("_llte_cavaliers_rep", nil)
+    player:setValue("_llte_cavaliers_nextcontact", nil)
+    player:setValue("_llte_cavaliers_startstory", nil)
+    player:setValue("_llte_story_1_accomplished", nil)
+    player:setValue("_llte_story_2_accomplished", nil)
+    player:setValue("_llte_story_3_accomplished", nil)
+    player:setValue("_llte_story_4_accomplished", nil)
+    player:setValue("_llte_story_5_accomplished", nil)
+    player:setValue("_llte_failedstory2", nil)
+    player:setValue("_llte_pirate_faction_vengeance", nil)
+    player:setValue("_llte_got_animosity_loot", nil)
+    player:setValue("_llte_cavaliers_have_avorion", nil)
+    player:setValue("_llte_cavaliers_strength", nil)
+    player:setValue("_llte_cavaliers_inbarrier", nil)
+    --Remove all scripts, and I mean ALL scripts.
+    local _Scripts = {
+        "missions/empress/story/lltestorymission1.lua",
+        "missions/empress/story/lltestorymission2.lua",
+        "missions/empress/story/lltestorymission3.lua",
+        "missions/empress/story/lltestorymission4.lua",
+        "missions/empress/story/lltestorymission5.lua",
+        "missions/empress/side/lltesidemission1.lua",
+        "missions/empress/side/lltesidemission2.lua",
+        "missions/empress/side/lltesidemission3.lua",
+        "missions/empress/side/lltesidemission4.lua",
+        "missions/empress/side/lltesidemission5.lua",
+        "missions/empress/side/lltesidemission6.lua"
+    }
+    for _, _Script in pairs(_Scripts) do
+        if player:hasScript(_Script) then
+            print("Invoking fail method of " .. _Script)
+            player:invokeFunction(_Script, "fail")
+        end
+    end
+end
+callable(nil, "onResetLLTEVarsButtonPressed")
+
+function onLLTERep1Pressed()
+    if onClient() then
+        invokeServerFunction("onLLTERep1Pressed")
+        return
+    end
+
+    print("Resetting Reputational LLTE Vars")
+
+    local player = Player(callingPlayer)
+
+    player:setValue("_llte_cavaliers_ranklevel", 1)
+    player:setValue("_llte_cavaliers_rank", "Squire")
+    player:setValue("_llte_cavaliers_rep", 4)
+end
+callable(nil, "onLLTERep1Pressed")
+
+function onLLTERep3Pressed()
+    if onClient() then
+        invokeServerFunction("onLLTERep3Pressed")
+        return
+    end
+
+    print("Resetting Reputational LLTE Vars")
+
+    local player = Player(callingPlayer)
+
+    player:setValue("_llte_cavaliers_ranklevel", 3)
+    player:setValue("_llte_cavaliers_rank", "Crusader")
+    player:setValue("_llte_cavaliers_rep", 29)
+end
+callable(nil, "onLLTERep3Pressed")
+
+function onLLTERep5Pressed()
+    if onClient() then
+        invokeServerFunction("onLLTERep5Pressed")
+        return
+    end
+
+    print("Resetting Reputational LLTE Vars")
+
+    local player = Player(callingPlayer)
+
+    player:setValue("_llte_cavaliers_ranklevel", 5)
+    player:setValue("_llte_cavaliers_rank", "Paladin")
+    player:setValue("_llte_cavaliers_rep", 51)
+end
+callable(nil, "onLLTERep5Pressed")
 
 --endregion
 

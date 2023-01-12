@@ -17,7 +17,7 @@ Eternal._Data._HealCharges = 0
 function Eternal.initialize(_RegenFactor, _DelayWhenHit)
     local _MethodName = "Initialize"
     Eternal.Log(_MethodName, "Initializing... _RegenFactor is : " .. tostring(_RegenFactor) .. "  _DelayWhenHit is : " .. tostring(_DelayWhenHit))
-    _RegenFactor = _RegenFactor or 0.015
+    _RegenFactor = _RegenFactor or 0.0075
     _DelayWhenHit = _DelayWhenHit or 0
 
     Eternal._Data._RegenFactor = _RegenFactor
