@@ -25,6 +25,7 @@ function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, ra
     -- generate weapons
     local numWeapons = 4
 
+    --We pre-determine a lot of values here to keep things consistent between the four weapons that get generated.
     local _WROF = rand:getFloat(0.14, 0.24)
     local _WACC1 = 0.99 - rand:getFloat(0, 0.01)
     local _WACC2 = 0.89 - rand:getFloat(0, 0.30)
@@ -35,14 +36,15 @@ function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, ra
     local _WVEL = rand:getFloat(410, 620) --Plasma gun is normally 400 - 600
     local _WSIZE = rand:getFloat(0.4, 0.8) --Plasma gun is normally 0.4 to 0.8
     local _XSEED = rand:getInt()
+    local _XPLAS = rand:test(0.05)
 
-    local weapon = WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _WROF, _WACC1, _COLOR, _WRANGE, _WVEL, _WSIZE)
+    local weapon = WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _WROF, _WACC1, _COLOR, _WRANGE, _WVEL, _WSIZE, _XSEED, _XPLAS)
     weapon.fireDelay = weapon.fireDelay * numWeapons
 
-    local weapon2 = WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _WROF, _WACC2, _COLOR, _WRANGE, _WVEL, _WSIZE, _XSEED)
+    local weapon2 = WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _WROF, _WACC2, _COLOR, _WRANGE, _WVEL, _WSIZE, _XSEED, _XPLAS)
     weapon2.fireDelay = weapon2.fireDelay * numWeapons
 
-    local weapon3 = WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _WROF, _WACC3, _COLOR, _WRANGE, _WVEL, _WSIZE, _XSEED)
+    local weapon3 = WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _WROF, _WACC3, _COLOR, _WRANGE, _WVEL, _WSIZE, _XSEED, _XPLAS)
     weapon3.fireDelay = weapon3.fireDelay * numWeapons
 
     -- attach weapons to turret

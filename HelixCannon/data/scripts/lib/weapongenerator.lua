@@ -1,4 +1,4 @@
-function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _ROF, _ACC, _COLOR, _RANGE, _VELOCITY, _SIZE, _SEED)
+function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, _ROF, _ACC, _COLOR, _RANGE, _VELOCITY, _SIZE, _SEED, _ADDPLASMA)
     local weapon = Weapon()
     weapon:setProjectile()
 
@@ -6,11 +6,12 @@ function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, 
     local fireDelay = _ROF or rand:getFloat(0.15, 0.25)
     local reach = _RANGE or rand:getFloat(620, 920)
     local damage = dps * fireDelay
-    local speed = _VELOCITY or rand:getFloat(410, 620)
+    local speed = _VELOCITY or rand:getFloat(420, 620)
     local weaponcolor = _COLOR or ColorHSV(rand:getFloat(135, 180), 1, 1)
     local weaponaccuracy =  _ACC or 0.99 - rand:getFloat(0, 0.01) --Favor the more accurate variety for just the weapon generation.
     local projectilesize = _SIZE or rand:getFloat(0.4, 0.8)
     local existingTime = reach / speed
+    local addPlasma = _ADDPLASMA or rand:test(0.05)
 
     weapon.fireDelay = fireDelay
     weapon.reach = reach
@@ -36,8 +37,9 @@ function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, 
     weapon.shotsFired = 5
     weapon.damage = weapon.damage * 2 / weapon.shotsFired --These scale better than normal to make up for the truly horrible accuracy.
 
-    if rand:test(0.05) then
-        WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 1.5, 0.1, 0.15)     
+    --5% for plasma damage - determined in the turret generator function to prevent a situation where one weapon has +plasma but not the others.
+    if addPlasma then
+        WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 1.5, 0.1, 0.2)     
     end
 
     WeaponGenerator.adaptWeapon(rand, weapon, tech, material, rarity)
