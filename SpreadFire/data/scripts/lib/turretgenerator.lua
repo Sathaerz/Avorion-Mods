@@ -25,18 +25,22 @@ function TurretGenerator.generateSpreadFireTurret(rand, dps, tech, material, rar
     -- generate weapons
     local numWeapons = 2
 
+    --We pre-determine a lot of values here to keep things consistent between the two weapons that get generated.
     local _WROF = rand:getFloat(0.28, 0.38)
     local _WACC1 = 0.99 - rand:getFloat(0, 0.01)
     local _WACC2 = 0.85 - rand:getFloat(0, 0.10)
+
     local _COLOR = ColorHSV(rand:getFloat(195, 240), 1, 1)
     local _WRANGE = rand:getFloat(580, 880) --Plasma gun is normaly 550 - 800
     local _WVEL = rand:getFloat(400, 600) --Plasma gun is normally 500 - 700
     local _WSIZE = rand:getFloat(0.4, 0.7) --Plasma gun is normally 0.4 to 0.8
+    local _XSEED = rand:getInt()
+    local _XPLAS = rand:test(0.05)
 
-    local weapon = WeaponGenerator.generateSpreadFire(rand, dps, tech, material, rarity, _WROF, _WACC1, _COLOR, _WRANGE, _WVEL, _WSIZE)
+    local weapon = WeaponGenerator.generateSpreadFire(rand, dps, tech, material, rarity, _WROF, _WACC1, _COLOR, _WRANGE, _WVEL, _WSIZE, _XSEED, _XPLAS)
     weapon.fireDelay = weapon.fireDelay * numWeapons
 
-    local weapon2 = WeaponGenerator.generateSpreadFire(rand, dps, tech, material, rarity, _WROF, _WACC2, _COLOR, _WRANGE, _WVEL, _WSIZE)
+    local weapon2 = WeaponGenerator.generateSpreadFire(rand, dps, tech, material, rarity, _WROF, _WACC2, _COLOR, _WRANGE, _WVEL, _WSIZE, _XSEED, _XPLAS)
     weapon2.fireDelay = weapon2.fireDelay * numWeapons
 
     -- attach weapons to turret
