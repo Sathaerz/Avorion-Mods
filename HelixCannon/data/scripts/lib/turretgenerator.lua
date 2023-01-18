@@ -32,7 +32,7 @@ function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, ra
     local _WACC3 = 0.79 - rand:getFloat(0, 0.30)
 
     local _COLOR = ColorHSV(rand:getFloat(135, 180), 1, 1)
-    local _WRANGE = rand:getFloat(550, 750) --Plasma gun is normaly 550 - 800
+    local _WRANGE = rand:getFloat(525, 750) --Plasma gun is normaly 550 - 800
     local _WVEL = rand:getFloat(410, 620) --Plasma gun is normally 400 - 600
     local _WSIZE = rand:getFloat(0.4, 0.8) --Plasma gun is normally 0.4 to 0.8
     local _XSEED = rand:getInt()
@@ -53,7 +53,7 @@ function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, ra
 
     local rechargeTime = 18 * rand:getFloat(0.8, 1.2)
     local shootingTime = 34 * rand:getFloat(0.8, 1.2)
-    TurretGenerator.createBatteryChargeCooling(result, rechargeTime, shootingTime)
+    TurretGenerator.createHelixCannonCooling(result, rechargeTime, shootingTime)
 
     -- add further descriptions
     TurretGenerator.scale(rand, result, WeaponType.HelixCannon, tech, 0.7)
@@ -86,6 +86,28 @@ function TurretGenerator.attachHelixWeapons(rand, turret, weapons)
 
         _widx = _widx+1
     end
+end
+
+function TurretGenerator.createHelixCannonCooling(turret, rechargeTime, shootingTime)
+    turret:updateStaticStats()
+
+    local maxCharge
+    if turret.dps > 0 then
+        maxCharge = turret.dps * 50
+    else
+        maxCharge = 25
+    end
+
+    local rechargeRate = maxCharge / rechargeTime -- must be smaller than consumption rate or the weapon will never run out of energy
+    local consumptionDelta = maxCharge / shootingTime
+    local consumptionRate = consumptionDelta + rechargeRate
+
+    local consumptionPerShot = consumptionRate / turret.firingsPerSecond
+
+    turret.coolingType = CoolingType.BatteryCharge
+    turret.maxHeat = maxCharge
+    turret.heatPerShot = consumptionPerShot or 0
+    turret.coolingRate = rechargeRate or 0
 end
 
 generatorFunction[WeaponType.HelixCannon] = TurretGenerator.generateHelixCannonTurret
