@@ -44,6 +44,7 @@ local Balancing = include("galaxy")
 local SpawnUtility = include ("spawnutility")
 local ShipUtility = include ("shiputility")
 local Placer = include ("placer")
+local UpgradeGenerator = include ("upgradegenerator")
 
 mission._Debug = 0
 mission._Name = "Attack Research Base"
@@ -91,6 +92,8 @@ function initialize(_Data_in)
                 .defenderRespawnTime
                 .researchStationid
                 .addChip
+                .supplyPerCycle
+                .supplyPerShip
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.pirates = _Data_in.pirates
@@ -118,6 +121,8 @@ function initialize(_Data_in)
             mission.data.custom.respawningDefenders = 3
             mission.data.custom.spawnMilitary = false
             mission.data.custom.defenderRespawnTime = 180
+            mission.data.custom.supplyPerCycle = 50
+            mission.data.custom.supplyPerShip = 500
 
             --Set values based on danger level.
             if mission.data.custom.dangerLevel >= 5 then
@@ -130,6 +135,8 @@ function initialize(_Data_in)
                 mission.data.custom.initialDefenders = mission.data.custom.initialDefenders + 2 --Bump to 7
                 mission.data.custom.respawningDefenders = mission.data.custom.respawningDefenders + 1 --Bump to 4
                 mission.data.custom.defenderRespawnTime = mission.data.custom.defenderRespawnTime - 30 --Bump to 2 1/2 minutes.
+                mission.data.custom.supplyPerCycle = 100
+                mission.data.custom.supplyPerShip = 600
             end
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
@@ -279,6 +286,11 @@ function buildObjectiveSector(_X, _Y)
             --Don't add the chip if the mission isn't happening inside the barrier.
             mission.data.custom.addChip = true
         end
+        --add a rare upgrade to the station's loot.
+        local _upgradeGenerator = UpgradeGenerator()
+        local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
+        Loot(_ResearchOutpost):insert(_upgradeGenerator:generateSectorSystem(_X, _Y, nil, _upgradeRarities))
+
         --mission.data.custom.addChip = true
         table.insert(_Stations, _ResearchOutpost)
 
@@ -302,7 +314,6 @@ function buildObjectiveSector(_X, _Y)
                 _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * 1.3
             end
 
-            local _StationBay = CargoBay(_Station)
             if mission.data.custom.dangerLevel < 8 or _Dist > 175 then
                 local _StationBay = CargoBay(_Station)
                 _StationBay:clear()
@@ -405,11 +416,27 @@ function buildObjectiveSector(_X, _Y)
         _DCD._IsPirate = mission.data.custom.pirates
         _DCD._Factionid = mission.data.custom.enemyFaction
         _DCD._PirateLevel = mission.data.custom.pirateLevel
-        _DCD._UseLeaderSupply = false
+        _DCD._UseLeaderSupply = true
         _DCD._LowTable = "Standard"
         _DCD._NoHazard = true
+        _DCD._SupplyPerLevel = 500
+        _DCD._SupplyFactor = 0.1 --+10% buff per level.
 
         Sector():addScript("sector/background/defensecontroller.lua", _DCD)
+
+        local _SCD = {}
+        _SCD._ShipmentLeader = mission.data.custom.researchStationid
+        _SCD._ShipmentCycleTime = mission.data.custom.defenderRespawnTime - 10
+        _SCD._DangerLevel = mission.data.custom.dangerLevel
+        _SCD._IsPirate = mission.data.custom.pirates
+        _SCD._Factionid = mission.data.custom.enemyFaction
+        _SCD._PirateLevel = mission.data.custom.pirateLevel
+        _SCD._SupplyTransferPerCycle = mission.data.custom.supplyPerCycle
+        _SCD._SupplyPerShip = mission.data.custom.supplyPerShip
+        _SCD._SupplierExtraScale = 6
+        _SCD._SupplierHealthScale = 0.1
+
+        Sector():addScript("sector/background/shipmentcontroller.lua", _SCD)
 
         Placer.resolveIntersections()
 
@@ -418,6 +445,33 @@ function buildObjectiveSector(_X, _Y)
 end
 
 --endregion
+
+function getSectorRarityTables(_X, _Y, _upgradeGenerator)
+    local _dangerLevel = mission.data.custom.dangerLevel
+    local _rarities = _upgradeGenerator:getSectorRarityDistribution(_X, _Y)
+    _rarities[-1] = 0 --no petty
+    _rarities[0] = 0 --no common
+    _rarities[1] = 0 --no uncommon
+    _rarities[2] = 0 --no rare
+
+    local _dangerFactors = {
+        { _exceptional = 1, _exotic = 1}, --1
+        { _exceptional = 1, _exotic = 1}, --2
+        { _exceptional = 1, _exotic = 1}, --3
+        { _exceptional = 1, _exotic = 1}, --4
+        { _exceptional = 0.5, _exotic = 1}, --5
+        { _exceptional = 0.5, _exotic = 1}, --6
+        { _exceptional = 0.5, _exotic = 0.75}, --7
+        { _exceptional = 0.25, _exotic = 0.75}, --8
+        { _exceptional = 0.25, _exotic = 0.5}, --9
+        { _exceptional = 0.12, _exotic = 0.5} --10
+    }
+    
+    _rarities[3] = _rarities[3] * _dangerFactors[_dangerLevel]._exceptional
+    _rarities[4] = _rarities[4] * _dangerFactors[_dangerLevel]._exotic
+
+    return _rarities
+end
 
 function onDefendersFinished(_Generated)
     for _, _Defender in pairs(_Generated) do
