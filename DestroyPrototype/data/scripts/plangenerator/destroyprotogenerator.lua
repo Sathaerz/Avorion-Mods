@@ -96,8 +96,8 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	
 	--Finally, increase the ship's damage multiplier by a random amount depending on the danger level of the mission.
 	local forceMultiplier = 1 + (random():getInt(0, dangerValue) / 50)
-	print("forceMultiplier is " .. forceMultiplier)
-	print("turretFactor is " .. turretFactor)
+	--print("forceMultiplier is " .. forceMultiplier)
+	--print("turretFactor is " .. turretFactor)
 	ship.damageMultiplier = damageFactor * forceMultiplier
 	--Make it unboardable because I don't want to account for what happens if the player boards it.
 	Boarding(ship).boardable = false
