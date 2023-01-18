@@ -4,7 +4,7 @@ function WeaponGenerator.generateSpreadFire(rand, dps, tech, material, rarity, _
 
     --NULL values come into play when generating a single weapon for fighters -- anything after "Rarity" will be null.
     local fireDelay = _ROF or rand:getFloat(0.28, 0.38) --In case it is nil
-    local reach = _RANGE or rand:getFloat(580, 880)
+    local reach = _RANGE or rand:getFloat(620, 920)
     local damage = dps * fireDelay
     local speed = _VELOCITY or rand:getFloat(400, 600)
     local weaponcolor = _COLOR or ColorHSV(rand:getFloat(195, 240), 1, 1)
