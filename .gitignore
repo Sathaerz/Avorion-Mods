@@ -45,12 +45,6 @@ luac.out
 *.ogg
 modconfig.lua
 
-# Files
-XExReplaceXWG/modinfo.lua
-XExReplaceXWG/data/plans/XWG.xml
-XExReplaceXWG/data/scripts/lib/story/xsotan.lua
-XExReplaceXWG/thumb.png
-
 # Folders
 Concepts/
 DestroyStronghold/
