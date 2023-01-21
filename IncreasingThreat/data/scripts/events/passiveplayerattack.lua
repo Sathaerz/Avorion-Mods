@@ -43,6 +43,9 @@ function spawnPirates(entry)
     if _Debug == 1 then
         print("Running spawnPirates vs Player : " .. tostring(_PlayerIndex))
     end
+    if not entry then
+        print("WARNING / ERROR - entry was " .. tostring(entry) .. " and _PlayerIndex is " .. tostring(_PlayerIndex) .. " please try and figure out the player / alliance that prompted this error and post a comment on the mod page @ https://steamcommunity.com/sharedfiles/filedetails/?id=2208370349. Thanks!")
+    end
     local _Player = Player(entry.faction)
     local sector = Sector()
     local x, y = sector:getCoordinates()
