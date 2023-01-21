@@ -435,16 +435,11 @@ function BusinessFrameworkMission.regenerateFactionArsenal()
     for _, _WType in pairs(_TurretTypes) do
         local _FamTurret = turretGenerator:generate(_X, _Y, 0, nil, _WType)
         _FamTurret.coaxial = false
-        if _WType == WeaponType.Laser or _WType == WeaponType.RocketLauncher then
-            --Lasers are no longer shit, but we buff them anyways!
+        if _WType == WeaponType.RocketLauncher then
             local _TWeapons = {_FamTurret:getWeapons()}
             _FamTurret:clearWeapons()
             for _, _W in pairs(_TWeapons) do
-                if _WType == WeaponType.Laser then
-                    _W.damage = _W.damage * 2
-                    _W.reach = _W.reach * 1.5
-                elseif _WType == WeaponType.RocketLauncher then
-                    _W.damage = _W.damage * 1.5
+                if _WType == WeaponType.RocketLauncher then
                     _W.seeker = true
                 end
 
