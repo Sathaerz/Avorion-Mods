@@ -559,6 +559,8 @@ function jumpAndAdvancePhase()
     local _Freighter = Entity(mission.data.custom.freighterid)
     _Freighter:setValue("_escc_deletion_timestamp", Server().unpausedRuntime + 245)
     Sector():transferEntity(_Freighter, target.x, target.y, SectorChangeType.Jump)
+    --Send message to player.
+    Player():sendChatMessage("Nav Computer", 0, "The " .. mission.data.custom.freightername .. " has jumped to \\s(%1%,%2%).", target.x, target.y)
     --Advance phase. We fail if we don't jump after the freighter quickly enough.
     setFailTimer()
     --NextPhase automatically syncs, so no need to call sync() separately.
@@ -610,6 +612,7 @@ function finishAndReward()
     end
 
     --Increase reputation by 1 (2 @ 10 danger)
+    mission.data.reward.paymentMessage = "Earned %1% credits for escorting the weapon shipment."
     _Player:setValue("_llte_cavaliers_rep", _Player:getValue("_llte_cavaliers_rep") + _RepReward)
     _Player:sendChatMessage("The Cavaliers", 0, _WinMsgTable[_Rgen:getInt(1, #_WinMsgTable)] .. " We've transferred a reward to your account.")
     reward()

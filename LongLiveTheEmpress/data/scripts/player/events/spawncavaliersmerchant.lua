@@ -63,9 +63,13 @@ function initialize()
     ship:invokeFunction("icon.lua", "set", nil)
     ship:removeScript("icon.lua")
 
+    if _PaladinPresent then
+        ship:setValue("_llte_PaladinInventory", true)
+    end
+
     ship.title = "Mobile Cavaliers Merchant"
     ship:addScript("data/scripts/entity/merchants/cavaliersutilitymerchant.lua")
-    ship:addScript("data/scripts/entity/merchants/turretmerchant.lua")
+    ship:addScript("data/scripts/entity/merchants/cavaliersturretmerchant.lua")
     ship:addScript("data/scripts/entity/merchants/travellingmerchant.lua")
     ship:addScript("ai/withdrawatlowhealth.lua", 0.1, 1, 1, 0.02)
     ship.name = LLTEUtil.getFreighterName() 

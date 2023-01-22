@@ -288,6 +288,7 @@ function finishAndReward()
     end
 
     --Increase reputation by 1 (2 @ 10 danger)
+    mission.data.reward.paymentMessage = "Earned %1% credits for destroying the pirate raiders."
     _Player:setValue("_llte_cavaliers_rep", _Player:getValue("_llte_cavaliers_rep") + _RepReward)
     _Player:sendChatMessage("The Cavaliers", 0, _WinMsgTable[_Rgen:getInt(1, #_WinMsgTable)] .. " We've transferred a reward to your account.")
     reward()

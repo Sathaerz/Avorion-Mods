@@ -210,15 +210,19 @@ function CavaliersTorpedoLoader.loadSelectedTorpedoes(_PlayerID)
     self.Log(_MethodName, "Adding torpedos directly to launchers.")
 
     for _, _Shaft in pairs(_Shafts) do
-        while _Launcher:getFreeSlots(_Shaft) > 0 and _Launcher:getFreeSlots(_Shaft) ~= 15 do
+        local _attempts = 0 --Emergency breakout - per shaft. Sometimes placing a torpedo in a shaft just doesn't work and I have no idea why. There's no error or anything.
+        while _Launcher:getFreeSlots(_Shaft) > 0 and _Launcher:getFreeSlots(_Shaft) ~= 15 and _attempts < 100 do
             _Launcher:addTorpedo(_Torpedo, _Shaft)
+            _attempts = _attempts + 1
         end
     end
 
     self.Log(_MethodName, "Adding torpeodes to storage.")
 
-    while _Launcher.freeStorage > _Torpedo.size do
+    local _storageattempts = 0 --Second emergency breakout
+    while _Launcher.freeStorage > _Torpedo.size and _storageattempts < 100 do
         _Launcher:addTorpedo(_Torpedo)
+        _storageattempts = _storageattempts + 1
     end
 
     local _Ship = Entity()

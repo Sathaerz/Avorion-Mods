@@ -386,7 +386,6 @@ function EmpressFrameworkMission.checkPlayerRank(_CurrentRank, _CurrentRep)
         _Mail.id = "_llte_promotion_mail"
 
         if _AttachPaladinItems then
-            local _LMTCS = 
             _Mail:addItem(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Legendary), Seed(1)) )
             _Mail:addItem(LLTEUtil.getSpecialRailguns())
             _Mail:addItem(LLTEUtil.getSpecialRailguns())
@@ -414,7 +413,6 @@ function EmpressFrameworkMission.regenerateFactionArsenal()
 
     local _X, _Y = Balancing_GetSectorByTechLevel(_TechLevel)
     local _Seed = Server().seed + self.Cavaliers.index
-    local _Random = Random(_Seed)
 
     local turretGenerator = SectorTurretGenerator(_Seed)
     --Don't add PDC types to this list. We don't want to have Cavaliers ships having PD Slapfights
@@ -437,16 +435,11 @@ function EmpressFrameworkMission.regenerateFactionArsenal()
     for _, _WType in pairs(_TurretTypes) do
         local _CavTurret = turretGenerator:generate(_X, _Y, 0, nil, _WType)
         _CavTurret.coaxial = false
-        if _WType == WeaponType.Laser or _WType == WeaponType.RocketLauncher then
-            --Lasers are SHIT. Buff them so they're actually decent.
+        if _WType == WeaponType.RocketLauncher then
             local _TWeapons = {_CavTurret:getWeapons()}
             _CavTurret:clearWeapons()
             for _, _W in pairs(_TWeapons) do
-                if _WType == WeaponType.Laser then
-                    _W.damage = _W.damage * 2
-                    _W.reach = _W.reach * 1.5
-                elseif _WType == WeaponType.RocketLauncher then
-                    _W.damage = _W.damage * 1.5
+                if _WType == WeaponType.RocketLauncher then
                     _W.seeker = true
                 end
 
@@ -494,6 +487,7 @@ _llte_cavaliers_have_avorion
 _llte_cavaliers_strength
 _llte_cavaliers_inbarrier
 ]]
+
 --All of the following cavaliers faction values are added / changed by this mod:
 --[[
 _llte_cavaliers_regeneratedArsenal

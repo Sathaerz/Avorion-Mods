@@ -1653,23 +1653,18 @@ function LLTEUtil.rebuildShipWeapons(_Ship, _Strength)
      
     local _X, _Y = Balancing_GetSectorByTechLevel(self.getTechLevelByStrength(_Strength))
     local _Seed = Server().seed + _Faction.index
-    local _Random = Random(_Seed)
     local SectorTurretGenerator = include("sectorturretgenerator")
-    local _TurretGen = SectorTurretGenerator()
+    local _TurretGen = SectorTurretGenerator(_Seed)
      
     for _ = 1, _AddWeaponSets do
         local _XWType = _TurretTypes[_Rgen:getInt(1, #_TurretTypes)]
         local _Turret = _TurretGen:generate(_X, _Y, 0, nil, _XWType)
         _Turret.coaxial = false
-        if _XWType == WeaponType.Laser or _XWType == WeaponType.RocketLauncher then
+        if _XWType == WeaponType.RocketLauncher then
             local _TWeapons = {_Turret:getWeapons()}
             _Turret:clearWeapons()
             for _, _W in pairs(_TWeapons) do
-                if _XWType == WeaponType.Laser then
-                    _W.damage = _W.damage * 2
-                    _W.reach = _W.reach * 1.5
-                elseif _XWType == WeaponType.RocketLauncher then
-                    _W.damage = _W.damage * 1.5
+                if _XWType == WeaponType.RocketLauncher then
                     _W.seeker = true
                 end
                 _Turret:addWeapon(_W)
@@ -1701,10 +1696,10 @@ function LLTEUtil.getSpecialRailguns()
     local _Turret = _EXCTurretGen:generate(0, 0, 0, Rarity(RarityType.Legendary), WeaponType.RailGun)
     local _Weapons = {_Turret:getWeapons()}
 
-    local _DamageFactor = _Rgen:getFloat(3.25, 3.4)
-    local _ROFFactor = _Rgen:getFloat(2, 2.1)
-    local _ReachFactor = _Rgen:getFloat(1.2, 1.3)
-    local _PenFactor = _Rgen:getInt(20, 24)
+    local _DamageFactor = _Rgen:getFloat(2.5, 2.75)
+    local _ROFFactor = _Rgen:getFloat(1.7, 1.9)
+    local _ReachFactor = _Rgen:getFloat(1.5, 1.75)
+    local _PenFactor = _Rgen:getInt(22, 28)
 
     local _OverallFactor = _PenFactor + math.floor(((_DamageFactor + _ROFFactor + _ReachFactor) * 10))
 

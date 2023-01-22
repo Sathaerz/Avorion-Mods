@@ -158,6 +158,21 @@ end
 mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].noBossEncountersTargetSector = true
+
+--#PHASE 1 TIMERS
+
+if onServer() then
+
+mission.phases[1].timers[1] = { time = 60, callback = function() 
+    local _Sector = Sector()
+    local _x, _y = _Sector:getCoordinates()
+    if _x == mission.data.location.x and _y == mission.data.location.y then
+        spawnXsotanWave()
+    end
+end, repeating = true }
+
+end
+
 mission.phases[1].onTargetLocationEntered = function(x, y)
     local _MethodName = "Phase 1 On Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
@@ -172,8 +187,6 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.Log(_MethodName, "Generating Xsotan.")
     --Spawn the maximum number of Xsotan.
     spawnXsotanWave()
-    --Start a 1-minute timer up so they come in waves.
-    mission.phases[1].timers[1] = { time = 60, callback = function() spawnXsotanWave() end, repeating = true }
 end
 
 mission.phases[1].onTargetLocationLeft = function(x, y)
@@ -401,6 +414,7 @@ function finishAndReward()
     end    
 
     --Increase reputation by 2 (3 @ 10 danger)
+    mission.data.reward.paymentMessage = "Earned %1% credits for destroying the Xsotan infestation."
     _Player:setValue("_llte_cavaliers_rep", _Player:getValue("_llte_cavaliers_rep") + _RepReward)
     _Player:sendChatMessage("The Cavaliers", 0, _WinMsgTable[_Rgen:getInt(1, #_WinMsgTable)] .. " We've transferred a reward to your account.")
     reward()

@@ -30,6 +30,7 @@ local function sortSystems(a, b)
 end
 
 function CavaliersUtilityMerchant.shop:addItems()
+    local _Merchant = Entity()
 
     local x, y = Sector():getCoordinates()
 
@@ -43,8 +44,13 @@ function CavaliersUtilityMerchant.shop:addItems()
         CavaliersUtilityMerchant.add(item, getInt(2, 5))
     end
 
-    local item = UsableInventoryItem("energysuppressor.lua", Rarity(RarityType.Exceptional))
-    CavaliersUtilityMerchant.add(item, getInt(2, 3))
+    if _Merchant:getValue("_llte_PaladinInventory") then
+        local item = UsableInventoryItem("cavaliersenergysuppressor.lua", Rarity(RarityType.Exceptional))
+        CavaliersUtilityMerchant.add(item, getInt(2, 3))
+    else
+        local item = UsableInventoryItem("energysuppressor.lua", Rarity(RarityType.Exceptional))
+        CavaliersUtilityMerchant.add(item, getInt(2, 3))
+    end
 end
 
 function CavaliersUtilityMerchant.initialize()

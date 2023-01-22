@@ -468,6 +468,7 @@ function finishAndReward()
         "We'll crush the pirates! We'll crush the Xsotan! And we'll crush the complacent fools who suffer them!"
     }
 
+    mission.data.reward.paymentMessage = "Earned %1% credits for crushing the resistance."
     _Player:sendChatMessage("The Emperor", 0, _WinMsgTable[_Rgen:getInt(1, #_WinMsgTable)])
     reward()
     accomplish()

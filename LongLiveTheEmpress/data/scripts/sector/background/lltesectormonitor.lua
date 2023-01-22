@@ -49,7 +49,7 @@ function LLTESectorMonitor.clearMissionAssets(_X, _Y, _DeleteOtherAssets, _Delet
     if _DeleteOtherAssets then
         self.Log(_MethodName, "Deleting all other non player-owned assets")
         local _EntityTypes = { EntityType.Ship, EntityType.Station, EntityType.Torpedo, EntityType.Fighter }
-        if _DeleteAsteroids then
+        if _DeleteEverything then
             self.Log(_MethodName, "Adding all other permanent entities to deletion table.")
             table.insert(_EntityTypes, EntityType.Wreckage)
             table.insert(_EntityTypes, EntityType.Asteroid)
