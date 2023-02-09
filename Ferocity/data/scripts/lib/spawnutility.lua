@@ -30,7 +30,7 @@ function SpawnUtility.addToughness(entity, level)
     local _dt = extraTierDistributions[_Difficulty]
     local _Hatred = 0
     
-    local players = {sector:getPlayers()}
+    local players = {Sector():getPlayers()}
     local _PlayerCt = #players
 
     if _PlayerCt > 0 and hasIncreasingThreat then
