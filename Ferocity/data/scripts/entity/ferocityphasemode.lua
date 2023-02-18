@@ -18,6 +18,11 @@ end
 function Unreal.updateServer(timeStep)
     self.timeInPhase = self.timeInPhase + timeStep
     local entity = Entity()
+    if entity.playerOwned or entity.allianceOwned then
+        terminate()
+        return
+    end
+    
     local shield = Shield(entity)
     local showAnimation = false
     --1 minute out, 10 seconds in.

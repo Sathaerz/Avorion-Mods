@@ -45,6 +45,11 @@ function Eternal.updateServer(_TimeStep)
         Eternal._Data._HealCharges = Eternal._Data._HealCharges + 1
 
         local entity = Entity()
+        if entity.playerOwned or entity.allianceOwned then
+            terminate()
+            return
+        end
+
         if not entity.invincible then
             local entityHull = entity.durability
             local entityMaxHull = entity.maxDurability
