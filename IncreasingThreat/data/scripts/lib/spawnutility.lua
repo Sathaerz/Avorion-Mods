@@ -46,6 +46,7 @@ function SpawnUtility.addITEnemyBuffs(_Ships, _WilyTrait, _HatredLevel)
 
             local _Ship = _Ships[_Shipidx]
             _Ship:addScriptOnce(_ScriptToAdd._Script)
+            Boarding(_Ship).boardable = false --Make ship unboardable.
 
             --Add an additional element to the title.
             if not _Ship:getValue("_increasingthreat_enhanced_title") then
