@@ -46,6 +46,12 @@ end
 function AllyBooster.updateServer(_TimeStep)
     local _MethodName = "Update Server"
 
+    local entity = Entity()
+    if entity.playerOwned or entity.allianceOwned then
+        terminate()
+        return
+    end
+
     self._Data._BoostTime = self._Data._BoostTime + _TimeStep
 
     if self._Data._BoostTime >= self._Data._BoostCycle then
@@ -97,6 +103,7 @@ function AllyBooster.boost()
         self.Log(_MethodName, "Adding script " .. tostring(_AllyScript) .. " to ally.")
     
         _TargetAlly:addScriptOnce(_AllyScript)
+        Boarding(_TargetAlly).boardable = false
         if not _TargetAlly:getValue("_increasingthreat_enhanced_title") and not _TargetAlly:getValue("_escc_enhanced_title") then
             _TargetAlly:setValue("_escc_enhanced_title", true)
 
