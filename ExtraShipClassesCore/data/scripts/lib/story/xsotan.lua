@@ -120,7 +120,7 @@ function Xsotan.createLonginus(_position, _volumeFactor)
     --Add Scripts
     local _X, _Y = Sector():getCoordinates()
 
-    local _LaserDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 250
+    local _LaserDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 125
 
     local _LaserSniperValues = {}
     _LaserSniperValues._DamagePerFrame = _LaserDamage
