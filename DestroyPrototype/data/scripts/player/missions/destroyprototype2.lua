@@ -407,7 +407,7 @@ function spawnPrototype()
             mission.Log(_MethodName, "Laser Sniper type chosen.")
             --Laser sniper
             local _LaserSniperValues = {
-                _DamagePerFrame = Balancing_GetSectorWeaponDPS(_X, _Y) * 500,
+                _DamagePerFrame = Balancing_GetSectorWeaponDPS(_X, _Y) * 250,
                 _TimeToActive = 30,
                 _UseEntityDamageMult = true
             }
