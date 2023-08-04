@@ -23,7 +23,7 @@ self._LaserData._TargetPoint = nil
 
 function LaserSniper.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Laser Sniper v62 script on entity.")
+    self.Log(_MethodName, "Initializing Laser Sniper v64 script on entity.")
 
     self._Data = _Values or {}
 
@@ -44,6 +44,8 @@ function LaserSniper.initialize(_Values)
     self._Data._FireCycle = nil
     self._Data._DOTCycle = 0
     self._Data._TargetPoint = nil
+    self._Data._StaticDamageMultSet = false
+    self._Data._StaticDamageMultValue = 1
 
     --Values the player can adjust.
     self._Data._MaxRange = self._Data._MaxRange or 20000
@@ -54,6 +56,7 @@ function LaserSniper.initialize(_Values)
     self._Data._CreepingBeam = self._Data._CreepingBeam or true
     self._Data._CreepingBeamSpeed = self._Data._CreepingBeamSpeed  or 0.75
     self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
+    self._Data._UseStaticDamageMult = self._Data._UseStaticDamageMult or false
     self._Data._IncreaseDamageOT = self._Data._IncreaseDamageOT or false
     self._Data._IncreaseDOTCycle = self._Data._IncreaseDOTCycle or 0
     self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
@@ -69,6 +72,14 @@ end
 
 function LaserSniper.update(_TimeStep)
     local _MethodName = "Update"
+    --If we're using a static damage multiplier, set it here. We only do this once.
+    if self._Data._UseStaticDamageMult and not self._Data._StaticDamageMultSet then
+        local _Mult = (Entity().damageMultiplier or 1)
+        self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult))
+        self._Data._StaticDamageMultValue = _Mult
+        self._Data._StaticDamageMultSet = true
+    end
+
     if self._Data._TimeToActive >= 0 then
         self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
         return
@@ -159,9 +170,16 @@ function LaserSniper.updateIntersection(_TimeStep)
             self._Data._BeamMisses = 0
             local _Shield = Shield(_Entity.id)
 
+            --Recommend keeping the log messages off. The message spam isn't quite as bad as the other case but it's still rough.
             local _EntityDamageMultiplier = 1
             if self._Data._UseEntityDamageMult then
-                _EntityDamageMultiplier = (boss.damageMultiplier or 1)
+                if self._Data._UseStaticDamageMult then
+                    _EntityDamageMultiplier = (self._Data._StaticDamageMultValue or 1)
+                    --self.Log(_MethodName, "Static damage multiplier is " .. tostring(_EntityDamageMultiplier))
+                else
+                    _EntityDamageMultiplier = (boss.damageMultiplier or 1)
+                    --self.Log(_MethodName, "Damage multiplier is " .. tostring(_EntityDamageMultiplier))
+                end
             end
 
             local _DamageToShield = self._Data._DamagePerFrame * _EntityDamageMultiplier

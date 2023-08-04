@@ -25,6 +25,7 @@ self._Data = {}
         _ForwardAdjustFactor    = Adjusts how far forward a torpedo spawns relative to the attached entity. Used for not spawning a torpedo in the ship's bounding box which does weird shit to the AI.
         _DurabilityFactor       = Multiplies the durability of torpedoes by this amount. Useful for making torpedoes that are hard to shoot down.
         _UseEntityDamageMult    = Multiplies the damage of the torpedoes by the attached entity's damage multiplier. Useful for overdrive or avenger enemies.
+        _UseStaticDamageMult    = Sets a multiplier on the first update and does not dynamically use the entity's damage multiplier.
         _TargetPriority         = 1 = most firepower, 2 = by script value, 3 = random non-xsotan
         _TargetScriptValue      = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
 
@@ -56,6 +57,9 @@ self._Data._DamageFactor = nil
 self._Data._ForwardAdjustFactor = nil --Consider setting this to a value greater than 1 if you put this on a smaller ship.
 self._Data._DurabilityFactor = nil
 self._Data._UseEntityDamageMult = nil
+self._Data._UseEntityDamageMult = nil
+self._Data._StaticDamageMult = nil
+self._Data._StaticDamageMultSet = nil
 self._Data._TargetPriority = nil
 self._Data._TargetScriptValue = nil
 
@@ -74,6 +78,8 @@ function TorpedoSlammer.initialize(_Values)
     --Stuff the player can't mess with.
     self._Data._FireCycle = 0
     self._Data._CurrentTarget = nil
+    self._Data._StaticDamageMultSet = false
+    self._Data._StaticDamageMultValue = 1
 
     --Preferred warhead / body type aren't set - if they are nil, that is fine.
 
@@ -84,6 +90,7 @@ function TorpedoSlammer.initialize(_Values)
     self._Data._ForwardAdjustFactor = self._Data._ForwardAdjustFactor or 1
     self._Data._DurabilityFactor = self._Data._DurabilityFactor or 1
     self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
+    self._Data._UseStaticDamageMult = self._Data._UseStaticDamageMult or false
     self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
 
     self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust))
@@ -96,6 +103,12 @@ end
 function TorpedoSlammer.updateServer(_TimeStep)
     local _MethodName = "Update Server"
     self.Log(_MethodName, "Running...")
+    if self._Data._UseStaticDamageMult and not self._Data._StaticDamageMultSet then
+        local _Mult = (Entity().damageMultiplier or 1)
+        self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult))
+        self._Data._StaticDamageMultValue = _Mult
+        self._Data._StaticDamageMultSet = true
+    end
 
     if self._Data._TimeToActive >= 0 then
         self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
@@ -208,7 +221,11 @@ function TorpedoSlammer.fireAtTarget()
 
     local _EntityDamageMultiplier = 1
     if self._Data._UseEntityDamageMult then
-        _EntityDamageMultiplier = (_Entity.damageMultiplier or 1)
+        if self._Data._UseStaticDamageMult then
+            _EntityDamageMultiplier = (self._Data._StaticDamageMultValue or 1)
+        else
+            _EntityDamageMultiplier = (_Entity.damageMultiplier or 1)
+        end
     end
 
     _Torpedo.shieldDamage = _Torpedo.shieldDamage * self._Data._DamageFactor * _EntityDamageMultiplier
