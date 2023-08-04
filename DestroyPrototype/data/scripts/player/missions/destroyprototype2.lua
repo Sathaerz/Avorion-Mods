@@ -369,8 +369,28 @@ function spawnPrototype()
         end
     end
 
+    --Add durability.
+    local durability = Durability(_BattleShip)
+    if durability then 
+        local _Factor = (durability.maxDurabilityFactor or 1) * _DuraFactor
+        mission.Log(_MethodName, "Setting durability factor of the prototype to : " .. tostring(_Factor))
+        durability.maxDurabilityFactor = _Factor
+    end
+
+    --Add damage.
+    local _FinalDamageFactor = (_BattleShip.damageMultiplier or 1) * _DamageFactor
+    mission.Log(_MethodName, "Setting final damage factor to : " .. tostring(_FinalDamageFactor))
+    _BattleShip.damageMultiplier = _FinalDamageFactor
+
+    --Add the superweapon script.
     if _Danger == 10 then
         local _X, _Y = Sector():getCoordinates()
+        local insideBarrier = MissionUT.checkSectorInsideBarrier(_X, _Y)
+
+        local _StaticMult = true
+        if insideBarrier then
+            _StaticMult = false
+        end
         
         --local _Type = 3
         local _Type = _Rgen:getInt(1, 3)
@@ -382,7 +402,8 @@ function spawnPrototype()
                 _ROF = 4,
                 _DurabilityFactor = 2,
                 _TimeToActive = 30,
-                _UseEntityDamageMult = true
+                _UseEntityDamageMult = true,
+                _UseStaticDamageMult = _StaticMult
             }
             _BattleShip:addScriptOnce("torpedoslammer.lua", _TorpValues)
             _BattleShip:setValue("_prototype_superweapon_script", "torpedoslammer.lua")
@@ -399,7 +420,8 @@ function spawnPrototype()
                 _TargetPriority = 1,
                 _BaseDamagePerShot = Balancing_GetSectorWeaponDPS(_X, _Y) * 1500,
                 _TimeToActive = 30,
-                _UseEntityDamageMult = true
+                _UseEntityDamageMult = true,
+                _UseStaticDamageMult = _StaticMult
             }
             _BattleShip:addScriptOnce("stationsiegegun.lua", _SiegeGunValues)
             _BattleShip:setValue("_prototype_superweapon_script", "stationsiegegun.lua")
@@ -409,25 +431,13 @@ function spawnPrototype()
             local _LaserSniperValues = {
                 _DamagePerFrame = Balancing_GetSectorWeaponDPS(_X, _Y) * 250,
                 _TimeToActive = 30,
-                _UseEntityDamageMult = true
+                _UseEntityDamageMult = true,
+                _UseStaticDamageMult = _StaticMult
             }
             _BattleShip:addScriptOnce("lasersniper.lua", _LaserSniperValues)
             _BattleShip:setValue("_prototype_superweapon_script", "lasersniper.lua")
         end
     end
-
-    --Add durability.
-    local durability = Durability(_BattleShip)
-    if durability then 
-        local _Factor = (durability.maxDurabilityFactor or 1) * _DuraFactor
-        mission.Log(_MethodName, "Setting durability factor of the prototype to : " .. tostring(_Factor))
-        durability.maxDurabilityFactor = _Factor
-    end
-
-    --Add damage.
-    local _FinalDamageFactor = (_BattleShip.damageMultiplier or 1) * _DamageFactor
-    mission.Log(_MethodName, "Setting final damage factor to : " .. tostring(_FinalDamageFactor))
-    _BattleShip.damageMultiplier = _FinalDamageFactor
 
     --Attach the boss script.
     if mission.data.custom.dangerLevel == 10 then
