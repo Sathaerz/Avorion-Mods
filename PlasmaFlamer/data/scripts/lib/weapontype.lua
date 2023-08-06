@@ -1,0 +1,1 @@
+WeaponTypes.addType("PlasmaFlamer", "Plasma Flamer", armed)

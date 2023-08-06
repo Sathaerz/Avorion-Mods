@@ -1,0 +1,1 @@
+weaponProbabilities[WeaponType.PlasmaFlamer] =            {d = 0.7, p = 1.8}

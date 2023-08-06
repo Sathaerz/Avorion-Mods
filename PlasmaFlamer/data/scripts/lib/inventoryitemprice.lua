@@ -1,0 +1,1 @@
+valueWeights[WeaponType.PlasmaFlamer] = 1.25 --Extremely short range offset by massive damage to shields. I think the end result makes this weapon quite powerful.
