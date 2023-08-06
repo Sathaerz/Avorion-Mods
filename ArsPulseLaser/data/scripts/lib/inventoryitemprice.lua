@@ -1,0 +1,1 @@
+valueWeights[WeaponType.ArsPulseLaser] = 1

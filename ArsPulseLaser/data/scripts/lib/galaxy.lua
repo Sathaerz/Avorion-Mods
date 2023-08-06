@@ -1,0 +1,1 @@
+weaponProbabilities[WeaponType.ArsPulseLaser] =            {p = 2.0}

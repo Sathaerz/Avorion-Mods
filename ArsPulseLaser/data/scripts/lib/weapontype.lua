@@ -1,0 +1,1 @@
+WeaponTypes.addType("ArsPulseLaser", "Pulse Laser", armed)
