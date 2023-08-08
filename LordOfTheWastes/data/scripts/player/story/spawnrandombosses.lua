@@ -1,7 +1,5 @@
 local Swenks = include("story/swenks")
 
-local noCoreSpawnTimer = 0
-
 local LOTW_onSectorEntered = SpawnRandomBosses.onSectorEntered
 function SpawnRandomBosses.onSectorEntered(_Player, _X, _Y, _ChangeType)
     LOTW_onSectorEntered(_Player, _X, _Y, _ChangeType)
