@@ -1,0 +1,1 @@
+table.insert(WeaponTypes, {type = WeaponType.MassDriver, name = "Mass Driver"})
