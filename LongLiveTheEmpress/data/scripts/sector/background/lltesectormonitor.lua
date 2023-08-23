@@ -56,6 +56,8 @@ function LLTESectorMonitor.clearMissionAssets(_X, _Y, _DeleteOtherAssets, _Delet
             table.insert(_EntityTypes, EntityType.Unknown)
             table.insert(_EntityTypes, EntityType.Other)
             table.insert(_EntityTypes, EntityType.Loot)
+            table.insert(_EntityTypes, EntityType.Container)
+            table.insert(_EntityTypes, EntityType.WormHole)
         end
         for _, _EntityType in pairs(_EntityTypes) do
             for _, _En in pairs({Sector():getEntitiesByType(_EntityType)}) do

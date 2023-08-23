@@ -1,6 +1,7 @@
 --[[
     Rank 2 side mission.
     Eradicate Xsotan Infestation
+    [CONVERTED]
     ADDITIONAL REQUIREMENTS TO DO THIS MISSION:
         - Rank 2
     ROUGH OUTLINE
@@ -383,9 +384,9 @@ function spawnXsotanInfestor()
         Loot(_XsotanInfestor):insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, getValueFromDistribution(_UpgradeRarities)))
     end
     
-    local _XostanInfestorTable = {}
-    table.insert(_XostanInfestorTable, _XostanInfestor)
-    SpawnUtility.addEnemyBuffs(_XostanInfestorTable)
+    local _XsotanInfestorTable = {}
+    table.insert(_XsotanInfestorTable, _XsotanInfestor)
+    SpawnUtility.addEnemyBuffs(_XsotanInfestorTable)
 
     _XsotanInfestor.damageMultiplier = (_XsotanInfestor.damageMultiplier or 1 ) * 1.6
 end

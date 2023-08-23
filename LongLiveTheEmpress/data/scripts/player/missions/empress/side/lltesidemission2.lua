@@ -456,13 +456,13 @@ function freighterReadyToJump()
         "Jump drives charged and warming up!",
         "Thanks for clearing the way! We'll be moving on shortly.",
         "Awesome job! We'll be heading to the next sector momentarily.",
-        "Jump drive ready! Calculating the jump route now.",
+        "Jump drive ready! Calculating the route now.",
         "We'll head out as soon as the jump route is calculated.",
         "That did it! Distortion cleared!"
     }
 
     local _Freighter = Entity(mission.data.custom.freighterid)
-    Sector():broadcastChatMessage(mission.data.custom.freighterid, ChatMessageType.Chatter, randomEntry(lines))
+    Sector():broadcastChatMessage(_Freighter, ChatMessageType.Chatter, randomEntry(lines))
 end
 
 function prepForPhaseAdvance(jumpidx)

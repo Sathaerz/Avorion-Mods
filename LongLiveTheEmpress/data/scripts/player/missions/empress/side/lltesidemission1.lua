@@ -1,6 +1,7 @@
 --[[
     Rank 1 side mission.
     Ambush Pirate Raiders
+    [CONVERTED]
     ADDITIONAL REQUIREMENTS TO DO THIS MISSION:
         - N/A
     ROUGH OUTLINE

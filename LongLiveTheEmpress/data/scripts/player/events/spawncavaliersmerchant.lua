@@ -68,12 +68,13 @@ function initialize()
     end
 
     ship.title = "Mobile Cavaliers Merchant"
+    ship.name = LLTEUtil.getFreighterName() 
+
     ship:addScript("data/scripts/entity/merchants/cavaliersutilitymerchant.lua")
     ship:addScript("data/scripts/entity/merchants/cavaliersturretmerchant.lua")
     ship:addScript("data/scripts/entity/merchants/travellingmerchant.lua")
     ship:addScript("ai/withdrawatlowhealth.lua", 0.1, 1, 1, 0.02)
-    ship.name = LLTEUtil.getFreighterName() 
-
+    
     Sector():broadcastChatMessage(ship, 0, "%1% %2% here. I'll be offering my services to all Cavaliers present for the next 15 minutes!"%_T, ship.title, ship.name)
 
     terminate()

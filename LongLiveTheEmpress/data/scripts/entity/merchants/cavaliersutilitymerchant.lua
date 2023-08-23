@@ -44,13 +44,18 @@ function CavaliersUtilityMerchant.shop:addItems()
         CavaliersUtilityMerchant.add(item, getInt(2, 5))
     end
 
+    local _satMin = 2
+    local _satMax = 3
+
     if _Merchant:getValue("_llte_PaladinInventory") then
         local item = UsableInventoryItem("cavaliersenergysuppressor.lua", Rarity(RarityType.Exceptional))
         CavaliersUtilityMerchant.add(item, getInt(2, 3))
-    else
-        local item = UsableInventoryItem("energysuppressor.lua", Rarity(RarityType.Exceptional))
-        CavaliersUtilityMerchant.add(item, getInt(2, 3))
+        _satMin = _satMin + 1
+        _satMax = _satMax + 2
     end
+
+    local item = UsableInventoryItem("energysuppressor.lua", Rarity(RarityType.Exceptional))
+    CavaliersUtilityMerchant.add(item, getInt(_satMin, _satMax))
 end
 
 function CavaliersUtilityMerchant.initialize()
