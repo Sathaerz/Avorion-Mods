@@ -11,6 +11,9 @@ local _SRM = false
 local _Slug = false
 local _ESCC = false
 local _Accel = false
+local _PlasFlamer = false
+local _MassDriver = false
+local _ArsPulseLaser = false
 local _Dangerous = false
 
 for _, p in pairs(xmods) do
@@ -44,6 +47,15 @@ for _, p in pairs(xmods) do
     if p.id == "2745345613" then
         _Dangerous = true
     end
+    if p.id == "3016092256" then
+        _PlasFlamer = true
+    end
+    if p.id == "3024338660" then
+        _MassDriver = true
+    end
+    if p.id == "3016092361" then
+        _ArsPulseLaser = true
+    end
 end
 
 if _Dangerous then
@@ -75,6 +87,20 @@ if _Slug then
     table.insert(AttackWeapons, WeaponType.SlugGun)
 end
 
+if _PlasFlamer then
+    table.insert(AttackWeapons, WeaponType.PlasmaFlamer)
+    table.insert(AntiShieldWeapons, WeaponType.PlasmaFlamer)
+end
+
+if _MassDriver then
+    table.insert(AttackWeapons, WeaponType.MassDriver)
+    table.insert(LongRangeWeapons, WeaponType.MassDriver)
+end
+
+if _ArsPulseLaser then
+    table.insert(AttackWeapons, WeaponType.ArsPulseLaser)
+end
+
 if ShipUtility._Dangerous then
     if _Vauss then
         table.insert(AttackWeapons, WeaponType.VaussCannon)
@@ -101,6 +127,14 @@ if _ESCC then
 
     if _Slug then
         table.insert(ExecutionerWeapons, WeaponType.SlugGun)
+    end
+
+    if _ArsPulseLaser then
+        table.insert(ExecutionerWeapons, WeaponType.ArsPulseLaser)
+    end
+
+    if _MassDriver then
+        table.insert(ExecutionerWeapons, WeaponType.MassDriver)
     end
 
     if ShipUtility._Dangerous then
