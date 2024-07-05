@@ -43,6 +43,7 @@ luac.out
 *.dat
 *.iml
 *.ogg
+.emmyrc.json
 modconfig.lua
 
 # Folders
