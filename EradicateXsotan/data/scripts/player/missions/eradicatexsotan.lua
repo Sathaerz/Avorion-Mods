@@ -197,6 +197,7 @@ mission.phases[1].onTargetLocationLeft = function(x, y)
     mission.Log(_MethodName, "Beginning...")
     --Reset.
     mission.data.custom.xsotanKilled = 0
+    mission.data.custom.infestorSpawned = false
 end
 
 mission.phases[1].updateTargetLocationServer = function(timeStep)
@@ -260,6 +261,9 @@ function spawnXsotanWave()
     local _MethodName = "Spawn Xsotan"
     
     local _SpawnCount = mission.data.custom.maximumXsotan - ESCCUtil.countEntitiesByValue("_infestation_xsotan")
+    if mission.data.custom.xsotanKilled >= 200 then
+        _SpawnCount = 0 --if you're silly enough to kill two hundred of these without killing the infestor, we'll throw you a bone.
+    end
     local rgen = ESCCUtil.getRand()
     local _Generator = SectorGenerator(Sector():getCoordinates())
     local _Players = {Sector():getPlayers()}
