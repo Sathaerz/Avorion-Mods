@@ -103,7 +103,7 @@ function SiegeGunShot.updateServer(_TimeStep)
                     _Shield:inflictDamage(_ShieldDamage, 1, DamageType.Energy, self._Position, self._OriginID)
                     if _HullDamage > 0 then
                         self.Log(_MethodName, tostring(_HullDamage) .. " damage to " .. tostring(_Entity.name) .. " hull")
-                        _Dura:inflictDamage(self._ShotDamage, 1, DamageType.Energy, self._OriginID)
+                        _Dura:inflictDamage(_HullDamage, 1, DamageType.Energy, self._OriginID)
                     end
                     _HitSomething = true
                 else

@@ -65,7 +65,7 @@ self._Data._TargetScriptValue = nil
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v5 script on entity.")
+    self.Log(_MethodName, "Initializing Torpedo Slammer v6 script on entity.")
 
     self._Data = _Values or {}
 
@@ -92,8 +92,12 @@ function TorpedoSlammer.initialize(_Values)
     self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
     self._Data._UseStaticDamageMult = self._Data._UseStaticDamageMult or false
     self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
+    self._Data._PreferWarheadType = self._Data._PreferWarheadType or nil
+    self._Data._PreferBodyType = self._Data._PreferBodyType or nil
 
     self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust))
+    self.Log(_MethodName, "Preferred warhead type is : " .. tostring(self._Data._PreferWarheadType))
+    self.Log(_MethodName, "Preferred bodty type is : " .. tostring(self._Data._PreferBodyType))
 end
 
 function TorpedoSlammer.getUpdateInterval()
@@ -256,6 +260,7 @@ function TorpedoSlammer.fireAtTarget()
 end
 
 function TorpedoSlammer.generateTorpedo()
+    local _MethodName = "Generate Torepedo"
     local _Rgen = ESCCUtil.getRand()
     local _Coordinates = {Sector():getCoordinates()}
     local _Generator = TorpedoGenerator()
@@ -269,6 +274,8 @@ function TorpedoSlammer.generateTorpedo()
     if not _BodyType then
         _BodyType = _Rgen:getInt(1, 9)
     end
+
+    self.Log(_MethodName, "Warhead type is : " .. tostring(_WarheadType) .. " and body type is : " .. tostring(_BodyType))
 
     return _Generator:generate(_Coordinates.x, _Coordinates.y, 0, Rarity(RarityType.Exotic), _WarheadType, _BodyType)
 end

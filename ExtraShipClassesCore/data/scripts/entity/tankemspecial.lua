@@ -5,14 +5,14 @@ package.path = package.path .. ";data/scripts/?.lua"
 TankemSpecial = {}
 local self = TankemSpecial
 
---Named after that old red alert unit that would give player units temporary invincibility
+--Based on IronCurtain.
 self._Data = {}
-self._Data._Duration = nil
-self._Data._TimeActive = nil
-self._Data._MinDura = nil
-self._Data._Active = nil
-self._Data._SentMessage = false
-self._Data._SGActive = false
+--self._Data._Duration = nil            The duration that the ship will be invulnerable for.
+--self._Data._TimeActive = nil          The amount of time the effect has been active for.
+--self._Data._MinDura = nil             The minimum durability - after the ship hits this % health the effect activates.
+--self._Data._Active = nil              Whether or not the effect is active.
+--self._Data._SentMessage = false       Set to true once the message is sent.
+--self._Data._SGActive = false          Set to true once the siege gun is set to active.
 
 self._Debug = 0
 
@@ -25,6 +25,8 @@ function TankemSpecial.initialize(_MaxDuration, _MinDurability, _DamageFactor)
     self._Data._TimeActive = 0
     self._Data._Active = false
     self._Data._DamageFactor = _DamageFactor or 1
+    self._Data._SentMessage = false
+    self._Data._SGActive = false
 
     if onServer() then
         Entity():registerCallback("onDamaged", "onDamaged")

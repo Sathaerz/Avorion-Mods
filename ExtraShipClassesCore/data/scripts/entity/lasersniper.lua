@@ -62,6 +62,7 @@ function LaserSniper.initialize(_Values)
     self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
     self._Data._TimeToActive = self._Data._TimeToActive or 0
     self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
+    --Target priority 3 goes off of self._Data._TargetTag which can be nil - it is deliberately not set here, I did not miss it.
 
     Entity():registerCallback("onDestroyed", "onDestroyed")
 end
@@ -185,6 +186,8 @@ function LaserSniper.updateIntersection(_TimeStep)
             local _DamageToShield = self._Data._DamagePerFrame * _EntityDamageMultiplier
             local _DamageToHull = 0
 
+            self.Log(_MethodName, "Inflicting " .. tostring(_DamageToShield) .. " damage", 1)
+
             --We'll be nice and not bypass shields this time, unlike IHDTX-style lasers.
             if _Shield and not self._Data._ShieldPen then
                 if _Shield.durability < _DamageToShield then
@@ -213,13 +216,18 @@ function LaserSniper.pickNewTarget()
     local _Rgen = ESCCUtil.getRand()
 
     --Pick a random target for now. I had this done by highest firepower, but I think it made the sniper too predictable.
-    --local _Enemies = {}
-    local _TargetCandidates = {Sector():getEnemies(_Factionidx)}
+    --Now remodeled to make it harder for my dumb ass to put an infinite loop in and explode my computer :3
+    local _Sector = Sector()
+    local _Enemies = {_Sector:getEnemies(_Factionidx)} 
+    local _TargetCandidates = {}
 
-    if self._Data._TargetPriority == 2 then --Reset target candidates and add all ships / stations that are not Xsotan.
-        _TargetCandidates = {}
-        local _Ships = {Sector():getEntitiesByType(EntityType.Ship)}
-        local _Stations = {Sector():getEntitiesByType(EntityType.Station)}
+    if self._Data._TargetPriority == 1 then
+        for _, _Candidate in pairs(_Enemies) do
+            table.insert(_TargetCandidates, _Candidate)
+        end
+    elseif self._Data._TargetPriority == 2 then
+        local _Ships = {_Sector:getEntitiesByType(EntityType.Ship)}
+        local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
 
         for _, _Candidate in pairs(_Ships) do
             if not _Candidate:getValue("is_xsotan") then
@@ -229,6 +237,13 @@ function LaserSniper.pickNewTarget()
 
         for _, _Candidate in pairs(_Stations) do
             if not _Candidate:getValue("is_xsotan") then
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end
+    elseif self._Data._TargetPriority == 3 then
+        if self._Data._TargetTag then
+            local _Entities = {_Sector:getEntitiesByScriptValue(self._Data._TargetTag)}
+            for _, _Candidate in pairs(_Entities) do
                 table.insert(_TargetCandidates, _Candidate)
             end
         end
@@ -245,6 +260,23 @@ end
 
 function LaserSniper.resetTimeToActive(_Time)
     self._Data._TimeToActive = _Time
+end
+
+function LaserSniper.adjustDamage(_dmg)
+    local _MethodName = "Adjusting Damage"
+    self.Log(_MethodName, "Adjusting damage from external call. Setting to " .. tostring(_dmg) .. " per update", 1)
+
+    self._Data._DamagePErFrame = _dmg
+end
+
+function LaserSniper.adjustTargetPrio(_prio, _tag)
+    local _MethodName = "Adjusting Priority"
+    self.Log(_MethodName, "Adjusting target priority / tag from external call. Setting priority to " .. tostring(_prio) .. " and tag to " .. tostring(_tag), 1)
+
+    self._Data._TargetPriority = _prio
+    self._Data._TargetTag = _tag
+    --Forcibly reset the target so another is picked in line w/ the new priority.
+    self._Data._CurrentTarget = nil
 end
 
 --region #CLIENT CALLS
@@ -478,8 +510,15 @@ end
 callable(LaserSniper, "syncLaserData")
 
 --Log function
-function LaserSniper.Log(_MethodName, _Msg)
-    if self._Debug == 1 then
+function LaserSniper.Log(_MethodName, _Msg, _OverrideDebug)
+    _OverrideDebug = _OverrideDebug or 0
+
+    local _LocalDebug = self._Debug
+    if _OverrideDebug == 1 then
+        _LocalDebug = 1
+    end
+
+    if _LocalDebug == 1 then
         print("[LaserSniper] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end

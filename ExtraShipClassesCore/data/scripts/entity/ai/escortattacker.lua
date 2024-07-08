@@ -19,7 +19,7 @@ self._Data._CurrentTarget = nil
 
 function AIEscortAttacker.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing AI Escort Attacker v1 script on entity.")
+    self.Log(_MethodName, "Initializing AI Escort Attacker v3 script on entity.")
 
     self._Data = _Values or {}
 end
@@ -30,7 +30,7 @@ end
 
 function AIEscortAttacker.updateServer(_TimeStep)
     local _MethodName = "Update Server"
-    self.Log(_MethodName, "Running...")
+    self.Log(_MethodName, "Running. Looking for tag " .. tostring(self._Data._TargetTag))
 
     local _ShipAI = ShipAI()
 
@@ -62,7 +62,7 @@ function AIEscortAttacker.pickNewTarget()
     end
 
     if #_TargetCandidates > 0 then
-        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.")
+        self.Log(_MethodName, "Found " .. tostring(#_TargetCandidates) .. " suitable target. Picking a random one.")
         return _TargetCandidates[_Rgen:getInt(1, #_TargetCandidates)]
     else
         self.Log(_MethodName, "WARNING - Could not find any target candidates.")

@@ -14,6 +14,8 @@ local ShipUtility = include("shiputility")
 local EventUT = include("eventutility")
 local TorpedoGenerator = include("torpedogenerator")
 local Xsotan = include ("story/xsotan")
+local EnvironmentalEffectUT = include("dlc/rift/sector/effects/environmentaleffectutility")
+local EnvironmentalEffectType = include("dlc/rift/sector/effects/environmentaleffecttype")
 
 local _ai = 1
 
@@ -86,6 +88,7 @@ function initUI()
     tab:createButton(ButtonRect(), "Phaser", "onSpawnPhaserButtonPressed")
     tab:createButton(ButtonRect(), "Frenzied", "onSpawnFrenziedButtonPressed")
     tab:createButton(ButtonRect(), "Secondaries", "onSpawnSecondariesButtonPressed")
+    tab:createButton(ButtonRect(), "Thorns", "onSpawnThornsButtonPressed")
     tab:createButton(ButtonRect(), "Xsotan Infestor", "onSpawnXsotanInfestorButtonPressed")
     tab:createButton(ButtonRect(), "Xsotan Oppressor", "onSpawnXsotanOppressorButtonPressed")
     tab:createButton(ButtonRect(), "Xsotan Sunmaker", "onSpawnXsotanSunmakerButtonPressed")
@@ -158,6 +161,11 @@ function initUI()
     tab7:createButton(ButtonRect(), "Test CDS Bombers", "onTestCDSBombersButtonPressed")
     tab7:createButton(ButtonRect(), "Test OOS Attack", "onTestOOSButtonPressed")
     tab7:createButton(ButtonRect(), "Reset XWG", "onLLTEResetXWGButtonPressed")
+    tab7:createButton(ButtonRect(), "Add Acid Fog Intensity 1", "onAcidFogIntensity1Pressed")
+    tab7:createButton(ButtonRect(), "Add Acid Fog Intensity 2", "onAcidFogIntensity2Pressed")
+    tab7:createButton(ButtonRect(), "Add Acid Fog Intensity 3", "onAcidFogIntensity3Pressed")
+    tab7:createButton(ButtonRect(), "Add Radiation Intensity 1", "onRadiationIntensity1Pressed")
+    tab7:createButton(ButtonRect(), "Remove All Weather", "onRemoveWeatherPressed")
     tab7:createButton(ButtonRect(), "Run Scratch Script", "onRunScratchScriptButtonPressed")
 
     if _ai == 1 then
@@ -175,6 +183,7 @@ function initUI()
     local hasRetrogradeCampaign = false
     local hasEmergence = false
     local hasLOTW = false
+    local hasBusinessAsUsual= false
     for _, p in pairs(xmods) do
         if p.id == "2208370349" then
             hasIncreasingThreat = true
@@ -190,6 +199,9 @@ function initUI()
         end
         if p.id == "2733586433" then
             hasLOTW = true
+        end
+        if p.id == "BusinessAsUsual" then
+            hasBusinessAsUsual = true
         end
     end
 
@@ -227,6 +239,28 @@ function initUI()
         tab5:createButton(ButtonRect(), "Set Rep Level 1", "onLLTERep1Pressed")
         tab5:createButton(ButtonRect(), "Set Rep Level 3", "onLLTERep3Pressed")
         tab5:createButton(ButtonRect(), "Set Rep Level 5", "onLLTERep5Pressed")
+    end
+
+    if hasBusinessAsUsual then
+        local BAUtab = tabbedWindow:createTab("Entity", "data/textures/icons/family.png", "Business As Usual")
+        numButtons = 0
+        --Misison tabs.
+        BAUtab:createButton(ButtonRect(), "Story Mission 1", "onBAUStoryMission1ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Story Mission 2", "onBAUStoryMission2ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Story Mission 3", "onBAUStoryMission3ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Story Mission 4", "onBAUStoryMission4ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Story Mission 5", "onBAUStoryMission5ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Side Mission 1", "onBAUSideMission1ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Side Mission 2", "onBAUSideMission2ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Side Mission 3", "onBAUSideMission3ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Side Mission 4", "onBAUSideMission4ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Side Mission 5", "onBAUSideMission5ButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Side Mission 6", "onBAUSideMission6ButtonPressed")
+
+        BAUtab:createButton(ButtonRect(), "Reset BAU Vars", "onResetBAUVarsButtonPressed")
+        BAUtab:createButton(ButtonRect(), "Set Rep Level 1", "onBAURep1Pressed")
+        BAUtab:createButton(ButtonRect(), "Set Rep Level 3", "onBAURep3Pressed")
+        BAUtab:createButton(ButtonRect(), "Set Rep Level 5", "onBAURep5Pressed")
     end
 
     if hasRetrogradeCampaign then
@@ -410,6 +444,14 @@ function onSecondariedEnemyGenerated(_Generated)
     print("adding secondary weapon script to enemy.")
     for _, _S in pairs(_Generated) do
         _S:addScript("secondaryweapons.lua")
+    end
+end
+
+function onThornsEnemyGenerated(_Generated)
+    onPiratesGenerated(_Generated)
+    print("adding thorns script to enemy.")
+    for _, _S in pairs(_Generated) do
+        _S:addScript("thorns.lua")        
     end
 end
 
@@ -747,6 +789,21 @@ function onSpawnSecondariesButtonPressed()
     generator:endBatch()   
 end
 callable(nil, "onSpawnSecondariesButtonPressed")
+
+function onSpawnThornsButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnThornsButtonPressed")
+        return
+    end
+    
+    local generator = AsyncPirateGenerator(nil, onThornsEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnThornsButtonPressed")
 
 function onSpawnXsotanInfestorButtonPressed()
     if onClient() then
@@ -1431,6 +1488,234 @@ callable(nil, "onLLTERep5Pressed")
 
 --endregion
 
+--region #TAB BAU (Business As Usual)
+
+function onBAUStoryMission1ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUStoryMission1ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/story/baustory1.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUStoryMission1ButtonPressed")
+
+function onBAUStoryMission2ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUStoryMission2ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/story/baustory2.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUStoryMission2ButtonPressed")
+
+function onBAUStoryMission3ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUStoryMission3ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/story/baustory3.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUStoryMission3ButtonPressed")
+
+function onBAUStoryMission4ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUStoryMission4ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/story/baustory4.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUStoryMission4ButtonPressed")
+
+function onBAUStoryMission5ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUStoryMission5ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/story/baustory5.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUStoryMission5ButtonPressed")
+
+function onBAUSideMission1ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUSideMission1ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/side/bauside1.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUSideMission1ButtonPressed")
+
+function onBAUSideMission2ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUSideMission2ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/side/bauside2.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUSideMission2ButtonPressed")
+
+function onBAUSideMission3ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUSideMission3ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/side/bauside3.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUSideMission3ButtonPressed")
+
+function onBAUSideMission4ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUSideMission4ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/side/bauside4.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUSideMission4ButtonPressed")
+
+function onBAUSideMission5ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onBAUSideMission5ButtonPressed")
+        return
+    end
+
+    local _Player = Player(callingPlayer)
+    local _Script = "missions/family/side/bauside5.lua"
+    _Player:removeScript(_Script)
+    _Player:addScript(_Script)
+end
+callable(nil, "onBAUSideMission5ButtonPressed")
+
+function onResetBAUVarsButtonPressed()
+    if onClient() then
+        invokeServerFunction("onResetBAUVarsButtonPressed")
+        return
+    end
+
+    print("Resetting BAU Vars")
+
+    local player = Player(callingPlayer)
+
+    --Set all values to nil
+    local _values = {
+        "_bau_family_inbarrier",
+        "_bau_family_ranklevel",
+        "_bau_family_rank",
+        "_bau_family_rep",
+        "_bau_family_nextcontact",
+        "_bau_family_startstory",
+        "_bau_story_1_accomplished",
+        "_bau_story_2_accomplished",
+        "_bau_story_3_accomplished",
+        "_bau_story_4_accomplished",
+        "_bau_story_5_accomplished",
+        "_bau_family_have_avorion",
+        "_bau_family_strength",
+        "_bau_family_inbarrier"
+    }
+
+    for _, _val in pairs(_values) do
+        player:setValue(_val, nil)
+    end
+
+    --Remove all scripts, and I mean ALL scripts.
+    local _Scripts = {
+        "missions/family/story/baustory1.lua",
+        "missions/family/story/baustory2.lua",
+        "missions/family/story/baustory3.lua",
+        "missions/family/story/baustory4.lua",
+        "missions/family/story/baustory5.lua",
+        "missions/family/side/bauside1.lua",
+        "missions/family/side/bauside2.lua",
+        "missions/family/side/bauside3.lua",
+        "missions/family/side/bauside4.lua",
+        "missions/family/side/bauside5.lua"
+    }
+    for _, _Script in pairs(_Scripts) do
+        if player:hasScript(_Script) then
+            print("Invoking fail method of " .. _Script)
+            player:invokeFunction(_Script, "fail")
+        end
+    end
+end
+callable(nil, "onResetBAUVarsButtonPressed")
+
+function onBAURep1Pressed()
+    if onClient() then
+        invokeServerFunction("onBAURep1Pressed")
+        return
+    end
+
+    print("Resetting Reputational BAU Vars")
+
+    local player = Player(callingPlayer)
+
+    player:setValue("_bau_family_ranklevel", 1)
+    player:setValue("_bau_family_rank", "Associate")
+    player:setValue("_bau_family_rep", 4)
+end
+callable(nil, "onBAURep1Pressed")
+
+function onBAURep3Pressed()
+    if onClient() then
+        invokeServerFunction("onBAURep3Pressed")
+        return
+    end
+
+    player:setValue("_bau_family_ranklevel", 3)
+    player:setValue("_bau_family_rank", "Capo")
+    player:setValue("_bau_family_rep", 29)
+end
+callable(nil, "onBAURep3Pressed")
+
+function onBAURep5Pressed()
+    if onClient() then
+        invokeServerFunction("onBAURep5Pressed")
+        return
+    end
+
+    player:setValue("_bau_family_ranklevel", 5)
+    player:setValue("_bau_family_rank", "Underboss")
+    player:setValue("_bau_family_rep", 51)
+end
+callable(nil, "onBAURep5Pressed")
+
+--endregion
+
 --region #TAB6
 
 function onTurretDataDumpButtonPressed()
@@ -1757,6 +2042,62 @@ function onLLTEResetXWGButtonPressed()
     _Server:setValue("xsotan_swarm_duration", nil)
 end
 callable(nil, "onLLTEResetXWGButtonPressed")
+
+function onAcidFogIntensity1Pressed()
+    if onClient() then
+        invokeServerFunction("onAcidFogIntensity1Pressed")
+        return
+    end
+
+    print("Adding acid fog @ 1")
+    EnvironmentalEffectUT.addEffect(EnvironmentalEffectType.AcidFog, 1)
+end
+callable(nil, "onAcidFogIntensity1Pressed")
+
+function onAcidFogIntensity2Pressed()
+    if onClient() then
+        invokeServerFunction("onAcidFogIntensity2Pressed")
+        return
+    end
+
+    print("Adding acid fog @ 2")
+    EnvironmentalEffectUT.addEffect(EnvironmentalEffectType.AcidFog, 2)
+end
+callable(nil, "onAcidFogIntensity2Pressed")
+
+function onAcidFogIntensity3Pressed()
+    if onClient() then
+        invokeServerFunction("onAcidFogIntensity3Pressed")
+        return
+    end
+
+    print("Adding acid fog @ 3")
+    EnvironmentalEffectUT.addEffect(EnvironmentalEffectType.AcidFog, 3)
+end
+callable(nil, "onAcidFogIntensity3Pressed")
+
+function onRadiationIntensity1Pressed()
+    if onClient() then
+        invokeServerFunction("onRadiationIntensity1Pressed")
+        return
+    end
+
+    print("Adding radiation @ 1")
+    EnvironmentalEffectUT.addEffect(EnvironmentalEffectType.Radiation, 1)
+end
+callable(nil, "onRadiationIntensity1Pressed")
+
+
+function onRemoveWeatherPressed()
+    if onClient() then
+        invokeServerFunction("onRemoveWeatherPressed")
+        return
+    end
+
+    print("Removing all weather")
+    EnvironmentalEffectUT.removeAllEffects()
+end
+callable(nil, "onRemoveWeatherPressed")
 
 function onRunScratchScriptButtonPressed()
     if onClient() then
