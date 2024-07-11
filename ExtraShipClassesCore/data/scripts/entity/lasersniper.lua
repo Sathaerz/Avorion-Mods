@@ -7,6 +7,8 @@ ESCCUtil = include("esccutil")
 LaserSniper = {}
 local self = LaserSniper
 
+--All of the various messages come with a _RequireDebugLevel parameter baked in. If you wish to see some specific messages, you can find those and set
+--_RequireDebugLevel to 0 for those messages. You can also set self._Debug to match it. Most messages are going to require level 1 but some require more.
 self._Debug = 0
 
 self._Data = {}
@@ -23,7 +25,7 @@ self._LaserData._TargetPoint = nil
 
 function LaserSniper.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Laser Sniper v64 script on entity.")
+    self.Log(_MethodName, "Initializing Laser Sniper v65 script on entity.", 1)
 
     self._Data = _Values or {}
 
@@ -76,7 +78,7 @@ function LaserSniper.update(_TimeStep)
     --If we're using a static damage multiplier, set it here. We only do this once.
     if self._Data._UseStaticDamageMult and not self._Data._StaticDamageMultSet then
         local _Mult = (Entity().damageMultiplier or 1)
-        self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult))
+        self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult), 1)
         self._Data._StaticDamageMultValue = _Mult
         self._Data._StaticDamageMultSet = true
     end
@@ -93,7 +95,7 @@ function LaserSniper.update(_TimeStep)
 
     if onServer() then
         if self._Data._BeamMisses >= 5 then
-            self.Log(_MethodName, "Beam has missed too frequently. Picking a new target.")
+            self.Log(_MethodName, "Beam has missed too frequently. Picking a new target.", 1)
             self._Data._CurrentTarget = nil
             self._Data._BeamMisses = 0
         end
@@ -102,7 +104,7 @@ function LaserSniper.update(_TimeStep)
             self._Data._DOTCycle = (self._Data._DOTCycle or 0) + _TimeStep
             if self._Data._DOTCycle >= self._Data._IncreaseDOTCycle then
                 self._Data._DamagePerFrame = self._Data._DamagePerFrame + self._Data._IncreaseDOTAmount
-                self.Log(_MethodName, "Increasing damage per frame - new value is " .. tostring(self._Data._DamagePerFrame))
+                self.Log(_MethodName, "Increasing damage per frame - new value is " .. tostring(self._Data._DamagePerFrame), 1)
                 self._Data._DOTCycle = 0
             end
         end
@@ -114,7 +116,7 @@ function LaserSniper.update(_TimeStep)
             self._Data._FireCycle = (self._Data._FireCycle or 0) + _TimeStep
             if self._Data._FireCycle >= self._Data._TargetCycle then
                 if not self._Data._TargetLaserActive then
-                    self.Log(_MethodName, "No target laser active - creating one.")
+                    self.Log(_MethodName, "No target laser active - creating one.", 1)
                     self.createTargetingLaser()
                     self._Data._TargetLaserActive = true
                     self._Data._TargetBeamActiveTime = 0
@@ -124,7 +126,7 @@ function LaserSniper.update(_TimeStep)
                 end
             end
             if self._Data._FireCycle >= self._Data._TargetCycle + self._Data._TargetingTime then --Target for X seconds, then fire.
-                self.Log(_MethodName, "Firing big laser and resetting fire cycle.")
+                self.Log(_MethodName, "Firing big laser and resetting fire cycle.", 1)
                 self.createShotLaser()
                 self._Data._BeamMisses = self._Data._BeamMisses + 1
                 self._Data._TargetLaserActive = false
@@ -171,15 +173,15 @@ function LaserSniper.updateIntersection(_TimeStep)
             self._Data._BeamMisses = 0
             local _Shield = Shield(_Entity.id)
 
-            --Recommend keeping the log messages off. The message spam isn't quite as bad as the other case but it's still rough.
+            --Require log level 3 for these to avoid spam. It's not quite as bad as log level 5 but it's still rough.
             local _EntityDamageMultiplier = 1
             if self._Data._UseEntityDamageMult then
                 if self._Data._UseStaticDamageMult then
                     _EntityDamageMultiplier = (self._Data._StaticDamageMultValue or 1)
-                    --self.Log(_MethodName, "Static damage multiplier is " .. tostring(_EntityDamageMultiplier))
+                    self.Log(_MethodName, "Static damage multiplier is " .. tostring(_EntityDamageMultiplier), 3)
                 else
                     _EntityDamageMultiplier = (boss.damageMultiplier or 1)
-                    --self.Log(_MethodName, "Damage multiplier is " .. tostring(_EntityDamageMultiplier))
+                    self.Log(_MethodName, "Damage multiplier is " .. tostring(_EntityDamageMultiplier), 3)
                 end
             end
 
@@ -250,10 +252,10 @@ function LaserSniper.pickNewTarget()
     end
 
     if #_TargetCandidates > 0 then
-        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.")
+        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
         return _TargetCandidates[_Rgen:getInt(1, #_TargetCandidates)]
     else
-        self.Log(_MethodName, "WARNING - Could not find any target candidates.")
+        self.Log(_MethodName, "WARNING - Could not find any target candidates.", 1)
         return nil
     end
 end
@@ -286,8 +288,8 @@ function LaserSniper.updateLaser()
     if onClient() then
         local _Entity = Entity()
         if not laser or not valid(laser) or not _Entity or not valid(_Entity) then
-            --Highly suggest keeping the next line commented out. The spam is unreal.
-            --self.Log(_MethodName, "Laser not valid!!! Returning immediately.")
+            --Set this to log level 7 - highly reccommend keeping it there unless you absolutely need this message. The spam is unreal.
+            self.Log(_MethodName, "Laser not valid!!! Returning immediately.", 7)
             return
         end
 
@@ -303,7 +305,7 @@ function LaserSniper.updateLaser()
 
             local _Target = self._Data._CurrentTarget
             if not valid(_Target) then
-                self.Log(_MethodName, "Target is not valid!!! Returning immediately.")
+                self.Log(_MethodName, "Target is not valid!!! Returning immediately.", 1)
                 return
             end
             local _TargetLoc = _Target.translationf
@@ -323,7 +325,7 @@ function LaserSniper.updateLaser()
         laser.aliveTime = 0
 
         if not _From or not _Direction then
-            self.Log(_MethodName, "WARNING - _From is " .. tostring(_From) .. " or _Direction is " .. tostring(_Direction))
+            self.Log(_MethodName, "WARNING - _From is " .. tostring(_From) .. " or _Direction is " .. tostring(_Direction), 1)
         end
 
         targetlaser.from = laser.to
@@ -351,14 +353,14 @@ function LaserSniper.createTargetingLaser()
     self._Data._TargetPoint = _TargetEntity.translationf
 
     if onServer() then
-        self.Log(_MethodName, "Calling on Server - invoking on Client")
+        self.Log(_MethodName, "Calling on Server - invoking on Client", 1)
         broadcastInvokeClientFunction("createTargetingLaser")
         return
     else
-        self.Log(_MethodName, "Calling on client")
+        self.Log(_MethodName, "Calling on client", 1)
     end
 
-    self.Log(_MethodName, "Entity targeted is " .. tostring(_TargetEntity.name) .. " and its position is " .. tostring(self._Data._TargetPoint))
+    self.Log(_MethodName, "Entity targeted is " .. tostring(_TargetEntity.name) .. " and its position is " .. tostring(self._Data._TargetPoint), 1)
 
     LaserSniper.deleteCurrentLasers()
     LaserSniper.createLaser(1, ColorRGB(0, 1, 0), true, _Entity.translationf, self._Data._TargetPoint)
@@ -368,18 +370,18 @@ end
 function LaserSniper.createShotLaser()
     local _MethodName = "Create Shot Laser"
     if onServer() then
-        self.Log(_MethodName, "Calling on Server - invoking on Client")
+        self.Log(_MethodName, "Calling on Server - invoking on Client", 1)
         broadcastInvokeClientFunction("createShotLaser")
         return
     else
-        self.Log(_MethodName, "Calling on client")
+        self.Log(_MethodName, "Calling on client", 1)
     end
 
     --Continue to shoot from the last point calculated by the targeting laser.
     local _Entity = Entity()
     local _TargetPoint = self._LaserData._TargetPoint
 
-    self.Log(_MethodName, "Target point is " .. tostring(self._LaserData._TargetPoint))
+    self.Log(_MethodName, "Target point is " .. tostring(self._LaserData._TargetPoint), 1)
 
     LaserSniper.deleteCurrentLasers()
     LaserSniper.createLaser(20, ColorRGB(1, 0, 0), false, _Entity.translationf, _TargetPoint)
@@ -389,11 +391,11 @@ end
 function LaserSniper.createLaser(_Width, _Color, _Collision, _From, _TargetPoint)
     local _MethodName = "Create Laser"
     if onServer() then
-        self.Log(_MethodName, "Calling on Server - invoking on Client")
+        self.Log(_MethodName, "Calling on Server - invoking on Client", 1)
         broadcastInvokeClientFunction("createLaser")
         return
     else
-        self.Log(_MethodName, "Calling on client - values are : _Width : " .. tostring(_Width) .. " - _Color : " .. tostring(_Color) .. " - _Collision : " .. tostring(_Collision) .. " - _From : " .. tostring(_From) .. " - _TargetPoint : " .. tostring(_TargetPoint))
+        self.Log(_MethodName, "Calling on client - values are : _Width : " .. tostring(_Width) .. " - _Color : " .. tostring(_Color) .. " - _Collision : " .. tostring(_Collision) .. " - _From : " .. tostring(_From) .. " - _TargetPoint : " .. tostring(_TargetPoint), 1)
     end
 
     local _Color = _Color or ColorRGB(0.1, 0.1, 0.1)
@@ -401,8 +403,8 @@ function LaserSniper.createLaser(_Width, _Color, _Collision, _From, _TargetPoint
     local _Dir = _TargetPoint - _From
     local _Direction = normalize(_Dir)
 
-    self.Log("Target point is : " .. tostring(_TargetPoint) .. " and from is : " .. tostring(_From))
-    self.Log("_Dir is : " .. tostring(_Dir))
+    self.Log(_MethodName, "Target point is : " .. tostring(_TargetPoint) .. " and from is : " .. tostring(_From), 1)
+    self.Log(_MethodName, "_Dir is : " .. tostring(_Dir), 1)
 
     local _lFrom = _From
     local _lTo = _From + (_Direction * _LookConstant)
@@ -411,9 +413,9 @@ function LaserSniper.createLaser(_Width, _Color, _Collision, _From, _TargetPoint
     laser.to = _lTo
     laser.collision = false
 
-    self.Log(_MethodName, "Making laser from : " .. tostring(_lFrom) .. " to : " .. tostring(_lTo))
+    self.Log(_MethodName, "Making laser from : " .. tostring(_lFrom) .. " to : " .. tostring(_lTo), 1)
     if not laser then
-        self.Log(_MethodName, "WARNING! laser is nil")
+        self.Log(_MethodName, "WARNING! laser is nil", 1)
     end
 
     local _ltFrom = _lTo
@@ -423,9 +425,9 @@ function LaserSniper.createLaser(_Width, _Color, _Collision, _From, _TargetPoint
     targetlaser.to = _ltTo
     targetlaser.collision = _Collision
 
-    self.Log(_MethodName, "Making target laser from : " .. tostring(_ltFrom) .. " to : " .. tostring(_ltTo))
+    self.Log(_MethodName, "Making target laser from : " .. tostring(_ltFrom) .. " to : " .. tostring(_ltTo), 1)
     if not targetlaser then
-        self.Log(_MethodName, "WARNING! targetlaser is nil")
+        self.Log(_MethodName, "WARNING! targetlaser is nil", 1)
     end
 
     self._LaserData._From = _ltFrom
@@ -434,7 +436,7 @@ function LaserSniper.createLaser(_Width, _Color, _Collision, _From, _TargetPoint
     self._LaserData._TargetPoint = _TargetPoint
     self._Data._TargetPoint = _TargetPoint
 
-    self.Log(_MethodName, "self._Data._TargetPoint is " .. tostring(self._Data._TargetPoint))
+    self.Log(_MethodName, "self._Data._TargetPoint is " .. tostring(self._Data._TargetPoint), 1)
 
     laser.maxAliveTime = 5
     targetlaser.maxAliveTime = 5
@@ -474,11 +476,11 @@ end
 function LaserSniper.deleteCurrentLasers()
     local _MethodName = "Delete Current Lasers"
     if onServer() then
-        self.Log(_MethodName, "Calling on Server - invoking on Client")
+        self.Log(_MethodName, "Calling on Server - invoking on Client", 1)
         broadcastInvokeClientFunction("deleteCurrentLasers")
         return
     else
-        self.Log(_MethodName, "Calling on client")
+        self.Log(_MethodName, "Calling on client", 1)
     end
 
     if valid(laser) then Sector():removeLaser(laser) end
@@ -510,15 +512,10 @@ end
 callable(LaserSniper, "syncLaserData")
 
 --Log function
-function LaserSniper.Log(_MethodName, _Msg, _OverrideDebug)
-    _OverrideDebug = _OverrideDebug or 0
+function LaserSniper.Log(_MethodName, _Msg, _RequireDebugLevel)
+    _RequireDebugLevel = _RequireDebugLevel or 1
 
-    local _LocalDebug = self._Debug
-    if _OverrideDebug == 1 then
-        _LocalDebug = 1
-    end
-
-    if _LocalDebug == 1 then
+    if self._Debug >= _RequireDebugLevel then
         print("[LaserSniper] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end
@@ -529,13 +526,13 @@ end
 
 function LaserSniper.secure()
     local _MethodName = "Secure"
-    self.Log(_MethodName, "Securing self._Data")
+    self.Log(_MethodName, "Securing self._Data", 1)
     return self._Data
 end
 
 function LaserSniper.restore(_Values)
     local _MethodName = "Restore"
-    self.Log(_MethodName, "Restoring self._Data")
+    self.Log(_MethodName, "Restoring self._Data", 1)
     self._Data = _Values
 end
 

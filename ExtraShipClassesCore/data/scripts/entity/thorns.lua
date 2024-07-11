@@ -7,23 +7,23 @@ include ("randomext")
 Thorns = {}
 local self = Thorns
 
-self._Debug = 2
+self._Debug = 0
 
 self._Data = {}
---self._Data._MaxTimeInPhase = nil
---self._Data._MaxTimeOutOfPhase = nil
---self._Data._DamageFrequency = nil
---self._Data._TimeInPhase = nil
---self._Data._DamageTimeTracker = nil
---self._Data._ThornsMode = nil
---self._Data._ThornsMultiplier = nil
+--self._Data._MaxTimeInPhase        Sets the maximum amount of time the script can spend in the phase where it is calculating / reflecting damage. Defaults to 20 seconds.
+--self._Data._MaxTimeOutOfPhase     Sets the maximum amount of time between the script being active. Defaults to 30 seconds.
+--self._Data._DamageFrequency       Sets the interval where the thorns damage is bounced back at the target. Defaults to 10 seconds. Cannot be meaningfully set to less than 2 seconds.
+--self._Data._TimeInPhase           Tracks the amount of time the script has been in the active phase.
+--self._Data._DamageTimeTracker     Tracks the amount of time since the last time the script has bounced damage.
+--self._Data._ThornsMode            Tracks whether thorns mode is currently active.
+--self._Data._ThornsMultiplier      Sets the multiplier for how much damage is reflected. Defaults to 0.25 or 25%
 
 self._ThornsDamage = {}
 
 function Thorns.initialize(_Values)
     local _MethodName = "Initialize"
     local _Entity = Entity()
-    self.Log(_MethodName, "Adding v9 of thorns.lua to entity.")
+    self.Log(_MethodName, "Adding v10 of thorns.lua to entity.")
 
     self._Data = _Values or {}
 
@@ -86,6 +86,7 @@ function Thorns.updateServer(_TimeStep)
             --Flip us to being IN the mode.
             self._Data._ThornsMode = true
             self._Data._TimeInPhase = 0
+            self._Data._DamageTimeTracker = 0
             _ShowAnimation = true
             self.Log(_MethodName, "Swapping modes. Thorns mode is now on.")
         end
@@ -199,10 +200,10 @@ function Thorns.bounceDamage()
     
             --Draw a laser
             self.createLaser(_MyPosition, _TargetPosition)
-    
-            _vals._thornsfor = 0
         end
     end
+
+    self._ThornsDamage = {} --Dump the table and make a new one.
 end
 
 --endregion

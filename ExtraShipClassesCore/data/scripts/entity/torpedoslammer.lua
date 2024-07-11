@@ -21,12 +21,13 @@ self._Data = {}
         _PreferWarheadType      = This script will always use this warhead type if this value is supplied. Otherwise a random type is used.
         _PreferBodyType         = This script will always use this body type if this value is supplied. Otherwise a random type is used.
         _UpAdjust               = Adjusts the spawned torpedo upwards or not. Used for not spawning a torpedo in the ship's bounding box which does weird shit to the AI.
+        _UpAdjustFactor         = Determines how much upwards to adjust the spawned torpedo. Defaults to 1.
         _DamageFactor           = Multiplies the amount of damage the torpedo does.
         _ForwardAdjustFactor    = Adjusts how far forward a torpedo spawns relative to the attached entity. Used for not spawning a torpedo in the ship's bounding box which does weird shit to the AI.
         _DurabilityFactor       = Multiplies the durability of torpedoes by this amount. Useful for making torpedoes that are hard to shoot down.
         _UseEntityDamageMult    = Multiplies the damage of the torpedoes by the attached entity's damage multiplier. Useful for overdrive or avenger enemies.
         _UseStaticDamageMult    = Sets a multiplier on the first update and does not dynamically use the entity's damage multiplier.
-        _TargetPriority         = 1 = most firepower, 2 = by script value, 3 = random non-xsotan
+        _TargetPriority         = 1 = most firepower, 2 = by script value, 3 = random non-xsotan, 4 = random enemy
         _TargetScriptValue      = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
 
         Example:
@@ -46,26 +47,28 @@ self._Data = {}
         local TorpedoUtility = include ("torpedoutility")
         _Boss:addScriptOnce("torpedoslammer.lua", { _ROF = 1, _TimeToActivate = 5, _PreferWarheadType = TorpedoUtility.WarheadType.EMP, _PreferBodyType = TorpedoUtility.BodyType.Hawk})
 ]]
-self._Data._ROF = nil
-self._Data._FireCycle = nil
-self._Data._TimeToActive = nil
-self._Data._CurrentTarget = nil
-self._Data._PreferWarheadType = nil
-self._Data._PreferBodyType = nil
-self._Data._UpAdjust = nil
-self._Data._DamageFactor = nil
-self._Data._ForwardAdjustFactor = nil --Consider setting this to a value greater than 1 if you put this on a smaller ship.
-self._Data._DurabilityFactor = nil
-self._Data._UseEntityDamageMult = nil
-self._Data._UseEntityDamageMult = nil
-self._Data._StaticDamageMult = nil
-self._Data._StaticDamageMultSet = nil
-self._Data._TargetPriority = nil
-self._Data._TargetScriptValue = nil
+        
+--Brief overview of the values available w/o documentation.
+
+--self._Data._ROF = nil
+--self._Data._FireCycle = nil
+--self._Data._TimeToActive = nil
+--self._Data._CurrentTarget = nil
+--self._Data._PreferWarheadType = nil
+--self._Data._PreferBodyType = nil
+--self._Data._UpAdjust = nil
+--self._Data._DamageFactor = nil
+--self._Data._ForwardAdjustFactor = nil --Consider setting this to a value greater than 1 if you put this on a smaller ship.
+--self._Data._DurabilityFactor = nil
+--self._Data._UseEntityDamageMult = nil
+--self._Data._UseStaticDamageMult = nil
+--self._Data._StaticDamageMultSet = nil
+--self._Data._TargetPriority = nil
+--self._Data._TargetScriptValue = nil
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v6 script on entity.")
+    self.Log(_MethodName, "Initializing Torpedo Slammer v7 script on entity.")
 
     self._Data = _Values or {}
 
@@ -86,6 +89,7 @@ function TorpedoSlammer.initialize(_Values)
     self._Data._TimeToActive = self._Data._TimeToActive or 10
     self._Data._ROF = self._Data._ROF or 1
     self._Data._UpAdjust = self._Data._UpAdjust or false
+    self._Data._UpAdjustFactor = self._Data._UpAdjustFactor or 1
     self._Data._DamageFactor = self._Data._DamageFactor or 1
     self._Data._ForwardAdjustFactor = self._Data._ForwardAdjustFactor or 1
     self._Data._DurabilityFactor = self._Data._DurabilityFactor or 1
@@ -94,6 +98,12 @@ function TorpedoSlammer.initialize(_Values)
     self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
     self._Data._PreferWarheadType = self._Data._PreferWarheadType or nil
     self._Data._PreferBodyType = self._Data._PreferBodyType or nil
+    self._Data._TargetScriptValue = self._Data._TargetScriptValue or nil
+
+    --Fix the target priority - if the ship isn't Xsotan make it use 4 instead of 3.
+    if self._Data._TargetPriority == 3 and not self_is_xsotan then
+        self._Data._TargetPriority = 4 --Just use 4. It's functionally the same as 3 but you won't target yourself due to the list of non-xsotan including you.
+    end
 
     self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust))
     self.Log(_MethodName, "Preferred warhead type is : " .. tostring(self._Data._PreferWarheadType))
@@ -135,7 +145,14 @@ function TorpedoSlammer.pickNewTarget()
     local _Rgen = ESCCUtil.getRand()
     local _TargetPriority = self._Data._TargetPriority
 
-    local _Enemies = {Sector():getEnemies(_Factionidx)}
+    --Get the list of enemies. This is a bit of work since it includes wacky crap like turrets.
+    local _RawEnemies = {Sector():getEnemies(_Factionidx)}
+    local _Enemies = {}
+    for _, _RawEnemy in pairs(_RawEnemies) do
+        if _RawEnemy.type == EntityType.Ship or _RawEnemy.type == EntityType.Station then
+           table.insert(_Enemies, _RawEnemy) 
+        end
+    end
     local _TargetCandidates = {}
 
     if self._Debug == 1 then
@@ -177,6 +194,10 @@ function TorpedoSlammer.pickNewTarget()
             if not _Candidate:getValue("is_xsotan") then
                 table.insert(_TargetCandidates, _Candidate)
             end
+        end
+    elseif _TargetPriority == 4 then
+        for _, _Candidate in pairs(_Enemies) do
+            table.insert(_TargetCandidates, _Candidate)            
         end
     end
 
@@ -220,7 +241,7 @@ function TorpedoSlammer.fireAtTarget()
     local _SpawnPos = _Mat.position + (_NDVec * _Bounds.radius * 1.25 * self._Data._ForwardAdjustFactor)
     if self._Data._UpAdjust then
         self.Log(_MethodName, "Adjusting up position.")
-        _SpawnPos = _SpawnPos + (_Mat.up * _Bounds.radius * 0.1)
+        _SpawnPos = _SpawnPos + (_Mat.up * _Bounds.radius * 0.1 * self._Data._UpAdjustFactor)
     end
 
     local _EntityDamageMultiplier = 1
@@ -232,8 +253,14 @@ function TorpedoSlammer.fireAtTarget()
         end
     end
 
+    local _BaseShieldDamage = _Torpedo.shieldDamage
+    local _BaseHullDamage = _Torpedo.hullDamage
+
     _Torpedo.shieldDamage = _Torpedo.shieldDamage * self._Data._DamageFactor * _EntityDamageMultiplier
     _Torpedo.hullDamage = _Torpedo.hullDamage * self._Data._DamageFactor * _EntityDamageMultiplier
+
+    self.Log(_MethodName, "Torpedo has base shield damage of : " .. tostring(_BaseShieldDamage) .. " and base hull damage of : " .. tostring(_BaseHullDamage))
+    self.Log(_MethodName, "Torpedo has final shield damage of " .. tostring(_Torpedo.shieldDamage) .. " and final hull damage of : " .. tostring(_Torpedo.hullDamage))
 
     _Out.position = _SpawnPos
     _Out.look = _Mat.look

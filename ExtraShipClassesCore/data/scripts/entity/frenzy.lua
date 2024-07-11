@@ -7,10 +7,14 @@ Frenzy = {}
 local self = Frenzy
 
 self._Data = {}
-self._Data._Active = nil
-self._Data._DamageThreshold = nil
-self._Data._IncreasePerUpdate = nil
-self._Data._UpdateCycle = nil
+--[[
+self._Data._Active              True/false value that specifies whether or not the script has activated.
+self._Data._DamageThreshold     The % health threshold at which this script activates - set this to a decimal value - default is 45% HP (or 0.45)
+self._Data._IncreasePerUpdate   The % damage buff given every time this script updates - this buff is ADDIIVE, not multiplicative. Set this to a decimal value Defaults to 5% (0.05)
+self._Data._UpdateCycle         How often the damage buff is applied. Default is 10 seconds. Script updates every 5 seconds so this effectively cannot be less than a multiple of 5.
+self._Data._EnableUpperLimit    Enables an upper limit to how much this script can buff the damage multiplier of a ship. Defaults to false.
+self._Data._UpperLimit          The upper limit of the DAMAGE MULTIPLIER - NOT THE TOTAL FIREPOWER OF THE SHIP - THE DAMAGE MULTIPLIER. Defaults to a meaninglessly high value.
+]]
 
 self._Debug = 0
 
@@ -20,9 +24,11 @@ function Frenzy.initialize(_Values)
     self._Data._Active = false
     self._Data._Timer = 0
 
-    self._Data._DamageThreshold = self._Data._DamageThreshold or 0.33
-    self._Data._IncreasePerUpdate = self._Data._IncreasePerUpdate or 0.01
+    self._Data._DamageThreshold = self._Data._DamageThreshold or 0.45
+    self._Data._IncreasePerUpdate = self._Data._IncreasePerUpdate or 0.05
     self._Data._UpdateCycle = self._Data._UpdateCycle or 10
+    self._Data._EnableUpperLimit = self._Data._EnableUpperLimit or false
+    self._Data._UpperLimit = self._Data._UpperLimit or 99999999
 
     if onServer() then
         Entity():registerCallback("onDamaged", "onDamaged")
@@ -40,6 +46,14 @@ function Frenzy.updateServer(_TimeStep)
         if self._Data._Timer >= self._Data._UpdateCycle then
             local _Entity = Entity()
             local _DmgFactor = (_Entity.damageMultiplier or 1) + self._Data._IncreasePerUpdate
+
+            --If the upper limit is enabled, prevent _DmgFactor from going past the factor specified in upper limit.
+            if self._Data._EnableUpperLimit then
+                if _DmgFactor > self._Data._UpperLimit then
+                    _DmgFactor = self._Data._UpperLimit
+                end
+            end
+
             _Entity.damageMultiplier = _DmgFactor
             self._Data._Timer = 0
 
@@ -80,7 +94,7 @@ end
 --region #CLIENT / SERVER functions
 
 function Frenzy.Log(_MethodName, _Msg)
-    if self._Debug == 1 then
+    if self._Debug >= 1 then
         print("[Frenzy] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end

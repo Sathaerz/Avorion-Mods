@@ -8,14 +8,14 @@ local self = AdaptiveDefense
 
 self._Data = {}
 --Placeholder / demo values to show what the script can have altered in one easy spot.
-self._Data._Resistance = nil --defaults to 0.55
-self._Data._PhysDamageTaken = nil
-self._Data._AntiDamageTaken = nil
-self._Data._PlasDamageTaken = nil
-self._Data._EnRGDamageTaken = nil
-self._Data._ElecDamageTaken = nil
-self._Data._OverallDamageTaken = nil
-self._Data._FirstUpdateRun = false
+--self._Data._Resistance = nil --defaults to 0.55
+--self._Data._PhysDamageTaken = nil
+--self._Data._AntiDamageTaken = nil
+--self._Data._PlasDamageTaken = nil
+--self._Data._EnRGDamageTaken = nil
+--self._Data._ElecDamageTaken = nil
+--self._Data._OverallDamageTaken = nil
+--self._Data._FirstUpdateRun = false
 
 local _DamageTaken = 0
 local _DamageTakenTable = {}
@@ -62,7 +62,7 @@ end
 
 function AdaptiveDefense.updateServer(_TimeStep)
     local _MethodName = "Update Server"
-    self.Log("Amount of damage taken: " .. tostring(_DamageTaken))
+    self.Log(_MethodName, "Amount of damage taken: " .. tostring(_DamageTaken))
     if _DamageTaken > 0 then
         self.Log(_MethodName, "Adapting defenses to offensive pressure...")
 
