@@ -106,6 +106,18 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
         local _GordianKnot = PariahUtility.spawnSuperWeapon(mission.data.custom.mainType, mission.data.custom.secondaryWeapons)
         mission.data.custom.gordianKnotid = _GordianKnot.id
     end
+
+    --Give the plyer a grace period before it starts blasting.
+    local _func = "resetTimeToActive"
+    local _gk = Entity(mission.data.custom.gordianKnotid)
+
+    --gk always has torp slammer.
+    _gk:invokeFunction("torpedoslammer.lua", _func, 10)
+
+    if _gk and valid(_gk) and _gk:getValue("_gk_superweaponscript") then
+        local _script = _gk:getValue("_gk_superweaponscript")
+        _gk:invokeFunction(_script, _func, 30)
+    end
 end
 
 mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)

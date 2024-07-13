@@ -291,6 +291,7 @@ function buildObjectiveSector(_X, _Y)
         local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
         Loot(_ResearchOutpost):insert(_upgradeGenerator:generateSectorSystem(_X, _Y, nil, _upgradeRarities))
 
+        --Uncomment to always add a chip.
         --mission.data.custom.addChip = true
         table.insert(_Stations, _ResearchOutpost)
 

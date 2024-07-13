@@ -191,6 +191,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         _SGD._BaseDamagePerShot = _Damage
 
         _Superweapon:addScript("entity/stationsiegegun.lua", _SGD)
+        _Superweapon:setValue("_gk_superweaponscript", "stationsiegegun.lua")
         ShipAI(_Superweapon.id):setAggressive()
         self.Log(_MethodName, "Attached siege gun script to SuperWeapon.")
     else
@@ -198,6 +199,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         --Laser Boss
         _AdjustSlammer = true
         _Superweapon:addScript("entity/gordianlaserboss.lua", _Amp)
+        _Superweapon:setValue("_gk_superweaponscript", "gordianlaserboss.lua")
         _TurnFactor = 2
         self.Log(_MethodName, "Attached laser boss script to SuperWeapon.")
     end
@@ -274,18 +276,19 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         _Loot:insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, Rarity(self.getRandomRarity())))
     end
 
-    local _TorpDamageFactor = 1
+    local _TorpDamageFactor = 1.5
     local _TechLevel = Balancing_GetTechLevel(_X, _Y)
     if _TechLevel <= 45 then
-        _TorpDamageFactor = 2
+        _TorpDamageFactor = 3
     end
     if _TechLevel <= 40 then
-        _TorpDamageFactor = 3
+        _TorpDamageFactor = 4.5
     end
 
     local _TorpSlammerValues = {}
     _TorpSlammerValues._TimeToActive = 10
     _TorpSlammerValues._ROF = 1
+    _TorpSlammerValues._TorpOffset = -750
     _TorpSlammerValues._UpAdjust = _AdjustSlammer
     _TorpSlammerValues._DamageFactor = _TorpDamageFactor
     _TorpSlammerValues._ForwardAdjustFactor = 1

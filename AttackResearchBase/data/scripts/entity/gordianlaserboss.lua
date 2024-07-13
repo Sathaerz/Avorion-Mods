@@ -21,6 +21,7 @@ data._TargetTimerMax = 0.5 -- Shoots somewhat faster than the standard laser bos
 data._ShotMaxTimer = 0.9 --Shoots somewhat faster.
 data._ShotRestTimer = 0.25 --Rest timer.
 data._LaserDistance = 60000
+data._TimeToActive = 30
 
 local laser = nil
 local targetLaser = nil
@@ -53,6 +54,9 @@ function GordianLaserBoss.initialize(_AmpData)
 
     local _Boss = Entity()
     
+    _Boss.addBaseMultiplier(_Boss, StatsBonuses.GeneratedEnergy, 20.0)
+    _Boss.addBaseMultiplier(_Boss, StatsBonuses.BatteryRecharge, 20.0)
+
     _Boss:registerCallback("onDestroyed", "onDestroyed")
 end
 
@@ -61,6 +65,11 @@ function GordianLaserBoss.onDestroyed()
 end
 
 function GordianLaserBoss.update(timeStep)
+    if data._TimeToActive >= 0 then
+        data._TimeToActive = data._TimeToActive - timeStep
+        return
+    end
+
     if data.aggressive then
 
         if not laserActive then
@@ -177,12 +186,28 @@ function GordianLaserBoss.initializeShot(entity, timeStep)
             if entity then Sector():deleteEntity(entity) end
         else
             -- do damage to entity
+            local _self = Entity()
+            local shield = Shield(entity.id)
             local durability = Durability(entity.id)
             if not durability then return end
             self.Log(_MethodName, "Hit! inflicting a ton of damage.")
-            --200 million damage * amped
-            --Hits directly in the durability so we will be a little more charitable here ;)
-            durability:inflictDamage(200000000 * data.amped, 1, DamageType.Energy, Entity().id)
+            
+            local _dmg = 200000000 * data.amped
+
+            if shield then
+                local _shielddmg = _dmg
+                local _hulldmg = 0
+                if shield.durability < _dmg then
+                    _shielddmg = shield.durability
+                    _hulldmg = _dmg - shield.durability
+                end
+                shield:inflictDamage(_shielddmg, 1, DamageType.Energy, _self.translationf, _self.id)
+                if _hulldmg > 0 then
+                    durability:inflictDamage(_hulldmg, 1, DamageType.Energy, _self.id)
+                end
+            else
+                durability:inflictDamage(_dmg, 1, DamageType.Energy, _self.id)
+            end           
         end
     elseif not entity and data.shotTimer > _ShotMaxTimer then
         GordianLaserBoss.createShotLaser()
@@ -201,6 +226,10 @@ function GordianLaserBoss.entityIsEnemy(_Entity)
     end
 
     return false
+end
+
+function GordianLaserBoss.resetTimeToActive(_Time)
+    data._TimeToActive = _Time
 end
 
 --region #CLIENT ONLY
