@@ -240,8 +240,16 @@ end
 
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _DestroyedEntity = Entity(_ID)
-    if _DestroyedEntity:getValue("is_prototype") then
-        local _Pirates = {Sector():getEntitiesByScriptValue("is_pirate")}
+
+    local _Sector = Sector()
+    local _X, _Y = _Sector:getCoordinates()
+    local _onLocation = false
+    if _X == mission.data.location.x and _Y == mission.data.location.y then
+        _onLocation = true
+    end
+
+    if _onLocation and _DestroyedEntity:getValue("is_prototype") then
+        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
 
         if #_Pirates > 0 then
             for _, _Pirate in pairs(_Pirates) do
@@ -255,7 +263,7 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
                         "The day is yours, but revenge will be ours!"
                     }
         
-                    Sector():broadcastChatMessage(_Pirate, ChatMessageType.Chatter, randomEntry(_Lines))
+                    _Sector:broadcastChatMessage(_Pirate, ChatMessageType.Chatter, randomEntry(_Lines))
     
                     break
                 end
@@ -402,6 +410,7 @@ function spawnPrototype()
                 _ROF = 4,
                 _DurabilityFactor = 2,
                 _TimeToActive = 30,
+                _DamageFactor = 2,
                 _UseEntityDamageMult = true,
                 _UseStaticDamageMult = _StaticMult
             }
