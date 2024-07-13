@@ -46,7 +46,7 @@ meta =
     dependencies = {
         {id = "2842525969", exact = "*.*", incompatible = true},
         {id = "2603954055", exact = "*.*", incompatible = true},
-        {id = "2207469437", min = "1.7.8"},
+        {id = "2207469437", min = "1.7.20"},
         {id = "Avorion", min = "2.0", max = "*.*"}
     },
 
