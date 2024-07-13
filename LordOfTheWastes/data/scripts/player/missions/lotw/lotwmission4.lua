@@ -506,10 +506,11 @@ function onBetaBackgroundPiratesFinished(_Generated)
     local _SlamAdded = 0
 
     local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = 30
+    _TorpSlammerValues._TimeToActive = 35
     _TorpSlammerValues._ROF = 8
     _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DamageFactor = 0.5 --If you get a bad seed, this might just obliterate the station. That's why it gets more HP for every failure.
+    _TorpSlammerValues._DamageFactor = 0.45 --If you get a bad seed, this might just obliterate the station. That's why it gets more HP for every failure.
+    _TorpSlammerValues._TorpOffset = -750 --Already balanced this for tech 52 torps in the starting sector, lmao
     _TorpSlammerValues._DurabilityFactor = 8
     _TorpSlammerValues._ForwardAdjustFactor = 2
     _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
