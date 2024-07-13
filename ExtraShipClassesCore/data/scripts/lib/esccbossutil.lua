@@ -152,6 +152,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _TorpSlammerValues._UpAdjust = false
             _TorpSlammerValues._DamageFactor = _TorpedoFactor
             _TorpSlammerValues._DurabilityFactor = _TorpDuraFactor
+            _TorpSlammerValues._TorpOffset = -750
             _TorpSlammerValues._ForwardAdjustFactor = 1
             _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
             _TorpSlammerValues._PreferBodyType = TorpedoUtility.BodyType.Hawk

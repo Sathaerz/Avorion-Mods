@@ -29,6 +29,7 @@ self._Data = {}
         _UseStaticDamageMult    = Sets a multiplier on the first update and does not dynamically use the entity's damage multiplier.
         _TargetPriority         = 1 = most firepower, 2 = by script value, 3 = random non-xsotan, 4 = random enemy
         _TargetScriptValue      = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
+        _TorpOffset             = Applies an offset to torpedo generation. Defaults to 0. Set to a negative value for higher tech level torpedoes.
 
         Example:
 
@@ -68,7 +69,7 @@ self._Data = {}
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v7 script on entity.")
+    self.Log(_MethodName, "Initializing Torpedo Slammer v10 script on entity.", 1)
 
     self._Data = _Values or {}
 
@@ -99,15 +100,16 @@ function TorpedoSlammer.initialize(_Values)
     self._Data._PreferWarheadType = self._Data._PreferWarheadType or nil
     self._Data._PreferBodyType = self._Data._PreferBodyType or nil
     self._Data._TargetScriptValue = self._Data._TargetScriptValue or nil
+    self._Data._TorpOffset = self._Data._TorpOffset or 0
 
     --Fix the target priority - if the ship isn't Xsotan make it use 4 instead of 3.
     if self._Data._TargetPriority == 3 and not self_is_xsotan then
         self._Data._TargetPriority = 4 --Just use 4. It's functionally the same as 3 but you won't target yourself due to the list of non-xsotan including you.
     end
 
-    self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust))
-    self.Log(_MethodName, "Preferred warhead type is : " .. tostring(self._Data._PreferWarheadType))
-    self.Log(_MethodName, "Preferred bodty type is : " .. tostring(self._Data._PreferBodyType))
+    self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust), 1)
+    self.Log(_MethodName, "Preferred warhead type is : " .. tostring(self._Data._PreferWarheadType), 1)
+    self.Log(_MethodName, "Preferred bodty type is : " .. tostring(self._Data._PreferBodyType), 1)
 end
 
 function TorpedoSlammer.getUpdateInterval()
@@ -116,10 +118,10 @@ end
 
 function TorpedoSlammer.updateServer(_TimeStep)
     local _MethodName = "Update Server"
-    self.Log(_MethodName, "Running...")
+    self.Log(_MethodName, "Running...", 3)
     if self._Data._UseStaticDamageMult and not self._Data._StaticDamageMultSet then
         local _Mult = (Entity().damageMultiplier or 1)
-        self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult))
+        self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult), 1)
         self._Data._StaticDamageMultValue = _Mult
         self._Data._StaticDamageMultSet = true
     end
@@ -157,7 +159,7 @@ function TorpedoSlammer.pickNewTarget()
 
     if self._Debug == 1 then
         for _, _Enemy in pairs(_Enemies) do
-            self.Log(_MethodName, "Enemy is a : " .. tostring(_Enemy.typename))
+            self.Log(_MethodName, "Enemy is a : " .. tostring(_Enemy.typename), 1)
         end
     end
 
@@ -202,10 +204,10 @@ function TorpedoSlammer.pickNewTarget()
     end
 
     if #_TargetCandidates > 0 then
-        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.")
+        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
         return _TargetCandidates[_Rgen:getInt(1, #_TargetCandidates)]
     else
-        self.Log(_MethodName, "WARNING - Could not find any target candidates.")
+        self.Log(_MethodName, "WARNING - Could not find any target candidates.", 1)
         return nil
     end
 end
@@ -240,7 +242,7 @@ function TorpedoSlammer.fireAtTarget()
     local _Out = Matrix()
     local _SpawnPos = _Mat.position + (_NDVec * _Bounds.radius * 1.25 * self._Data._ForwardAdjustFactor)
     if self._Data._UpAdjust then
-        self.Log(_MethodName, "Adjusting up position.")
+        self.Log(_MethodName, "Adjusting up position.", 1)
         _SpawnPos = _SpawnPos + (_Mat.up * _Bounds.radius * 0.1 * self._Data._UpAdjustFactor)
     end
 
@@ -259,8 +261,8 @@ function TorpedoSlammer.fireAtTarget()
     _Torpedo.shieldDamage = _Torpedo.shieldDamage * self._Data._DamageFactor * _EntityDamageMultiplier
     _Torpedo.hullDamage = _Torpedo.hullDamage * self._Data._DamageFactor * _EntityDamageMultiplier
 
-    self.Log(_MethodName, "Torpedo has base shield damage of : " .. tostring(_BaseShieldDamage) .. " and base hull damage of : " .. tostring(_BaseHullDamage))
-    self.Log(_MethodName, "Torpedo has final shield damage of " .. tostring(_Torpedo.shieldDamage) .. " and final hull damage of : " .. tostring(_Torpedo.hullDamage))
+    self.Log(_MethodName, "Torpedo has tech of : " .. tostring(_Torpedo.tech) .. " and base shield damage of : " .. tostring(_BaseShieldDamage) .. " and base hull damage of : " .. tostring(_BaseHullDamage), 1)
+    self.Log(_MethodName, "Torpedo has final shield damage of " .. tostring(_Torpedo.shieldDamage) .. " and final hull damage of : " .. tostring(_Torpedo.hullDamage), 1)
 
     _Out.position = _SpawnPos
     _Out.look = _Mat.look
@@ -289,7 +291,7 @@ end
 function TorpedoSlammer.generateTorpedo()
     local _MethodName = "Generate Torepedo"
     local _Rgen = ESCCUtil.getRand()
-    local _Coordinates = {Sector():getCoordinates()}
+    local _TorpX, _TorpY = Sector():getCoordinates()
     local _Generator = TorpedoGenerator()
 
     local _WarheadType = self._Data._PreferWarheadType
@@ -302,9 +304,18 @@ function TorpedoSlammer.generateTorpedo()
         _BodyType = _Rgen:getInt(1, 9)
     end
 
-    self.Log(_MethodName, "Warhead type is : " .. tostring(_WarheadType) .. " and body type is : " .. tostring(_BodyType))
+    --The offest value does weird crap in the torp gen. It's calculated via length so if you're not careful and you put in too high of an offset, 
+    --you actually make your desired tech level worse. We solve this wacky unintuitive case by handling things ourselves. If you're an avo dev and you happen
+    --to read this, I'm not sorry for getting a little snarky here. Fix this by putting 'sector = math.max(sector, 0)' on line 106 of torpedogenerator.lua.
+    --I guarantee you that nobody is expecting to see the tech level wrapping from higher/lower offset values. Guarantee it. Especially since the Turret
+    --generator does it correctly. Look at line 95 in turretgenerator.lua! That's the correct approach!!!!
+    local _SimSector = math.floor(length(vec2(_TorpX, _TorpY))) + self._Data._TorpOffset
+    _SimSector = math.max(_SimSector, 0) --Don't let it go below 0, otherwise we get an unexpected tech value.
 
-    return _Generator:generate(_Coordinates.x, _Coordinates.y, 0, Rarity(RarityType.Exotic), _WarheadType, _BodyType)
+    self.Log(_MethodName, "x is : " .. tostring(_TorpX) .. " and y is : " .. tostring(_TorpY) .. " and offset is : " .. tostring(self._Data._TorpOffset) .. " and Warhead type is : " .. tostring(_WarheadType) .. " and body type is : " .. tostring(_BodyType), 1)
+    self.Log(_MethodName, "Simulated sector is " .. tostring(_SimSector) .. " : 0", 2)
+
+    return _Generator:generate(_SimSector, 0, 0, Rarity(RarityType.Exotic), _WarheadType, _BodyType)
 end
 
 function TorpedoSlammer.resetTimeToActive(_Time)
@@ -313,8 +324,8 @@ end
 
 --region #CLIENT / SERVER CALLS
 
-function TorpedoSlammer.Log(_MethodName, _Msg)
-    if self._Debug == 1 then
+function TorpedoSlammer.Log(_MethodName, _Msg, _RequireLogLevel)
+    if self._Debug >= _RequireLogLevel then
         print("[TorpedoSlammer] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end
@@ -325,13 +336,13 @@ end
 
 function TorpedoSlammer.secure()
     local _MethodName = "Secure"
-    self.Log(_MethodName, "Securing self._Data")
+    self.Log(_MethodName, "Securing self._Data", 1)
     return self._Data
 end
 
 function TorpedoSlammer.restore(_Values)
     local _MethodName = "Restore"
-    self.Log(_MethodName, "Restoring self._Data")
+    self.Log(_MethodName, "Restoring self._Data", 1)
     self._Data = _Values
 end
 
