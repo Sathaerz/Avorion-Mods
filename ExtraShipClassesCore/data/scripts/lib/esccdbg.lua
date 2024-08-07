@@ -75,6 +75,7 @@ function initUI()
     tab:createButton(ButtonRect(), "Pillager", "onSpawnPillagerButtonPressed")
     tab:createButton(ButtonRect(), "Devastator", "onSpawnDevastatorButtonPressed")
     tab:createButton(ButtonRect(), "Slammer", "onSpawnTorpedoSlammerButtonPressed")
+    tab:createButton(ButtonRect(), "Deadshot", "onSpawnDeadshotButtonPressed")
     tab:createButton(ButtonRect(), "Absolute PD", "onSpawnAbsolutePDButtonPressed")
     tab:createButton(ButtonRect(), "Curtain", "onSpawnIronCurtainButtonPressed")
     tab:createButton(ButtonRect(), "Eternal", "onSpawnEternalButtonPressed")
@@ -342,6 +343,18 @@ function onSlammerGenerated(_Generated)
         local _TorpSlammerValues = {}
         _TorpSlammerValues._ForwardAdjustFactor = 2.5
         _S:addScript("torpedoslammer.lua", _TorpSlammerValues)
+        _S:addScript("icon.lua", "data/textures/icons/pixel/torpedoboatex.png")
+    end
+end
+
+function onDeadshotGenerated(_Generated)
+    onPiratesGenerated(_Generated)
+    for _, _S in pairs(_Generated) do
+        local _TitleArgs = _S:getTitleArguments()
+        _S:setTitle("${toughness}${lasername}${title}", {toughness = _TitleArgs.toughness, title = _TitleArgs.title, lasername = "Deadshot "})
+
+        _S:addScript("lasersniper.lua")
+        _S:addScript("icon.lua", "data/textures/icons/pixel/laserboat.png")
     end
 end
 
@@ -594,6 +607,21 @@ function onSpawnTorpedoSlammerButtonPressed()
     generator:endBatch()
 end
 callable(nil, "onSpawnTorpedoSlammerButtonPressed")
+
+function onSpawnDeadshotButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnDeadshotButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onDeadshotGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnDeadshotButtonPressed")
 
 function onSpawnAbsolutePDButtonPressed()
     if onClient() then

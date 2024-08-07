@@ -14,7 +14,7 @@ local dangerLevel_StandardSpawnTables = {
     {Level = 7, Table = {"Disruptor", "Disruptor", "Raider", "Raider", "Ravager", "Ravager", "Scorcher", "Scorcher", "Prowler", "Prowler"}},
     {Level = 8, Table = {"Disruptor", "Disruptor", "Raider", "Ravager", "Scorcher", "Scorcher", "Prowler", "Prowler", "Pillager", "Pillager"}},
     {Level = 9, Table = {"Disruptor", "Disruptor", "Scorcher", "Scorcher", "Scorcher", "Prowler", "Prowler", "Prowler", "Pillager", "Pillager"}},
-    {Level = 10, Table = {"Disruptor", "Disruptor", "Scorcher", "Scorcher", "Scorcher", "Prowler", "Pillager", "Pillager", "Pillager", "Devastator"}}
+    {Level = 10, Table = {"Disruptor", "Scorcher", "Scorcher", "Scorcher", "Prowler", "Prowler", "Pillager", "Pillager", "Pillager", "Devastator"}}
 }
 --low threat standard table of spawns by danger level. Custom ships (which are much more dangerous than the standard pirates) aren't even represented until
 --threat level 10, where we have a mere 10% chance to spawn a prowler (not that threatening compared to a scorcher, pillager or devastator)
@@ -40,7 +40,7 @@ local dangerLevel_HighThreatSpawnTables = {
     {Level = 6, Table = {"Raider", "Ravager", "Ravager", "Ravager", "Scorcher", "Scorcher", "Scorcher", "Prowler", "Prowler", "Prowler"}},
     {Level = 7, Table = {"Ravager", "Scorcher", "Scorcher", "Scorcher", "Prowler", "Prowler", "Prowler", "Pillager", "Pillager", "Pillager"}},
     {Level = 8, Table = {"Scorcher", "Scorcher", "Scorcher", "Prowler", "Pillager", "Pillager", "Pillager", "Devastator", "Devastator", "Devastator"}},
-    {Level = 9, Table = {"Scorcher", "Scorcher", "Scorcher", "Pillager", "Pillager", "Devastator", "Devastator", "Devastator", "Devastator", "Devastator"}},
+    {Level = 9, Table = {"Scorcher", "Scorcher", "Scorcher", "Scorcher", "Pillager", "Pillager", "Devastator", "Devastator", "Devastator", "Devastator"}},
     --50/50 split, so no need for more than this.
     {Level = 10, Table = {"Scorcher", "Devastator"}}
 }
@@ -259,6 +259,30 @@ function ESCCUtil.allEntityTypes()
         EntityType.Unknown,
         EntityType.Other
     }
+end
+
+function ESCCUtil.setBombardier(_Ship)
+    local _TitleArgs = _Ship:getTitleArguments()
+
+    local _ToughnessArg = _TitleArgs.toughness or ""
+    local _TitleArg = _TitleArgs.title or ""
+    local _ScriptNameArg = "Bombardier "
+
+    _Ship:setTitle("${toughness}${scriptname}${title}", {toughness = _ToughnessArg, title = _TitleArg, scriptname = _ScriptNameArg})
+    _Ship:removeScript("icon.lua")
+    _Ship:addScript("icon.lua", "data/textures/icons/pixel/torpedoboatex.png")
+end
+
+function ESCCUtil.setDeadshot(_Ship)
+    local _TitleArgs = _Ship:getTitleArguments()
+
+    local _ToughnessArg = _TitleArgs.toughness or ""
+    local _TitleArg = _TitleArgs.title or ""
+    local _ScriptNameArg = "Deadshot "
+
+    _Ship:setTitle("${toughness}${lasername}${title}", {toughness = _ToughnessArg, title = _TitleArg, lasername = _ScriptNameArg})
+    _Ship:removeScript("icon.lua")
+    _Ship:addScript("icon.lua", "data/textures/icons/pixel/laserboat.png")
 end
 
 --region #LOGGING

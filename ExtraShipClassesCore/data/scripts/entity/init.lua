@@ -1,15 +1,9 @@
 if onServer() then
-
     local entity = Entity()
-
     if (entity.isShip or entity.isStation) then
         local _Script = "data/scripts/lib/esccdbg.lua"
-        if GameSettings().devMode then
-            entity:addScriptOnce(_Script)
-        else
-            if entity:hasScript(_Script) then
-                entity:removeScript(_Script)
-            end
+        if entity:hasScript(_Script) then
+            entity:removeScript(_Script)
         end
     end
 end
