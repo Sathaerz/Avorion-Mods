@@ -74,6 +74,14 @@ function initialize(_Data_in)
 
             local _Sector = Sector()
             local _Giver = Entity(_Data_in.giver)
+
+            --Emergency breakout just in case the player somehow got this from a player faction.
+            local _missionFaction = Faction(_Giver.factionIndex)
+            if _missionFaction.isPlayer or _missionFaction.isAlliance then
+                print("ERROR: Mission from player faction - aborting.")
+                terminate()
+                return
+            end
             --[[=====================================================
                 CUSTOM MISSION DATA:
                 .dangerLevel
