@@ -62,6 +62,7 @@ function initialize(_Data_in)
                 CUSTOM MISSION DATA:
                 .dangerLevel
                 .playerAttacked
+                .inBarrier
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.playerAttacked =  false
@@ -69,6 +70,7 @@ function initialize(_Data_in)
                 mission.Log(_MethodName, "Player is getting attacked.")
                 mission.data.custom.playerAttacked = true
             end
+            mission.data.custom.inBarrier = _Data_in.inBarrier
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
@@ -97,6 +99,22 @@ end
 
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
+
+mission.getRewardedItems = function()
+    --25% of getting a random rarity hyperspace upgrade.
+    if random():test(0.25) then
+        local _SeedInt = random():getInt(1, 20000)
+        local _Rarities = {RarityType.Common, RarityType.Common, RarityType.Uncommon, RarityType.Uncommon, RarityType.Rare}
+
+        if mission.data.custom.inBarrier then
+            _Rarities = {RarityType.Uncommon, RarityType.Uncommon, RarityType.Rare, RarityType.Rare, RarityType.Exceptional, RarityType.Exotic}
+        end
+
+        shuffle(random(), _Rarities)
+
+        return SystemUpgradeTemplate("data/scripts/systems/hyperspacebooster.lua", Rarity(_Rarities[1]), Seed(_SeedInt))
+    end
+end
 
 mission.globalPhase = {}
 mission.globalPhase.onEntityDestroyed = function(id, lastDamageInflictor)
@@ -273,8 +291,6 @@ end
 function onPirateAmbushFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 
-    local _TauntingEnemy = _Generated[2]
-
     mission.data.custom.timerAdvance = true
 end
 
@@ -384,7 +400,8 @@ mission.makeBulletin = function(_Station)
             punishment = {relations = 4000 },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
-            playerAttacked = _PlayerAttacked
+            playerAttacked = _PlayerAttacked,
+            inBarrier = insideBarrier
         }},
     }
 
