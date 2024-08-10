@@ -8,3 +8,13 @@ function mission.Log(_MethodName, _Msg, _OverrideDebug)
     end
     if _OverrideDebug then mission._Debug = _TempDebug end
 end
+
+function getOnLocation(inSector)
+    local _Sector = inSector or Sector()
+    local _X, _Y = _Sector:getCoordinates()
+    if _X == mission.data.location.x and _Y == mission.data.location.y then
+        return true
+    else
+        return false
+    end
+end
