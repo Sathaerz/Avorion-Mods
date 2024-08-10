@@ -320,7 +320,6 @@ function spawnPrototype()
     --Add some scripts.
     local _DefensiveScriptsct = 1
     local _OffensiveScriptsct = 0
-    local _SuperWeaponScriptsct = 0
     local _AddBlocker = false
     local _BlockerToAdd = ""
 
@@ -427,7 +426,7 @@ function spawnPrototype()
                 _UseSupply = false,
                 _FragileShots = false,
                 _TargetPriority = 1,
-                _BaseDamagePerShot = Balancing_GetSectorWeaponDPS(_X, _Y) * 1500,
+                _BaseDamagePerShot = Balancing_GetSectorWeaponDPS(_X, _Y) * 2500,
                 _TimeToActive = 30,
                 _UseEntityDamageMult = true,
                 _UseStaticDamageMult = _StaticMult
