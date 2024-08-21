@@ -30,8 +30,6 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
-local _Version = GameVersion()
-
 include("randomext")
 include("structuredmission")
 
@@ -166,54 +164,26 @@ end
 
 --region #PHASE CALLS
 
-mission.phases[1] = {}
-mission.phases[1].triggers = {}
-mission.phases[1].triggers[1] = {
-    condition = function()
-        if onServer() then
-            local _X, _Y = Sector():getCoordinates()
-            if _X == mission.data.location.x and _Y == mission.data.location.y then
-                if mission.data.custom.builtObjectiveSector then
-                    return ESCCUtil.countEntitiesByValue("attackresearchbase_mission_target") == 0
-                end
-            end
-            
-            return false
-        else
-            return true
-        end
-        local _MethodName = "Phase 1 Trigger 1 Condition"
-    end,
-    callback = function()
-        local _MethodName = "Phase 1 Trigger 1 Callback"
-        
-        if onServer() then
-            mission.Log(_MethodName, "Finished mission - rewarding player.")
+mission.globalPhase = {}
+mission.globalPhase.onAbandon = function()
+    if mission.data.location then
+        runFullSectorCleanup()
+    end
+end
 
-            if mission.data.custom.pirates then
-                ESCCUtil.allPiratesDepart()
-            else
-                local _Rgen = ESCCUtil.getRand()
-                local _MissionDoer = Player().craftFaction or Player()
-                local _Faction = Faction(mission.data.custom.enemyFaction)
-                local _Galaxy = Galaxy()
-    
-                local _Entities = {Sector():getEntitiesByFaction(_Faction.index)}
-                for _, _E in pairs(_Entities) do
-                    if _E.type == EntityType.Ship then
-                        _E:addScriptOnce("entity/utility/delayeddelete.lua", _Rgen:getFloat(4, 8))
-                    end
-                end
-    
-                _Galaxy:setFactionRelations(_Faction, _MissionDoer, mission.data.custom.enemyRelationLevel - 10000)
-                _Galaxy:setFactionRelationStatus(_Faction, _MissionDoer, mission.data.custom.enemyRelationStatus)
-            end
-    
-            finishAndReward()
-        end
-    end,
-    repeating = false
-}
+mission.globalPhase.onFail = function()
+    if mission.data.location then
+        runFullSectorCleanup()
+    end
+end
+
+mission.globalPhase.onAccomplish = function()
+    if mission.data.location then
+        runFullSectorCleanup()
+    end
+end
+
+mission.phases[1] = {}
 mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onTargetLocationEntered = function(_X, _Y) 
     local _MethodName = "Phase 1 on Target Location Entered"
@@ -245,207 +215,246 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
             end
         end
     end
+
+    nextPhase()
 end
 
-mission.phases[1].onAbandon = function()
-    local _X, _Y = Sector():getCoordinates()
-    if _X == mission.data.location.x and _Y == mission.data.location.y then
-        --Abandoned in-sector.
-        local _EntityTypes = ESCCUtil.allEntityTypes()
-        Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
-    end
+mission.phases[2] = {}
+mission.phases[2].triggers = {}
+
+--region #PHASE 2 TRIGGERS
+
+if onServer() then
+
+--Win condition trigger.
+mission.phases[2].triggers[1] = {
+    condition = function()
+        local _MethodName = "Phase 2 Trigger 1 Condition"
+
+        local _OnLocation = getOnLocation(nil)
+        if _OnLocation then
+            return ESCCUtil.countEntitiesByValue("attackresearchbase_mission_target") == 0
+        else
+            return false
+        end
+    end,
+    callback = function()
+        local _MethodName = "Phase 2 Trigger 1 Callback"
+            
+        mission.Log(_MethodName, "Finished mission - rewarding player.")
+    
+        if mission.data.custom.pirates then
+            ESCCUtil.allPiratesDepart()
+        else
+            local _Rgen = ESCCUtil.getRand()
+            local _MissionDoer = Player().craftFaction or Player()
+            local _Faction = Faction(mission.data.custom.enemyFaction)
+            local _Galaxy = Galaxy()
+        
+            local _Entities = {Sector():getEntitiesByFaction(_Faction.index)}
+            for _, _E in pairs(_Entities) do
+                if _E.type == EntityType.Ship then
+                    _E:addScriptOnce("entity/utility/delayeddelete.lua", _Rgen:getFloat(4, 8))
+                end
+            end
+        
+            _Galaxy:setFactionRelations(_Faction, _MissionDoer, mission.data.custom.enemyRelationLevel - 10000)
+            _Galaxy:setFactionRelationStatus(_Faction, _MissionDoer, mission.data.custom.enemyRelationStatus)
+        end
+        
+        finishAndReward()
+    end,
+    repeating = false
+}
+
 end
+
+--endregion
 
 --endregion
 
 --region #SERVER CALLS
 
---region #SPAWN OBJECTS
-
 function buildObjectiveSector(_X, _Y)
     local _MethodName = "Build Objective Sector"
-    
-    if not mission.data.custom.builtObjectiveSector then
-        mission.Log(_MethodName, "Main sector not yet built - building it now.")
-        local _Generator = SectorGenerator(_X, _Y)
-        local _Rgen = ESCCUtil.getRand()
-        --Add: Research Station and maybe Military Outpost
-        local _Faction = Faction(mission.data.custom.enemyFaction)
-        if mission.data.custom.pirates then
-            mission.Log(_MethodName, "Building sector for pirate level faction: " .. tostring(_Faction.name) .. " level " .. tostring(mission.data.custom.pirateLevel) .. " pirates")
-        else
-            mission.Log(_MethodName, "Building sector for standard faction " .. tostring(_Faction.name))
-        end 
-        local _Stations = {}
 
-        local _ResearchOutpost = _Generator:createResearchStation(_Faction)
-        local _Pct = mission.data.custom.dangerLevel
-        local _Chance = _Rgen:getInt(1, 100)
-        mission.Log(_MethodName, "_Pct is " .. tostring(_Pct) .. " and _Chance is " .. tostring(_Chance))
-        if MissionUT.checkSectorInsideBarrier(_X, _Y) and _Chance <= _Pct then
-            --Don't add the chip if the mission isn't happening inside the barrier.
-            mission.data.custom.addChip = true
-        end
-        --add a rare upgrade to the station's loot.
-        local _upgradeGenerator = UpgradeGenerator()
-        local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
-        Loot(_ResearchOutpost):insert(_upgradeGenerator:generateSectorSystem(_X, _Y, nil, _upgradeRarities))
+    mission.Log(_MethodName, "Main sector not yet built - building it now.")
+    local _Generator = SectorGenerator(_X, _Y)
+    local _Rgen = ESCCUtil.getRand()
+    --Add: Research Station and maybe Military Outpost
+    local _Faction = Faction(mission.data.custom.enemyFaction)
+    if mission.data.custom.pirates then
+        mission.Log(_MethodName, "Building sector for pirate level faction: " .. tostring(_Faction.name) .. " level " .. tostring(mission.data.custom.pirateLevel) .. " pirates")
+    else
+        mission.Log(_MethodName, "Building sector for standard faction " .. tostring(_Faction.name))
+    end 
+    local _Stations = {}
 
-        --Uncomment to always add a chip.
-        --mission.data.custom.addChip = true
-        table.insert(_Stations, _ResearchOutpost)
-
-        if mission.data.custom.spawnMilitary then
-            local _MilitaryOutpost = _Generator:createMilitaryBase(_Faction)
-            _MilitaryOutpost:setValue("attackresearchbase_military_outpost", true)
-            table.insert(_Stations, _MilitaryOutpost)
-        end
-
-        --Place research station at 0,0 and record index.
-        mission.data.custom.researchStationid = _ResearchOutpost.index
-        _ResearchOutpost.position = Matrix()
-
-        local _Dist = ESCCUtil.getDistanceToCenter(_X, _Y)
-
-        --Update stations.
-        for _, _Station in pairs(_Stations) do
-            --Increase HP
-            local _Dura = Durability(_Station)
-            if _Dura then
-                _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * 1.3
-            end
-
-            if mission.data.custom.dangerLevel < 8 or _Dist > 175 then
-                local _StationBay = CargoBay(_Station)
-                _StationBay:clear()
-            end
-
-            local _DuraFactor = 1.0
-            local _ArtilleryFactor = 0
-            if mission.data.custom.dangerLevel >= 6 then
-                _DuraFactor = 1
-                _ArtilleryFactor = 1
-            end
-            if mission.data.custom.dangerLevel == 10 then
-                _DuraFactor = 1.1
-                _ArtilleryFactor = 2
-            end
-            if _Station:getValue("attackresearchbase_military_outpost") then
-                --Military base.
-                ShipUtility.addScalableArtilleryEquipment(_Station, 4.0 + _ArtilleryFactor, 1.0, false)
-            else
-                --Research lab. Add HP bonus based on damage.
-                ShipUtility.addScalableArtilleryEquipment(_Station, 1.0 + _ArtilleryFactor, 0.0, false)
-
-                mission.Log(_MethodName, "Bumping research outpost HP to factor : " .. tostring(_DuraFactor))
-
-                local _Dura = Durability(_Station)
-                if _Dura then
-                    _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * _DuraFactor
-                end
-        
-                local _Shield = Shield(_Station)
-                if _Shield then
-                    _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * _DuraFactor
-                end
-            end
-            local _ShipAI = ShipAI(_Station)
-            _ShipAI:setAggressive()
-
-            if mission.data.custom.pirates then
-                _Station:setValue("is_pirate", true)
-            end
-
-            --Remove consumer script.
-            _Station:removeScript("consumer.lua")
-            _Station:removeScript("backup.lua")
-            _Station:setValue("attackresearchbase_mission_target", true)
-        end
-        Sector():removeScript("traders.lua")
-
-        --Add: 3-5 small asteroid fields.
-        for _ = 3, 5 do
-            _Generator:createSmallAsteroidField()
-        end
-
-        --Add: standard threat defenders
-        local _InitialDefenders = mission.data.custom.initialDefenders
-        local _SpawnTable = ESCCUtil.getStandardTable(mission.data.custom.dangerLevel, "Standard", not mission.data.custom.pirates)
-        local _InitialDefenseShips = {}
-        if mission.data.custom.pirates then
-            local _SpawnTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _InitialDefenders, "Standard")
-            
-            local generator = AsyncPirateGenerator(nil, onDefendersFinished)
-            generator.pirateLevel = mission.data.custom.pirateLevel
-
-            generator:startBatch()
-        
-            for _, _Ship in pairs(_SpawnTable) do
-                generator:createScaledPirateByName(_Ship, generator.getGenericPosition())
-            end
-
-            generator:endBatch()
-        else
-            local _SpawnTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _InitialDefenders, "Standard", true)
-
-            local generator = AsyncShipGenerator(nil, onDefendersFinished)
-
-            generator:startBatch()
-
-            for _, _Ship in pairs(_SpawnTable) do
-                generator:createDefenderByName(_Faction, generator.getGenericPosition(), _Ship)
-            end
-
-            generator:endBatch()
-        end
-
-        --finally, add a defense controller script.
-        local _ForcedDamageScale = 3
-        if mission.data.custom.dangerLevel >= 6 then
-            _ForcedDamageScale = _ForcedDamageScale + 3
-        end
-
-        local _DCD = {}
-        _DCD._DefenseLeader = mission.data.custom.researchStationid
-        _DCD._DefenderCycleTime = mission.data.custom.defenderRespawnTime
-        _DCD._DangerLevel = mission.data.custom.dangerLevel
-        _DCD._MaxDefenders = mission.data.custom.respawningDefenders
-        _DCD._DefenderHPThreshold = 0.5
-        _DCD._DefenderOmicronThreshold = 0.5
-        _DCD._ForceWaveAtThreshold = 0.5
-        _DCD._ForcedDefenderDamageScale = _ForcedDamageScale
-        _DCD._IsPirate = mission.data.custom.pirates
-        _DCD._Factionid = mission.data.custom.enemyFaction
-        _DCD._PirateLevel = mission.data.custom.pirateLevel
-        _DCD._UseLeaderSupply = true
-        _DCD._LowTable = "Standard"
-        _DCD._NoHazard = true
-        _DCD._SupplyPerLevel = 500
-        _DCD._SupplyFactor = 0.1 --+10% buff per level.
-
-        Sector():addScript("sector/background/defensecontroller.lua", _DCD)
-
-        local _SCD = {}
-        _SCD._ShipmentLeader = mission.data.custom.researchStationid
-        _SCD._ShipmentCycleTime = mission.data.custom.defenderRespawnTime - 10
-        _SCD._DangerLevel = mission.data.custom.dangerLevel
-        _SCD._IsPirate = mission.data.custom.pirates
-        _SCD._Factionid = mission.data.custom.enemyFaction
-        _SCD._PirateLevel = mission.data.custom.pirateLevel
-        _SCD._SupplyTransferPerCycle = mission.data.custom.supplyPerCycle
-        _SCD._SupplyPerShip = mission.data.custom.supplyPerShip
-        _SCD._SupplierExtraScale = 6
-        _SCD._SupplierHealthScale = 0.1
-
-        Sector():addScript("sector/background/shipmentcontroller.lua", _SCD)
-
-        Placer.resolveIntersections()
-
-        mission.data.custom.builtObjectiveSector = true
+    local _ResearchOutpost = _Generator:createResearchStation(_Faction)
+    local _Pct = mission.data.custom.dangerLevel
+    local _Chance = _Rgen:getInt(1, 100)
+    mission.Log(_MethodName, "_Pct is " .. tostring(_Pct) .. " and _Chance is " .. tostring(_Chance))
+    if MissionUT.checkSectorInsideBarrier(_X, _Y) and _Chance <= _Pct then
+        --Don't add the chip if the mission isn't happening inside the barrier.
+        mission.data.custom.addChip = true
     end
-end
+    --add a rare upgrade to the station's loot.
+    local _upgradeGenerator = UpgradeGenerator()
+    local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
+    Loot(_ResearchOutpost):insert(_upgradeGenerator:generateSectorSystem(_X, _Y, nil, _upgradeRarities))
 
---endregion
+    --Uncomment to always add a chip.
+    --mission.data.custom.addChip = true
+    table.insert(_Stations, _ResearchOutpost)
+
+    if mission.data.custom.spawnMilitary then
+        local _MilitaryOutpost = _Generator:createMilitaryBase(_Faction)
+        _MilitaryOutpost:setValue("attackresearchbase_military_outpost", true)
+        table.insert(_Stations, _MilitaryOutpost)
+    end
+
+    --Place research station at 0,0 and record index.
+    mission.data.custom.researchStationid = _ResearchOutpost.index
+    _ResearchOutpost.position = Matrix()
+    
+    local _Dist = ESCCUtil.getDistanceToCenter(_X, _Y)
+
+    --Update stations.
+    for _, _Station in pairs(_Stations) do
+        --Increase HP
+        local _Dura = Durability(_Station)
+        if _Dura then
+            _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * 1.3
+        end
+
+        if mission.data.custom.dangerLevel < 8 or _Dist > 175 then
+            local _StationBay = CargoBay(_Station)
+            _StationBay:clear()
+        end
+
+        local _DuraFactor = 1.0
+        local _ArtilleryFactor = 0
+        if mission.data.custom.dangerLevel >= 6 then
+            _DuraFactor = 1
+            _ArtilleryFactor = 1
+        end
+        if mission.data.custom.dangerLevel == 10 then
+            _DuraFactor = 1.1
+            _ArtilleryFactor = 2
+        end
+        if _Station:getValue("attackresearchbase_military_outpost") then
+            --Military base.
+            ShipUtility.addScalableArtilleryEquipment(_Station, 4.0 + _ArtilleryFactor, 1.0, false)
+        else
+            --Research lab. Add HP bonus based on damage.
+            ShipUtility.addScalableArtilleryEquipment(_Station, 1.0 + _ArtilleryFactor, 0.0, false)
+
+            mission.Log(_MethodName, "Bumping research outpost HP to factor : " .. tostring(_DuraFactor))
+
+            if _Dura then
+                _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * _DuraFactor
+            end
+        
+            local _Shield = Shield(_Station)
+            if _Shield then
+                _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * _DuraFactor
+            end
+        end
+        local _ShipAI = ShipAI(_Station)
+        _ShipAI:setAggressive()
+
+        if mission.data.custom.pirates then
+            _Station:setValue("is_pirate", true)
+        end
+
+        --Remove consumer / bulletin board script.
+        _Station:removeScript("consumer.lua")
+        _Station:removeScript("backup.lua")
+        _Station:removeScript("bulletinboard.lua")
+        _Station:removeScript("missionbulletins.lua")
+        _Station:removeScript("story/bulletins.lua")
+        _Station:setValue("attackresearchbase_mission_target", true)
+    end
+    Sector():removeScript("traders.lua")
+
+    --Add: 3-5 small asteroid fields.
+    for _ = 3, 5 do
+        _Generator:createSmallAsteroidField()
+    end
+
+    --Add: standard threat defenders
+    local _InitialDefenders = mission.data.custom.initialDefenders
+    if mission.data.custom.pirates then
+        local _SpawnTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _InitialDefenders, "Standard")
+            
+        local generator = AsyncPirateGenerator(nil, onDefendersFinished)
+        generator.pirateLevel = mission.data.custom.pirateLevel
+
+        generator:startBatch()
+        
+        for _, _Ship in pairs(_SpawnTable) do
+            generator:createScaledPirateByName(_Ship, generator.getGenericPosition())
+        end
+
+        generator:endBatch()
+    else
+        local _SpawnTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _InitialDefenders, "Standard", true)
+
+        local generator = AsyncShipGenerator(nil, onDefendersFinished)
+
+        generator:startBatch()
+
+        for _, _Ship in pairs(_SpawnTable) do
+            generator:createDefenderByName(_Faction, generator.getGenericPosition(), _Ship)
+        end
+
+        generator:endBatch()
+    end
+
+    --finally, add a defense controller script.
+    local _ForcedDamageScale = 3
+    if mission.data.custom.dangerLevel >= 6 then
+        _ForcedDamageScale = _ForcedDamageScale + 3
+    end
+
+    local _DCD = {}
+    _DCD._DefenseLeader = mission.data.custom.researchStationid
+    _DCD._DefenderCycleTime = mission.data.custom.defenderRespawnTime
+    _DCD._DangerLevel = mission.data.custom.dangerLevel
+    _DCD._MaxDefenders = mission.data.custom.respawningDefenders
+    _DCD._DefenderHPThreshold = 0.5
+    _DCD._DefenderOmicronThreshold = 0.5
+    _DCD._ForceWaveAtThreshold = 0.5
+    _DCD._ForcedDefenderDamageScale = _ForcedDamageScale
+    _DCD._IsPirate = mission.data.custom.pirates
+    _DCD._Factionid = mission.data.custom.enemyFaction
+    _DCD._PirateLevel = mission.data.custom.pirateLevel
+    _DCD._UseLeaderSupply = true
+    _DCD._LowTable = "Standard"
+    _DCD._NoHazard = true
+    _DCD._SupplyPerLevel = 500
+    _DCD._SupplyFactor = 0.1 --+10% buff per level.
+
+    Sector():addScript("sector/background/defensecontroller.lua", _DCD)
+
+    local _SCD = {}
+    _SCD._ShipmentLeader = mission.data.custom.researchStationid
+    _SCD._ShipmentCycleTime = mission.data.custom.defenderRespawnTime - 10
+    _SCD._DangerLevel = mission.data.custom.dangerLevel
+    _SCD._IsPirate = mission.data.custom.pirates
+    _SCD._Factionid = mission.data.custom.enemyFaction
+    _SCD._PirateLevel = mission.data.custom.pirateLevel
+    _SCD._SupplyTransferPerCycle = mission.data.custom.supplyPerCycle
+    _SCD._SupplyPerShip = mission.data.custom.supplyPerShip
+    _SCD._SupplierExtraScale = 6
+    _SCD._SupplierHealthScale = 0.1
+
+    Sector():addScript("sector/background/shipmentcontroller.lua", _SCD)
+
+    Placer.resolveIntersections()
+
+    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+end
 
 function getSectorRarityTables(_X, _Y, _upgradeGenerator)
     local _dangerLevel = mission.data.custom.dangerLevel
@@ -481,6 +490,21 @@ function onDefendersFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
+function runFullSectorCleanup()
+    local _Sector = Sector()
+    local _OnLocation = getOnLocation(_Sector)
+
+    if _OnLocation then
+        local _EntityTypes = ESCCUtil.allEntityTypes()
+        _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
+        _Sector:removeScript("sector/background/campaignsectormonitor.lua")
+    else
+        local _MX, _MY = mission.data.location.x, mission.data.location.y
+        Galaxy():loadSector(_MX, _MY)
+        invokeSectorFunction(_MX, _MY, true, "campaignsectormonitor.lua", "clearMissionAssets", _MX, _MY, true, true)
+    end
+end
+
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
@@ -493,14 +517,6 @@ function finishAndReward()
     reward()
     accomplish()
 end
-
---endregion
-
---region #CLIENT CALLS
-
---endregion
-
---region #CLIENT / SERVER CALLS
 
 --endregion
 
@@ -597,22 +613,19 @@ mission.makeBulletin = function(_Station)
         _EnemyFactionName = "pirates"
     end
 
-    local _BaseReward = 55000
+    local _BaseReward = 70000
     if _DangerLevel >= 5 then
-        _BaseReward = _BaseReward + 3000
+        _BaseReward = _BaseReward + 5000
     end
     if _DangerLevel == 10 then
-        _BaseReward = _BaseReward + 8000
+        _BaseReward = _BaseReward + 11000
     end
     if insideBarrier then
         _BaseReward = _BaseReward * 2
     end
-    local _Version = GameVersion()
-    if _Version.major > 1 then
-        _BaseReward = _BaseReward * 1.33
-    end
 
     reward = _BaseReward * Balancing.GetSectorRichnessFactor(Sector():getCoordinates())
+    reputation = 6000
 
     local bulletin =
     {
@@ -635,7 +648,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = 6000},
+            reward = {credits = reward, relations = reputation},
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
             pirates = _Pirates,
