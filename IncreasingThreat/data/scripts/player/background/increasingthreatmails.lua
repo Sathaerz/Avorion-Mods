@@ -22,7 +22,10 @@ if onServer() then
         local player = Player()
         local _Time = Server().unpausedRuntime
         local _DecapTime = player:getValue("_increasingthreat_next_decap")
-        local _TimeUntilDecap = _DecapTime - _Time
+        local _TimeUntilDecap = 0
+        if _DecapTime then
+            _TimeUntilDecap = _DecapTime - _Time
+        end
         --Don't give the player an exact number - fudge by +/- 20 minutes.
         local _FudgeTime = 1200 - random():getInt(0, 2400)
         local _ReportTimeUntilDecap = _TimeUntilDecap + _FudgeTime
