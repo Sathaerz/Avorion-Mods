@@ -156,52 +156,52 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
-mission.phases[1] = {}
-mission.phases[1].timers = {}
-mission.phases[1].noBossEncountersTargetSector = true
-
-if onServer() then
-
-mission.phases[1].timers[1] = {
-    time = 60,
-    callback = function()
-        local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
-        if _X == mission.data.location.x and _Y == mission.data.location.y then
-            spawnXsotanWave()
-        end
-    end,
-    repeating = true
-}
-
+mission.globalPhase = {}
+mission.globalPhase.onAbandon = function()
+    if mission.data.location then
+        runFullSectorCleanup()
+    end
 end
 
+mission.globalPhase.onFail = function()
+    if mission.data.location then
+        runFullSectorCleanup()
+    end
+end
+
+mission.globalPhase.onAccomplish = function()
+    if mission.data.location then
+        runFullSectorCleanup()
+    end
+end
+
+mission.phases[1] = {}
+mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
     local _MethodName = "Phase 1 On Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
 
-    local rgen = ESCCUtil.getRand()
-    mission.Log(_MethodName, "Generating asteroid fields.")
-    local generator = SectorGenerator(x, y)
-    for _ = 1, rgen:getInt(2,6) do
-        generator:createSmallAsteroidField()
-    end
-
-    mission.Log(_MethodName, "Generating Xsotan.")
-    --Spawn the maximum number of Xsotan.
-    spawnXsotanWave()
+    spawnObjectiveSector(x, y)
 end
 
-mission.phases[1].onTargetLocationLeft = function(x, y)
-    local _MethodName = "Phase 1 On Target Location Left"
+mission.phases[1].onTargetLocationArrivalConfirmed = function(x, y)
+    nextPhase()
+end
+
+mission.phases[2] = {}
+mission.phases[2].timers = {}
+mission.phases[2].noBossEncountersTargetSector = true
+
+mission.phases[2].onTargetLocationLeft = function(x, y)
+    local _MethodName = "Phase 2 On Target Location Left"
     mission.Log(_MethodName, "Beginning...")
     --Reset.
     mission.data.custom.xsotanKilled = 0
     mission.data.custom.infestorSpawned = false
 end
 
-mission.phases[1].updateTargetLocationServer = function(timeStep)
-    local _MethodName = "Phase 1 Update Target Location"
+mission.phases[2].updateTargetLocationServer = function(timeStep)
+    local _MethodName = "Phase 2 Update Target Location"
 
     local _XKR = mission.data.custom.xsotanKillreq
     if mission.data.custom.xsotanKilled >= _XKR and not mission.data.custom.infestorSpawned then
@@ -216,13 +216,12 @@ mission.phases[1].updateTargetLocationServer = function(timeStep)
     end
 end
 
-mission.phases[1].onEntityDestroyed = function(id, lastDamageInflictor)
-    local _MethodName = "Phase 1 On Entity Destroyed"
-    local _Sector = Sector()
+mission.phases[2].onEntityDestroyed = function(id, lastDamageInflictor)
+    local _MethodName = "Phase 2 On Entity Destroyed"
+    
+    local _OnLocation = getOnLocation(nil)
 
-    local _X, _Y = _Sector:getCoordinates()
-
-    if _X == mission.data.location.x and _Y == mission.data.location.y then
+    if _OnLocation then
         local entity = Entity(id)
         if valid(entity) and entity:getValue("_infestation_xsotan") then
             mission.data.custom.xsotanKilled = mission.data.custom.xsotanKilled + 1
@@ -244,18 +243,46 @@ mission.phases[1].onEntityDestroyed = function(id, lastDamageInflictor)
     end
 end
 
-mission.phases[1].onAbandon = function()
-    local _X, _Y = Sector():getCoordinates()
-    if _X == mission.data.location.x and _Y == mission.data.location.y then
-        --Abandoned in-sector.
-        local _EntityTypes = ESCCUtil.allEntityTypes()
-        Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
-    end
-end
+--region #PHASE 2 timers
+
+if onServer() then
+
+mission.phases[2].timers[1] = {
+    time = 60,
+    callback = function()
+        local _OnLocation = getOnLocation(nil)
+        if _OnLocation then
+            spawnXsotanWave()
+        end
+    end,
+    repeating = true
+}
+    
+ end
+
+--endregion
 
 --endregion
 
 --region #SERVER CALLS
+
+function spawnObjectiveSector(x, y)
+    local _MethodName = "Spawning Sector"
+
+    local rgen = ESCCUtil.getRand()
+    mission.Log(_MethodName, "Generating asteroid fields.")
+    local generator = SectorGenerator(x, y)
+    for _ = 1, rgen:getInt(2,6) do
+        generator:createSmallAsteroidField()
+    end
+
+    mission.Log(_MethodName, "Generating Xsotan.")
+    --Spawn the maximum number of Xsotan.
+    spawnXsotanWave()
+
+    mission.Log(_MethodName, "Adding sector monitor")
+    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+end
 
 function spawnXsotanWave()
     local _MethodName = "Spawn Xsotan"
@@ -389,6 +416,21 @@ function spawnXsotanInfestor()
     invokeClientFunction(Player(), "startBossCameraAnimation", _XsotanInfestor.id)
 end
 
+function runFullSectorCleanup()
+    local _Sector = Sector()
+    local _OnLocation = getOnLocation(_Sector)
+
+    if _OnLocation then
+        local _EntityTypes = ESCCUtil.allEntityTypes()
+        _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
+        _Sector:removeScript("sector/background/campaignsectormonitor.lua")
+    else
+        local _MX, _MY = mission.data.location.x, mission.data.location.y
+        Galaxy():loadSector(_MX, _MY)
+        invokeSectorFunction(_MX, _MY, true, "campaignsectormonitor.lua", "clearMissionAssets", _MX, _MY, true, true)
+    end
+end
+
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
@@ -460,9 +502,10 @@ end
 mission.makeBulletin = function(_Station)
     local _MethodName = "Make Bulletin"
     --We don't need a specific type of sector here. Just an empty one that's on the same side of the barrier as the questgiver.
+    local _Sector = Sector()
     local _Rgen = ESCCUtil.getRand()
     local target = {}
-    local x, y = Sector():getCoordinates()
+    local x, y = _Sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
     target.x, target.y = MissionUT.getSector(x, y, 2, 15, false, false, false, false, insideBarrier)
 
@@ -500,7 +543,7 @@ mission.makeBulletin = function(_Station)
         _BaseRelReward = _BaseRelReward + 4000
     end
 
-    reward = _BaseReward * Balancing.GetSectorRichnessFactor(Sector():getCoordinates()) --SET REWARD HERE
+    reward = _BaseReward * Balancing.GetSectorRichnessFactor(_Sector:getCoordinates()) --SET REWARD HERE
     relreward = _BaseRelReward
 
     local bulletin =
