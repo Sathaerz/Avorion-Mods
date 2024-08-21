@@ -667,9 +667,10 @@ function onGammaBackgroundPiratesFinished(_Generated)
 end
 
 function runFullSectorCleanup()
-    local _OnLocation = getOnLocation(nil)
+    local _Sector = Sector()
+    local _OnLocation = getOnLocation(_Sector)
+
     if _OnLocation then
-        local _Sector = Sector()
         local _EntityTypes = ESCCUtil.allEntityTypes()
         _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
         _Sector:removeScript("sector/background/campaignsectormonitor.lua")
