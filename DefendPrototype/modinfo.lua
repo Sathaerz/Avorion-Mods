@@ -4,7 +4,7 @@ meta =
     -- ID of your mod; Make sure this is unique!
     -- Will be used for identifying the mod in dependency lists
     -- Will be changed to workshop ID (ensuring uniqueness) when you upload the mod to the workshop
-    id = "DefendPrototype",
+    id = "3306700477",
 
     -- Name of your mod; You may want this to be unique, but it's not absolutely necessary.
     -- This is an additional helper attribute for you to easily identify your mod in the Mods() list
@@ -45,8 +45,8 @@ meta =
     -- },
     dependencies = {
         {id = "2207469437", min = "1.7.22"},
-        {id = "Avorion", min = "2.0", max = "*.*"},
-        {id = "2445091865", min = "1.0", optional = true}
+        {id = "2445091865", min = "1.0", optional = true},
+        {id = "Avorion", min = "2.0", max = "*.*"}
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves
