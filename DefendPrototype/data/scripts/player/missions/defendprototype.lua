@@ -147,7 +147,6 @@ end
 
 mission.globalPhase = {}
 mission.globalPhase.timers = {}
-mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     failAndPunish() --Will run globalPhase.onFail and clean up the sector.
 end
@@ -670,8 +669,10 @@ end
 function runFullSectorCleanup()
     local _OnLocation = getOnLocation(nil)
     if _OnLocation then
+        local _Sector = Sector()
         local _EntityTypes = ESCCUtil.allEntityTypes()
-        Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
+        _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
+        _Sector:removeScript("sector/background/campaignsectormonitor.lua")
     else
         local _MX, _MY = mission.data.location.x, mission.data.location.y
         Galaxy():loadSector(_MX, _MY)
