@@ -2,19 +2,17 @@ local AmbushRaiders_getPossibleMissions = MissionBulletins.getPossibleMissions
 function MissionBulletins.getPossibleMissions()
 	local station = Entity()
 	local stationTitle = station.title
-    local stationFaction = Faction(station.factionIndex)
 
 	local scripts = AmbushRaiders_getPossibleMissions()
 
-    --Everything but factories, basically.
+    --Everything but factories and military outposts, basically.
     local _Tokens = {
         "Habitat",
         "Research Station",
         "Trading Post",
         "Shipyard",
         "Repair Dock",
-        "Smuggler's Market",
-        "Smuggler Hideout",
+        "Smuggler",
         "Equipment Dock",
         "Casino",
         "Biotope",
@@ -28,15 +26,11 @@ function MissionBulletins.getPossibleMissions()
     for _k, _v in pairs(_Tokens) do
         if string.find(stationTitle, _v) then
             _Add = true
+            break --If one is true, don't need to check the rest.
         end
     end
 
-    --Don't add this mission to player / alliance stations.
-    if stationFaction.isPlayer or stationFaction.isAlliance then
-        _Add = false
-    end
-
-    if _Add then
+    if _Add and not station.playerOrAllianceOwned then
         table.insert(scripts, {path = "data/scripts/player/missions/ambushraiders.lua", prob = 3})
     end
 

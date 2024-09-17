@@ -78,8 +78,6 @@ function initialize(_Data_in)
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
 
-            _Data_in.reward.paymentMessage = "Earned %1% credits for eliminating raiders."
-
             --Run standard initialization
             AmbushRaiders_init(_Data_in)
         else
@@ -376,29 +374,28 @@ end
 --region #MAKEBULLETIN CALL
 
 function formatDescription()
-    local _Rgen = ESCCUtil.getRand()
+    local xrand = random()
 
-    local _Chance = _Rgen:getInt(1, 100)
-    local _DescriptionType = _Rgen:getInt(1,3)
+    local _Chance = xrand:getInt(1, 100)
 
-    local _FinalDescription = ""
+    --"please help, nobody believes me" (DONE)
+    --"please help, there's no time" (DONE)
+    --"please help, they're after me" (DONE)
+    local _Descriptions = {
+        "Just a few hours ago, we picked up some subspace signals in (${x}:${y}). They were consistent with pirate signatures, so we left the sector right away. Unfortunately, since we left the sector immediately after picking them up, we can't prove that they belonged to pirates! We think that a pirate raid may be imminent on a nearby sector, but nobody that we've told believes us! Please help! You're our last hope of defeating these pirates before they attack an unsuspecting colony!",
+        "We've received credible intelligence that a group of pirates is planning on raiding a nearby sector. Normally we'd do this by the book, but the raid is imminent - there's not enough time to alert the proper authorities. We're putting this request out to any independent captain who happens to see it. Please hurry! If you manage to stop these pirates in time, you could save hundreds of lives. If our sources are correct, they should be gathering in (${x}:${y}).",
+        "We were minding our own business mining in a nearby sector when a bunch of pirates warped in! Obviously, we warped out immediately but... we think that they might still be after us! I swear we've been seeing pirate subspace signals on our radar ever since we left that sector. We think that they're going to be coming after us through (${x}:${y}) - please head there and attack them first! Please! I don't want to spend the rest of my life looking over my shoulder!"
+    }
+
     if _Chance <= 5 then
-        --"please help, I don't want there to be any competition."
-        _FinalDescription = "There's a gang of pirate rabble that intends to attack a nearby sector. They're going to be mustering their strength in (${x}:${y}). Head there first and wipe them out. Why, you ask? Simple. I'd rather not have any comp-ah. I see what you did there. No. You should do it because killing pirates is its own reward. They'll drop turrets and systems, and in addition to that I'll pay you quite well for your efforts. Not a bad deal, wouldn't you say?"
-    else
-        if _DescriptionType == 1 then
-            --"please help, nobody believes me"
-            _FinalDescription = "Just a few hours ago, we picked up some subspace signals in (${x}:${y}). They were consistent with pirate signatures, so we left the sector right away. Unfortunately, since we left the sector immediately after picking them up, we can't prove that they belonged to pirates! We think that a pirate raid may be imminent on a nearby sector, but nobody that we've told believes us! Please help! You're our last hope of defeating these pirates before they attack an unsuspecting colony!"
-        elseif _DescriptionType == 2 then
-            --"please help, there's no time"
-            _FinalDescription = "We've received credible intelligence that a group of pirates is planning on raiding a nearby sector. Normally we'd do this by the book, but the raid is imminent - there's not enough time to alert the proper authorities. We're putting this request out to any independent captain who happens to see it. Please hurry! If you manage to stop these pirates in time, you could save hundreds of lives. If our sources are correct, they should be gathering in (${x}:${y})."
-        elseif _DescriptionType == 3 then
-            --"please help, they're after me"
-            _FinalDescription = "We were minding our own business mining in a nearby sector when a bunch of pirates warped in! Obviously, we warped out immediately but... we think that they might still be after us! I swear we've been seeing pirate subspace signals on our radar ever since we left that sector. We think that they're going to be coming after us through (${x}:${y}) - please head there and attack them first! Please! I don't want to spend the rest of my life looking over my shoulder!"
-        end
+        --"please help, I don't want there to be any competition." (DONE)
+        _Descriptions = {
+            "There's a gang of pirate rabble that intends to attack a nearby sector. They're going to be mustering their strength in (${x}:${y}). Head there first and wipe them out. Why, you ask? Simple. I'd rather not have any comp-ah. I see what you did there. No. You should do it because killing pirates is its own reward. They'll drop turrets and systems, and in addition to that I'll pay you quite well for your efforts. Not a bad deal, wouldn't you say?"
+        }
     end
+    shuffle(xrand, _Descriptions)
 
-    return _FinalDescription
+    return _Descriptions[1]
 end
 
 mission.makeBulletin = function(_Station)
@@ -458,7 +455,8 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = 4000}, --This is such a common mission. It's like free the slaves all over again!
+            --This is such a common mission. It's like free the slaves all over again!
+            reward = {credits = reward, relations = 4000, paymentMessage = "Earned %1% credits for eliminating raiders."}, 
             punishment = { relations = 4000 },
             dangerLevel = _DangerLevel,
             initialDesc = _Description
