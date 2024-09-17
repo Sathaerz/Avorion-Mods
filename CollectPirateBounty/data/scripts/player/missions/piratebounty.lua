@@ -85,8 +85,6 @@ function initialize(_Data_in)
             mission.data.description[2].arguments = { targets = tostring(mission.data.custom.targets), targetFaction = _TargetFaction.name }
             mission.data.description[3].arguments = { targetFaction = _TargetFaction.name, targets = tostring(mission.data.custom.targets), killedTargets = "0" }
 
-            _Data_in.reward.paymentMessage = "Earned %1% credits for collecting the bounty on " .. _TargetFaction.name .. "."
-
             --Run standard initialization
             PirateBounty_init(_Data_in)
         else
@@ -383,7 +381,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = nil,
-            reward = {credits = reward, relations = 6000},
+            reward = {credits = reward, relations = 6000, paymentMessage = "Earned %1% credits for collecting the bounty on " .. _TargetFaction.name .. "."},
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
             targetFaction = _TargetFaction.index,
