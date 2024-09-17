@@ -105,8 +105,6 @@ function initialize(_Data_in)
             mission.data.accomplishMessage = _Data_in.winMsg
             mission.data.failMessage = _Data_in.loseMsg
 
-            _Data_in.reward.paymentMessage = "Earned %1% for destroying the prototype."
-
             --Run standard initialization
             DestroyPrototype_init(_Data_in)
         else
@@ -687,7 +685,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = reputation},
+            reward = {credits = reward, relations = reputation, paymentMessage = "Earned %1% for destroying the prototype."},
             punishment = {relations = 8000 },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
