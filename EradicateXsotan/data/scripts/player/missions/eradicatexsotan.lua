@@ -132,8 +132,6 @@ function initialize(_Data_in)
             mission.data.description[2].arguments = {x = _X, y = _Y }
             mission.data.description[3].arguments = {x = _X, y = _Y }
 
-            _Data_in.reward.paymentMessage = "Earned %1% credits for destroying Xsotan."
-
             --Run standard initialization
             EradicateXsotan_init(_Data_in)
         else
@@ -159,19 +157,19 @@ end
 mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
-        runFullSectorCleanup()
+        runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
     if mission.data.location then
-        runFullSectorCleanup()
+        runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onAccomplish = function()
     if mission.data.location then
-        runFullSectorCleanup()
+        runFullSectorCleanup(false)
     end
 end
 
@@ -191,6 +189,28 @@ end
 mission.phases[2] = {}
 mission.phases[2].timers = {}
 mission.phases[2].noBossEncountersTargetSector = true
+mission.phases[2].onTargetLocationEntered = function(x, y)
+    --Give the player a 30 second window before any sunmakers, longinus(es?), or ballistyx start shooting again.
+    local _Sector = Sector()
+
+    local _func = "resetTimeToActive"
+    local _time = 30
+
+    local _Sunmakers = {_Sector:getEntitiesByScriptValue("is_sunmaker")}
+    for _, _sunmaker in pairs(_Sunmakers) do
+        _sunmaker:invokeFunction("stationsiegegun.lua", _func, _time)
+    end
+
+    local _Longinus_plural = {_Sector:getEntitiesByScriptValue("is_longinus")}
+    for _, _longinus in pairs(_Longinus_plural) do
+        _longinus:invokeFunction("lasersniper.lua", _func, _time)
+    end
+    
+    local _Ballistyx_plural = {_Sector:getEntitiesByScriptValue("is_ballistyx")}
+    for _, _ballistyx in pairs(_Ballistyx_plural) do
+        _ballistyx:invokeFunction("torpedoslammer.lua", _func, _time)
+    end
+end
 
 mission.phases[2].onTargetLocationLeft = function(x, y)
     local _MethodName = "Phase 2 On Target Location Left"
@@ -416,56 +436,12 @@ function spawnXsotanInfestor()
     invokeClientFunction(Player(), "startBossCameraAnimation", _XsotanInfestor.id)
 end
 
-function runFullSectorCleanup()
-    local _Sector = Sector()
-    local _OnLocation = getOnLocation(_Sector)
-
-    if _OnLocation then
-        local _EntityTypes = ESCCUtil.allEntityTypes()
-        _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
-        _Sector:removeScript("sector/background/campaignsectormonitor.lua")
-    else
-        local _MX, _MY = mission.data.location.x, mission.data.location.y
-        Galaxy():loadSector(_MX, _MY)
-        invokeSectorFunction(_MX, _MY, true, "campaignsectormonitor.lua", "clearMissionAssets", _MX, _MY, true, true)
-    end
-end
-
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
     reward()
     accomplish()
-end
-
---endregion
-
---region #CLIENT CALLS
-
-function startBossCameraAnimation(bossId)
-    bossId = Uuid(bossId)
-    local camera = Player().cameraPosition
-    local startPosition = camera.translation
-
-    local boss = Entity(bossId)
-    local direction = normalize(boss.translationf - startPosition)
-    local endPosition = boss.translationf - direction * boss.radius
-
-    local path = endPosition - startPosition
-
-    local bossUp = boss.up
-    if dot(camera.up, bossUp) < 0 then
-        bossUp = -bossUp -- limit the angle of rotation for the camera
-    end
-
-    local keyframes = {}
-    table.insert(keyframes, CameraKeyFrame(startPosition, startPosition + camera.look * 1000, camera.up, 0))
-    table.insert(keyframes, CameraKeyFrame(startPosition, bossId, camera.up, 1))
-    table.insert(keyframes, CameraKeyFrame(startPosition + path * 0.8, bossId, bossUp, 1.8))
-    table.insert(keyframes, CameraKeyFrame(startPosition + path, bossId, bossUp, 4))
-
-    Player():setCameraKeyFrames(unpack(keyframes))
 end
 
 --endregion
@@ -568,7 +544,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = relreward},
+            reward = {credits = reward, relations = relreward, paymentMessage = "Earned %1% credits for destroying Xsotan." },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
             inbarrier = insideBarrier
