@@ -37,7 +37,6 @@ LLTEUtil = include("llteutil")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local PirateGenerator = include("pirategenerator")
 local AsyncShipGenerator = include("asyncshipgenerator")
-local SectorSpecifics = include ("sectorspecifics")
 local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 
@@ -382,7 +381,7 @@ function spawnPirates()
             table.insert(_PirateTable, "Boss")
         end
 
-        shuffle(_PirateTable)
+        shuffle(random(), _PirateTable)
 
         for _, _P in pairs(_PirateTable) do
             local _NextPirate = PirateGenerator.createPirateByName(_P, PirateGenerator.getGenericPosition())
@@ -403,7 +402,7 @@ function spawnSecondPirateWave()
     local _MethodName = "Spawn Second Pirate Wave"
     local _PirateTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 5, "High")
 
-    shuffle(_PirateTable)
+    shuffle(random(), _PirateTable)
 
     local _Generator = AsyncPirateGenerator(nil, onSecondWaveFinished)
     _Generator.pirateLevel = PirateGenerator.pirateLevel

@@ -115,7 +115,7 @@ mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     local _X, _Y = Sector():getCoordinates()
     if mission.data.location then
-        runFullSectorCleanup()
+        runFullSectorCleanup_llte()
     end
 end
 
@@ -125,7 +125,7 @@ mission.globalPhase.onFail = function()
     mission.Log(_MethodName, "Beginning...")
 
     --Add a script to the mission location to nuke it if we are there, nuke it remotely otherwise.
-    runFullSectorCleanup()
+    runFullSectorCleanup_llte()
     --Send fail mail.
     local _Player = Player()
     local _Rank = _Player:getValue("_llte_cavaliers_rank")
@@ -408,7 +408,7 @@ end
 
 --region #DESPAWN OBJECTS
 
-function runFullSectorCleanup()
+function runFullSectorCleanup_llte()
     local _X, _Y = Sector():getCoordinates()
     if _X == mission.data.location.x and _Y == mission.data.location.y then
         local _EntityTypes = ESCCUtil.allEntityTypes()

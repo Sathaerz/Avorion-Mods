@@ -62,10 +62,7 @@ ESCCUtil = include("esccutil")
 LLTEUtil = include("llteutil")
 
 local SectorGenerator = include ("SectorGenerator")
-local AsyncPirateGenerator = include ("asyncpirategenerator")
 local PirateGenerator = include("pirategenerator")
-local AsyncShipGenerator = include("asyncshipgenerator")
-local SectorSpecifics = include ("sectorspecifics")
 local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 local ShipUtility = include ("shiputility")
@@ -123,7 +120,7 @@ function initialize()
                 { text = "Search the wreckages for anything interesting", bulletPoint = true, fulfilled = false, visible = false }
             }
 
-            local _RewardBase = 120000
+            local _RewardBase = 180000
             local _InitialMessage = "The outpost is located at \\s(%1%:%2%)."
             --[[=====================================================
                 CUSTOM MISSION DATA:
@@ -151,9 +148,11 @@ function initialize()
             table.insert(mission.data.custom.locations, _Target)
             table.insert(mission.data.custom.locations, _OptTarget)
             mission.data.custom.optlocation = _OptTarget
+            mission.data.custom.optionalObjectiveCompleted = false
+            mission.data.custom.optionalObjectiveInvoked = false
             mission.data.custom.pirateLevel = Balancing_GetPirateLevel(_Target.x, _Target.y)
             mission.data.custom.maxDefenders = 4
-            mission.data.custom.defenderRespawnTime = 210
+            mission.data.custom.defenderRespawnTime = 150
             mission.data.custom.forcedDefenderScale = 2.5
             mission.data.custom.freighterRespawnTime = 125
             mission.data.custom.freighterSupply = 500
@@ -166,23 +165,23 @@ function initialize()
             if mission.data.custom.dangerLevel >= 6 then
                 mission.data.custom.freighterRespawnTime = mission.data.custom.freighterRespawnTime - 30
                 mission.data.custom.freighterScale = mission.data.custom.freighterScale + 2
-                _RewardBase = _RewardBase + 5000
+                _RewardBase = _RewardBase + 8000
                 mission.data.description[1] = mission.data.description[1] .. " Heavy resistance is expected."
             end
             if mission.data.custom.dangerLevel >= 8 then
                 mission.data.custom.freighterSupplyTransfer = 75
                 mission.data.custom.freighterScale = mission.data.custom.freighterScale + 2
                 mission.data.custom.forcedDefenderScale = 5
-                _RewardBase = _RewardBase + 7500
+                _RewardBase = _RewardBase + 12000
             end
             if mission.data.custom.dangerLevel == 10 then
                 mission.data.custom.maxDefenders = mission.data.custom.maxDefenders + 1
-                mission.data.custom.defenderRespawnTime = mission.data.custom.defenderRespawnTime - 15
+                mission.data.custom.defenderRespawnTime = mission.data.custom.defenderRespawnTime - 30
                 mission.data.custom.freighterSupply = mission.data.custom.freighterSupply + 500
                 mission.data.custom.freighterSupplyTransfer = 90
                 mission.data.custom.freighterScale = mission.data.custom.freighterScale + 2
                 mission.data.custom.forcedDefenderScale = 10
-                _RewardBase = _RewardBase + 10000
+                _RewardBase = _RewardBase + 16000
             end
             PirateGenerator.pirateLevel = mission.data.custom.pirateLevel
 
@@ -281,13 +280,21 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     local _Sector = Sector()
 
     local _MilitaryStation = Entity(mission.data.custom.militaryStationid)
+    local _SetOptionalObjectiveInvoked = false
     --ADD DEFENDER CONTROLLER + SHIPMENT CONTROLLER SCRIPT
     if not _Sector:hasScript("sector/background/defensecontroller.lua") then
         --Defense Controller Data
+        local _defCycleTime = mission.data.custom.defenderRespawnTime
+        if mission.data.custom.optionalObjectiveCompleted then
+            mission.Log(_MethodName, "Optional objective completed on enter - incrementing defender cycle time.")
+            _defCycleTime = _defCycleTime + 30
+            _SetOptionalObjectiveInvoked = true
+        end
+
         local _DCD = {}
         _DCD._DefenseLeader = mission.data.custom.militaryStationid
         _DCD._CodesCracked = mission.data.custom.optionalObjectiveCompleted
-        _DCD._DefenderCycleTime = mission.data.custom.defenderRespawnTime
+        _DCD._DefenderCycleTime = _defCycleTime
         _DCD._DangerLevel = mission.data.custom.dangerLevel
         _DCD._MaxDefenders = mission.data.custom.maxDefenders
         _DCD._DefenderHPThreshold = 0.5
@@ -313,15 +320,27 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
         _Sector:addScript("sector/background/defensecontroller.lua", _DCD)
         mission.Log(_MethodName, "Defense controller successfully attached.")
     else
-        _Sector:invokeFunction("sector/background/defensecontroller.lua", "setCodesCracked", mission.data.custom.optionalObjectiveCompleted)
+        if mission.data.custom.optionalObjectiveCompleted and not mission.data.custom.optionalObjectiveInvoked then
+            mission.Log(_MethodName, "optional objective invoked - setting sector's defense controller script to have codes cracked & incrementing cycle")
+            _Sector:invokeFunction("sector/background/defensecontroller.lua", "setCodesCracked", true)
+            _Sector:invokeFunction("sector/background/defensecontroller.lua", "incrementCycleTime", 30)
+            _SetOptionalObjectiveInvoked = true
+        end
     end
 
     if not _Sector:hasScript("sector/background/shipmentcontroller.lua") then
         --Shipment Controller Data
+        local _shipCycleTime = mission.data.custom.freighterRespawnTime
+        if mission.data.custom.optionalObjectiveCompleted then
+            mission.Log(_MethodName, "Optional objective completed on enter - incrementing shipment cycle time.")
+            _shipCycleTime = _shipCycleTime + 30
+            _SetOptionalObjectiveInvoked = true
+        end
+
         local _SCD = {}
         _SCD._ShipmentLeader = mission.data.custom.militaryStationid
         _SCD._CodesCracked = mission.data.custom.optionalObjectiveCompleted
-        _SCD._ShipmentCycleTime = mission.data.custom.freighterRespawnTime
+        _SCD._ShipmentCycleTime = _shipCycleTime
         _SCD._DangerLevel = mission.data.custom.dangerLevel
         _SCD._IsPirate = true
         _SCD._Factionid = _MilitaryStation.factionIndex
@@ -334,7 +353,12 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
         _Sector:addScript("sector/background/shipmentcontroller.lua", _SCD)
         mission.Log(_MethodName, "Shipment controller successfully attached.")
     else
-        _Sector:invokeFunction("sector/background/shipmentcontroller.lua", "setCodesCracked", mission.data.custom.optionalObjectiveCompleted)
+        if mission.data.custom.optionalObjectiveCompleted and not mission.data.custom.optionalObjectiveInvoked then
+            mission.Log(_MethodName, "optional objective invoked - setting sector's shipment controller script to have codes cracked & incrementing cycle")
+            _Sector:invokeFunction("sector/background/shipmentcontroller.lua", "setCodesCracked", true)
+            _Sector:invokeFunction("sector/background/shipmentcontroller.lua", "incrementCycleTime", 15)
+            _SetOptionalObjectiveInvoked = true
+        end
     end
 
     if not _MilitaryStation:hasScript("entity/stationsiegegun.lua") then
@@ -361,7 +385,15 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
         _MilitaryStation:addScript("entity/stationsiegegun.lua", _SGD)
         mission.Log(_MethodName, "Attached siege gun script to military outpost.")
     else
-        _MilitaryStation:invokeFunction("entity/stationsiegegun.lua", "setCodesCracked", mission.data.custom.optionalObjectiveCompleted)
+        if mission.data.custom.optionalObjectiveCompleted and not mission.data.custom.optionalObjectiveInvoked then
+            mission.Log(_MethodName, "optional objective invoked - setting military station's script to have codes cracked")
+            _MilitaryStation:invokeFunction("entity/stationsiegegun.lua", "setCodesCracked", true)
+            _SetOptionalObjectiveInvoked = true
+        end
+    end
+
+    if _SetOptionalObjectiveInvoked then
+        mission.data.custom.optionalObjectiveInvoked = true
     end
 end
 
@@ -455,7 +487,7 @@ mission.phases[1].optionalUpdateServer = function(_TimeStep)
         end
 
         --Get 5 random wreckages from the table.
-        shuffle(_Rgen, _Wreckages)
+        shuffle(random(), _Wreckages)
         local _CandidateWrecks = {}
         for _, _Wreck in pairs(_Wreckages) do
             local _Pl = Plan(_Wreck.id)
@@ -471,7 +503,7 @@ mission.phases[1].optionalUpdateServer = function(_TimeStep)
         for _, _Wreck in pairs(_CandidateWrecks) do
             table.insert(mission.data.custom.wreckagePieceIds, _Wreck.id)
             _Wreck:addScriptOnce("player/missions/empress/side/side5/llteside5search.lua")
-            _Wreck:setValue("_llte_optionalwreck_targetplayer", Player().id)
+            _Wreck:setValue("_llte_optionalwreck_targetplayer", Player().index)
         end
         local _TargetWreck = Entity(mission.data.custom.wreckagePieceIds[_Rgen:getInt(1, #mission.data.custom.wreckagePieceIds)])
         _TargetWreck:setValue("_llte_optionalwreck_hascode", true)
@@ -574,6 +606,7 @@ function buildObjectiveSector(_X, _Y)
 
             _Station.title = "Arms Fortress"
             _Station:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
+            _Station:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
         else
             _Station.title = "Military Outpost"
             _Station:addScript("icon.lua", "data/textures/icons/pixel/military.png")

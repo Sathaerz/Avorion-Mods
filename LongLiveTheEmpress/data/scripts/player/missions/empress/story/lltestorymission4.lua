@@ -168,7 +168,7 @@ mission.globalPhase.timers[1] = {
 }
 mission.globalPhase.onAbandon = function()
 	Player():unregisterCallback("onPreRenderHud", "onMarkArtifact")
-    runFullSectorCleanup()
+    runFullSectorCleanup_llte()
 end
 
 mission.globalPhase.onFail = function()
@@ -189,7 +189,7 @@ mission.globalPhase.onFail = function()
 	ESCCUtil.allXsotanDepart()
 
     --Add a script to the mission location to nuke it if we are there, nuke it remotely otherwise.
-    runFullSectorCleanup()
+    runFullSectorCleanup_llte()
     --Send fail mail.
     local _Player = Player()
     local _Rank = _Player:getValue("_llte_cavaliers_rank")
@@ -235,7 +235,7 @@ mission.globalPhase.onEntityDestroyed = function(id, lastDamageInflictor)
 	end
 	
 	if mission.data.custom.capitalsLost > 1 then
-		runFullSectorCleanup()
+		runFullSectorCleanup_llte()
 		fail()
 	end
 end
@@ -588,7 +588,7 @@ mission.phases[7].onTargetLocationArrivalConfirmed = function(_X, _Y)
 	
 		local _WreckageEntities = {_Sector:getEntitiesByType(EntityType.Wreckage)}
 		local _TargetWreck
-		shuffle(_WreckageEntities)
+		shuffle(random(), _WreckageEntities)
 
 		for idx = 1, #_WreckageEntities do
 			local _XWreck = _WreckageEntities[idx]
@@ -819,7 +819,7 @@ end
 
 --region #DESPAWN OBJECTS
 
-function runFullSectorCleanup()
+function runFullSectorCleanup_llte()
 	local _Sector = Sector()
 	local _X, _Y = Sector():getCoordinates()
 	local _EntityTypes = ESCCUtil.allEntityTypes()
@@ -1643,7 +1643,7 @@ function onPhase8DialogEnd()
 	else
 		mission.Log(_MethodName, "Calling on Server")
 		--We are finally, FINALLY done with this mission. Holy shit.
-		runFullSectorCleanup()
+		runFullSectorCleanup_llte()
 		finishAndReward()
 	end
 end

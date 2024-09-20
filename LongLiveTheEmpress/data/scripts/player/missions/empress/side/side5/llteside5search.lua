@@ -6,7 +6,6 @@ include("callable")
 -- if this function returns false, the script will not be listed in the interaction window,
 -- even though its UI may be registered
 function interactionPossible(playerIndex)
-
     local player = Player(playerIndex)
     local _Entity = Entity()
 
@@ -15,7 +14,9 @@ function interactionPossible(playerIndex)
 
     local dist = craft:getNearestDistance(_Entity)
 
-    if dist < 200 then
+    local targetplayerid = _Entity:getValue("_llte_optionalwreck_targetplayer")
+
+    if dist < 200 and playerIndex == targetplayerid then
         return true
     end
 

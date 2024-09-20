@@ -275,7 +275,7 @@ end
 
 mission.phases[2].onAbandon = function()
     if mission.data.location then
-        runFullSectorCleanup()
+        runFullSectorCleanup_llte()
     end
 end
 
@@ -441,7 +441,7 @@ function broadcastEmpressBladeMsg(_Msg, ...)
 	_Sector:broadcastChatMessage(_EmpressBlade[1], ChatMessageType.Normal, _Msg, ...)
 end
 
-function runFullSectorCleanup()
+function runFullSectorCleanup_llte()
     local _X, _Y = Sector():getCoordinates()
     if _X == mission.data.location.x and _Y == mission.data.location.y then
         local _EntityTypes = ESCCUtil.allEntityTypes()

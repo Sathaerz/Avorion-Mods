@@ -19,12 +19,12 @@ function LLTESectorMonitor.clearMissionAssets(_X, _Y, _DeleteOtherAssets, _Delet
     self.Log(_MethodName, "Invoked...")
     local _Pirates = {Sector():getEntitiesByScriptValue("is_pirate")}
     if not _Pirates then 
-        self.Log("WARNING - _Pirates is nil")
+        self.Log(_MethodName, "WARNING - _Pirates is nil")
     end
 
     local _Xsotan = {Sector():getEntitiesByScriptValue("is_xsotan")}
     if not _Xsotan then 
-        self.Log("WARNING - _Xsotan is nil")
+        self.Log(_MethodName, "WARNING - _Xsotan is nil")
     end
 
     self.Log(_MethodName, "Iterating through and clearing out all pirates.")
