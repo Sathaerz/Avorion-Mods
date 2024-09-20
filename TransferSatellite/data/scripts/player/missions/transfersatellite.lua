@@ -76,8 +76,6 @@ function initialize(_Data_in)
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
 
-            _Data_in.reward.paymentMessage = "Earned %1% credits for transferring the satellite."
-
             --Run standard initialization
             TransferSatellite_init(_Data_in)
         else
@@ -396,7 +394,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = 4000}, --This is a very easy mission unless you get attacked.
+            reward = {credits = reward, relations = 4000, paymentMessage = "Earned %1% credits for transferring the satellite."}, --This is a very easy mission unless you get attacked.
             punishment = {relations = 4000 },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
