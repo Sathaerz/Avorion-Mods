@@ -41,7 +41,7 @@ mission.data.description = {
     { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
     { text = "Defend the Prototype", bulletPoint = true, fulfilled = false, visible = false }
 }
-mission.data.timeLimit = 5 * 60 --Player has 5 minutes to head to the sector. Take the time limit off when the player arrives.
+mission.data.timeLimit = 10 * 60 --Player has 10 minutes to head to the sector. Take the time limit off when the player arrives.
 mission.data.timeLimitInDescription = true --Show the player how much time is left.
 
 mission.data.accomplishMessage = "..." --Placeholder, varies by faction.
@@ -62,8 +62,7 @@ function initialize(_Data_in)
             local _Giver = Entity(_Data_in.giver)
 
             --Emergency breakout just in case the player somehow got this from a player faction.
-            local _missionFaction = Faction(_Giver.factionIndex)
-            if _missionFaction.isPlayer or _missionFaction.isAlliance then
+            if _Giver.playerOrAllianceOwned then
                 print("ERROR: Mission from player faction - aborting.")
                 terminate()
                 return
@@ -89,8 +88,6 @@ function initialize(_Data_in)
 
             mission.data.accomplishMessage = _Data_in.winMsg
             mission.data.failMessage = _Data_in.loseMsg
-
-            _Data_in.reward.paymentMessage = "Earned %1% for defending the prototype."
 
             --Run standard initialization
             DefendPrototype_init(_Data_in)
@@ -157,7 +154,7 @@ mission.globalPhase.onFail = function()
         if _OnLocation then
             ESCCUtil.allPiratesDepart()
         end
-        runFullSectorCleanup()
+        runFullSectorCleanup(true)
     end
 end
 
@@ -167,7 +164,7 @@ mission.globalPhase.onAccomplish = function()
         if _OnLocation then
             ESCCUtil.allPiratesDepart()
         end
-        runFullSectorCleanup()
+        runFullSectorCleanup(false)
     end
 end
 
@@ -666,21 +663,6 @@ function onGammaBackgroundPiratesFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function runFullSectorCleanup()
-    local _Sector = Sector()
-    local _OnLocation = getOnLocation(_Sector)
-
-    if _OnLocation then
-        local _EntityTypes = ESCCUtil.allEntityTypes()
-        _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
-        _Sector:removeScript("sector/background/campaignsectormonitor.lua")
-    else
-        local _MX, _MY = mission.data.location.x, mission.data.location.y
-        Galaxy():loadSector(_MX, _MY)
-        invokeSectorFunction(_MX, _MY, true, "campaignsectormonitor.lua", "clearMissionAssets", _MX, _MY, true, true)
-    end
-end
-
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
@@ -855,7 +837,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = reputation},
+            reward = {credits = reward, relations = reputation, paymentMessage = "Earned %1% for defending the prototype."},
             punishment = { relations = 16000 },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
