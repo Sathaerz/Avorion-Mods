@@ -35,8 +35,9 @@ mission.data.description = {
 }
 mission.data.timeLimit = 30 * 60 --Player has 30 minutes.
 mission.data.timeLimitInDescription = true --Show the player how much time is left.
---Can't set mission.data.reward.paymentMessage here since we are using a custom init.
-mission.data.accomplishMessage = "Thank you for the wreckages. We transferred the reward to your account."
+--Can't set mission.data.reward.paymentMessage here since we are using a funky setup for doing the rewards.
+mission.data.custom.accomplishMessage = "Thank you for the wreckages. We transferred the reward to your account."
+mission.data.custom.failMessage = "We see that you weren't able to drop off any wreckages. That's a shame. Better luck next time!"
 
 --endregion
 
@@ -81,6 +82,7 @@ mission.phases[1].sectorCallbacks[1] = {
                 _WreckVelocity:addVelocity(_Velocity.velocityf)
 
                 if _PlanValue > 0 then
+                    mission.data.accomplishMessage = mission.data.custom.accomplishMessage
                     mission.data.reward.credits = mission.data.reward.credits + _PlanValue
                     mission.data.reward.relations = mission.data.reward.relations + 150
                     mission.Log(_MethodName, "Added value of plan (" .. tostring(_PlanValue) .. ") to reward. Total reward is now : " .. tostring(mission.data.reward.credits) .. " credits for " .. tostring(mission.data.custom.wreckagesDropped) .. " wrecks.")
@@ -107,6 +109,7 @@ mission.phases[1].onBeginServer = function()
     mission.data.description[1] = "You recieved the following request from the " .. _Sector.name .. " " .. _Giver.translatedTitle .. ":"
     mission.data.description[2] = formatDescription(_Giver)
     mission.data.description[4].arguments = { dropped = mission.data.custom.wreckagesDropped }
+    mission.data.accomplishMessage = mission.data.custom.failMessage
     --Tag all wrecks already in the sector that aren't docked to the player ship. We actually do need to do this here in case the player doesn't have the other mod.
     
     local _Ships = {_Sector:getEntitiesByType(EntityType.Ship)}
@@ -144,8 +147,12 @@ mission.phases[1].onBeginServer = function()
     mission.internals.fulfilled = true --This mission will succeed at the end, and not fail. The only question is how much money the player gets.
 end
 mission.phases[1].onAccomplish = function()
-    --The mission only accomplishes when the time runs out and doesn't reward
-    reward()
+    if mission.data.custom.wreckagesDropped and mission.data.custom.wreckagesDropped > 0 then
+        --The mission only accomplishes when the time runs out and doesn't reward
+        reward()
+    else
+        punish()
+    end
 end
 
 --endregion
@@ -239,6 +246,7 @@ mission.makeBulletin = function(_Station)
             giver = _Station.index,
             location = target,
             reward = {credits = reward, relations = 0},
+            punishment = { relations = 1000 }, --Nothing too bad. Just a little sting.
             initialDesc = _Description
         }},
     }
