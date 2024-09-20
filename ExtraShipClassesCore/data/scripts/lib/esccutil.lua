@@ -241,6 +241,16 @@ function ESCCUtil.allXsotanDepart()
     end
 end
 
+function ESCCUtil.majorEntityTypes()
+    return {
+        EntityType.Ship,
+        EntityType.Station,
+        EntityType.Asteroid,
+        EntityType.Torpedo,
+        EntityType.Fighter
+    }
+end
+
 function ESCCUtil.allEntityTypes()
     return {
         EntityType.None,

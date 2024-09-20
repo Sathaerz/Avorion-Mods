@@ -105,13 +105,17 @@ function SiegeGunShot.updateServer(_TimeStep)
                         self.Log(_MethodName, tostring(_HullDamage) .. " damage to " .. tostring(_Entity.name) .. " hull")
                         _Dura:inflictDamage(_HullDamage, 1, DamageType.Energy, self._OriginID)
                     end
-                    _HitSomething = true
+                    if e.type ~= EntityType.Fighter or self._Fragile then
+                        _HitSomething = true
+                    end
                 else
                     if _Dura then
                         --Do everything to the hull.
                         self.Log(_MethodName, "Found target. Inflicting " .. tostring(self._ShotDamage) .. " damage to " .. tostring(_Entity.name))
                         _Dura:inflictDamage(self._ShotDamage, 1, DamageType.Energy, self._OriginID)
-                        _HitSomething = true
+                        if e.type ~= EntityType.Fighter or self._Fragile then
+                            _HitSomething = true
+                        end
                     end
                 end
             end

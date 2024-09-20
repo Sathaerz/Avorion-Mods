@@ -300,6 +300,11 @@ function ShipmentController.setCodesCracked(_Val)
     self._Data._CodesCracked = _Val
 end
 
+function ShipmentController.incrementCycleTime(_Val)
+    _Val = _Val or 0
+    self._Data._ShipmentCycleTime = self._Data._ShipmentCycleTime + _Val
+end
+
 --endregion
 
 --region #CLIENT / SERVER CALLS

@@ -76,7 +76,7 @@ function TankemSpecial.addSG()
 
     local _SGD = {}
     _SGD._CodesCracked = false
-    _SGD._Velocity = 450
+    _SGD._Velocity = 400
     _SGD._ShotCycle = 30
     _SGD._ShotCycleSupply = 0
     _SGD._ShotCycleTimer = 30

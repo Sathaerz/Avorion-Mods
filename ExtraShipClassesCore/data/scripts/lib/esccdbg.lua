@@ -76,6 +76,7 @@ function initUI()
     tab:createButton(ButtonRect(), "Devastator", "onSpawnDevastatorButtonPressed")
     tab:createButton(ButtonRect(), "Slammer", "onSpawnTorpedoSlammerButtonPressed")
     tab:createButton(ButtonRect(), "Deadshot", "onSpawnDeadshotButtonPressed")
+    tab:createButton(ButtonRect(), "SeigeGun", "onSpawnSeigeGunButtonPressed")
     tab:createButton(ButtonRect(), "Absolute PD", "onSpawnAbsolutePDButtonPressed")
     tab:createButton(ButtonRect(), "Curtain", "onSpawnIronCurtainButtonPressed")
     tab:createButton(ButtonRect(), "Eternal", "onSpawnEternalButtonPressed")
@@ -168,6 +169,7 @@ function initUI()
     tab7:createButton(ButtonRect(), "Add Radiation Intensity 1", "onRadiationIntensity1Pressed")
     tab7:createButton(ButtonRect(), "Remove All Weather", "onRemoveWeatherPressed")
     tab7:createButton(ButtonRect(), "Run Scratch Script", "onRunScratchScriptButtonPressed")
+    tab7:createButton(ButtonRect(), "Run GetInt() Test", "onRunRandomGetIntTestButtonPressed")
 
     if _ai == 1 then
         local tab4 = tabbedWindow:createTab("Entity", "data/textures/icons/computation-mainframe.png", "AI Test")
@@ -355,6 +357,26 @@ function onDeadshotGenerated(_Generated)
 
         _S:addScript("lasersniper.lua")
         _S:addScript("icon.lua", "data/textures/icons/pixel/laserboat.png")
+    end
+end
+
+function onSpawnSeigeGunGenerated(_Generated)
+    onPiratesGenerated(_Generated)
+    for _, _S in pairs(_Generated) do
+
+        local _sgargs = {}
+        _sgargs._CodesCracked = true
+        _sgargs._Velocity = 400
+        _sgargs._ShotCycle = 30
+        _sgargs._ShotCycleSupply = 0
+        _sgargs._ShotCycleTimer = 30
+        _sgargs._UseSupply = false
+        _sgargs._FragileShots = false
+        _sgargs._TargetPriority = 1 --Target a random enemy.
+        _sgargs._UseEntityDamageMult = true --Use the entity damage multiplier. Fun with the overdrive / avenger scripts :)
+        _sgargs._BaseDamagePerShot = 100000 --Enough to notice but not enough to really heck the player up
+
+        _S:addScript("stationsiegegun.lua", _sgargs)
     end
 end
 
@@ -622,6 +644,21 @@ function onSpawnDeadshotButtonPressed()
     generator:endBatch()
 end
 callable(nil, "onSpawnDeadshotButtonPressed")
+
+function onSpawnSeigeGunButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnSeigeGunButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onSpawnSeigeGunGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnSeigeGunButtonPressed")
 
 function onSpawnAbsolutePDButtonPressed()
     if onClient() then
@@ -2138,6 +2175,18 @@ function onRunScratchScriptButtonPressed()
     --Put server script here.
 end
 callable(nil, "onRunScratchScriptButtonPressed")
+
+function onRunRandomGetIntTestButtonPressed()
+    if onClient() then
+        invokeServerFunction("onRunRandomGetIntTestButtonPressed")
+        return
+    end
+
+    for _ = 1, 10 do
+        print("random() generated " .. tostring(random():getInt(1, 10)))
+    end
+end
+callable(nil, "onRunRandomGetIntTestButtonPressed")
 
 --endregion
 

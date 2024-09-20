@@ -22,6 +22,7 @@ if onServer() then
 
         ai:stop()
         ai:setIdle()
+        ai:setPassiveShooting(true)
         for _, t in pairs({ship:getTurrets()}) do
             local xt = Turret(t)
             xt.group = 8

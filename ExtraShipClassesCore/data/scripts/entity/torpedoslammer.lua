@@ -27,9 +27,10 @@ self._Data = {}
         _DurabilityFactor       = Multiplies the durability of torpedoes by this amount. Useful for making torpedoes that are hard to shoot down.
         _UseEntityDamageMult    = Multiplies the damage of the torpedoes by the attached entity's damage multiplier. Useful for overdrive or avenger enemies.
         _UseStaticDamageMult    = Sets a multiplier on the first update and does not dynamically use the entity's damage multiplier.
-        _TargetPriority         = 1 = most firepower, 2 = by script value, 3 = random non-xsotan, 4 = random enemy
+        _TargetPriority         = 1 = most firepower, 2 = by script value, 3 = random non-xsotan, 4 = random enemy, 5 = player's current ship - specified by _pindex
         _TargetScriptValue      = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
         _TorpOffset             = Applies an offset to torpedo generation. Defaults to 0. Set to a negative value for higher tech level torpedoes.
+        _pindex                 = The index of the player to target w/ _TargetPriority 5. _TargetPriority cannot be set to 5 if this value is nil.
 
         Example:
 
@@ -101,10 +102,14 @@ function TorpedoSlammer.initialize(_Values)
     self._Data._PreferBodyType = self._Data._PreferBodyType or nil
     self._Data._TargetScriptValue = self._Data._TargetScriptValue or nil
     self._Data._TorpOffset = self._Data._TorpOffset or 0
+    --pindex can be nil.
 
     --Fix the target priority - if the ship isn't Xsotan make it use 4 instead of 3.
     if self._Data._TargetPriority == 3 and not self_is_xsotan then
         self._Data._TargetPriority = 4 --Just use 4. It's functionally the same as 3 but you won't target yourself due to the list of non-xsotan including you.
+    end
+    if self._Data._TargetPriority == 5 and self._Data._pindex == nil then
+        self._Data._TargetPriority = 4
     end
 
     self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust), 1)
@@ -201,6 +206,10 @@ function TorpedoSlammer.pickNewTarget()
         for _, _Candidate in pairs(_Enemies) do
             table.insert(_TargetCandidates, _Candidate)            
         end
+    elseif _TargetPriority == 5 then
+        local _PlayerTarget = Player(self._Data._pindex)
+        local _PlayerTargetShip = Entity(_PlayerTarget.craft.id)
+        table.insert(_TargetCandidates, _PlayerTargetShip)
     end
 
     if #_TargetCandidates > 0 then

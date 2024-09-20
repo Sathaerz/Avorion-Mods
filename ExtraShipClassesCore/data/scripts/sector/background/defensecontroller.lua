@@ -630,6 +630,11 @@ function DefenseController.setDangerLevel(_Val)
     self._Data._DangerLevel = _Val
 end
 
+function DefenseController.incrementCycleTime(_Val)
+    _Val = _Val or 0
+    self._Data._DefenderCycleTime = self._Data._DefenderCycleTime + _Val
+end
+
 --endregion
 
 --region #CLIENT / SERVER CALLS

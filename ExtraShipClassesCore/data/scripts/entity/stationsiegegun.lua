@@ -92,6 +92,7 @@ self._Data._TimeToActive = nil
 --All of these values can be generated on the fly / defaulted internally and do not need to be passed.
 self._NextTarget = nil --This will be an issue on the unlikely chance the player manages to unload the script in the 5 seconds between the pick + shot.
 self._CanShoot = nil
+self._SentTauntForShot = nil
 
 --region #INIT
 
@@ -175,8 +176,9 @@ function StationSiegeGun.updateServer(_TimeStep)
             self._NextTarget = self.getNextTarget()
             if self._NextTarget then
                 self.Log(_MethodName, "Shot Cycle Timer is " .. tostring(self._Data._ShotCycleTimer) .. "/" .. tostring(self._Data._ShotCycle) .. "Successfully picked a target. Broadcasting and firing.")
-                if self._Data._CodesCracked then
+                if self._Data._CodesCracked and not self._SentTauntForShot then
                     self.broadcastPrepForShotCall(self._NextTarget)
+                    self._SentTauntForShot = true
                 end
                 self.Log(_MethodName, "Setting CanShoot to true.")
                 self._CanShoot = true
@@ -186,6 +188,7 @@ function StationSiegeGun.updateServer(_TimeStep)
     if self._Data._ShotCycleTimer > self._Data._ShotCycle then
         if self._CanShoot then
             self.fireMainGun()
+            self._SentTauntForShot = false
         end
         self._Data._ShotCycleTimer = 0 --Reset the timer anyways and catch it on the next pass. The supply is the main bottleneck.
     end
@@ -195,11 +198,18 @@ end
 
 function StationSiegeGun.getNextTarget()
     local _MethodName = "Get Next Target"
-    local _Station = Entity()
+    local _Factionidx = Entity().factionIndex
     local _TargetPriority = self._Data._TargetPriority
     local _Rgen = ESCCUtil.getRand()
 
-    local _Enemies = {Sector():getEnemies(_Station.factionIndex)}
+    --Get the list of enemies. This is a bit of work since it includes wacky crap like turrets.
+    local _RawEnemies = {Sector():getEnemies(_Factionidx)}
+    local _Enemies = {}
+    for _, _RawEnemy in pairs(_RawEnemies) do
+        if _RawEnemy.type == EntityType.Ship or _RawEnemy.type == EntityType.Station then
+           table.insert(_Enemies, _RawEnemy) 
+        end
+    end
     local _TargetCandidates = {}
 
     self.Log(_MethodName, "Beginning... _TargetPriority is " .. tostring(_TargetPriority))
@@ -328,6 +338,7 @@ end
 function StationSiegeGun.broadcastPrepForShotCall(_Target)
     local _MethodName = "Broadcast Shot Call"
     self.Log(_MethodName, "Calling Shot.")
+    self.Log(_MethodName, "Target is " .. tostring(_Target))
 
     local _Lines = {
         "CHRRK....Secure...main....CHRRRK...pass...CHRRRK...FIRE!...CHRRK", --Zone of the Enders 2 reference that people aren't going to get.
@@ -382,7 +393,7 @@ function StationSiegeGun.fireMainGun()
     _ShotDamage = _ShotDamage * (1 + (_ShotLevel * _ShotMultiplier)) * _EntityDamageMultiplier
     
     self.Log(_MethodName, "Fire level " .. tostring(_ShotLevel) .. " shot")
-    self.Log(_MethodName, tostring(_SupplyValue) .. " supply available. " .. tostring(self._Data._ShotSupplyConsumed) .. " supply consumed. Incrementing consumed and firing.", 0)
+    self.Log(_MethodName, tostring(_SupplyValue) .. " supply available. " .. tostring(self._Data._ShotSupplyConsumed) .. " supply consumed. Incrementing consumed and firing.")
     Sector():addScript("sector/siegegunshot.lua", _Station.translationf, _NDVec * self._Data._Velocity, 30, _ShotDamage, _Station.id, self._Data._FragileShots)
 
     self._Data._ShotSupplyConsumed = self._Data._ShotSupplyConsumed + self._Data._ShotCycleSupply
