@@ -141,8 +141,6 @@ function initialize(_Data_in)
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y, enemyName = mission.data.custom.enemyName }
 
-            _Data_in.reward.paymentMessage = "Earned %1% credits for destroying the research base."
-
             --Run standard initialization
             AttackResearchBase_init(_Data_in)
         else
@@ -167,19 +165,19 @@ end
 mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
-        runFullSectorCleanup()
+        runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
     if mission.data.location then
-        runFullSectorCleanup()
+        runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onAccomplish = function()
     if mission.data.location then
-        runFullSectorCleanup()
+        runFullSectorCleanup(false)
     end
 end
 
@@ -490,21 +488,6 @@ function onDefendersFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function runFullSectorCleanup()
-    local _Sector = Sector()
-    local _OnLocation = getOnLocation(_Sector)
-
-    if _OnLocation then
-        local _EntityTypes = ESCCUtil.allEntityTypes()
-        _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
-        _Sector:removeScript("sector/background/campaignsectormonitor.lua")
-    else
-        local _MX, _MY = mission.data.location.x, mission.data.location.y
-        Galaxy():loadSector(_MX, _MY)
-        invokeSectorFunction(_MX, _MY, true, "campaignsectormonitor.lua", "clearMissionAssets", _MX, _MY, true, true)
-    end
-end
-
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
@@ -648,7 +631,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = reputation},
+            reward = {credits = reward, relations = reputation, paymentMessage = "Earned %1% credits for destroying the research base."},
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
             pirates = _Pirates,

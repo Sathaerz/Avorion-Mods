@@ -135,7 +135,8 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
         "Remember, you wanted this.",
         "Have you the strength?",
         "What have we here?",
-        "We all make mistakes. Don't you think, Captain?"
+        "We all make mistakes. Don't you think, Captain?",
+        "Oh, the misery."
     }
 
     local _GordianKnot = Entity(mission.data.custom.gordianKnotid)
