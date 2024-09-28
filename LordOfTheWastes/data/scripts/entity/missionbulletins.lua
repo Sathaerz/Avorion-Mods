@@ -5,7 +5,7 @@ function MissionBulletins.getPossibleMissions()
 
 	local scripts = LOTW_getPossibleMissions()
 
-	if stationTitle == "Military Outpost" then
+	if not station.playerOrAllianceOwned and stationTitle == "Military Outpost" then
 		local _AddBulletins = true
 		local _Players = {Sector():getPlayers()}
 		for _, _Player in pairs(_Players) do

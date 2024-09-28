@@ -52,7 +52,7 @@ function initialize(_Data_in)
 
     if onServer()then
         if not _restoring then
-            mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel) .. " - pirates : " .. tostring(_Data_in.pirates) .. " - enemy : " .. tostring(_Data_in.enemyFaction))
+            mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
 
             local _Rgen = ESCCUtil.getRand()
             local _X, _Y = _Data_in.location.x, _Data_in.location.y
@@ -62,9 +62,7 @@ function initialize(_Data_in)
             --[[=====================================================
                 CUSTOM MISSION DATA:
                 .dangerLevel
-                .pirateLevel
                 .friendlyFaction
-                .enemyFaction
                 .firstWaveTaunt
                 .waveCounter
                 .firstTimerAdvance
@@ -72,17 +70,11 @@ function initialize(_Data_in)
                 .thirdTimerAdvance
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
-            mission.data.custom.pirateLevel = Balancing_GetPirateLevel(_X, _Y)
-            local _EnemyFaction = Galaxy():getPirateFaction(mission.data.custom.pirateLevel)
-            mission.data.custom.enemyFaction = _EnemyFaction.index
-            mission.Log(_MethodName, "Enemy faction is : " .. tostring(_EnemyFaction.name))
             mission.data.custom.friendlyFaction = _Giver.factionIndex
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y, enemyName = mission.data.custom.enemyName }
-
-            _Data_in.reward.paymentMessage = "Earned %1% credits for destroying the pirate fleet."
 
             --Run standard initialization
             LOTW_Mission_init(_Data_in)
@@ -521,7 +513,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = 12000},
+            reward = {credits = reward, relations = 12000, paymentMessage = "Earned %1% credits for destroying the pirate fleet."},
             initialDesc = _Description,
             dangerLevel = _DangerLevel
         }},

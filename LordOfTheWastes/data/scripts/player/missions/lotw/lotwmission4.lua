@@ -187,7 +187,7 @@ end
 mission.phases[3] = {}
 mission.phases[3].timers = {}
 
---region #PHASE 2 TIMERS
+--region #PHASE 3 TIMERS
 
 if onServer() then
 
@@ -374,7 +374,8 @@ function buildSector(_X, _Y)
 
     Placer.resolveIntersections()
 
-    Sector():addScriptOnce("deleteentitiesonplayersleft.lua")
+    local _EntityTypes = ESCCUtil.allEntityTypes()
+    Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
 end
 
 function getWingSpawnTables(_WingScriptValue)

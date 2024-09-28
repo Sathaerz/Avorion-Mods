@@ -88,8 +88,6 @@ function initialize(_Data_in)
             mission.data.description[2].arguments = {x = mission.data.location.x, y = mission.data.location.y }
             mission.data.description[3].arguments = {x = mission.data.location.x, y = mission.data.location.y } --Not sure if this is needed but eh
 
-            _Data_in.reward.paymentMessage = "Earned %1% credits for destroying the pirate freighters."
-
             LOTW_Mission_init(_Data_in)
         else
             --Restoring
@@ -529,7 +527,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = 6000},
+            reward = {credits = reward, relations = 6000, paymentMessage = "Earned %1% credits for destroying the pirate freighters."},
             initialDesc = _Description,
             dangerLevel = _DangerLevel
         }},
