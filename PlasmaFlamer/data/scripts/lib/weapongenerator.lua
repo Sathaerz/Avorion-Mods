@@ -3,8 +3,8 @@ function WeaponGenerator.generatePlasmaFlamer(rand, dps, tech, material, rarity)
     weapon:setProjectile()
 
     local fireDelay = 0.005
-    local reach = rand:getFloat(100, 120)
-    local damage = dps * fireDelay * 0.45 --Low damage but terrifying shield stripping potential.
+    local reach = rand:getFloat(120, 150)
+    local damage = dps * fireDelay * 0.5 --Low damage but terrifying shield stripping potential.
     local speed = rand:getFloat(500, 700)
     local existingTime = reach / speed
 
@@ -26,7 +26,7 @@ function WeaponGenerator.generatePlasmaFlamer(rand, dps, tech, material, rarity)
 
     -- 100 % chance for plasma damage
     -- Formula is shield damage multiplier = (flat factor) + (random 0 to random factor) + (rarity * factor)
-    WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 8.35, 1.35, 0.3)
+    WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 8.3, 1.3, 0.3)
 
     weapon.psize = rand:getFloat(1.1, 1.5)
     weapon.pmaximumTime = existingTime
