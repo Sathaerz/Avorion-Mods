@@ -109,25 +109,23 @@ end
 mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].triggers = {}
+
+if onServer() then
+
 mission.phases[1].triggers[1] = {
     condition = function()
         local _MethodName = "Phase 1 Trigger 1 Condition"
-
-        if onServer() then
-            return mission.data.custom.killedTargets >= mission.data.custom.targets
-        else
-            return true
-        end
+        return mission.data.custom.killedTargets >= mission.data.custom.targets
     end,
     callback = function()
         local _MethodName = "Phase 1 Trigger 1 Callback"
-        
-        if onServer() then
-            finishAndReward()
-        end
+        finishAndReward()
     end,
     repeating = false    
 }
+
+end
+
 mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _MethodName = "Phase 1 On Entity Destroyed"
     local _DestroyedEntity = Entity(_ID)
@@ -140,7 +138,12 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
 
     if (_DestroyedEntity.type == EntityType.Ship or _DestroyedEntity.type == EntityType.Station) and (_EntityDestroyer.type == EntityType.Ship or _EntityDestroyer.type == EntityType.Station) then
         mission.Log(_MethodName, "Both destroyer / destroyed were ships / stations - checking faction indexes.")
-        if _DestroyedEntity.factionIndex == mission.data.custom.pirateFaction and _EntityDestroyer.factionIndex == Player().index then
+        local _dfindex = _EntityDestroyer.factionIndex -- "destroyer faction" index
+        local _pfindex = mission.data.custom.pirateFaction -- "pirate faction" index
+        local _player = Player()
+        local _pindex = _player.index
+
+        if _DestroyedEntity.factionIndex == _pfindex and (_dfindex == _pindex or (_player.allianceIndex and _dfindex == _player.allianceIndex)) then
             mission.data.custom.killedTargets = mission.data.custom.killedTargets + 1
             mission.data.description[3].arguments.killedTargets = mission.data.custom.killedTargets
             sync()
