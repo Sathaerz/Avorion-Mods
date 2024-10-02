@@ -209,6 +209,7 @@ mission.phases[1].timers[2] = {
         local _MethodName = "Phase 1 Timer 2 Callback"
         mission.Log(_MethodName, "Running danger 10 threat timer.")
         if mission.data.custom.dangerLevel == 10 and not mission.data.custom.spawnedDangerTenThreat and getOnLocation(nil) then
+            mission.Log(_MethodName, "Danger 10 - spawning threat.")
             spawnThreat()
             mission.data.custom.spawnedDangerTenThreat = true
         end
@@ -780,7 +781,24 @@ mission.makeBulletin = function(_Station)
 
     _MissionReward = { credits = reward, relations = reputation }
 
-    local materialAmount = round(random():getInt(40000, 50000) / 100) * 100
+    local distToCenter = math.sqrt(x * x + y * y)
+    local _MatlMin = 7000
+    local _MatlMax = 8000
+    if distToCenter > 400 then
+        --Always give about 50% more than free slaves.
+        _MatlMin = 10000
+        _MatlMax = 12000
+    elseif distToCenter < 400 and distToCenter > 300 then
+        _MatlMin = 20000
+        _MatlMax = 24000
+    else
+        _MatlMin = 40000
+        _MatlMax = 48000
+    end
+    
+    mission.Log(_MethodName, "matlmin is ${MIN} and matlmax is ${MAX}" % { MIN = _MatlMin, MAX = _MatlMax }) 
+
+    local materialAmount = round(random():getInt(_MatlMin, _MatlMax) / 100) * 100
     MissionUT.addSectorRewardMaterial(x, y, _MissionReward, materialAmount)
 
     _MissionPunishment = { relations = baseRep }

@@ -331,8 +331,7 @@ function PirateGenerator.addPirateEquipment(craft, title)
 			--A tiny ship that focuses on disrupting the player. Blocks hyperspace
 			ShipUtility.addBlockerEquipment(craft)
 
-			craft:removeScript("icon.lua")
-			craft:addScript("icon.lua", "data/textures/icons/pixel/jammer.png")
+			ESCCUtil.replaceIcon(craft, "data/textures/icons/pixel/jammer.png")
 			craft:setValue("is_jammer", true)
 		elseif title == "Stinger" then
 			--A fast, tiny ship that focuses on destroying shields. Focus on death by 1000 paper cuts.
@@ -357,8 +356,7 @@ function PirateGenerator.addPirateEquipment(craft, title)
 			craft.damageMultiplier = (craft.damageMultiplier or 1) * _HighAmp --Double dip on the bonus for extra scariness
 
 			if type == 2 then
-				craft:removeScript("icon.lua")
-				craft:addScript("icon.lua", "data/textures/icons/pixel/scorcher.png")
+				ESCCUtil.replaceIcon(craft, "data/textures/icons/pixel/scorcher.png")
 			end
 			craft:setValue("is_scorcher", true)
 		elseif title == "Bomber" then
@@ -520,8 +518,7 @@ function PirateGenerator.addPirateEquipment(craft, title)
 			upgradeRarities[1] = 0
 			upgradeRarities[2] = upgradeRarities[2] * 0.5
 
-			craft:removeScript("icon.lua")
-			craft:addScript("icon.lua", "data/textures/icons/pixel/executioner.png")
+			ESCCUtil.replaceIcon(craft, "data/textures/icons/pixel/executioner.png")
 			craft:setValue("is_executioner", true)
 		end
 
