@@ -94,24 +94,24 @@ function BusinessFrameworkMission.updateServer(_TimeStep)
             local _Story5 = player:getValue("_bau_story_5_accomplished")
 
             self.Log(_MethodName, "Story 1 is " .. tostring(_Story1) .. " checking for script and attaching.")
-            if not _Story1 and not player:hasScript("missions/family/story/baustorymission1.lua") then
-                player:addScript("missions/family/story/baustorymission1.lua")
+            if not _Story1 and not player:hasScript("missions/family/story/baustory1.lua") then
+                player:addScript("missions/family/story/baustory1.lua")
             end
 
-            if _Story1 and not _Story2 and not player:hasScript("missions/family/story/baustorymission2.lua") then
-                player:addScript("missions/family/story/baustorymission2.lua")
+            if _Story1 and not _Story2 and not player:hasScript("missions/family/story/baustory2.lua") then
+                player:addScript("missions/family/story/baustory2.lua")
             end
 
-            if _Story2 and not _Story3 and not player:hasScript("missions/family/story/baustorymission3.lua") then
-                player:addScript("missions/family/story/baustorymission3.lua")
+            if _Story2 and not _Story3 and not player:hasScript("missions/family/story/baustory3.lua") then
+                player:addScript("missions/family/story/baustory3.lua")
             end
 
-            if _Story3 and not _Story4 and not player:hasScript("missions/family/story/baustorymission4.lua") and _RankLevel >= 4 and _HaveAvo then
-                player:addScript("missions/family/story/baustorymission4.lua")
+            if _Story3 and not _Story4 and not player:hasScript("missions/family/story/baustory4.lua") and _RankLevel >= 4 and _HaveAvo then
+                player:addScript("missions/family/story/baustory4.lua")
             end
 
-            if _Story4 and not _Story5 and not player:hasScript("missions/family/story/baustorymission5.lua") and _RankLevel >= 4 and _VanillaStoryAdvancement >= 6 and _GuardianCanSpawn then
-                player:addScript("missions/family/story/baustorymission5.lua")
+            if _Story4 and not _Story5 and not player:hasScript("missions/family/story/baustory5.lua") and _RankLevel >= 4 and _VanillaStoryAdvancement >= 6 and _GuardianCanSpawn then
+                player:addScript("missions/family/story/baustory5.lua")
             end
         end
     else
@@ -341,6 +341,8 @@ function BusinessFrameworkMission.checkPlayerRank(_CurrentRank, _CurrentRep)
 end
 
 function BusinessFrameworkMission.resetPlayerValues(_Player)
+    local _MethodName = "Reset Player Values"
+    
     _Player:setValue("_bau_family_ranklevel", nil)
     _Player:setValue("_bau_family_rank", nil)
     _Player:setValue("_bau_family_rep", nil)
@@ -356,17 +358,17 @@ function BusinessFrameworkMission.resetPlayerValues(_Player)
     _Player:setValue("_bau_family_inbarrier", nil)
     --Remove all scripts, and I mean ALL scripts.
     local _Scripts = {
-        "missions/family/story/baustorymission1.lua",
-        "missions/family/story/baustorymission2.lua",
-        "missions/family/story/baustorymission3.lua",
-        "missions/family/story/baustorymission4.lua",
-        "missions/family/story/baustorymission5.lua",
-        "missions/family/side/bausidemission1.lua",
-        "missions/family/side/bausidemission2.lua",
-        "missions/family/side/bausidemission3.lua",
-        "missions/family/side/bausidemission4.lua",
-        "missions/family/side/bausidemission5.lua",
-        "missions/family/side/bausidemission6.lua"
+        "missions/family/story/baustory1.lua",
+        "missions/family/story/baustory2.lua",
+        "missions/family/story/baustory3.lua",
+        "missions/family/story/baustory4.lua",
+        "missions/family/story/baustory5.lua",
+        "missions/family/side/bauside1.lua",
+        "missions/family/side/bauside2.lua",
+        "missions/family/side/bauside3.lua",
+        "missions/family/side/bauside4.lua",
+        "missions/family/side/bauside5.lua",
+        "missions/family/side/bauside6.lua"
     }
 
     for _, _Script in pairs(_Scripts) do

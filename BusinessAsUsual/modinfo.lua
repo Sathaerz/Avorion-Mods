@@ -11,7 +11,7 @@ meta =
     name = "BusinessAsUsual",
 
     -- Title of your mod that will be displayed to players
-    title = "Mod Title",
+    title = "Business As Usual",
 
     -- Type of your mod, either "mod" or "factionpack"
     type = "mod",

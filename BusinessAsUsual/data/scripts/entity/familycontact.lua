@@ -66,7 +66,7 @@ function FamilyContact.onClientHailTimeout()
     self.warpOut()
 end
 
-function CavaliersContact.startTalk()
+function FamilyContact.startTalk()
     local _MethodName = "Start Talk"
     self.Log(_MethodName, "Initiating conversation with the player")
 
@@ -87,13 +87,13 @@ function CavaliersContact.startTalk()
     local dialog2 = {}
 
     --Determine the side mission options based on the player's rank. Always add at least one. 50% chance to add a 2nd. 25% chance to add a 3rd.
-    local missionTable = { "EscortShipment", "DestroyRaiders" }
+    local missionTable = { "RescueAssociate", "RumRun" }
     local availableMissionTable = {}
     if _RankLevel >= 2 then
-        table.insert(missionTable, "DestroyXsotan")
+        table.insert(missionTable, "GoingToTheMat")
     end
     if _RankLevel >= 3 then
-        table.insert(missionTable, "DestroyOutpost")
+        table.insert(missionTable, "AuctionKings")
     end
     if _Story3Done and _HaveAvo then
         table.insert(missionTable, "DeliverMaterials")
@@ -122,11 +122,8 @@ function CavaliersContact.startTalk()
     end
     if _Story3Done and not _HaveAvo then
         --always add Deliver Materials if we've done story 3 and haven't done it once already.
+        --Family just tells you to do it, but this is a safeguard in case the player abandons the mission.
         table.insert(availableMissionTable, "DeliverMaterials")
-    end
-    if _RankLevel >= 3 and _Story2Done and not _Story3Done then
-        --always add Order from Chaos if it is available - add this at the start of the table.
-        table.insert(availableMissionTable, 1, "OrderfromChaos")
     end
 
     local noThanksText = "No problem. We'll catch you next time. " .. goodbyes[rgen:getInt(1, #goodbyes)]
@@ -136,7 +133,7 @@ function CavaliersContact.startTalk()
         {answer = "I'm available.", followUp = dialog1 },
         {answer = "I'm busy.", onSelect = "warpOut", text = noThanksText}
     }
-    dialog1.text = "Great! We could use your asssistance."
+    dialog1.text = "We could use your asssistance."
     dialog1.answers = {
         {answer = "What would you have me do?", followUp = dialog2 }
     }
@@ -144,18 +141,14 @@ function CavaliersContact.startTalk()
     dialog2.answers = {}
     for _, mission in pairs(availableMissionTable) do
         local missionAcceptText = "Thank you for your assistance. " .. missionconfirms[rgen:getInt(1, #missionconfirms)]
-        if mission == "EscortShipment" then
-            table.insert(dialog2.answers, {answer = "Escort Shipment", onSelect = "escortShipment", text = missionAcceptText})
-        elseif mission == "DestroyRaiders" then
-            table.insert(dialog2.answers, {answer = "Ambush Raiders", onSelect = "destroyRaiders", text = missionAcceptText})
-        elseif mission == "FutileResistance" then
-            table.insert(dialog2.answers, {answer = "Defeat Resistance", onSelect = "destroyResistance", text = missionAcceptText})
-        elseif mission == "DestroyXsotan" then
-            table.insert(dialog2.answers, {answer = "Destroy Xsotan", onSelect = "destroyXsotan", text = missionAcceptText})
-        elseif mission == "DestroyOutpost" then
-            table.insert(dialog2.answers, {answer = "Destroy Outpost", onSelect = "destroyOutpost", text = missionAcceptText})
-        elseif mission == "OrderfromChaos" then
-            table.insert(dialog2.answers, {answer = "Order from Chaos", onSelect = "orderfromChaos", text = "The empress will be in touch."})
+        if mission == "RescueAssociate" then
+            table.insert(dialog2.answers, {answer = "Rescue Associate", onSelect = "rescueAssoc", text = missionAcceptText})
+        elseif mission == "RumRun" then
+            table.insert(dialog2.answers, {answer = "Rum Run", onSelect = "rumRun", text = missionAcceptText})
+        elseif mission == "GoingToTheMat" then
+            table.insert(dialog2.answers, {answer = "Going To The Mat", onSelect = "gotoTheMat", text = missionAcceptText})
+        elseif mission == "AuctionKings" then
+            table.insert(dialog2.answers, {answer = "Auction Kings", onSelect = "auctionKings", text = missionAcceptText})
         elseif mission == "DeliverMaterials" then
             table.insert(dialog2.answers, {answer = "Deliver Materials", onSelect = "deliverMaterials", text = missionAcceptText})
         end
@@ -164,5 +157,119 @@ function CavaliersContact.startTalk()
 
     ScriptUI():interactShowDialog(dialog0, false)
 end
+
+--endregion
+
+--region # CLIENT/SERVER CALLS
+
+function FamilyContact.Log(_MethodName, _Msg, _OverrideDebug)
+    local _TempDebug = self._Debug
+    if _OverrideDebug then self._Debug = _OverrideDebug end
+    if self._Debug and self._Debug == 1 then
+        print("[BAU Family Contact] - [" .. _MethodName .. "] - " .. _Msg)
+    end
+    if _OverrideDebug then self._Debug = _TempDebug end
+end
+
+function FamilyContact.warpOut()
+    --No penalty for rejecting contact with them.
+    if onClient() then
+        invokeServerFunction("warpOut")
+        return
+    end
+
+    local entity = Entity()
+    local rgen = ESCCUtil.getRand()
+
+    entity:addScriptOnce("utility/delayeddelete.lua", rgen:getFloat(3, 6))
+end
+callable(FamilyContact, "warpOut")
+
+function FamilyContact.playerHasBeenContacted()
+    local _MethodName = "Player has been contacted"
+    self.Log(_MethodName, "Beginning...")
+    if onClient() then
+        invokeServerFunction("playerHasBeenContacted")
+        return
+    end
+
+    self.playerResponded = true
+end
+callable(FamilyContact, "playerHasBeenContacted")
+
+--endregion
+
+--region #MISSION LIST
+
+--RESCUE ASSOCIATE
+function FamilyContact.rescueAssoc()
+    local _MethodName = "Resuce Associate"
+    if onClient() then
+        self.Log(_MethodName, "Invoking on Server")
+        invokeServerFunction("rescueAssoc")
+        return
+    end
+
+    self.Log(_MethodName, "Adding mission script to player.")
+    self.contactPlayer:addScript("data/scripts/player/missions/family/side/bauside1.lua")
+    self.warpOut()
+end
+callable(FamilyContact, "rescueAssoc")
+
+--RUM RUN
+function FamilyContact.rumRun()
+    local _MethodName = "Rum Run"
+    if onClient() then
+        self.Log(_MethodName, "Invoking on Server")
+        invokeServerFunction("rumRun")
+    end
+
+    self.Log(_MethodName, "Adding mission script to player.")
+    self.contactPlayer:addScript("data/scripts/player/missions/family/side/bauside2.lua")
+    self.warpOut()
+end
+callable(FamilyContact, "rumRun")
+
+--GOING TO THE MAT
+function FamilyContact.gotoTheMat()
+    local _MethodName = "Going To The Mat"
+    if onClient() then
+        self.Log(_MethodName, "Invoking on Server")
+        invokeServerFunction("gotoTheMat")
+    end
+
+    self.Log(_MethodName, "Adding mission script to player.")
+    self.contactPlayer:addScript("data/scripts/player/missions/family/side/bauside3.lua")
+    self.warpOut()
+end
+callable(FamilyContact, "gotoTheMat")
+
+--AUCTION KINGS
+function FamilyContact.auctionKings()
+    local _MethodName = "Auction Kings"
+    if onClient() then
+        self.Log(_MethodName, "Invoking on Server")
+        invokeServerFunction("auctionKings")
+    end
+
+    self.Log(_MethodName, "Adding mission script to player.")
+    self.contactPlayer:addScript("data/scripts/player/missions/family/side/bauside4.lua")
+    self.warpOut()
+end
+callable(FamilyContact, "auctionKings")
+
+--DELIVER MATERIALS
+function FamilyContact.deliverMaterials()
+    local _MethodName = "Deliver Materials"
+    if onClient() then
+        self.Log(_MethodName, "Invoking on Server")
+        invokeServerFunction("deliverMaterials")
+    end
+
+    self.Log(_MethodName, "Adding mission script to player.")
+    self.contactPlayer:addScript("data/scripts/player/missions/family/side/bauside5.lua")
+    self.warpOut()
+end
+callable(FamilyContact, "deliverMaterials")
 
 --endregion
