@@ -687,10 +687,8 @@ function highlightRescuedSlaves()
 
     for _, entity in pairs({Sector():getEntitiesByComponent(ComponentType.CargoLoot)}) do
         local loot = CargoLoot(entity)
-        local _highlightsent = entity:getValue("rescueslaves_highlightsent")
 
-        if loot:matches("Rescued Slave") and not _highlightsent then
-            entity:setValue("rescueslaves_highlightsent", true) --see if this even works.
+        if loot:matches("Rescued Slave") then
             Hud():displayHint("Pick up these Rescued Slaves! Make sure to turn on 'Pick up stolen goods'!", entity)
         end
     end
