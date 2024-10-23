@@ -375,8 +375,9 @@ function buildObjectiveSector(_X, _Y)
     end
     Sector():removeScript("traders.lua")
 
+    local _fields = random():getInt(3, 5)
     --Add: 3-5 small asteroid fields.
-    for _ = 3, 5 do
+    for _ = 1, _fields do
         _Generator:createSmallAsteroidField()
     end
 
