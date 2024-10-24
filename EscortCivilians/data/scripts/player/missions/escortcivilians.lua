@@ -55,6 +55,8 @@ mission.data.description = {
     { text = "Defend the civilian transports until they warp out - ${_ESCORTED}/${_MAXESCORTED} Escorted", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Don't let too many transports be destroyed - ${_DESTROYED}/${_MAXDESTROYED} Lost", bulletPoint = true, fulfilled = false, visible = false }
 }
+mission.data.timeLimit = 10 * 60 --Player has 10 minutes to head to the sector. Take the time limit off when the player arrives.
+mission.data.timeLimitInDescription = true --Show the player how much time is left.
 
 --Can't set mission.data.reward.paymentMessage here since we are using a custom init.
 mission.data.accomplishMessage = "Thank you. You've saved thousands of lives today. We transferred the reward to your account."
@@ -76,8 +78,7 @@ function initialize(_Data_in)
             local _Giver = Entity(_Data_in.giver)
 
             --Emergency breakout just in case the player somehow got this from a player faction.
-            local _missionFaction = Faction(_Giver.factionIndex)
-            if _missionFaction.isPlayer or _missionFaction.isAlliance then
+            if _Giver.playerOrAllianceOwned then
                 print("ERROR: Mission from player faction - aborting.")
                 terminate()
                 return
@@ -127,8 +128,6 @@ function initialize(_Data_in)
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
-
-            _Data_in.reward.paymentMessage = "Earned %1% credits for escorting civilians."
 
             --Run standard initialization
             EscortCivilians_init(_Data_in)
@@ -189,6 +188,9 @@ mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].noPlayerEventsTargetSector = true
 mission.phases[1].noLocalPlayerEventsTargetSector = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
+    mission.data.timeLimit = nil 
+    mission.data.timeLimitInDescription = false 
+
     nextPhase()
 end
 
@@ -211,7 +213,8 @@ mission.phases[2].timers[1] = {
     end,
     repeating = true
 }
---Timer 8 = set timer 2 to spawn transports - timers 5, 6, and 7 are spoken for in the spacn transports call
+
+--Timer 8 = set timer 2 to spawn transports - timers 5, 6, and 7 are spoken for in the spawn transports call
 mission.phases[2].timers[8] = {
     time = 30,
     callback = function()
@@ -230,6 +233,7 @@ mission.phases[2].timers[8] = {
     end,
     repeating = false
 }
+
 --Timer 3 moved to global phase.
 --Timer 4 = advancement / objective timer
 mission.phases[2].timers[4] = {
@@ -490,11 +494,11 @@ function onBetaBackgroundPiratesFinished(_Generated)
     _TorpSlammerValues._ForwardAdjustFactor = 2
     _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
     _TorpSlammerValues._TargetPriority = 2
-    _TorpSlammerValues._TargetScriptValue = "_escortcivilians_defendobjective"
+    _TorpSlammerValues._TargetTag = "_escortcivilians_defendobjective"
 
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_escortcivilians_beta_wing", true)
-        _Pirate:addScript("ai/escortattacker.lua", {_TargetTag = "_escortcivilians_defendobjective"})
+        _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = "_escortcivilians_defendobjective" })
 
         --This is for performance reasons, so there aren't dozens and dozens of items scattered around the sector.
         local _PiratesSpawned = mission.data.custom.piratesSpawned + 1
@@ -631,7 +635,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = 1000}, --Why is this so low? Becasue you get a ton of extra rep from killing the pirates w/ the civil transports active.
+            reward = {credits = reward, relations = 1000, paymentMessage = "Earned %1% credits for escorting civilians."}, --Why is this so low? Becasue you get a ton of extra rep from killing the pirates w/ the civil transports active.
             punishment = {relations = 16000}, --This is so high for the same reason the above is so low.
             dangerLevel = _DangerLevel,
             initialDesc = _Description
