@@ -202,21 +202,20 @@ mission.phases[2].onTargetLocationEntered = function(_X, _Y)
 end
 
 mission.phases[2].onTargetLocationLeft = function(_X, _Y)
-    mission.data.timeLimit = 5 * 60 --Player has 5 minutes to head back to the sector.
+    mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to head back to the sector.
     mission.data.timeLimitInDescription = true --Show the player how much time is left.
 end
 
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _DestroyedEntity = Entity(_ID)
+    if getOnLocation(nil) then
+        if _DestroyedEntity:getValue("is_prototype") then
+            failAndPunish()
+        end
 
-    local _onLocation = getOnLocation(nil)
-
-    if _onLocation and _DestroyedEntity:getValue("is_prototype") then
-        failAndPunish()
-    end
-
-    if _onLocation and _DestroyedEntity:getValue("is_pirate") then
-        mission.data.custom.piratesKilled = mission.data.custom.piratesKilled + 1
+        if _DestroyedEntity:getValue("is_pirate") then
+            mission.data.custom.piratesKilled = mission.data.custom.piratesKilled + 1
+        end
     end
 end
 
@@ -471,50 +470,35 @@ function spawnBackgroundPirates()
     local _MethodName = "Spawn Background Pirates"
     mission.Log(_MethodName, "Beginning...")
 
-    local _AlphaSpawnTable = getWingSpawnTables("_defendprototype_alpha_wing")
-    local generator = AsyncPirateGenerator(nil, onAlphaBackgroundPiratesFinished)
-
     local distance = 250 --_#DistAdj
 
-    generator:startBatch()
-
-    local posCounter = 1
-    local pirate_positions = generator:getStandardPositions(#_AlphaSpawnTable, distance)
-    for _, p in pairs(_AlphaSpawnTable) do
-        generator:createScaledPirateByName(p, pirate_positions[posCounter])
-        posCounter = posCounter + 1
-    end
-
-    generator:endBatch()
-
-    local _BetaSpawnTable = getWingSpawnTables("_defendprototype_beta_wing")
-    generator = AsyncPirateGenerator(nil, onBetaBackgroundPiratesFinished)
-
-    generator:startBatch()
-
-    local posCounter = 1
-    local pirate_positions = generator:getStandardPositions(#_BetaSpawnTable, distance)
-    for _, p in pairs(_BetaSpawnTable) do
-        generator:createScaledPirateByName(p, pirate_positions[posCounter])
-        posCounter = posCounter + 1
-    end
-
-    generator:endBatch()
-
-    local _GammaSpawnTable = getWingSpawnTables("_defendprototype_gamma_wing")
-    if #_GammaSpawnTable > 0 then --Don't spawn gamma pirates unless there are any.
-        generator = AsyncPirateGenerator(nil, onGammaBackgroundPiratesFinished)
-
-        generator:startBatch()
+    local _spawnFunc = function(wingScriptValue, wingOnSpawnFunc)
+        local _WingSpawnTable = getWingSpawnTables(wingScriptValue)
+        local wingGenerator = AsyncPirateGenerator(nil, wingOnSpawnFunc)
 
         local posCounter = 1
-        local pirate_positions = generator:getStandardPositions(#_GammaSpawnTable, distance)
-        for _, p in pairs(_GammaSpawnTable) do
-            generator:createScaledPirateByName(p, pirate_positions[posCounter])
+        local wingPositions = wingGenerator:getStandardPositions(#_WingSpawnTable, distance)
+        
+        wingGenerator:startBatch()
+
+        for _, p in pairs(_WingSpawnTable) do
+            wingGenerator:createScaledPirateByName(p, wingPositions[posCounter])
             posCounter = posCounter + 1
         end
 
-        generator:endBatch()
+        wingGenerator:endBatch()
+    end
+
+    --spawn alpha
+    _spawnFunc("_defendprototype_alpha_wing", onAlphaBackgroundPiratesFinished)
+
+    --spawn beta
+    _spawnFunc("_defendprototype_beta_wing", onBetaBackgroundPiratesFinished)
+
+    --spawn gamma if needed
+    local _GammaSpawnTable = getWingSpawnTables("_defendprototype_gamma_wing")
+    if #_GammaSpawnTable > 0 then --Don't spawn gamma pirates unless there aren't any.
+        _spawnFunc("_defendprototype_gamma_wing", onGammaBackgroundPiratesFinished)
     end
 
     mission.data.custom.waveCounter = mission.data.custom.waveCounter + 1 --Regardless of how many pirates we actually spawn, increment the wave counter.
@@ -592,11 +576,11 @@ function onBetaBackgroundPiratesFinished(_Generated)
     _TorpSlammerValues._ForwardAdjustFactor = 2
     _TorpSlammerValues._PreferWarheadType = _PrefType
     _TorpSlammerValues._TargetPriority = 2 --Target tag.
-    _TorpSlammerValues._TargetScriptValue = "is_prototype"
+    _TorpSlammerValues._TargetTag = "is_prototype"
 
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_defendprototype_beta_wing", true)
-        _Pirate:addScript("ai/escortattacker.lua", {_TargetTag = "is_prototype"})
+        _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = "is_prototype" })
 
         --This is for performance reasons, so there aren't dozens and dozens of items scattered around the sector.
         local _PiratesSpawned = mission.data.custom.piratesSpawned + 1
@@ -625,9 +609,11 @@ function onBetaBackgroundPiratesFinished(_Generated)
             
                 mission.Log(_MethodName,"Setting dpf to " .. tostring(_dpf))
 
-                local _LaserSniperValues = {
+                local _LaserSniperValues = { --#LONGINUS_SNIPER
                     _DamagePerFrame = _dpf,
                     _TimeToActive = 30,
+                    _TargetCycle = 15,
+                    _TargetingTime = 2.25, --Take longer than normal to target.
                     _TargetPriority = 3, --Target tag.
                     _TargetTag = "is_prototype"
                 }
@@ -647,7 +633,7 @@ end
 function onGammaBackgroundPiratesFinished(_Generated)
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_defendprototype_gamma_wing", true)
-        _Pirate:addScript("ai/escortattacker.lua", {_TargetTag = "_defendprototype_station"})
+        _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = "_defendprototype_station" })
 
         --This is for performance reasons, so there aren't dozens and dozens of items scattered around the sector.
         local _PiratesSpawned = mission.data.custom.piratesSpawned + 1
