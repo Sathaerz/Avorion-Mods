@@ -40,13 +40,8 @@ LLTEUtil = include("llteutil")
 
 local SectorGenerator = include ("SectorGenerator")
 local PirateGenerator = include("pirategenerator")
-local AsyncPirateGenerator = include ("asyncpirategenerator")
-local AsyncShipGenerator = include ("asyncshipgenerator")
-local SectorSpecifics = include ("sectorspecifics")
-local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 local ShipUtility = include ("shiputility")
-local Placer = include("placer")
 
 mission._Debug = 0
 mission._Name = "Order From Chaos"
@@ -432,7 +427,7 @@ function getNextLocation(_FirstLocation)
     if _FirstLocation then
         --Get a somewhat nearby sector. No need to go terribly to the barrier for this one in particular.
         local _Nx, _Ny = ESCCUtil.getPosOnRing(x, y, 165)
-        target.x, target.y = MissionUT.getSector(math.floor(_Nx), math.floor(_Ny), 5, 10, false, false, false, false, false)
+        target.x, target.y = MissionUT.getSector(_Nx, _Ny, 5, 10, false, false, false, false, false)
     else
         target.x, target.y = MissionUT.getSector(x, y, 3, 5, false, false, false, false, false)
     end

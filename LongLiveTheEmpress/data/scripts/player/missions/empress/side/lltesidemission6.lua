@@ -505,7 +505,15 @@ function onFreighterFinished(_Generated)
         ship:setValue("npc_chatter", nil)
         ship:setValue("is_freighter", nil)
         ship:setValue("is_cavaliers", true)
-        ship:addScript("ai/withdrawatlowhealth.lua", 0.8, 1, 1, 0.02)
+
+        local _WithdrawData = {
+            _Threshold = 0.8,
+            _MinTime = 1,
+            _MaxTime = 1,
+            _Invincibility = 0.02
+        }
+
+        ship:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
         ship:addScript("player/missions/empress/side/side6/llteside6giveshipment.lua")
         MissionUT.deleteOnPlayersLeft(ship)
 
@@ -529,7 +537,15 @@ function onDefendersFinished(_Generated)
         ship:removeScript("antismuggle.lua")
         ship:setValue("npc_chatter", nil)
         ship:setValue("is_cavaliers", true)
-        ship:addScript("ai/withdrawatlowhealth.lua", 0.8, 1, 1, 0.02)
+
+        local _WithdrawData = {
+            _Threshold = 0.8,
+            _MinTime = 1,
+            _MaxTime = 1,
+            _Invincibility = 0.02
+        }
+
+        ship:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
         MissionUT.deleteOnPlayersLeft(ship)
     end
 end

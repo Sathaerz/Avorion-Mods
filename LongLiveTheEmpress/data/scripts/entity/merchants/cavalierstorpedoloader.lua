@@ -18,13 +18,14 @@ local self = CavaliersTorpedoLoader
 
 self._Torpedoes = {}
 
-self._Debug = 0
+self._Debug = 1
 
 -- if this function returns false, the script will not be listed in the interaction window,
 -- even though its UI may be registered
 function CavaliersTorpedoLoader.interactionPossible(playerIndex, option)
     local _Player = Player(playerIndex)
     local _Rank = _Player:getValue("_llte_cavaliers_ranklevel")
+    local _Entity = Entity()
     local _CanInteract = true
     if _Rank and _Rank >= 2 then
         --Do nothing
@@ -34,6 +35,11 @@ function CavaliersTorpedoLoader.interactionPossible(playerIndex, option)
 
     local craft = _Player.craft
     if not craft then
+        _CanInteract = false
+    end
+
+    local dist = craft:getNearestDistance(_Entity)
+    if dist > 300 then
         _CanInteract = false
     end
 
@@ -174,7 +180,7 @@ function CavaliersTorpedoLoader.CalculateTorpedoPrice(_PlayerID, _WarheadType)
     
     self.Log(_MethodName, "Your ship can hold " .. tostring(_Qty) .. " torpedoes.")
 
-    local _Total = (_Cost * _Qty) * 0.7
+    local _Total = (_Cost * _Qty) * 0.5
     self._TotalPrice = _Total
 
     self.Log(_MethodName, "Your ship will cost " .. tostring(_Total) .. " to load. Invoking onConfirmToLoad for player " .. tostring(_Player.name) .. ".")
@@ -209,21 +215,24 @@ function CavaliersTorpedoLoader.loadSelectedTorpedoes(_PlayerID)
 
     self.Log(_MethodName, "Adding torpedos directly to launchers.")
 
-    for _, _Shaft in pairs(_Shafts) do
+    for _ShaftKey, _Shaft in pairs(_Shafts) do
         local _attempts = 0 --Emergency breakout - per shaft. Sometimes placing a torpedo in a shaft just doesn't work and I have no idea why. There's no error or anything.
-        while _Launcher:getFreeSlots(_Shaft) > 0 and _Launcher:getFreeSlots(_Shaft) ~= 15 and _attempts < 100 do
+        local _initialFreeSlots = _Launcher:getFreeSlots(_Shaft) --For some reason the game will register nonexistent shafts as having 15 free slots. It's fucking wack.
+        while _Launcher:getFreeSlots(_Shaft) > 0 and _initialFreeSlots ~= 15 and _attempts < 100 do
             _Launcher:addTorpedo(_Torpedo, _Shaft)
             _attempts = _attempts + 1
         end
+        self.Log(_MethodName, "Made " .. tostring(_attempts) .. " attempts with shaft " .. tostring(_ShaftKey), false)
     end
 
     self.Log(_MethodName, "Adding torpeodes to storage.")
 
     local _storageattempts = 0 --Second emergency breakout
-    while _Launcher.freeStorage > _Torpedo.size and _storageattempts < 100 do
+    while _Launcher.freeStorage > _Torpedo.size and _storageattempts < 1000 do
         _Launcher:addTorpedo(_Torpedo)
         _storageattempts = _storageattempts + 1
     end
+    self.Log(_MethodName, "Made " .. tostring(_storageattempts) .. " storage attempts.", false)
 
     local _Ship = Entity()
     Sector():broadcastChatMessage(_Ship, ChatMessageType.Chatter, "Rearming complete! You're good to go, Cavalier!")

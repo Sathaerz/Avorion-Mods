@@ -31,11 +31,8 @@ local SectorGenerator = include ("SectorGenerator")
 local PirateGenerator = include("pirategenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local AsyncShipGenerator = include ("asyncshipgenerator")
-local SectorSpecifics = include ("sectorspecifics")
-local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 local Xsotan = include("story/xsotan")
-local Placer = include("placer")
 
 mission._Debug = 0
 mission._Name = "March of The Cavaliers"
@@ -296,6 +293,7 @@ mission.phases[2].onTargetLocationEntered = function(_X, _Y)
 
 	if not mission.data.custom.capitalsSpawned then
 		local _EmpressBlade = LLTEUtil.spawnBladeOfEmpress(false)
+		_EmpressBlade:removeScript("ai/withdrawatlowhealth.lua") --Need to make sure she doesn't jump out somehow. She'll remain @ 2% if she gets too badly damaged.
 		local _SuperCap1 = LLTEUtil.spawnCavalierSupercap(false)
 		local _SuperCap2 = LLTEUtil.spawnCavalierSupercap(false)
 		local _SuperCap3 = LLTEUtil.spawnCavalierSupercap(false)
@@ -848,7 +846,12 @@ function onCavaliersFinished(_Generated)
         _S.title = "Cavaliers " .. _S.title
         _S:setValue("npc_chatter", nil)
         _S:setValue("is_cavaliers", true)
-        _S:addScript("ai/withdrawatlowhealth.lua", 0.15)
+
+		local _WithdrawData = {
+        	_Threshold = 0.15
+        }
+
+        _S:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
 		_S:removeScript("antismuggle.lua")
 		LLTEUtil.rebuildShipWeapons(_S, Player():getValue("_llte_cavaliers_strength"))
     end
@@ -922,7 +925,7 @@ function getNextLocation(_Location)
 	}
 
 	local _Nx, _Ny = ESCCUtil.getPosOnRing(x, y, _NxTable[_Location]._RingPos)
-	target.x, target.y = MissionUT.getSector(math.floor(_Nx), math.floor(_Ny), 1, 4, false, false, false, false, _NxTable[_Location]._InBarrier)
+	target.x, target.y = MissionUT.getSector(_Nx, _Ny, 1, 4, false, false, false, false, _NxTable[_Location]._InBarrier)
 
 	if target == nil or target.x == nil or target.y == nil then
 		print("Could not get a location - enacting failsafe")
@@ -1014,52 +1017,35 @@ function onPhase2Dialog(_ID)
 	local d3 = {}
 	local d4 = {}
 
-    local _Talker = "Adriana Stahl"
-    local _TalkerColor = MissionUT.getDialogTalkerColor1()
-	local _TextColor = MissionUT.getDialogTextColor1()
-	
 	local _Player = Player()
 	local _PlayerRank = _Player:getValue("_llte_cavaliers_rank")
     local _PlayerName = _Player.name
 
     --d0
     d0.text = _PlayerRank .. " " .. _PlayerName .. "! Glad to see you here!"
-    d0.talker = _Talker
-    d0.textColor = _TextColor
-	d0.talkerColor = _TalkerColor
 	d0.answers = {
 		{ answer = "So, what's the plan?", followUp = d1 }
 	}
 
 	d1.text = "We've taken the Avorion that you delivered to us and fitted it to our hyperspace drives. We'll start here, then push all the way to the barrier. Lastly, enough of our ships have to make it through this, or it's all for nothing."
-	d1.talker = _Talker
-    d1.textColor = _TextColor
-	d1.talkerColor = _TalkerColor
 	d1.followUp = d4
 
 	d4.text = "Once we reach the barrier we... just jump through it? That feels strange to say. 200 years of isolation and it's over just like that?"
-	d4.talker = _Talker
-    d4.textColor = _TextColor
-	d4.talkerColor = _TalkerColor
 	d4.answers = {
 		{ answer = "It was a lot of work to make that happen, I'll have you know.", followUp = d2 }
 	}
 
 	d2.text = "You're right. Thank you for your efforts!"
-	d2.talker = _Talker
-    d2.textColor = _TextColor
-	d2.talkerColor = _TalkerColor
 	d2.answers = {
 		{ answer = "You're welcome.", followUp = d3 }
 	}
 
 	d3.text = "We'll need a couple of minutes after each jump for our ships to recharge their hyperspace engines. We'll also transmit each jump location, so you should be able to keep up with us! Not that there was any doubt of that. Are you ready?"
-	d3.talker = _Talker
-    d3.textColor = _TextColor
-	d3.talkerColor = _TalkerColor
 	d3.answers = {
 		{ answer = "I'm ready. Let's do this.", onSelect = "onPhase2DialogEnd" }
 	}
+
+	ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4}, "Adriana Stahl", MissionUT.getDialogTalkerColor1(), MissionUT.getDialogTextColor1())
 
 	ScriptUI(_ID):interactShowDialog(d0, false)
 end
@@ -1073,31 +1059,20 @@ function onPhase3Dialog(_ID)
     local d1 = {}
     local d2 = {}
 
-    local _Talker = "Adriana Stahl"
-    local _TalkerColor = MissionUT.getDialogTalkerColor1()
-    local _TextColor = MissionUT.getDialogTextColor1()
-
     --d0
     d0.text = "That was strange. It barely even counted as an attack. What is going on?"
-    d0.talker = _Talker
-    d0.textColor = _TextColor
-    d0.talkerColor = _TalkerColor
     d0.answers = {
 		{ answer = "Scouts, maybe?", followUp = d1 },
         { answer = "It's probably nothing to worry about.", followUp = d2 }
     }
     --d1
     d1.text = "Maybe. I don't like this. We'll be jumping to the next sector in two minutes. Stay alert."
-    d1.talker = _Talker
-    d1.textColor = _TextColor
-    d1.talkerColor = _TalkerColor
     d1.onEnd = "onPhase3DialogEnd"
-    --d1
+    --d2
     d2.text = "... Maybe. I don't like this. It doesn't make any sense - they must be up to something. We'll be jumping to the next sector in two minutes. Keep your eyes open."
-    d2.talker = _Talker
-    d2.textColor = _TextColor
-    d2.talkerColor = _TalkerColor
     d2.onEnd = "onPhase3DialogEnd"
+
+	ESCCUtil.setTalkerTextColors({d0, d1, d2}, "Adriana Stahl", MissionUT.getDialogTalkerColor1(), MissionUT.getDialogTextColor1())
 
     ScriptUI(_ID):interactShowDialog(d0, false)
 end
@@ -1113,44 +1088,26 @@ function onPhase4Dialog2(_ID)
 	local d3 = {}
 	local d4 = {}
 
-    local _Talker = "Adriana Stahl"
-    local _TalkerColor = MissionUT.getDialogTalkerColor1()
-	local _TextColor = MissionUT.getDialogTextColor1()
-	
 	local _Player = Player()
 	local _PlayerRank = _Player:getValue("_llte_cavaliers_rank")
-    local _PlayerName = _Player.name
 
     --d0
     d0.text = "That ship was incredibly powerful. I've never seen its like before."
-    d0.talker = _Talker
-    d0.textColor = _TextColor
-	d0.talkerColor = _TalkerColor
 	d0.followUp = d1
 	
 	d1.text = "It's a shame. Just think of what they could have done with it. Instead, they threw their lives away to try and kill us."
-	d1.talker = _Talker
-	d1.textColor = _TextColor
-	d1.talkerColor = _TalkerColor
 	d1.followUp = d2
 
 	d2.text = "I keep thinking about what they said about the galactic order. As long as people feel like they've been abandoned, there will always be pirates, won't there?"
-	d2.talker = _Talker
-	d2.textColor = _TextColor
-	d2.talkerColor = _TalkerColor
 	d2.followUp = d3
 
 	d3.text = "Perhaps... destroying pirates isn't the only way to keep the peace. Maybe there's more that we could do."
-	d3.talker = _Talker
-	d3.textColor = _TextColor
-	d3.talkerColor = _TalkerColor
 	d3.followUp = d4
 
-	d4.text = "I'll have to think about it. Regardless, the Xsotan are still a threat. Let's keep moving, " .. _PlayerRank .. "."
-	d4.talker = _Talker
-	d4.textColor = _TextColor
-	d4.talkerColor = _TalkerColor
+	d4.text = "I'll have to think about it. Regardless, the Xsotan are still a threat. Let's keep moving, ${_PLAYERRANK}." % { _PLAYERRANK = _PlayerRank }
     d4.onEnd = "onPhase4Dialog2End"
+
+	ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4}, "Adriana Stahl", MissionUT.getDialogTalkerColor1(), MissionUT.getDialogTextColor1())
 
 	ScriptUI(_ID):interactShowDialog(d0, false)
 end
@@ -1165,24 +1122,14 @@ function onPhase5Dialog1(_ID)
 	local d2 = {}
 	local d3 = {}
 
-	local _Talker = "Adriana Stahl"
-	local _TalkerColor = MissionUT.getDialogTalkerColor1()
-	local _TextColor = MissionUT.getDialogTextColor1()
-
     --d0
     d0.text = "So, this is the galactic core..."
-    d0.talker = _Talker
-    d0.textColor = _TextColor
-    d0.talkerColor = _TalkerColor
     d0.answers = {
 		{ answer = "You sound disappointed.", followUp = d1 }
 	}
 
 	--d1
 	d1.text = "Oh, I was just... expecting it to be different, somehow?"
-	d1.talker = _Talker
-    d1.textColor = _TextColor
-	d1.talkerColor = _TalkerColor
 	d1.answers = {
 		{ answer = "You haven't been here for long. Give it some time.", followUp = d2 },
 		{ answer = "There are a lot more Xsotan here, and they are aggressive.", followUp = d3 }
@@ -1190,19 +1137,15 @@ function onPhase5Dialog1(_ID)
 
 	--d2
 	d2.text = "You're right, of course. Is there anything that we should be on the lookout for?"
-	d2.talker = _Talker
-    d2.textColor = _TextColor
-	d2.talkerColor = _TalkerColor
 	d2.answers = {
 		{ answer = "There are a lot more Xsotan here, and they are aggressive.", followUp = d3 }
 	}
 
 	--d3
 	d3.text = "That would worry anyone else, but that's what we're here for! We'll destroy them just like the pirates."
-	d3.talker = _Talker
-    d3.textColor = _TextColor
-	d3.talkerColor = _TalkerColor
 	d3.onEnd = "onPhase5Dialog1End"
+
+	ESCCUtil.setTalkerTextColors({d0, d1, d2, d3}, "Adriana Stahl", MissionUT.getDialogTalkerColor1(), MissionUT.getDialogTextColor1())
 
 	local _Entities = {Sector():getEntitiesByScriptValue("_llte_empressblade")}
 
@@ -1218,32 +1161,21 @@ function onPhase5Dialog2(_ID)
 	local d1 = {}
 	local d2 = {}
 
-    local _Talker = "Adriana Stahl"
-    local _TalkerColor = MissionUT.getDialogTalkerColor1()
-    local _TextColor = MissionUT.getDialogTextColor1()
-
     --d0
     d0.text = "That was intense! Do the Xsotan always do this inside the barrier?"
-    d0.talker = _Talker
-    d0.textColor = _TextColor
-	d0.talkerColor = _TalkerColor
 	d0.answers = {
 		{ answer = "Not always. This is unusual.", followUp = d1 }
 	}
 
 	d1.text = "Interesting... I wonder if..."
-	d1.talker = _Talker
-    d1.textColor = _TextColor
-	d1.talkerColor = _TalkerColor
 	d1.answers = {
 		{ answer = "Wonder if what?", followUp = d2 }
 	}
 
 	d2.text = "We'll get to that shortly! I'd like to move on from here just in case the Xsotan decide to attack again."
-	d2.talker = _Talker
-    d2.textColor = _TextColor
-	d2.talkerColor = _TalkerColor
 	d2.onEnd = "onPhase5Dialog2End"
+
+	ESCCUtil.setTalkerTextColors({d0, d1, d2}, "Adriana Stahl", MissionUT.getDialogTalkerColor1(), MissionUT.getDialogTextColor1())
 
 	ScriptUI(_ID):interactShowDialog(d0, false)
 end
@@ -1258,40 +1190,26 @@ function onPhase6Dialog(_ID, _X, _Y)
 	local d2 = {}
 	local d3 = {}
 
-    local _Talker = "Adriana Stahl"
-    local _TalkerColor = MissionUT.getDialogTalkerColor1()
-    local _TextColor = MissionUT.getDialogTextColor1()
-
     --d0
     d0.text = "Before we jumped away from the sector where the Xsotan attacked us, we picked up some strange signals in a nearby sector. I wonder if it had to do with why we were attacked?"
-    d0.talker = _Talker
-    d0.textColor = _TextColor
-    d0.talkerColor = _TalkerColor
 	d0.answers = {
 		{ answer = "Possibly. What of it?", followUp = d1 }
 	}
 	
 	d1.text = "Whatever is causing those signals... I'd like to investgate it! If we could recover what's causing them, we might be able to figure out how to use it against the Xsotan."
-	d1.talker = _Talker
-    d1.textColor = _TextColor
-    d1.talkerColor = _TalkerColor
 	d1.answers = { 
 		{ answer = "And you want me to recover it, don't you?", followUp = d2 }
 	}
 	
 	d2.text = "It would be easier that way. We need to repair, rearm, and consolidate our base of operations here. We would also be able to provide a point for you to retreat to if you ran into trouble."
-	d2.talker = _Talker
-    d2.textColor = _TextColor
-	d2.talkerColor = _TalkerColor
 	d2.answers = {
 		{ answer = "That makes sense. Where am I heading?", followUp = d3 }
 	}
 	
 	d3.text = "Whatever is causing the signals should be in (" .. _X .. ":" .. _Y .. ")! Head there and investigate it. Make sure to send us the telemetry."
-	d3.talker = _Talker
-    d3.textColor = _TextColor
-	d3.talkerColor = _TalkerColor
 	d3.onEnd = "onPhase6DialogEnd"
+
+	ESCCUtil.setTalkerTextColors({d0, d1, d2, d3}, "Adriana Stahl", MissionUT.getDialogTalkerColor1(), MissionUT.getDialogTextColor1())
 
 	ScriptUI(_ID):interactShowDialog(d0, false)
 end
@@ -1305,32 +1223,20 @@ function onPhase8Dialog(_ID)
 	local d1 = {}
 	local d2 = {}
 
-    local _Talker = "Adriana Stahl"
-    local _TalkerColor = MissionUT.getDialogTalkerColor1()
-	local _TextColor = MissionUT.getDialogTextColor1()
-	
 	local _Player = Player()
 	local _PlayerRank = _Player:getValue("_llte_cavaliers_rank")
-    local _PlayerName = _Player.name
 
     --d0
-    d0.text = "Hello " .. _PlayerRank .. "! We've had some time to figure out what is going on with those signals. They were coming from a strange artifact that we found embedded in the ship."
-    d0.talker = _Talker
-    d0.textColor = _TextColor
-	d0.talkerColor = _TalkerColor
+    d0.text = "Hello ${_PLAYERRANK}! We've had some time to figure out what is going on with those signals. They were coming from a strange artifact that we found embedded in the ship." % { _PLAYERRANK = _PlayerRank }
 	d0.followUp = d1
 
 	d1.text = "I ordered a salvage team to cut the artifact out of the hull of the ship, and we've moved it aboard the Blade of the Empress. I'll have our research teams start looking at it immediately."
-	d1.talker = _Talker
-    d1.textColor = _TextColor
-	d1.talkerColor = _TalkerColor
 	d1.followUp = d2
 
 	d2.text = "Once we figure out some more about the artifact, I'll contact you with the details. Until then, take care!"
-	d2.talker = _Talker
-	d2.textColor = _TextColor
-	d2.talkerColor = _TalkerColor
 	d2.onEnd = "onPhase8DialogEnd"
+
+	ESCCUtil.setTalkerTextColors({d0, d1, d2}, "Adriana Stahl", MissionUT.getDialogTalkerColor1(), MissionUT.getDialogTextColor1())
 
 	ScriptUI(_ID):interactShowDialog(d0, false)
 end	

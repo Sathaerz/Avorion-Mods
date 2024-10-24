@@ -17,14 +17,16 @@ function create(item, rarity, allyIndex)
     item.stackable = false
     item.depleteOnUse = true
     item.name = "Cavaliers Torpedo Loader Beacon"%_t
-    item.price = 1200000
+    item.price = 1600000
     item.icon = "data/textures/icons/missile-pod.png"
+    item.iconColor = rarity.color
     item.rarity = rarity
     item:setValue("subtype", "TorpedoLoaderCaller")
     item:setValue("factionIndex", allyIndex)
 
     local tooltip = Tooltip()
     tooltip.icon = item.icon
+    tooltip.rarity = rarity
 
     local title = "Cavaliers Torpedo Loader Beacon"%_t
 
@@ -189,7 +191,15 @@ function activate(item)
     ship:addScriptOnce("data/scripts/entity/merchants/cavalierstorpedoloader.lua")
     ship:addScript("data/scripts/entity/merchants/travellingmerchant.lua")
     ship:addScriptOnce("deleteonplayersleft.lua")
-    ship:addScript("ai/withdrawatlowhealth.lua", 0.1, 1, 1, 0.02)
+
+    local _WithdrawData = {
+        _Threshold = 0.1,
+        _MinTime = 1,
+        _MaxTime = 1,
+        _Invincibility = 0.02
+    }
+
+    ship:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
     ship:setValue("_llte_cavaliers_torpedo_loader", true)
     ship.name = LLTEUtil.getFreighterName()
 

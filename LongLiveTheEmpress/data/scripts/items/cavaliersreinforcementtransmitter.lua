@@ -23,12 +23,14 @@ function create(item, rarity, allyIndex)
     item.name = "Cavaliers Reinforcements Transmitter"
     item.price = 12000000
     item.icon = "data/textures/icons/firing-ship.png"
+    item.iconColor = rarity.color
     item.rarity = rarity
     item:setValue("subtype", "ReinforcementsTransmitter")
     item:setValue("factionIndex", allyIndex)
 
     local tooltip = Tooltip()
     tooltip.icon = item.icon
+    tooltip.rarity = rarity
 
     local title = "Cavaliers Reinforcements Transmitter"
 
@@ -186,9 +188,13 @@ function activate(item)
             end
         end
 
+        local _WithdrawData = {
+            _Threshold = 0.15
+        }
+
         ship.title = "Cavaliers " .. ship.title
         MissionUT.deleteOnPlayersLeft(ship)
-        ship:addScript("ai/withdrawatlowhealth.lua", 0.15)
+        ship:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
         ship:removeScript("antismuggle.lua")
         LLTEUtil.rebuildShipWeapons(ship, _Player:getValue("_llte_cavaliers_strength"))
         ship:setValue("npc_chatter", nil)

@@ -33,7 +33,6 @@ local PirateGenerator = include("pirategenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local ShipGenerator = include("shipgenerator")
 local AsyncShipGenerator = include ("asyncshipgenerator")
-local SectorSpecifics = include ("sectorspecifics")
 local Balancing = include ("galaxy")
 local ShipUtility = include ("shiputility")
 local SpawnUtility = include ("spawnutility")
@@ -651,9 +650,14 @@ function getNextLocation(_FirstLocation)
         --Get a sector that's very close to the outer edge of the barrier.
         mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
         local _Nx, _Ny = ESCCUtil.getPosOnRing(x, y, Balancing.BlockRingMax + 2)
-        target.x, target.y = MissionUT.getSector(math.floor(_Nx), math.floor(_Ny), 3, 6, false, false, false, false, false)
+        target.x, target.y = MissionUT.getEmptySector(_Nx, _Ny, 3, 6, false)
+        local _safetyBreakout = 0
+        while target.x == x and target.y == y and _safetyBreakout <= 100 do
+            target.x, target.y = MissionUT.getEmptySector(_Nx,_Ny, 3, 6, false)
+            _safetyBreakout = _safetyBreakout + 1
+        end
     else
-        target.x, target.y = MissionUT.getSector(x, y, 5, 12, false, false, false, false, false)
+        target.x, target.y = MissionUT.getEmptySector(x, y, 5, 12, false)
     end
 
     mission.Log(_MethodName, "X coordinate of next location is : " .. tostring(target.x) .. " Y coordinate of next location is : " .. tostring(target.y))

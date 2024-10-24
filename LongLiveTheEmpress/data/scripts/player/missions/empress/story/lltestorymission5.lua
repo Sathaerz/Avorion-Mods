@@ -34,13 +34,8 @@ ESCCUtil = include("esccutil")
 LLTEUtil = include("llteutil")
 
 local PirateGenerator = include("pirategenerator")
-local AsyncPirateGenerator = include ("asyncpirategenerator")
 local AsyncShipGenerator = include ("asyncshipgenerator")
-local SectorSpecifics = include ("sectorspecifics")
-local Balancing = include ("galaxy")
-local SpawnUtility = include ("spawnutility")
 local Xsotan = include("story/xsotan")
-local Placer = include("placer")
 
 mission._Debug = 0
 mission._Name = "Long Live The Empress"
@@ -388,7 +383,7 @@ function getNextLocation(_Location)
 	}
 
 	local _Nx, _Ny = ESCCUtil.getPosOnRing(x, y, _NxTable[_Location]._RingPos)
-	target.x, target.y = MissionUT.getSector(math.floor(_Nx), math.floor(_Ny), 1, 4, false, false, false, false, _NxTable[_Location]._InBarrier)
+	target.x, target.y = MissionUT.getSector(_Nx, _Ny, 1, 4, false, false, false, false, _NxTable[_Location]._InBarrier)
 
 	if target == nil or target.x == nil or target.y == nil then
 		print("Could not get a location - enacting failsafe")
@@ -424,7 +419,12 @@ function onCavaliersFinished(_Generated)
         _S.title = "Cavaliers " .. _S.title
         _S:setValue("npc_chatter", nil)
         _S:setValue("is_cavaliers", true)
-        _S:addScript("ai/withdrawatlowhealth.lua", 0.15)
+
+        local _WithdrawData = {
+            _Threshold = 0.15
+        }
+
+        _S:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
         _S:removeScript("antismuggle.lua")
         LLTEUtil.rebuildShipWeapons(_S, Player():getValue("_llte_cavaliers_strength"))
         

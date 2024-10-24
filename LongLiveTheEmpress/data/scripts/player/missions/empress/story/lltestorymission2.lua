@@ -43,10 +43,8 @@ local SectorGenerator = include ("SectorGenerator")
 local PirateGenerator = include("pirategenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local AsyncShipGenerator = include ("asyncshipgenerator")
-local SectorSpecifics = include ("sectorspecifics")
 local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
-local Placer = include("placer")
 
 mission._Debug = 0
 mission._Name = "The Unforgiving Blade"
@@ -647,7 +645,12 @@ function onCavaliersFinished(_Generated, _StartPassive)
         _S.title = "Cavaliers " .. _S.title
         _S:setValue("npc_chatter", nil)
         _S:setValue("is_cavaliers", true)
-        _S:addScript("ai/withdrawatlowhealth.lua", 0.30)
+
+        local _WithdrawData = {
+            _Threshold = 0.3
+        }
+
+        _S:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
         _S:removeScript("antismuggle.lua")
         LLTEUtil.rebuildShipWeapons(_S, Player():getValue("_llte_cavaliers_strength"))
         --Sometimes you get a bad seed and get really frail cavaliers. This should help counteract that.
@@ -702,7 +705,7 @@ function getNextLocation(_FirstLocation)
     if _FirstLocation then
         --Get a sector that's very close to the outer edge of the barrier.
         local _Nx, _Ny = ESCCUtil.getPosOnRing(x, y, Balancing.BlockRingMax + 2)
-        target.x, target.y = MissionUT.getSector(math.floor(_Nx), math.floor(_Ny), 3, 6, false, false, false, false, false)
+        target.x, target.y = MissionUT.getSector(_Nx, _Ny, 3, 6, false, false, false, false, false)
     else
         target.x, target.y = MissionUT.getSector(x, y, 5, 10, false, false, false, false, false)
     end
@@ -764,7 +767,10 @@ function onMarkShips()
                 --Red at 40%
                 _MarkColor = ESCCUtil.getSaneColor(255, 0, 0)
             end
-            renderer:renderEntityTargeter(_S, _MarkColor, 1.0)
+
+            local _, size = renderer:calculateEntityTargeter(_S)
+
+            renderer:renderEntityTargeter(_S, _MarkColor, size * 1.25)
             renderer:renderEntityArrow(_S, 30, 10, 100, _MarkColor)
             renderer:renderEntityArrow(_S, 30, 10, 100, _MarkColor, 0.13)
             renderer:renderEntityArrow(_S, 30, 30, 100, _MarkColor, 0.13)

@@ -1442,13 +1442,17 @@ function LLTEUtil.spawnBladeOfEmpress(_DeleteOnLeft)
 
     _EmpressBlade.crew = _EmpressBlade.idealCrew
     _EmpressBlade:addScript("icon.lua", "data/textures/icons/pixel/cavaliers.png")
-    _EmpressBlade:addScript("ai/withdrawatlowhealth.lua", 0.15)
+
+    local _WithdrawData = {
+        _Threshold = 0.15,
+        _Invincibility = 0.02,
+        _WithdrawMessage = "I'll be back!"
+    }
+
+    _EmpressBlade:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
     _EmpressBlade:setValue("_llte_empressblade", true)
     _EmpressBlade:setValue("is_cavaliers", true)
     _EmpressBlade.damageMultiplier = (_EmpressBlade.damageMultiplier or 1) * 5 * _Amp
-    
-    local _Durability = Durability(_EmpressBlade)
-    _Durability.invincibility = 0.02
 
     Boarding(_EmpressBlade).boardable = false
     _EmpressBlade.dockable = false
