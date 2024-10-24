@@ -516,7 +516,7 @@ function onBetaBackgroundPiratesFinished(_Generated)
     _TorpSlammerValues._ForwardAdjustFactor = 2
     _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
     _TorpSlammerValues._TargetPriority = 2
-    _TorpSlammerValues._TargetScriptValue = "_lotw_mission4_defendobjective"
+    _TorpSlammerValues._TargetTag = "_lotw_mission4_defendobjective"
 
     local _DefenseObjectives = {Sector():getEntitiesByScriptValue("_lotw_mission4_defendobjective")}
     local _DefenseObjective = _DefenseObjectives[1]
