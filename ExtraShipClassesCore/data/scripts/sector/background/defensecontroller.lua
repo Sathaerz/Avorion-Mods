@@ -49,6 +49,7 @@ self._Data = {}
         _InvincibleOnForced*        ==  If this is set to true, the _DefenseLeader entity will be set to be immune to damage while ships from the forced spawn wave are around.
         _FirstWaveSpawned*          ==  This will be set to true once the first wave has spawned.
         _ForcedDefenderDamageScale* ==  All forcibly spawned defenders (see _ForceWaveAtThreshold / _InvincibleOnForced, etc.) will have their damage multiplier multiplied by this value.
+        _AllDefenderDamageScale*    ==  Multiplies the damage of all ships spawned by this amount. Defaults to 1.
         _IsPirate                   ==  Whether or not to use faction ships or pirate ships.
         _FactionId                  ==  The faction ID of the faction that the ships will spawn for. Important for picking a new defense leader, and for 
         _PirateLevel                ==  The pirate level of the pirates that will spawn. Important for setting the async pirate generator.
@@ -176,6 +177,7 @@ function DefenseController.initialize(_Values)
             self._Data._FirstWaveSpawned = self._Data._FirstWaveSpawned or false
             self._Data._InvincibleOnForced = self._Data._InvincibleOnForced or false
             self._Data._ForcedDefenderDamageScale = self._Data._ForcedDefenderDamageScale or 1
+            self._Data._AllDefenderDamageScale = self._Data._AllDefenderDamageScale or 1
             self._Data._CanBroadcast = true
             self._Data._MaxDefendersSpawn = self._Data._MaxDefendersSpawn or self._Data._MaxDefenders
             self._Data._UseFixedDanger = self._Data._UseFixedDanger or false
@@ -544,6 +546,7 @@ function DefenseController.onNextWaveGenerated(_Generated)
         end
 
         _Defender.damageMultiplier = _Defender.damageMultiplier * _Factor
+        _Defender.damageMultiplier = _Defender.damageMultiplier * self._Data._AllDefenderDamageScale
         if self._ForcingWave then
             _Defender.damageMultiplier = _Defender.damageMultiplier * self._Data._ForcedDefenderDamageScale
         end
@@ -551,7 +554,10 @@ function DefenseController.onNextWaveGenerated(_Generated)
         --Set some final values / scripts.
         if self._Data._AutoWithdrawDefenders then
             self.Log(_MethodName, "Adding AI withdraw script at " .. tostring(self._Data._DefenderHPThreshold) .. " threshold.")
-            _Defender:addScript("ai/withdrawatlowhealth.lua", self._Data._DefenderHPThreshold)
+            local _WithdrawData = {
+                _Threshold = self._Data._DefenderHPThreshold
+            }
+            _Defender:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
         end
         if self._Data._DeleteDefendersOnLeave then
             MissionUT.deleteOnPlayersLeft(_Defender)

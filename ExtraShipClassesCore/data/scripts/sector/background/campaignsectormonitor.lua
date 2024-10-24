@@ -50,11 +50,17 @@ function CampaignSectorMonitor.clearMissionAssets(_DeleteOtherAssets, _DeleteEve
         self.Log(_MethodName, "Deleting all other non player-owned assets")
         local _EntityTypes = { EntityType.Ship, EntityType.Station, EntityType.Torpedo, EntityType.Fighter, EntityType.Asteroid }
         if _DeleteEverything then
-            self.Log(_MethodName, "Adding non-permanent entities to deletion table.")
+            self.Log(_MethodName, "Adding non-permanent entities to deletion table.", false)
             table.insert(_EntityTypes, EntityType.Wreckage)
             table.insert(_EntityTypes, EntityType.Unknown)
             table.insert(_EntityTypes, EntityType.Other)
             table.insert(_EntityTypes, EntityType.Loot)
+            table.insert(_EntityTypes, EntityType.None)
+            table.insert(_EntityTypes, EntityType.Drone)
+            table.insert(_EntityTypes, EntityType.Turret)
+            table.insert(_EntityTypes, EntityType.Anomaly)
+            table.insert(_EntityTypes, EntityType.WormHole)
+            table.insert(_EntityTypes, EntityType.Container)
         end
         for _, _EntityType in pairs(_EntityTypes) do
             for _, _En in pairs({_Sector:getEntitiesByType(_EntityType)}) do

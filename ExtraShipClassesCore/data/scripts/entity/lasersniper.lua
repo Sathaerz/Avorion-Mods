@@ -1,7 +1,7 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
-ESCCUtil = include("esccutil")
+include ("randomext")
 
 -- namespace LaserSniper
 LaserSniper = {}
@@ -25,7 +25,7 @@ self._LaserData._TargetPoint = nil
 
 function LaserSniper.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Laser Sniper v65 script on entity.", 1)
+    self.Log(_MethodName, "Initializing Laser Sniper v66 script on entity.", 1)
 
     self._Data = _Values or {}
 
@@ -38,7 +38,7 @@ function LaserSniper.initialize(_Values)
     --Values the player isn't meant to adjust.
     self._Data._TargetLaserActive = false
     self._Data._TargetBeamActiveTime = 0
-    self._Data._MaxBeamActiveTime = 2
+    self._Data._MaxBeamActiveTime = 2 --How long the beam is active for.
     self._Data._BeamActiveTime = 0
     self._Data._ShotLaserActive = false
     self._Data._BeamMisses = 0
@@ -53,8 +53,8 @@ function LaserSniper.initialize(_Values)
     self._Data._MaxRange = self._Data._MaxRange or 20000
     self._Data._DamagePerFrame = self._Data._DamagePerFrame or 155000
     self._Data._ShieldPen = self._Data._ShieldPen or false
-    self._Data._TargetCycle = self._Data._TargetCycle or 10
-    self._Data._TargetingTime = self._Data._TargetingTime or 1.75
+    self._Data._TargetCycle = self._Data._TargetCycle or 10 --Starts targeting when the firing cycle is greater than this value - set to adjust amount of time between shots.
+    self._Data._TargetingTime = self._Data._TargetingTime or 1.75 --Amount of time it takes to target the laser.
     self._Data._CreepingBeam = self._Data._CreepingBeam or true
     self._Data._CreepingBeamSpeed = self._Data._CreepingBeamSpeed  or 0.75
     self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
@@ -63,8 +63,21 @@ function LaserSniper.initialize(_Values)
     self._Data._IncreaseDOTCycle = self._Data._IncreaseDOTCycle or 0
     self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
     self._Data._TimeToActive = self._Data._TimeToActive or 0
+    --TARGET PRIORITIES:
+    -- 1 - Random enemy - must be ship or station.
+    -- 2 - Any non-Xsotan ship or station.
+    -- 3 - Any entity with a specified scriptvalue - chosen by self._Data._TargetTag - for example, is_pirate would target any enemies with is_pirate set.
+    -- 4 - The target player's current ship. Set with _pindex. Works similarly to TorpedoSlammer's priority 5.
     self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
     --Target priority 3 goes off of self._Data._TargetTag which can be nil - it is deliberately not set here, I did not miss it.
+
+    --Fix the target priority - if the ship isn't Xsotan make it use 1 instead of 2.
+    if self._Data._TargetPriority == 2 and not self_is_xsotan then
+        self._Data._TargetPriority = 1 --Just use 1.
+    end
+    if self._Data._TargetPriority == 4 and self._Data._pindex == nil then
+        self._Data._TargetPriority = 1
+    end
 
     Entity():registerCallback("onDestroyed", "onDestroyed")
 end
@@ -215,50 +228,74 @@ end
 function LaserSniper.pickNewTarget()
     local _MethodName = "Pick New Target"
     local _Factionidx = Entity().factionIndex
-    local _Rgen = ESCCUtil.getRand()
+    local _TargetPriority = self._Data._TargetPriority
 
     --Pick a random target for now. I had this done by highest firepower, but I think it made the sniper too predictable.
     --Now remodeled to make it harder for my dumb ass to put an infinite loop in and explode my computer :3
     local _Sector = Sector()
-    local _Enemies = {_Sector:getEnemies(_Factionidx)} 
+    local _RawEnemies = {_Sector:getEnemies(_Factionidx)} 
+    local _Enemies = {}
+    for _, _RawEnemy in pairs(_RawEnemies) do
+        if _RawEnemy.type == EntityType.Ship or _RawEnemy.type == EntityType.Station then
+           table.insert(_Enemies, _RawEnemy) 
+        end
+    end
+
     local _TargetCandidates = {}
 
-    if self._Data._TargetPriority == 1 then
-        for _, _Candidate in pairs(_Enemies) do
-            table.insert(_TargetCandidates, _Candidate)
-        end
-    elseif self._Data._TargetPriority == 2 then
-        local _Ships = {_Sector:getEntitiesByType(EntityType.Ship)}
-        local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
-
-        for _, _Candidate in pairs(_Ships) do
-            if not _Candidate:getValue("is_xsotan") then
+    local _TargetPriorityFunctions = {
+        function() --1 - pick an enemy at random.
+            for _, _Candidate in pairs(_Enemies) do
                 table.insert(_TargetCandidates, _Candidate)
             end
-        end
+        end,
+        function() --2 - pick a random non-Xostan
+            local _Ships = {_Sector:getEntitiesByType(EntityType.Ship)}
+            local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
 
-        for _, _Candidate in pairs(_Stations) do
-            if not _Candidate:getValue("is_xsotan") then
-                table.insert(_TargetCandidates, _Candidate)
+            for _, _Candidate in pairs(_Ships) do
+                if not _Candidate:getValue("is_xsotan") then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
             end
-        end
-    elseif self._Data._TargetPriority == 3 then
-        if self._Data._TargetTag then
+
+            for _, _Candidate in pairs(_Stations) do
+                if not _Candidate:getValue("is_xsotan") then
+                table.insert(_TargetCandidates, _Candidate)
+                end
+            end
+        end,
+        function() --3 - pick enemies with a specific script value.
             local _Entities = {_Sector:getEntitiesByScriptValue(self._Data._TargetTag)}
             for _, _Candidate in pairs(_Entities) do
                 table.insert(_TargetCandidates, _Candidate)
             end
+        end,
+        function() --4 - pick the player's current ship. Similar to TorpedoSlammer's priority 5
+            if self._Data._pindex then
+                local _PlayerTarget = Player(self._Data._pindex)
+                local _PlayerTargetShip = Entity(_PlayerTarget.craft.id)
+
+                if _PlayerTargetShip and valid(_PlayerTargetShip) then
+                    table.insert(_TargetCandidates, _PlayerTargetShip)
+                end
+            end
         end
-    end
+    }
+
+     _TargetPriorityFunctions[_TargetPriority]()
 
     if #_TargetCandidates > 0 then
+        shuffle(random(), _TargetCandidates)
         self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
-        return _TargetCandidates[_Rgen:getInt(1, #_TargetCandidates)]
+        return _TargetCandidates[1]
     else
         self.Log(_MethodName, "WARNING - Could not find any target candidates.", 1)
         return nil
     end
 end
+
+--region #SERVER => EXTERNAL ADJ METHODS
 
 function LaserSniper.resetTimeToActive(_Time)
     self._Data._TimeToActive = _Time
@@ -268,7 +305,7 @@ function LaserSniper.adjustDamage(_dmg)
     local _MethodName = "Adjusting Damage"
     self.Log(_MethodName, "Adjusting damage from external call. Setting to " .. tostring(_dmg) .. " per update", 1)
 
-    self._Data._DamagePErFrame = _dmg
+    self._Data._DamagePerFrame = _dmg
 end
 
 function LaserSniper.adjustTargetPrio(_prio, _tag)
@@ -280,6 +317,8 @@ function LaserSniper.adjustTargetPrio(_prio, _tag)
     --Forcibly reset the target so another is picked in line w/ the new priority.
     self._Data._CurrentTarget = nil
 end
+
+--endregion
 
 --region #CLIENT CALLS
 

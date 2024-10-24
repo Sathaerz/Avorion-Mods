@@ -122,12 +122,14 @@ function Xsotan.createLonginus(_position, _volumeFactor)
 
     local _LaserDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 125
 
-    local _LaserSniperValues = {}
-    _LaserSniperValues._DamagePerFrame = _LaserDamage
-	_LaserSniperValues._UseEntityDamageMult = true
-    _LaserSniperValues._TargetPriority = 2 --Random non-xsotan.
-    _LaserSniperValues._TargetingTime = 2.25 --Take longer than normal to target.
-    
+    local _LaserSniperValues = { --#LONGINUS_SNIPER
+        _DamagePerFrame = _LaserDamage,
+        _UseEntityDamageMult = true,
+        _TargetPriority = 2, --Random non-xsotan.
+        _TargetCycle = 15,
+        _TargetingTime = 2.25 --Take longer than normal to target.
+    }
+
     _XsotanShip:addScriptOnce("lasersniper.lua", _LaserSniperValues)
 
     return _XsotanShip

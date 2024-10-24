@@ -1,3 +1,5 @@
+--region #GENERAL PURPOSE
+
 function ShipUtility.addScalableArtilleryEquipment(_Craft, _TurretFactor, _TorpedoFactor, _ResetNameAndIcon)
     local weaponTypes = ArtilleryWeapons
     local torpedoTypes = NormalTorpedoes
@@ -16,6 +18,63 @@ function ShipUtility.addScalableArtilleryEquipment(_Craft, _TurretFactor, _Torpe
         _Craft:addScript("icon.lua", "data/textures/icons/pixel/artillery.png")
     end
 end
+
+function ShipUtility.addSpecificScalableWeapon(_Craft, _WeaponTypes, _TurretFactor, _TorpedoFactor, _TurretRange)
+    local weaponTypes = _WeaponTypes or AttackWeapons
+    local torpedoTypes = NormalTorpedoes
+
+    _TurretFactor = _TurretFactor or 1.5
+    _TorpedoFactor = _TorpedoFactor or 1.0
+
+    --Parameters for this - Craft / Weapon Types / Torpedo Types / Turret Factor / Torpedo Factor / Turret Range
+    --Most of these are pass through.
+    --There are a lot of different possibilities here - no need to reset the type / icon.
+    ShipUtility.addSpecializedEquipment(_Craft, weaponTypes, torpedoTypes, _TurretFactor, _TorpedoFactor, _TurretRange)
+end
+
+--endregion
+
+--region #HORIZON BOSSES
+
+function ShipUtility.addHorizonPrototypePlasmaGuns(_Craft, _TurretFactor)
+    --Adds a battery of plasma mortars that are somewhat dangerous to shields, but not very dangerous to hull.
+    local _Sector = Sector()
+    local _X, _Y = _Sector:getCoordinates()
+    local _Seed = SectorSeed(_X, _Y)
+
+    local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
+    local _Generator = SectorTurretGenerator(_Seed)
+    local _BaseTurretGen = include("turretgenerator")
+
+    local _Rgen = random()
+
+    local _PlasmaTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.PlasmaGun, nil)
+    _PlasmaTurret.coaxial = false
+    local _NumWeapons = _PlasmaTurret.numWeapons
+    local _PlasmaWeapons = {_PlasmaTurret:getWeapons()}
+    _PlasmaTurret:clearWeapons()
+
+    local _BaseFireRate = _Rgen:getFloat(0.4, 0.6)
+    local _CoolingTime = _Rgen:getInt(8, 10)
+    local _ShootingTime = _Rgen:getInt(30, 35)
+    local _ShotRange = _Rgen:getFloat(1100, 1500)
+
+    for _, _W in pairs(_PlasmaWeapons) do
+        _W.reach = _ShotRange
+        _W.fireRate = _BaseFireRate / _NumWeapons
+        _W.blength = _W.reach
+        _W.psize = 8
+        _W.shieldDamageMultiplier = _W.shieldDamageMultiplier * 1.25
+
+        _PlasmaTurret:addWeapon(_W)
+    end
+
+    _BaseTurretGen.createBatteryChargeCooling(_PlasmaTurret, _CoolingTime, _ShootingTime)
+
+    ShipUtility.addTurretsToCraft(_Craft, _PlasmaTurret, _TurretCount)
+end
+
+--endregion
 
 --region #GORDIAN KNOT
 
@@ -150,9 +209,6 @@ function ShipUtility.addHellcatLasers(_Craft)
     local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
     local _Generator = SectorTurretGenerator(_Seed)
 
-    local ESCCUtil = include("esccutil")
-    local _Rgen = ESCCUtil.getRand()
-
     local _LaserTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.Laser, nil)
     _LaserTurret.coaxial = false
     local _NumWeapons = _LaserTurret.numWeapons
@@ -163,7 +219,7 @@ function ShipUtility.addHellcatLasers(_Craft)
     --Yeah I have no fucking clue what's going on here. Laser damage seems to be VERY dependent on # of slots for some reason????
     --So we multiply the base damage amount by the # of slots in the turret and then divide that by the # of weapons. This should keep the
     --RNG fairly consistent and not cause WILD variances (like 700k to 7 million)
-    local _Damage = 2800 + _Rgen:getInt(100, 450) * math.max(1, _LaserTurret.slots / 1.75)
+    local _Damage = 2800 + rand:getInt(100, 450) * math.max(1, _LaserTurret.slots / 1.75)
 
     for _, _W in pairs(_LaserWeapons) do
         local hue = 182
@@ -197,8 +253,7 @@ function ShipUtility.addKatanaRailguns(_Craft)
     local _Generator = SectorTurretGenerator(_Seed)
     local _BaseTurretGen = include("turretgenerator")
 
-    local ESCCUtil = include("esccutil")
-    local _Rgen = ESCCUtil.getRand()
+    local _Rgen = random()
 
     local _RailgunTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.RailGun, nil)
     _RailgunTurret.coaxial = false
@@ -245,8 +300,7 @@ function ShipUtility.addKatanaMortars(_Craft)
     local _Generator = SectorTurretGenerator(_Seed)
     local _BaseTurretGen = include("turretgenerator")
 
-    local ESCCUtil = include("esccutil")
-    local _Rgen = ESCCUtil.getRand()
+    local _Rgen = random()
 
     local _PlasmaTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.PlasmaGun, nil)
     _PlasmaTurret.coaxial = false
@@ -273,7 +327,7 @@ function ShipUtility.addKatanaMortars(_Craft)
 
     _BaseTurretGen.createBatteryChargeCooling(_PlasmaTurret, _CoolingTime, _ShootingTime)
 
-    ShipUtility.addTurretsToCraft(_Craft, _PlasmaTurret, _TurretCount)    
+    ShipUtility.addTurretsToCraft(_Craft, _PlasmaTurret, _TurretCount)
 end
 
 function ShipUtility.addGoliathLaunchers(_Craft)
@@ -319,8 +373,7 @@ function ShipUtility.addVigShieldCannons(_Craft)
     local _TurretCount = Balancing_GetEnemySectorTurrets(_Sector:getCoordinates()) * _TurretFactor + 2
     local _Generator = SectorTurretGenerator(_Seed)
 
-    local ESCCUtil = include("esccutil")
-    local _Rgen = ESCCUtil.getRand()
+    local _Rgen = random()
 
     local _CannonTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.Cannon, nil)
     _CannonTurret.coaxial = false
@@ -354,8 +407,7 @@ function ShipUtility.addPhoenixCannons(_Craft)
     local _Generator = SectorTurretGenerator(_Seed)
     local _BaseTurretGen = include("turretgenerator")
 
-    local ESCCUtil = include("esccutil")
-    local _Rgen = ESCCUtil.getRand()
+    local _Rgen = random()
 
     local _CannonTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.Cannon, nil)
     _CannonTurret.coaxial = false
@@ -394,8 +446,7 @@ function ShipUtility.addHunterRailguns(_Craft)
     local _Generator = SectorTurretGenerator(_Seed)
     local _BaseTurretGen = include("turretgenerator")
 
-    local ESCCUtil = include("esccutil")
-    local _Rgen = ESCCUtil.getRand()
+    local _Rgen = random()
 
     local _RailgunTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.RailGun, nil)
     _RailgunTurret.coaxial = false
@@ -437,8 +488,7 @@ function ShipUtility.addHunterLightningGuns(_Craft)
     local _Generator = SectorTurretGenerator(_Seed)
     local _BaseTurretGen = include("turretgenerator")
 
-    local ESCCUtil = include("esccutil")
-    local _Rgen = ESCCUtil.getRand()
+    local _Rgen = random()
 
     local _LightningTurret = _Generator:generate(_X, _Y, 0, nil, WeaponType.LightningGun, nil)
     _LightningTurret.coaxial = false

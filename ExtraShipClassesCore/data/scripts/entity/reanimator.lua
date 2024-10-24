@@ -75,7 +75,7 @@ function Reanimator.createLaser(_From, _To)
         return
     end
 
-    local _Color = color or ColorRGB(0.8, 0.0, 0.8)
+    local _Color = ColorRGB(0.8, 0.0, 0.8)
 
     local _Sector = Sector()
     local _Laser = _Sector:createLaser(_From, _To, _Color, 16)

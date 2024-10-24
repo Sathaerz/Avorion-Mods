@@ -29,9 +29,17 @@ function runFullSectorCleanup(cleanAll)
         _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
         _Sector:removeScript("sector/background/campaignsectormonitor.lua")
     else
-        local _MX, _MY = mission.data.location.x, mission.data.location.y
-        Galaxy():loadSector(_MX, _MY)
-        invokeSectorFunction(_MX, _MY, true, "campaignsectormonitor.lua", "clearMissionAssets", true, cleanAll)
+        local cleanupFunc = function(lCleanAll)
+            local _MX, _MY = mission.data.location.x, mission.data.location.y
+            Galaxy():loadSector(_MX, _MY)
+            invokeSectorFunction(_MX, _MY, true, "campaignsectormonitor.lua", "clearMissionAssets", true, lCleanAll)
+        end
+        
+        --There are certain circumstances where we abandon the mission but the sector hasn't gotten the sectormonitor - don't cause an error in that case, but do log.
+        local status, result = pcall(cleanupFunc, cleanAll)
+        if not status then 
+            mission.Log("Cleanup", "Sector does not have campaignsectormonitor attached.", nil)
+        end
     end
 end
 
@@ -69,13 +77,14 @@ end
 --region #CLIENT / SERVER functions
 
 function mission.Log(_MethodName, _Msg, _OverrideDebug)
-    local _TempDebug = mission._Debug
-    if _OverrideDebug then mission._Debug = _OverrideDebug end
-    if mission._Debug and mission._Debug == 1 then
+    local localDebug = mission._Debug
+    if _OverrideDebug then
+        localDebug = _OverrideDebug
+    end
+    if localDebug and localDebug == 1 then
         local _Name = mission._Name or mission.title or "Mission"
         print("[" .. _Name .. "] - [" .. _MethodName .. "] - " .. _Msg)
     end
-    if _OverrideDebug then mission._Debug = _TempDebug end
 end
 
 --endregion

@@ -10,9 +10,6 @@ local self = Avenger
 self._Debug = 0
 
 self._Data = {}
-self._Data._Multiplier = nil
-self._Data._Invoked = nil
-self._Data._AllowMultiProc = nil
 
 function Avenger.initialize(_Values)
     local _MethodName = "Initialize"
@@ -104,17 +101,13 @@ end
 
 --endregion
 
---region #CLIENT / SERVER functions
+--region #LOG / SECURE / RESTORE
 
 function Avenger.Log(_MethodName, _Msg)
     if self._Debug == 1 then
         print("[Avenger] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end
-
---endregion
-
---region #SECURE / RESTORE
 
 function Avenger.secure()
     local _MethodName = "Secure"

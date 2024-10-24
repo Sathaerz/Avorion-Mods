@@ -66,6 +66,9 @@ self.RandomCalled = 0
 self._Debug = 0
 
 --If you want to just get the table to do something with it - such as adding a jammer
+
+--region #WAVE TABLES
+
 function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
     local _MethodName = "Get Standardized Spawn Table"
     --Get standard if not specified.
@@ -101,6 +104,12 @@ function ESCCUtil.getStandardTable(dangerLevel, threatLevel, _Faction)
     end
 end
 
+---Gets a standard table of ships for a wave.
+---@param _DangerLevel int Danger level of the wave table you want to get
+---@param _WaveShips int Number of ships in the wave.
+---@param _ThreatLevel string The threat level of the ships you want to spawn - goes low / standard / high
+---@param _Faction boolean Whether these are faction ships or pirate shps. Defaults to false.
+---@return table Returns a table of ship names - use for spawn[Ship]ByName, i.e. - { "Pirate", "Pirate", "Outlaw" }
 function ESCCUtil.getStandardWave(_DangerLevel, _WaveShips, _ThreatLevel, _Faction)
     local _MethodName = "Get Standard Pirate Wave"
     _ThreatLevel = _ThreatLevel or "Standard"
@@ -119,39 +128,9 @@ function ESCCUtil.getStandardWave(_DangerLevel, _WaveShips, _ThreatLevel, _Facti
     return _EnemyTable
 end
 
-function ESCCUtil.countEntitiesByValue(_Value)
-    --We know this works, and the spam messages can be quite annoying. There's no need to add debugging to this.
-    local _Entities = {Sector():getEntitiesByScriptValue(_Value)}
-    if _Entities then
-        return #_Entities
-    else
-        return 0
-    end
-end
+--endregion
 
-function ESCCUtil.getStandardTemplateBlacklist()
-    local _MethodName = "Get Standard Template Blacklist"
-    ESCCUtil.Log(_MethodName, "Beginning...")
-
-    local templateBlacklist = {
-        "sectors/asteroidshieldboss",
-        "sectors/ancientgates",
-        "sectors/containerfield",
-        "sectors/cultists",
-        "sectors/pirateasteroidfield",
-        "sectors/piratefight",
-        "sectors/piratestation",
-        "sectors/resistancecell",
-        "sectors/researchsatellite",
-        "sectors/smugglerhideout",
-        "sectors/wreckagefield",
-        "sectors/xsotanasteroids",
-        "sectors/xsotanbreeders",
-        "sectors/xsotantransformed"
-    }
-
-    return templateBlacklist
-end
+--region #MATHEMATICS
 
 function ESCCUtil.getRand()
     local _MethodName = "Get Random Number Generator"
@@ -168,30 +147,6 @@ function ESCCUtil.clampToNearest(_Value, _Clamp, _Round)
         _ClampCoefficient = math.ceil(_Value / _Clamp)
     end
     return _ClampCoefficient * _Clamp
-end
-
-function ESCCUtil.getIndex(_Table, _Element)
-    local _MethodName = "Get Index of Table"
-    if not _Table or not _Element then
-        ESCCUtil.Log(_MethodName, "Cannot get random element - either the table or the element was not provided", 1)
-        return
-    end
-    for _IDX, _VAL in pairs(_Table) do
-        if _VAL == _Element then
-            return _IDX
-        end
-    end
-    --Standard C# practice.
-    return -1 
-end
-
-function ESCCUtil.getSaneColor(_R, _G, _B)
-    --For some reason OpenGL does colors by floats which is just wack.
-    local _Rfactor = _R / 255
-    local _Gfactor = _G / 255
-    local _Bfactor = _B / 255
-
-    return ColorRGB(_Rfactor, _Gfactor, _Bfactor)
 end
 
 function ESCCUtil.getDistanceToCenter(_X, _Y)
@@ -217,11 +172,85 @@ function ESCCUtil.getPosOnRing(x_in, y_in, dist)
     return math.floor(_Pos.x), math.floor(_Pos.y)
 end
 
-function ESCCUtil.playerBeatStory(_Player)
-    if _Player:getValue("story_completed") or _Player:getValue("wormhole_guardian_destroyed") then
-        return true
+function ESCCUtil.getVectorAtDistance(_position, _distance, _min)
+    local _xrange = { _xmin = _position.x - _distance, _xmax = _position.x + _distance }
+    local _yrange = { _ymin = _position.y - _distance, _ymax = _position.y + _distance }
+    local _zrange = { _zmin = _position.z - _distance, _zmax = _position.z + _distance }
+
+    local _xrand = random()
+    local _rejects = {}
+
+    --for _MIN = true, _distance is the MINIMUM - so we want to be outside of it.
+    local _evalForDistance = function(_fdist, _dist)
+        if _fdist >= _dist then
+            return true
+        else
+            return false
+        end
+    end
+    --for _MIN = false, _distance is the MAXIMUM, so we want to be inside of it.
+    if not _min then
+        _evalForDistance = function(_fdist, _dist)
+            if _fdist <= _dist then
+                return true
+            else
+                return false
+            end
+        end
+    end
+
+    for _ = 1, 100 do
+        local _vecx = _xrand:getFloat(_xrange._xmin, _xrange._xmax)
+        local _vecy = _xrand:getFloat(_yrange._ymin, _yrange._ymax)
+        local _vecz = _xrand:getFloat(_zrange._zmin, _zrange._zmax)
+        local _vec = vec3(_vecx, _vecy, _vecz)
+
+        local _cdistance = distance(_vec, _position)
+        if _evalForDistance(_cdistance, _distance) then
+            return _vec
+        else
+            table.insert(_rejects, { _adist = _cdistance, _avec = _vec })
+        end
+    end
+
+    --If we still haven't found one in 100 tries, fish through the rejects table for the best one.
+    local _evalvsdist = 0
+    if not _min then
+        _evalvsdist = math.huge
+    end
+    local _tidx = 0
+    for idx, _reject in pairs(_rejects) do
+        local _set = false
+        if _min then
+            if _evalvsdist > _reject._adist then
+                _set = true
+            end
+        else
+            if _evalvsdist <= _reject._adist then
+                _set = true
+            end
+        end
+
+        if _set then
+            _evalvsdist = _reject.adist
+            _tidx = idx
+        end
+    end
+
+    return _rejects[_tidx]._avec
+end
+
+--endregion
+
+--region #ENTITIES
+
+function ESCCUtil.countEntitiesByValue(_Value)
+    --We know this works, and the spam messages can be quite annoying. There's no need to add debugging to this.
+    local _Entities = {Sector():getEntitiesByScriptValue(_Value)}
+    if _Entities then
+        return #_Entities
     else
-        return false
+        return 0
     end
 end
 
@@ -242,6 +271,7 @@ function ESCCUtil.allXsotanDepart()
 end
 
 function ESCCUtil.majorEntityTypes()
+    --Basically anything that's not loot / wreckages.
     return {
         EntityType.Ship,
         EntityType.Station,
@@ -271,6 +301,16 @@ function ESCCUtil.allEntityTypes()
     }
 end
 
+function ESCCUtil.replaceIcon(_Craft, _IconPath)
+    local _safetyBreakout = 0
+    while _Craft:hasScript("icon.lua") or _safetyBreakout < 10 do
+        _Craft:removeScript("icon.lua")
+        _safetyBreakout = _safetyBreakout + 1
+    end
+
+    _Craft:addScript("icon.lua", _IconPath)
+end
+
 function ESCCUtil.setBombardier(_Ship)
     local _TitleArgs = _Ship:getTitleArguments()
 
@@ -279,8 +319,7 @@ function ESCCUtil.setBombardier(_Ship)
     local _ScriptNameArg = "Bombardier "
 
     _Ship:setTitle("${toughness}${scriptname}${title}", {toughness = _ToughnessArg, title = _TitleArg, scriptname = _ScriptNameArg})
-    _Ship:removeScript("icon.lua")
-    _Ship:addScript("icon.lua", "data/textures/icons/pixel/torpedoboatex.png")
+    self.replaceIcon(_Ship, "data/textures/icons/pixel/torpedoboatex.png")
 end
 
 function ESCCUtil.setDeadshot(_Ship)
@@ -291,9 +330,105 @@ function ESCCUtil.setDeadshot(_Ship)
     local _ScriptNameArg = "Deadshot "
 
     _Ship:setTitle("${toughness}${lasername}${title}", {toughness = _ToughnessArg, title = _TitleArg, lasername = _ScriptNameArg})
-    _Ship:removeScript("icon.lua")
-    _Ship:addScript("icon.lua", "data/textures/icons/pixel/laserboat.png")
+    self.replaceIcon(_Ship, "data/textures/icons/pixel/laserboat.png")
 end
+
+function ESCCUtil.removeCivilScripts(_Ship)
+    _Ship:removeScript("civilship.lua")
+    _Ship:removeScript("dialogs/storyhints.lua")
+    _Ship:setValue("is_civil", nil)
+    _Ship:setValue("npc_chatter", nil)
+end
+
+--endregion
+
+--region #FACTION HELPERS
+
+function ESCCUtil.getNeutralSmugglerFaction()
+    local name = "Ureth'gul Smugglers"
+
+    local galaxy = Galaxy()
+    local faction = galaxy:findFaction(name)
+    if faction == nil then
+        faction = galaxy:createFaction(name, 175, 0)
+        faction.initialRelations = 0
+        faction.initialRelationsToPlayer = 0
+        faction.staticRelationsToAll = true
+        faction.homeSectorUnknown = true
+    end
+
+    return faction
+end
+
+--endregion
+
+function ESCCUtil.getStandardTemplateBlacklist()
+    local _MethodName = "Get Standard Template Blacklist"
+    ESCCUtil.Log(_MethodName, "Beginning...")
+
+    local templateBlacklist = {
+        "sectors/asteroidshieldboss",
+        "sectors/ancientgates",
+        "sectors/containerfield",
+        "sectors/cultists",
+        "sectors/pirateasteroidfield",
+        "sectors/piratefight",
+        "sectors/piratestation",
+        "sectors/resistancecell",
+        "sectors/researchsatellite",
+        "sectors/smugglerhideout",
+        "sectors/wreckagefield",
+        "sectors/xsotanasteroids",
+        "sectors/xsotanbreeders",
+        "sectors/xsotantransformed"
+    }
+
+    return templateBlacklist
+end
+
+function ESCCUtil.getIndex(_Table, _Element)
+    local _MethodName = "Get Index of Table"
+    if not _Table or not _Element then
+        ESCCUtil.Log(_MethodName, "Cannot get random element - either the table or the element was not provided", 1)
+        return
+    end
+    for _IDX, _VAL in pairs(_Table) do
+        if _VAL == _Element then
+            return _IDX
+        end
+    end
+    --Standard C# practice.
+    return -1 
+end
+
+function ESCCUtil.getSaneColor(_R, _G, _B)
+    --For some reason OpenGL does colors by floats which is just wack.
+    local _Rfactor = _R / 255
+    local _Gfactor = _G / 255
+    local _Bfactor = _B / 255
+
+    return ColorRGB(_Rfactor, _Gfactor, _Bfactor)
+end
+
+function ESCCUtil.playerBeatStory(_Player)
+    if _Player:getValue("story_completed") or _Player:getValue("wormhole_guardian_destroyed") then
+        return true
+    else
+        return false
+    end
+end
+
+--region #DIALOGUE HELPERS
+
+function ESCCUtil.setTalkerTextColors(table, talker, talkerColor, textColor)
+    for _, dx in pairs(table) do
+        dx.talker = talker
+        dx.textColor = textColor
+        dx.talkerColor = talkerColor
+    end
+end
+
+--endregion
 
 --region #LOGGING
 
