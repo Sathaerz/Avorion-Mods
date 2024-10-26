@@ -194,6 +194,7 @@ function XsologizeBossHierophant.createSinners()
             pirate:setMovePlan(piratePlan)
 
             pirate:setValue("is_sinner", true)
+            pirate:setValue("is_horizon", true)
             pirate.factionIndex = xsologize.factionIndex
             pirate.title = "Sinner"
             pirate:addScriptOnce("esccblinker.lua", { blinkLimit = 3 })
@@ -274,6 +275,7 @@ function XsologizeBossHierophant.createRevenant(wreckage)
     ship:addScriptOnce("ai/patrol.lua")
     ship:addScriptOnce("utility/aiundockable.lua")
     ship:setValue("is_revenant", true)
+    ship:setValue("is_horizon", true)
 
     Boarding(ship).boardable = false
 

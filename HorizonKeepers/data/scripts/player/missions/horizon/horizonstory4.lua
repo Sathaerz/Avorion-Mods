@@ -400,7 +400,6 @@ end
 
 mission.phases[5] = {}
 mission.phases[5].timers = {}
-mission.phases[5].showUpdateOnEnd = true
 mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].onBeginServer = function()
     local _hBattleship = Entity(mission.data.custom.horizonBattleshipid)

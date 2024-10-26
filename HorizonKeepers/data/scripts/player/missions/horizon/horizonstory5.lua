@@ -335,7 +335,6 @@ end
 --endregion
 
 mission.phases[5] = {}
-mission.phases[5].showUpdateOnEnd = true
 mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].onBeginServer = function()
     spawnVarlance()

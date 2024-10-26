@@ -50,6 +50,18 @@ kothchapter = {
             end
         },
         {
+            title = "Torpedo Loaders",
+            picture = "data/textures/ui/encyclopedia/exploring/characters/torpedoloaders.jpg",
+            text = "Originally pioneered by The \\c(0d0)Cavaliers\\c(), the \\c(0d0)Torpedo Loader\\c() is a specialized ship containing large ordinance bays and a \\c(0d0)high-speed transfer system\\c() that is capable of quickly loading a ship's torpedo tubes and hold with torpedoes of a selected type. \\c(0d0)Frostbite Company\\c() got their hands on several of the proprietary loading systems and have since been fielding torpedo loaders of their own. While the loaders themselves tend to be slow and vulnerable, proper deployment ensures that a fleet of ships will stay well-supplied with munitions even in a prolonged engagement.",
+            isUnlocked = function()
+                if Player():getValue("encyclopedia_koth_torploader") then
+                    return true
+                else
+                    return false
+                end
+            end
+        },
+        {
             title = "Sophie Netreba",
             picture = "data/textures/ui/encyclopedia/exploring/characters/sophie.jpg",
             text = "\\c(0d0)Sophie Netreba\\c() is \\c(0d0)Varlance\\c()'s executive officer and right-hand woman.\nWhere \\c(0d0)Varlance\\c() is stoic and standoffish, \\c(0d0)Sophie\\c() is warm and energetic. The two of them compliment each other well, and have a solid professional relationship. \\c(0d0)Sophie\\c() has proven her worth time and time again, ensuring that the operations of \\c(0d0)Frostbite Company\\c() are smooth and seamless as the fleet hops between pirate busts. She studied advanced computational technology for several years before her work as a mercenary, eventually dropping out of her studies because it \"didn't hold [her] interest.\"",

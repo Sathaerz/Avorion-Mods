@@ -27,7 +27,8 @@ mission.data.description = {
     { text = "" }, --Placeholder
     { text = "Meet Varlance in (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
     { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false, visible = false },
-    { text = "Defeat XSOLOGIZE Mk II", bulletPoint = true, fulfilled = false, visible = false }
+    { text = "Defeat XSOLOGIZE Mk II", bulletPoint = true, fulfilled = false, visible = false },
+    { text = "Clean up Horizon remnants", bulletPoint = true, fulfilled = false, visible = false }
 }
 
 mission.data.accomplishMessage = "Frostbite Company thanks you. Here's your compensation."
@@ -162,8 +163,15 @@ mission.phases[2].timers[2] = {
         local _sector = Sector()
 
         if getOnLocation(_sector) then
-            if not _sector:exists(mission.data.custom.xsologizeID) then
+            if not _sector:exists(mission.data.custom.xsologizeID) and not mission.data.custom.allowPayment then
                 mission.data.custom.allowPayment = true
+                mission.data.description[5].fulfilled = true
+                mission.data.description[6].visible = true
+                sync()
+            end
+
+            local horizonCt = ESCCUtil.countEntitiesByValue("is_horizon")
+            if horizonCt == 0 and mission.data.custom.allowPayment then
                 nextPhase()
             end
         end
@@ -176,13 +184,13 @@ end
 --endregion
 
 mission.phases[3] = {}
-mission.phases[3].showUpdateOnEnd = true
 mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBegin = function()
     local _MethodName = "Phase 3 On Begin"
     mission.Log(_MethodName, "Beginning...")
 
     mission.data.description[5].fulfilled = true
+    mission.data.description[6].fulfilled = true
 end
 
 mission.phases[3].onBeginServer = function()
@@ -192,12 +200,16 @@ mission.phases[3].onBeginServer = function()
 end
 
 local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, function()
+    local methodName = "On Phase 3 Dialog End"
+
     local _Varlance = Entity(mission.data.custom.varlanceID)
     _Varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
 
-    if mission.data.allowPayment then
+    if mission.data.custom.allowPayment then
+        mission.Log(methodName, "Rewarding and accomplishing.")
         finishAndReward()
     else
+        mission.Log(methodName, "accomplishing only.")
         accomplish()
     end
 end)

@@ -424,7 +424,6 @@ end
 --endregion
 
 mission.phases[6] = {}
-mission.phases[6].showUpdateOnEnd = true
 mission.phases[6].noBossEncountersTargetSector = true
 mission.phases[6].onBegin = function()
     local _MethodName = "Phase 5 On Begin"

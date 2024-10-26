@@ -222,7 +222,6 @@ end
 --endregion
 
 mission.phases[3] = {}
-mission.phases[3].showUpdateOnEnd = true
 mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBegin = function()
     local _MethodName = "Phase 3 On Begin"
@@ -238,12 +237,16 @@ mission.phases[3].onBeginServer = function()
 end
 
 local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, function()
+    local methodName = "On Phase 3 Dialog End"
+
     local _Varlance = Entity(mission.data.custom.varlanceID)
     _Varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
 
-    if mission.data.allowPayment then
+    if mission.data.custom.allowPayment then
+        mission.Log(methodName, "Rewarding and accomplishing.")
         finishAndReward()
     else
+        mission.Log(methodName, "accomplishing only.")
         accomplish()
     end
 end)

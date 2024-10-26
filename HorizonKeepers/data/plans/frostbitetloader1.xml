@@ -6064,9 +6064,6 @@
 		<item parent="2002" index="2020">
 			<block lx="-26.2151432" ly="-15.6434593" lz="-16.6973343" ux="-20.9457684" uy="-15.3799906" uz="-14.0626478" index="19" material="4" look="1" up="3" color="ff141414" secondaryColor="00000000"/>
 		</item>
-		<item parent="120" index="2211">
-			<block lx="-21.7361755" ly="8.79327202" lz="-22.8888474" ux="-20.4188309" uy="11.4279594" uz="-19.9248276" index="3" material="4" look="1" up="3" color="fffffafa" secondaryColor="00000000"/>
-		</item>
 		<item parent="2211" index="2207">
 			<block lx="-24.370863" ly="8.79327202" lz="-24.8648663" ux="-21.7361755" uy="11.4279594" uz="-19.9248276" index="3" material="4" look="1" up="3" color="fffffafa" secondaryColor="00000000"/>
 		</item>
@@ -6079,8 +6076,8 @@
 		<item parent="2207" index="2210">
 			<block lx="-24.370863" ly="11.4279594" lz="-22.8888474" ux="-21.7361755" uy="12.7453041" uz="-19.9248276" index="3" material="4" look="1" up="3" color="fffffafa" secondaryColor="00000000"/>
 		</item>
-		<item parent="111" index="2216">
-			<block lx="20.4188309" ly="8.79327202" lz="-22.8888474" ux="21.7361755" uy="11.4279594" uz="-19.9248276" index="3" material="4" look="1" up="3" color="fffffafa" secondaryColor="00000000"/>
+		<item parent="120" index="2211">
+			<block lx="-21.7361755" ly="8.79327202" lz="-22.8888474" ux="-20.4188309" uy="11.4279594" uz="-19.9248276" index="3" material="4" look="1" up="3" color="fffffafa" secondaryColor="00000000"/>
 		</item>
 		<item parent="2216" index="2212">
 			<block lx="21.7361774" ly="8.79327202" lz="-24.8648663" ux="24.3708649" uy="11.4279594" uz="-19.9248276" index="3" material="4" look="1" up="3" color="fffffafa" secondaryColor="00000000"/>
@@ -6093,6 +6090,9 @@
 		</item>
 		<item parent="2212" index="2215">
 			<block lx="21.7361774" ly="11.4279594" lz="-22.8888474" ux="24.3708649" uy="12.7453041" uz="-19.9248276" index="3" material="4" look="1" up="3" color="fffffafa" secondaryColor="00000000"/>
+		</item>
+		<item parent="111" index="2216">
+			<block lx="20.4188309" ly="8.79327202" lz="-22.8888474" ux="21.7361755" uy="11.4279594" uz="-19.9248276" index="3" material="4" look="1" up="3" color="fffffafa" secondaryColor="00000000"/>
 		</item>
 		<item parent="121" index="2217">
 			<block lx="-19.1014881" ly="12.7453041" lz="-24.3708611" ux="-16.4667988" uy="13.0087738" uz="-18.4428139" index="8" material="3" look="1" up="3" color="ffb0e0e6" secondaryColor="ff00688b"/>
@@ -6777,6 +6777,18 @@
 		</item>
 		<item parent="2441" index="2444">
 			<block lx="17.8576374" ly="15.9960327" lz="19.6662769" ux="17.9647617" uy="19.0319328" uz="19.7734013" index="0" material="4" look="1" up="3" color="ff141414" secondaryColor="00000000"/>
+		</item>
+		<item parent="9" index="2445">
+			<block lx="0.474244118" ly="12.9337721" lz="-12.4830627" ux="4.92424393" uy="13.0837717" uz="-12.3330612" index="150" material="4" look="1" up="3" color="ff1e90ff" secondaryColor="00000000"/>
+		</item>
+		<item parent="2448" index="2450">
+			<block lx="-4.92424393" ly="12.9337721" lz="-14.1330605" ux="-4.77424431" uy="13.0837717" uz="-12.4830627" index="150" material="4" look="1" up="3" color="ff1e90ff" secondaryColor="00000000"/>
+		</item>
+		<item parent="2445" index="2447">
+			<block lx="4.77424431" ly="12.9337721" lz="-14.1330605" ux="4.92424393" uy="13.0837717" uz="-12.4830627" index="150" material="4" look="1" up="3" color="ff1e90ff" secondaryColor="00000000"/>
+		</item>
+		<item parent="9" index="2448">
+			<block lx="-4.92424393" ly="12.9337721" lz="-12.4830627" ux="-0.474244118" uy="13.0837717" uz="-12.3330612" index="150" material="4" look="1" up="3" color="ff1e90ff" secondaryColor="00000000"/>
 		</item>
 	</plan>
 </ship_design>

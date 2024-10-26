@@ -6712,5 +6712,17 @@
 		<item parent="2455" index="2458">
 			<block lx="-13.0996799" ly="4.73269272" lz="-0.752541721" ux="-12.9925556" uy="7.76859283" uz="-0.645417511" index="0" material="4" look="1" up="3" color="ff141414" secondaryColor="00000000"/>
 		</item>
+		<item parent="9" index="2459">
+			<block lx="-4.92423439" ly="1.6704464" lz="-13.4708004" ux="-0.474234581" uy="1.82044601" uz="-13.3207989" index="150" material="4" look="1" up="3" color="ff1e90ff" secondaryColor="00000000"/>
+		</item>
+		<item parent="2459" index="2460">
+			<block lx="-4.92423439" ly="1.6704464" lz="-15.1207981" ux="-4.77423477" uy="1.82044601" uz="-13.4708004" index="150" material="4" look="1" up="3" color="ff1e90ff" secondaryColor="00000000"/>
+		</item>
+		<item parent="9" index="2461">
+			<block lx="0.474234581" ly="1.6704464" lz="-13.4708004" ux="4.92423439" uy="1.82044601" uz="-13.3207989" index="150" material="4" look="1" up="3" color="ff1e90ff" secondaryColor="00000000"/>
+		</item>
+		<item parent="2461" index="2462">
+			<block lx="4.77423477" ly="1.67044663" lz="-15.1207981" ux="4.92423439" uy="1.82044625" uz="-13.4708004" index="150" material="4" look="1" up="3" color="ff1e90ff" secondaryColor="00000000"/>
+		</item>
 	</plan>
 </ship_design>

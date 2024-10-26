@@ -4,7 +4,7 @@ package.path = package.path .. ";data/scripts/?.lua"
 include("randomext")
 include("structuredmission")
 
-mission._Debug = 0
+mission._Debug = 1
 
 --mission.tracing = true
 mission.data.silent = true
@@ -38,7 +38,6 @@ mission.globalPhase.onRestore = function()
 end
 
 mission.phases[1] = {}
-
 mission.phases[1].onSectorEntered = function(x, y)
     local _MethodName = "Phase 1 On Sector Entered"
     mission.Log(_MethodName, "Running.")
@@ -163,10 +162,9 @@ mission.phases[9].updateServer = function()
 end
 
 mission.phases[10] = {}
-
 mission.phases[10].onSectorEntered = function(x, y)
-    local _MethodName = "Phase 10 On Sector Entered"
-    mission.Log(_MethodName, "Running.")
+    local methodName = "Phase 10 On Sector Entered"
+    mission.Log(methodName, "Running.")
 
     if onClient() then --We don't care about this on client.
         return
@@ -182,9 +180,11 @@ mission.phases[10].onSectorEntered = function(x, y)
     local _random = random()
 
     if currentTime >= nextValidSide1Time and _random:test(0.10) then
+        mission.Log(methodName, "Adding side 1 to board.")
         addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonside1.lua")
     end
     if currentTime >= nextValidSide2Time and _random:test(0.10) then
+        mission.Log(methodName, "Adding side 2 to board.")
         addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonside2.lua")
     end
 end

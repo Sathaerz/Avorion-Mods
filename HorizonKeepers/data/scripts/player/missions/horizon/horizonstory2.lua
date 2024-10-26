@@ -543,7 +543,6 @@ end
 
 mission.phases[8] = {}
 mission.phases[8].timers = {}
-mission.phases[8].showUpdateOnEnd = true
 mission.phases[8].noBossEncountersTargetSector = true
 mission.phases[8].onBegin = function()
     local _MethodName = "Phase 8 On Begin"

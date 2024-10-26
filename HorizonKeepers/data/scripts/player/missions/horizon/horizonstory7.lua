@@ -789,7 +789,6 @@ end
 --endregion
 
 mission.phases[7] = {}
-mission.phases[7].showUpdateOnEnd = true
 mission.phases[7].noBossEncountersTargetSector = true
 mission.phases[7].noPlayerEventsTargetSector = true
 mission.phases[7].noLocalPlayerEventsTargetSector = true

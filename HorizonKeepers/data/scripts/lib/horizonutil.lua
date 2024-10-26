@@ -486,6 +486,7 @@ function HorizonUtil.spawnAlphaHansel(_DeleteOnLeft, _Position, addGoodLoot, _Sp
     }
 
     if _Spawnv2 then
+        _ShipData._ShipTitle = "HPW α \"Hansel\" Mk II"
         _ShipData._ShipDamageMultiplier = 4
 
         _ShipData._SetAIFunction = function(ship)
@@ -534,6 +535,8 @@ function HorizonUtil.spawnBetaGretel(_DeleteOnLeft, _Position, addGoodLoot, _Spa
     }
 
     if _Spawnv2 then
+        _ShipData._ShipTitle = "HPW β \"Gretel\" Mk II"
+
         _ShipData._ArmamentFunction = function(ship)
             ShipUtility.addSpecificScalableWeapon(ship, { WeaponType.Cannon }, 4, 1, nil)
             ShipUtility.addHorizonPrototypePlasmaGuns(ship, 4)
@@ -611,7 +614,7 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
 
             for _ = 1, 4 do
                 local _rarity = Rarity(RarityType.Exotic)
-                if _random:test(0.5) then
+                if _random:test(0.25) then
                     _rarity = Rarity(RarityType.Legendary)
                 end
 

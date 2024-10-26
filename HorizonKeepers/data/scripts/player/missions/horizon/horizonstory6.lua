@@ -473,7 +473,6 @@ end
 --endregion
 
 mission.phases[5] = {}
-mission.phases[5].showUpdateOnEnd = true
 mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].noPlayerEventsTargetSector = true
 mission.phases[5].noLocalPlayerEventsTargetSector = true
@@ -804,6 +803,7 @@ function finishAndReward()
 
     _player:setValue("_horizonkeepers_story_stage", 7)
     _player:setValue("encyclopedia_koth_hanselgretel", true)
+    _player:setValue("encyclopedia_koth_torploader", true)
 
     _player:sendChatMessage("Frostbite Company", 0, _AccomplishMessage)
     mission.data.reward = {credits = _BaseReward, paymentMessage = "Earned %1% credits for destroying the Horizon Keeper fleet." }

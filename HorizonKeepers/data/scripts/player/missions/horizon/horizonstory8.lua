@@ -467,7 +467,6 @@ mission.phases[7].timers[1] = {
 
 mission.phases[8] = {}
 mission.phases[8].timers = {}
-mission.phases[8].showUpdateOnEnd = true
 mission.phases[8].noBossEncountersTargetSector = true
 mission.phases[8].noPlayerEventsTargetSector = true
 mission.phases[8].noLocalPlayerEventsTargetSector = true
