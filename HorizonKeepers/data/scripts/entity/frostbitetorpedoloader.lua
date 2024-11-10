@@ -55,6 +55,13 @@ function FrostbiteTorpedoLoader.initialize(values)
         local _sector = Sector()
         local x, y = _sector:getCoordinates()
 
+        local torpGenRarities = torpGenerator:getDefaultRarityDistribution()
+
+        torpGenRarities[0] = 0 --no common torps. I'm okay with this being a little overpowered since you can't use it in the barrier.
+        torpGenRarities[1] = torpGenRarities[1] * 0.75 --less of a chance of uncommon torps
+
+        torpGenerator.rarities = torpGenRarities
+
         if not self.data.sabotOnly then
             table.insert(self.torpedoes, torpGenerator:generate(x, y, nil, nil, WarheadType.Nuclear, nil))
             table.insert(self.torpedoes, torpGenerator:generate(x, y, nil, nil, WarheadType.Neutron, nil))
@@ -139,14 +146,23 @@ function FrostbiteTorpedoLoader.loadSelectedTorpedoes(_PlayerID, _WarheadType)
     local _Craft = _Player.craft
     local _Launcher = TorpedoLauncher(_Craft.index)
     local _Shafts = { _Launcher:getShafts() }
+    local _TorpsLoaded = 0
+    local _MaxTorpsToLoad = 330 --Enough to fill 10x avorion shafts + 100 in the torpedo bay.
 
     self.Log(_MethodName, "Adding torpedos directly to launchers.")
 
     for _, _Shaft in pairs(_Shafts) do
         local _attempts = 0 --Emergency breakout - per shaft. Sometimes placing a torpedo in a shaft just doesn't work and I have no idea why. There's no error or anything.
         local initialFreeSlots = _Launcher:getFreeSlots(_Shaft) --For some reason the game will register nonexistent shafts as having 15 free slots. It's fucking wack.
-        while _Launcher:getFreeSlots(_Shaft) > 0 and initialFreeSlots ~= 15 and _attempts < 100 do
+        while _Launcher:getFreeSlots(_Shaft) > 0 and initialFreeSlots ~= 15 and _attempts < 100 and _TorpsLoaded < _MaxTorpsToLoad do
+            local _freeSlots1 = _Launcher:getFreeSlots(_Shaft)
             _Launcher:addTorpedo(_Torpedo, _Shaft)
+
+            local _freeSlots2 = _Launcher:getFreeSlots(_Shaft)
+            if _freeSlots2 < _freeSlots1 then
+                _TorpsLoaded = _TorpsLoaded + 1
+            end
+
             _attempts = _attempts + 1
         end
     end
@@ -154,8 +170,15 @@ function FrostbiteTorpedoLoader.loadSelectedTorpedoes(_PlayerID, _WarheadType)
     self.Log(_MethodName, "Adding torpeodes to storage.")
 
     local _storageattempts = 0 --Second emergency breakout
-    while _Launcher.freeStorage > _Torpedo.size and _storageattempts < 1000 do
+    while _Launcher.freeStorage > _Torpedo.size and _storageattempts < 1000 and _TorpsLoaded < _MaxTorpsToLoad do
+        local _freeStorage1 = _Launcher.freeStorage
         _Launcher:addTorpedo(_Torpedo)
+
+        local _freeStorage2 = _Launcher.freeStorage
+        if _freeStorage2 < _freeStorage1 then
+            _TorpsLoaded = _TorpsLoaded + 1
+        end
+
         _storageattempts = _storageattempts + 1
     end
 

@@ -73,6 +73,7 @@ function HorizonUtil.getEnemyFaction()
         faction.initialRelations = -100000
         faction.initialRelationsToPlayer = -100000
         faction.staticRelationsToAll = true
+        faction.staticRelationsToPlayers = true
         faction.homeSectorUnknown = true
         faction.alwaysAtWar = true
     end

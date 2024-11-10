@@ -133,7 +133,7 @@ mission.phases[1].onBeginServer = function()
     --Send mail to player.
     local _Player = Player()
     local _Mail = Mail()
-	_Mail.text = Format("Hey buddy,\n\nMy teams have been looking through all of the information we managed to pull off of the prototype weapons. It looks like most of it was blown up with their ships, but we did find a few interesting tidbits. Mostly related to something called \"Project XSOLOGIZE\". The only complete information we managed to pull was a schedule. It looks like its nearing completion. If it's anything like those prototypes we fought earlier, we can't let Horizon Keepers unleash this - the galaxy will be forced to bend the knee or face a level of suffering and death we haven't seen since the Great War.\n\nFortunately, this doesn't change our plans. We managed to capture a freighter and we'll be using it to infiltrate their shipyard. We're going to have to be careful about how we approach this - if we've learned anything over the last few sorties it's that these bastards are quick to delete whatever information is in their databanks.\n\nCome to (%1%:%2%). I'll go over the plan with you.\n\nVarlance", _X, _Y)
+	_Mail.text = Format("Hey buddy,\n\nMy teams have been looking through all of the information we pulled off of the prototype weapons. It looks like most of it was blown up with their ships, but we did find a few interesting tidbits. Mostly related to something called \"Project XSOLOGIZE\". The only complete information we pulled was a schedule. It looks like its nearing completion. If it's anything like those prototypes we fought earlier, we can't let Horizon Keepers unleash this - the galaxy will be forced to bend the knee or face a level of suffering and death we haven't seen since the Great War.\n\nFortunately, this doesn't change our plans. We captured a freighter and we'll be using it to infiltrate their shipyard. We're going to have to be careful about how we approach this - if we've learned anything over the last few sorties it's that these bastards are quick to delete whatever information is in their databanks.\n\nCome to (%1%:%2%). I'll go over the plan with you.\n\nVarlance", _X, _Y)
 	_Mail.header = "It's Time"
 	_Mail.sender = "Varlance @FrostbiteCompany"
 	_Mail.id = "_horizon_story7_mail"
@@ -438,8 +438,11 @@ mission.phases[5].sectorCallbacks[1] = {
     func = function(defenderidx, playershipidx)
         local _MethodName = "Phase 5 Custom Callback 1"
         mission.Log(_MethodName, "Calling.")
+
+        local pShip = Entity(playershipidx)
+        local eShip = Entity(defenderidx)
         
-        Player():sendChatMessage("", 3, "Your ship is too close to a Horizon ship. Move before it can scan you.")
+        Player():sendChatMessage("", 3, "Your ship ${_PLAYERSHIP} is too close to the Horizon ship ${_ENEMYSHIP}. Move before it can scan you." % { _PLAYERSHIP = pShip.name, _ENEMYSHIP = eShip.name})
         --Check timer slots 6 to 30. Use the first one that's available (timer 3 runs cleanup)
         local _MINTIMERSLOT = 6
         local _MAXTIMERSLOT = 30
@@ -466,11 +469,21 @@ mission.phases[5].sectorCallbacks[1] = {
     
                             for _, pShip in pairs(playerShips) do
                                 for _, dShip in pairs(defenderShips) do
-                                    --be a little more forgiving than the sus script.
+                                    --same as sus script. Distance needed is decreased by chameleon.
+                                    local baseDist = 1000
+
                                     local dist = pShip:getNearestDistance(dShip)
-                                    if dist <= 950 then
-                                        onStealthBroken(true)
-                                        fail()
+                                    if dist <= baseDist then --Don't bother doing any of this unless we're even within 10km. Waste of processing power otherwise.
+                                        local adjDist = baseDist
+                                        local ret, detectionRangeFactor = pShip:invokeFunction("internal/dlc/blackmarket/systems/badcargowarningsystem.lua", "getDetectionRangeFactor")
+                                        if ret == 0 then
+                                            adjDist = baseDist * detectionRangeFactor
+                                        end
+
+                                        if dist <= adjDist then
+                                            onStealthBroken(true)
+                                            fail()
+                                        end
                                     end
                                 end
                             end
@@ -1416,19 +1429,19 @@ function onPhase2Dialog(varlanceID)
     d4.text = "You two will hang back and let the freighter fly in. It'll have a boarding team, and they'll try to sneak the data off the network - this time without setting off any alarms."
     d4.followUp = d5
 
-    d5.text = "Between the data we've recovered from the prototypes and some scraping our AWACS did, we managed to recover a number of their IFF codes. As long as you don't let any of the defenders patrolling the sector get near you, you should have no problem. Stand by with the Ice Nova in case any issues come up."
+    d5.text = "Between the data we've recovered from the prototypes and some scraping our AWACS did, we recovered a number of their IFF codes. As long as you don't let any of the defenders patrolling the sector get near you, you should have no problem. Stand by with the Ice Nova in case any issues come up."
     d5.answers = {
         { answer = "I understand.", followUp = d7 },
         { answer = "Do I need to equip a subsystem?", followUp = d6 }
     }
 
-    d6.text = "What do you think we are, The Family? Nah. Our tech is better - we've got you covered."
+    d6.text = "What do you think we are, The Family? Nah. Our tech is better - we've got you covered. But if you're feeling nervous, you can install a chameleon."
     d6.followUp = d7
 
     d7.text = "I'm sending you the coordinates of the shipyard now. Sophie will meet you there with the captured freighter."
     d7.onEnd = onPhase2DialogEnd
 
-    ESCCUtil.setTalkerTextColors({d0, d1, d2, d4, d5, d6, d7}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
+    ESCCUtil.setTalkerTextColors({d0, d1, d2, d4, d5, d6, d7 }, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ESCCUtil.setTalkerTextColors({d3}, "Sophie", HorizonUtil.getDialogSophieTalkerColor(), HorizonUtil.getDialogSophieTextColor())
 

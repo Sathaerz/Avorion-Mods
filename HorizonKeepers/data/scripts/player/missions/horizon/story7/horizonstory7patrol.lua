@@ -49,7 +49,8 @@ function HorizonStory7Patrol.updateServer(timeStep)
     local _sector = Sector()
     local _entity = Entity()
 
-    -- check if within 4 km of a player ship - if so, send a callback to the sector.
+    -- check if within 10 km of a player ship - if so, send a callback to the sector.
+    
     local entities = {_sector:getEntitiesByType(EntityType.Ship)}
     for _, ship in pairs(entities) do
         -- skip controls if the controlled object doesn't belong to a faction
@@ -75,11 +76,19 @@ function HorizonStory7Patrol.updateServer(timeStep)
             goto continue 
         end
 
-        local scannerDistance = 1000
+        local baseScannerDistance = 1000
         local ownSphere = _entity:getBoundingSphere()
 
+        --If the player's ship has a chameleon, increase this distance
+        local chameleonScannerDistance = baseScannerDistance
+        local ret, detectionRangeFactor = ship:invokeFunction("internal/dlc/blackmarket/systems/badcargowarningsystem.lua", "getDetectionRangeFactor")
+        if ret == 0 then
+            chameleonScannerDistance = baseScannerDistance * detectionRangeFactor
+        end
+
         -- make sure the other ship is close enough
-        local testDistance = scannerDistance + ownSphere.radius + ship.radius
+        -- reminder: _entity is the current ship, ship is the player ship.
+        local testDistance = chameleonScannerDistance + ownSphere.radius + ship.radius
         local d2 = distance2(_entity.translationf, ship.translationf)
         if d2 > testDistance * testDistance then 
             goto continue 
