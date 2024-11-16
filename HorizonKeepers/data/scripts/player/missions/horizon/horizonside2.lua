@@ -112,7 +112,6 @@ end)
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
-mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBegin = function()
     mission.data.location = mission.data.custom.secondLocation

@@ -111,7 +111,6 @@ end)
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
-mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBegin = function()
     mission.data.location = mission.data.custom.secondLocation
@@ -413,7 +412,7 @@ end
 --region #MAKEBULLETIN CALLS
 
 function formatDescription()
-    return "To any independent captains out there, this is captain Varlance with the mercenary group Frostbite Company. Some time ago, a company named Horizon Keepers, LTD. attempted to unleash a pair of prototype weapons on the galaxy. Had they been allowed to rampage unchecked, they could have caused an incalculable amount of damage to the galaxy. I've received word that they've assembled a new set of similar weapons - I'm looking for someone to help me hunt them down and eliminate them before they can be set loose."
+    return "To any independent captains out there, this is captain Varlance with the mercenary group Frostbite Company. Some time ago, a company named Horizon Keepers, LTD. attempted to unleash a pair of prototype weapons on the galaxy. Had they been allowed to rampage unchecked, they could have caused an incalculable amount of damage. I've received word that they've assembled a new set of similar weapons - I'm looking for someone to help me hunt them down and eliminate them before they can be set loose."
 end
 
 mission.makeBulletin = function(_Station)
