@@ -303,7 +303,7 @@ end
 
 function ESCCUtil.replaceIcon(_Craft, _IconPath)
     local _safetyBreakout = 0
-    while _Craft:hasScript("icon.lua") or _safetyBreakout < 10 do
+    while _Craft:hasScript("icon.lua") or _safetyBreakout < 10 do --Shouldn't need more than 10 iterations to nuke the old icon script.
         _Craft:removeScript("icon.lua")
         _safetyBreakout = _safetyBreakout + 1
     end

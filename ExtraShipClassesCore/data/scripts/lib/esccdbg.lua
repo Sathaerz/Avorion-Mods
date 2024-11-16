@@ -228,7 +228,7 @@ function initUI()
             MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 4", "onLLTESideMission4ButtonPressed")
             MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 5", "onLLTESideMission5ButtonPressed")
             MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 6", "onLLTESideMission6ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Cav Reinforcement Caller", "onCavReinforcementsCallerButtonPressed")
+            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Give Cav Reinforcement Caller", "onCavReinforcementsCallerButtonPressed")
             MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Cav Merchant", "onCavMerchantButtonPressed")
             MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Get Excalibur", "onGetExcaliburButtonPressed")
             MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Reset LLTE Vars", "onResetLLTEVarsButtonPressed")
@@ -297,6 +297,8 @@ function initUI()
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 7", "onHKTabMission7ButtonPressed")
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 8", "onHKTabMission8ButtonPressed")
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 9", "onHKTabMission9ButtonPressed")
+            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Side Mission 1", "onHKTabSideMission1ButtonPressed")
+            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Side Mission 2", "onHKTabSideMission2ButtonPressed")
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Frostbite Torp Loader", "onSpawnFrostbiteTorpLoaderButtonPressed")
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Frostbite AWACS", "onSpawnFrostibteAWACSButtonPressed")
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Frostbite Warship", "onSpawnFrostbiteWarshipButtonPressed")
@@ -314,6 +316,9 @@ function initUI()
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Horizon Shipyard 1", "onHKShipyard1Pressed")
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Horizon Shipyard 2", "onHKShipyard2Pressed")
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Horizon Research 1", "onHKResearchPressed")
+            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Give Frostbite Torpedo Loader Beacon", "onFBTorpedoLoaderBeaconPressed")
+            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Reset Cooldowns", "onResetFBCooldownsPressed")
+            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Unlock Encyclopedia", "onUnlockAllKOTHEncyclopediaPressed")
             MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Clear Values", "onHKClearValuesPressed")
         end
 
@@ -353,7 +358,7 @@ function getModTable()
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasBusinessAsUsual = true
         end
-        if p.id == "HorizonKeepers" then
+        if p.id == "3354090937" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasHorizonKeepers = true
         end
@@ -2893,14 +2898,66 @@ function onHKTabMission9ButtonPressed()
 end
 callable(nil, "onHKTabMission9ButtonPressed")
 
+function onHKTabSideMission1ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onHKTabSideMission1ButtonPressed")
+        return
+    end
+
+    local _station = Entity()
+    if _station.type ~= EntityType.Station then
+        print("Can't add missions to non-station entities.")
+    else
+        if _station.playerOrAllianceOwned then
+            print("Can't add missions to player or alliance stations.")
+        else
+            print("Adding Horizon Side 1 bulletin.")
+            local _MissionPath = "data/scripts/player/missions/horizon/horizonside1.lua"
+            local ok, bulletin=run(_MissionPath, "getBulletin", _station)
+            _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
+        end
+    end    
+end
+callable(nil, "onHKTabSideMission1ButtonPressed")
+
+function onHKTabSideMission2ButtonPressed()
+    if onClient() then
+        invokeServerFunction("onHKTabSideMission2ButtonPressed")
+        return
+    end
+
+    local _station = Entity()
+    if _station.type ~= EntityType.Station then
+        print("Can't add missions to non-station entities.")
+    else
+        if _station.playerOrAllianceOwned then
+            print("Can't add missions to player or alliance stations.")
+        else
+            print("Adding Horizon Side 1 bulletin.")
+            local _MissionPath = "data/scripts/player/missions/horizon/horizonside2.lua"
+            local ok, bulletin=run(_MissionPath, "getBulletin", _station)
+            _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
+        end
+    end    
+end
+callable(nil, "onHKTabSideMission2ButtonPressed")
+
+local torpLoaderSpawns = 0
 function onSpawnFrostbiteTorpLoaderButtonPressed()
     if onClient() then
         invokeServerFunction("onSpawnFrostbiteTorpLoaderButtonPressed")
         return
     end
 
+    local sabotOnly = true
+    if math.fmod(torpLoaderSpawns, 2) == 1 then
+        sabotOnly = false
+    end
+
     local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnFrostbiteTorpedoLoader(false)
+    HorizonUtil.spawnFrostbiteTorpedoLoader(false, sabotOnly)
+
+    torpLoaderSpawns = torpLoaderSpawns + 1
 end
 callable(nil, "onSpawnFrostbiteTorpLoaderButtonPressed")
 
@@ -3021,7 +3078,7 @@ function onSpawnHKHanselButtonPressed()
     end
 
     local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnAlphaHansel(false, nil)
+    HorizonUtil.spawnAlphaHansel(false, nil, false)
 end
 callable(nil, "onSpawnHKHanselButtonPressed")
 
@@ -3032,7 +3089,7 @@ function onSpawnHKGretelButtonPressed()
     end
 
     local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnBetaGretel(false, nil)
+    HorizonUtil.spawnBetaGretel(false, nil, false)
 end
 callable(nil, "onSpawnHKGretelButtonPressed")
 
@@ -3058,6 +3115,17 @@ function onHKShipyard1Pressed()
 end
 callable(nil, "onHKShipyard1Pressed")
 
+function onHKShipyard2Pressed()
+    if onClient() then
+        invokeServerFunction("onHKShipyard2Pressed")
+        return
+    end
+
+    local HorizonUtil = include("horizonutil")
+    HorizonUtil.spawnHorizonShipyard2(false, nil)
+end
+callable(nil, "onHKShipyard2Pressed")
+
 function onHKResearchPressed()
     if onClient() then
         invokeServerFunction("onHKResearchPressed")
@@ -3069,34 +3137,112 @@ function onHKResearchPressed()
 end
 callable(nil, "onHKResearchPressed")
 
+function onFBTorpedoLoaderBeaconPressed()
+    if onClient() then
+        invokeServerFunction("onFBTorpedoLoaderBeaconPressed")
+        return
+    end
+
+    print("Adding Frostbite torpedo loader beacon")
+    local HorizonUtil = include("horizonutil")
+
+    local _Player = Player(callingPlayer)
+    local friendlyFaction = HorizonUtil.getFriendlyFaction()
+
+    _Player:getInventory():addOrDrop(
+        UsableInventoryItem("frostbitetorpedoloadercaller.lua", Rarity(RarityType.Legendary), friendlyFaction.index)
+    )
+end
+callable(nil, "onFBTorpedoLoaderBeaconPressed")
+
+function onResetFBCooldownsPressed()
+    if onClient() then
+        invokeServerFunction("onResetFBCooldownsPressed")
+        return
+    end
+
+    print("Resetting Horizon Keepers Cooldowns")
+    local HorizonUtil = include("horizonutil")
+
+    local _player = Player(callingPlayer)
+    local friendlyFaction = HorizonUtil.getFriendlyFaction()
+
+    _player:setValue("torploader_requested_" .. friendlyFaction.index, 0)
+    _player:setValue("_horizonkeepers_last_side1", 0)
+    _player:setValue("_horizonkeepers_last_side2", 0)
+end
+callable(nil, "onResetFBCooldownsPressed")
+
+function onUnlockAllKOTHEncyclopediaPressed()
+    if onClient() then
+        invokeServerFunction("onUnlockAllKOTHEncyclopediaPressed")
+        return
+    end
+
+    print("Unlocking Horizon Keeper Encyclopedia entries")
+
+    local _player = Player(callingPlayer)
+    _player:setValue("encyclopedia_koth_frostbite", true)
+    _player:setValue("encyclopedia_koth_varlance", true)
+    _player:setValue("encyclopedia_koth_horizonkeepers", true)
+    _player:setValue("encyclopedia_koth_sophie", true)
+    _player:setValue("encyclopedia_koth_hanselgretel", true)
+    _player:setValue("encyclopedia_koth_torploader", true)
+    _player:setValue("encyclopedia_koth_xsologize", true)
+    _player:setValue("encyclopedia_koth_01macedon", true)
+end
+callable(nil, "onUnlockAllKOTHEncyclopediaPressed")
+
 function onHKClearValuesPressed()
     if onClient() then
         invokeServerFunction("onHKClearValuesPressed")
         return
     end
 
-    local _Player = Player(callingPlayer)
+    local _player = Player(callingPlayer)
     local HorizonUtil = include("horizonutil")
 
     local _Scripts = {
         "missions/horizon/horizonstory1.lua",
-        "missions/horizon/horizonstory2.lua"
+        "missions/horizon/horizonstory2.lua",
+        "missions/horizon/horizonstory3.lua",
+        "missions/horizon/horizonstory4.lua",
+        "missions/horizon/horizonstory5.lua",
+        "missions/horizon/horizonstory6.lua",
+        "missions/horizon/horizonstory7.lua",
+        "missions/horizon/horizonstory8.lua",
+        "missions/horizon/horizonstory9.lua",
+        "missions/horizon/horizonside1.lua",
+        "missions/horizon/horizonside2.lua"
     }
 
     for _k, _v in pairs(_Scripts) do
-        _Player:removeScript(_v)
+        _player:removeScript(_v)
     end
 
-    _Player:setValue("_horizonkeepers_story_stage", 1)
-    _Player:setValue("_horizonkeepers_story3_cargolooted", nil)
-    _Player:setValue("_horizonkeepers_killed_hansel", nil)
-    _Player:setValue("_horizonkeepers_killed_gretel", nil)
-
-    HorizonUtil.setFriendlyFactionRep(_Player, 0)
+    _player:setValue("_horizonkeepers_story_stage", 1)
+    _player:setValue("_horizonkeepers_story_complete", nil)
+    _player:setValue("_horizonkeepers_story3_cargolooted", nil)
+    _player:setValue("_horizonkeepers_killed_hansel", nil)
+    _player:setValue("_horizonkeepers_killed_gretel", nil)
+    _player:setValue("_horizonkeepers_last_side1", nil)
+    _player:setValue("_horizonkeepers_last_side2", nil)
+    _player:setValue("_horizonkeepers_side1_complete", nil)
+    _player:setValue("_horizonkeepers_side2_complete", nil)
+    _player:setValue("encyclopedia_koth_frostbite", nil)
+    _player:setValue("encyclopedia_koth_varlance", nil)
+    _player:setValue("encyclopedia_koth_horizonkeepers", nil)
+    _player:setValue("encyclopedia_koth_sophie", nil)
+    _player:setValue("encyclopedia_koth_hanselgretel", nil)
+    _player:setValue("encyclopedia_koth_torploader", nil)
+    _player:setValue("encyclopedia_koth_xsologize", nil)
+    _player:setValue("encyclopedia_koth_01macedon", nil)
+   
+    HorizonUtil.setFriendlyFactionRep(_player, 0)
 
     local _msg = "All Horizon Keepers data cleared."
     print(_msg)
-    _Player:sendChatMessage("Server", ChatMessageType.Information, _msg)
+    _player:sendChatMessage("Server", ChatMessageType.Information, _msg)
 end
 callable(nil, "onHKClearValuesPressed")
 

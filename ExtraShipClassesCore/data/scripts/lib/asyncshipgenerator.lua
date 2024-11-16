@@ -326,6 +326,7 @@ end
 
 --endregion
 
+---@diagnostic disable-next-line: need-import
 local extraShipClassesCore_new = new
 local function new(namespace, onGeneratedCallback)
     local _MethodName = "[ESCC] New Async Ship Generator"
