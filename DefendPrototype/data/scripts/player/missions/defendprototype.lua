@@ -798,7 +798,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * Balancing.GetSectorRichnessFactor(_Sector:getCoordinates()) --SET REWARD HERE
+    reward = _BaseReward * Balancing.GetSectorRewardFactor(_Sector:getCoordinates()) --SET REWARD HERE
     reputation = 1000 --Don't need to give more than this - the amount of rep the player will gain from killing pirates is insane.
 
     local bulletin =
