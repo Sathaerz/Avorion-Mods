@@ -30,7 +30,7 @@ function MissionBulletins.getPossibleMissions()
         end
     end
 
-    if _Add and not station.playerOrAllianceOwned then
+    if _Add then
         table.insert(scripts, {path = "data/scripts/player/missions/ambushraiders.lua", prob = 3})
     end
 

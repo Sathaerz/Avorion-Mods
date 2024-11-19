@@ -415,8 +415,11 @@ mission.makeBulletin = function(_Station)
     local _DangerLevel = _Rgen:getInt(1, 10)
 
     local _Difficulty = "Easy"
-    if _DangerLevel == 10 then
+    if _DangerLevel >= 6 then
         _Difficulty = "Medium"
+    end
+    if _DangerLevel >= 9 then
+        _Difficulty = "Difficult"
     end
     
     local _Description = formatDescription()
@@ -432,7 +435,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * Balancing.GetSectorRichnessFactor(Sector():getCoordinates()) --SET REWARD HERE
+    reward = _BaseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates()) --SET REWARD HERE
 
     local bulletin =
     {
