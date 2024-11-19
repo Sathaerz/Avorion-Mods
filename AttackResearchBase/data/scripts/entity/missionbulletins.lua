@@ -7,7 +7,7 @@ function MissionBulletins.getPossibleMissions()
 
     --Don't add this mission to player / alliance stations.
 	if not station.playerOrAllianceOwned and stationTitle == "Military Outpost" then
-		table.insert(scripts, {path = "data/scripts/player/missions/attackresearchbase.lua", prob = 3})
+		table.insert(scripts, {path = "data/scripts/player/missions/attackresearchbase.lua", prob = 2})
 	end
 
 	return scripts

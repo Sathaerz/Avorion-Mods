@@ -608,7 +608,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * Balancing.GetSectorRichnessFactor(Sector():getCoordinates())
+    reward = _BaseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates())
     reputation = 6000
 
     local bulletin =
