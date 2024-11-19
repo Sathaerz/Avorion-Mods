@@ -16,7 +16,7 @@ local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 local Placer = include("placer")
 
-mission._Debug = 1
+mission._Debug = 0
 mission._Name = "Hunt Pirate Fleet"
 
 --region #INIT / DATA

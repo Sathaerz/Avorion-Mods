@@ -13,7 +13,7 @@ HorizonUtil = include("horizonutil")
 local Balancing = include ("galaxy")
 local Placer = include("placer")
 
-mission._Debug = 1
+mission._Debug = 0
 mission._Name = "Operation Xsology"
 
 --region #INIT / DATA

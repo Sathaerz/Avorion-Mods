@@ -4,7 +4,7 @@ package.path = package.path .. ";data/scripts/?.lua"
 include("randomext")
 include("structuredmission")
 
-mission._Debug = 1
+mission._Debug = 0
 
 --mission.tracing = true
 mission.data.silent = true

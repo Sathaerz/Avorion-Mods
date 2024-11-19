@@ -9,7 +9,7 @@ HorizonUtil = include("horizonutil")
 HorizonStory2Dialog3 = {}
 local self = HorizonStory2Dialog3
 
-self._Debug = 1
+self._Debug = 0
 
 self._Data = {}
 

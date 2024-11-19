@@ -16,7 +16,7 @@ local ShipGenerator = include("shipgenerator")
 local Balancing = include ("galaxy")
 local Placer = include("placer")
 
-mission._Debug = 1
+mission._Debug = 0
 mission._Name = "The Swordfish's Bill"
 
 --region #INIT / DATA

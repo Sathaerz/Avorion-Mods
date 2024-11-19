@@ -16,7 +16,7 @@ local shipUtility = include("shiputility")
 XsologizeBossHierophant = {}
 local self = XsologizeBossHierophant
 
-self._Debug = 1
+self._Debug = 0
 
 self._Data = {}
 self.lasers = {}
