@@ -38,7 +38,6 @@ local AsyncPirateGenerator = include ("asyncpirategenerator")
 local AsyncShipGenerator = include("asyncshipgenerator")
 local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
-local TorpedoUtility = include ("torpedoutility")
 
 mission._Debug = 0
 mission._Name = "Escort Civilian Transports"
@@ -60,6 +59,7 @@ mission.data.timeLimitInDescription = true --Show the player how much time is le
 
 --Can't set mission.data.reward.paymentMessage here since we are using a custom init.
 mission.data.accomplishMessage = "Thank you. You've saved thousands of lives today. We transferred the reward to your account."
+mission.data.abandonMessage = "We're disappointed you decided to abandon this contract. Many of our transports cannot re-route. Thousands will die."
 mission.data.failMessage = "The transports have been destroyed. Thousands of lives have been lost because of your failure."
 
 local EscortCivilians_init = initialize
@@ -100,6 +100,7 @@ function initialize(_Data_in)
             mission.data.custom.friendlyFaction = _Giver.factionIndex
             mission.data.custom.escorted = 0
             mission.data.custom.destroyed = 0
+            mission.data.custom.timePassed = 0
             mission.data.custom.piratesSpawned = 0
 
             local _MaxEscort = 3
@@ -152,6 +153,40 @@ end
 
 mission.globalPhase = {}
 mission.globalPhase.timers = {}
+mission.globalPhase.onAbandon = function()
+    if mission.data.custom.destroyed == 0 then
+        mission.data.punishment.relations = mission.data.punishment.relations / 2
+        punish()
+    else
+        punish()
+    end
+
+    if mission.data.location then
+        if atTargetLocation() then
+            ESCCUtil.allPiratesDepart()
+            transportsDepart()
+        end
+        runFullSectorCleanup(true)
+    end
+end
+
+mission.globalPhase.onFail = function()
+    if mission.data.location then
+        if atTargetLocation() then
+            ESCCUtil.allPiratesDepart()
+        end
+        runFullSectorCleanup(true)
+    end
+end
+
+mission.globalPhase.onAccomplish = function()
+    if mission.data.location then
+        if atTargetLocation() then
+            ESCCUtil.allPiratesDepart()
+        end
+        runFullSectorCleanup(false)
+    end
+end
 
 --region #GLOBALPHASE TIMERS
 
@@ -162,9 +197,11 @@ mission.globalPhase.timers[1] = {
     callback = function() 
         local _MethodName = "Global Phase Timer 1"
         mission.Log(_MethodName, "Beginning...")
-        local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
-        if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
+
+        mission.data.custom.timePassed = (mission.data.custom.timePassed or 0) + 130
+
+        --Give the player a 5 minute grace period.
+        if mission.data.custom.timePassed >= 300 and not atTargetLocation() then
             mission.data.custom.destroyed = mission.data.custom.destroyed + 1
             mission.Log(_MethodName, "Not on location - incrementing destroyed to : " .. tostring(mission.data.custom.destroyed))
 
@@ -173,6 +210,8 @@ mission.globalPhase.timers[1] = {
             end
 
             mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
+            mission.data.abandonMessage = mission.data.failMessage
+
             sync()
         end
     end,
@@ -276,6 +315,7 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
         mission.Log(_MethodName, "Was an objective.")
         mission.data.custom.destroyed = mission.data.custom.destroyed + 1
         mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
+        mission.data.abandonMessage = mission.data.failMessage
 
         mission.Log(_MethodName, "Number of transports destroyed " .. tostring(mission.data.custom.destroyed))
         sync()
@@ -312,21 +352,12 @@ function spawnCivilTransport()
 end
 
 function onCivilTransportFinished(_Generated)
-    local _Sector = Sector()
-    local _X, _Y = _Sector:getCoordinates()
-
     local _Ship = _Generated[1]
-
-    --Set durability factor.
-    local _DuraFactor = 4
-    if MissionUT.checkSectorInsideBarrier(_X, _Y) then
-        _DuraFactor = 6
-    end
 
     --Multiply durability so the ship isn't instakilled.
     local _Dura = Durability(_Ship)
     if _Dura then
-        _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * _DuraFactor
+        _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * 3
     end
 
     _Ship:setValue("_escortcivilians_defendobjective", true)
@@ -382,6 +413,17 @@ function civilTransportEscaped()
     mission.data.custom.escorted = mission.data.custom.escorted + 1
     mission.data.description[4].arguments = { _ESCORTED = mission.data.custom.escorted, _MAXESCORTED = mission.data.custom.maxEscorted }
     sync()
+end
+
+function transportsDepart()
+    local methodName = "Transports Depart"
+    mission.Log(methodName, "Running.")
+
+    local transports = {Sector():getEntitiesByScriptValue("_escortcivilians_defendobjective")}
+
+    for _, transport in pairs(transports) do
+        transport:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(3, 6))
+    end
 end
 
 function getWingSpawnTables(_WingScriptValue)
@@ -480,21 +522,38 @@ function onBetaBackgroundPiratesFinished(_Generated)
     local _SlamCt = #_Slammers
     local _SlamAdded = 0
 
-    local _DmgFactor = 0.5
+    local _DmgFactor = 4
+    local _TorpROF = 8
     if MissionUT.checkSectorInsideBarrier(_X, _Y) then
-        _DmgFactor = 2
+        _DmgFactor = 8
+        _TorpROF = 6
     end
 
-    local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = 25
-    _TorpSlammerValues._ROF = 8
-    _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DamageFactor = _DmgFactor
-    _TorpSlammerValues._DurabilityFactor = 8
-    _TorpSlammerValues._ForwardAdjustFactor = 2
-    _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
-    _TorpSlammerValues._TargetPriority = 2
-    _TorpSlammerValues._TargetTag = "_escortcivilians_defendobjective"
+    local _TorpAccelFactor = 1
+    local _TorpVelocityFactor = 1
+    local _TorpTurningSpeedFactor = 1
+    local _TorpDurabilityFactor = 10
+    if mission.data.custom.dangerLevel == 10 then
+        _TorpDurabilityFactor = 20
+        _TorpAccelFactor = 1.5
+        _TorpVelocityFactor = 1.5
+        _TorpTurningSpeedFactor = 1.5
+    end
+
+    local _TorpSlammerValues = {
+        _TimeToActive = 30,
+        _ROF = _TorpROF,
+        _UpAdjust = false,
+        _DamageFactor = _DmgFactor,
+        _DurabilityFactor = _TorpDurabilityFactor,
+        _ForwardAdjustFactor = 2,
+        _PreferWarheadType = 1, --Nuclear
+        _TargetPriority = 2,
+        _TargetTag = "_escortcivilians_defendobjective",
+        _AccelFactor = _TorpAccelFactor,
+        _VelocityFactor = _TorpVelocityFactor,
+        _TurningSpeedFactor = _TorpTurningSpeedFactor
+    }
 
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_escortcivilians_beta_wing", true)
@@ -513,15 +572,10 @@ function onBetaBackgroundPiratesFinished(_Generated)
 
         --Add torpedo slammer scripts if necessary.
         if _SlamCt + _SlamAdded < _SlamCtMax then
-            local _TitleArguments = _Pirate:getTitleArguments()
-            local _OldTitle = _TitleArguments.title
-            _TitleArguments.title = "Bombardier " .. _OldTitle
-
-            _Pirate:setTitleArguments(_TitleArguments)
-
-            _Pirate:removeScript("icon.lua")
-            _Pirate:addScript("icon.lua", "data/textures/icons/pixel/torpedoboatex.png")
+            ESCCUtil.setBombardier(_Pirate)
+            
             _Pirate:addScript("torpedoslammer.lua", _TorpSlammerValues)
+
             _SlamAdded = _SlamAdded + 1
         end
     end
@@ -531,6 +585,11 @@ end
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
+
+    if mission.data.custom.destroyed == 0 then --give players a bonus if they don't lose any transports.
+        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " Plus a bonus for no losses."
+        mission.data.reward.credits = mission.data.reward.credits * 1.25
+    end
 
     reward()
     accomplish()
@@ -612,7 +671,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * Balancing.GetSectorRichnessFactor(Sector():getCoordinates()) --SET REWARD HERE
+    reward = _BaseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates()) --SET REWARD HERE
 
     local bulletin =
     {
