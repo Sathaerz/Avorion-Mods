@@ -132,7 +132,12 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         ["2573925137"] = 0.33    ---Another autocannon mod.
     }
 
+    local genericModMultiplier = 1.0
+
     for _, _Xmod in pairs(_ActiveMods) do
+        --There are way too many mods to go through them manually anymore. Sad but we take the easy way out here.
+        genericModMultiplier = genericModMultiplier + 0.1 
+
         if _Xmod.id == "2017677089" or _Xmod.name == "DccWeaponEngineering" or _Xmod.title == "Weapon Engineering" then
             _Amp = _Amp + 3
             _ic2 = true
@@ -162,8 +167,12 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         _Amp = _Amp * 2
     end
 
-    local _FinalFactor = _Factor * _Amp
-    local _FinalDamageFactor = _DamageFactor * _Amp
+    local _FinalFactor = _Factor * _Amp * genericModMultiplier
+    local _FinalDamageFactor = _DamageFactor * _Amp * genericModMultiplier
+
+    if _MainWeapon == 1 then
+        _FinalDamageFactor = _FinalDamageFactor * 1.25
+    end
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
@@ -187,7 +196,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
 		_SGD._TargetPriority = 3 --Target the most dangerous enemies first.
 
         local _Damage = 500000000 --500 million base damage, since this can't go through shields.
-        _Damage = _Damage * math.max(1, _Amp / 2)
+        _Damage = _Damage * math.max(1, _Amp / 2) * math.max(1, genericModMultiplier / 2)
         _SGD._BaseDamagePerShot = _Damage
 
         _Superweapon:addScript("entity/stationsiegegun.lua", _SGD)
@@ -276,13 +285,13 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         _Loot:insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, Rarity(self.getRandomRarity())))
     end
 
-    local _TorpDamageFactor = 1.5
+    local _TorpDamageFactor = 2
     local _TechLevel = Balancing_GetTechLevel(_X, _Y)
     if _TechLevel <= 45 then
-        _TorpDamageFactor = 3
+        _TorpDamageFactor = 4
     end
     if _TechLevel <= 40 then
-        _TorpDamageFactor = 4.5
+        _TorpDamageFactor = 6
     end
 
     local _TorpSlammerValues = {}
@@ -292,6 +301,12 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     _TorpSlammerValues._UpAdjust = _AdjustSlammer
     _TorpSlammerValues._DamageFactor = _TorpDamageFactor
     _TorpSlammerValues._ForwardAdjustFactor = 1
+    _TorpSlammerValues._DurabilityFactor = 32
+    _TorpSlammerValues._ReachFactor = 10
+    _TorpSlammerValues._AccelFactor = 1.5
+    _TorpSlammerValues._VelocityFactor = 1.5
+    _TorpSlammerValues._TurningSpeedFactor = 1.5
+    _TorpSlammerValues._ShockwaveFactor = 2
 
     _Superweapon:addAbsoluteBias(StatsBonuses.ShieldImpenetrable, true)
     _Superweapon:addScriptOnce("internal/common/entity/background/legendaryloot.lua")

@@ -229,8 +229,7 @@ mission.phases[2].triggers[1] = {
     condition = function()
         local _MethodName = "Phase 2 Trigger 1 Condition"
 
-        local _OnLocation = getOnLocation(nil)
-        if _OnLocation then
+        if atTargetLocation() then
             return ESCCUtil.countEntitiesByValue("attackresearchbase_mission_target") == 0
         else
             return false
@@ -599,10 +598,10 @@ mission.makeBulletin = function(_Station)
 
     local _BaseReward = 70000
     if _DangerLevel >= 5 then
-        _BaseReward = _BaseReward + 5000
+        _BaseReward = _BaseReward + 6000
     end
     if _DangerLevel == 10 then
-        _BaseReward = _BaseReward + 11000
+        _BaseReward = _BaseReward + 12000
     end
     if insideBarrier then
         _BaseReward = _BaseReward * 2
