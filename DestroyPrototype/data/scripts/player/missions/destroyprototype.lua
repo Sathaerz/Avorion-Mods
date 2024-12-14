@@ -507,7 +507,7 @@ function getBulletin(station)
 	if dangerValue == 10 then
 		_BaseReward = _BaseReward + 15000
 	end
-	_BaseReward = _BaseReward * Balancing.GetSectorRichnessFactor(Sector():getCoordinates())
+	_BaseReward = _BaseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates())
 	if giverInsideBarrier then
 		_BaseReward = _BaseReward * 2
 	end
