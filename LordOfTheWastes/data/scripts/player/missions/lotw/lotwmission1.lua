@@ -480,7 +480,7 @@ mission.makeBulletin = function(_Station)
     
     local _Description = formatDescription(_Station)
 
-    reward = ESCCUtil.clampToNearest(125000 + (50000 * Balancing.GetSectorRichnessFactor(_Sector:getCoordinates())), 5000, "Up") --SET REWARD HERE
+    reward = ESCCUtil.clampToNearest(125000 + (50000 * Balancing.GetSectorRewardFactor(_Sector:getCoordinates())), 5000, "Up") --SET REWARD HERE
 
     local bulletin =
     {

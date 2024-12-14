@@ -502,7 +502,7 @@ mission.makeBulletin = function(_Station)
         _DangerCash = 30000
     end
 
-    reward = 100000 + (_DangerCash * Balancing.GetSectorRichnessFactor(_Sector:getCoordinates())) --SET REWARD HERE
+    reward = 100000 + (_DangerCash * Balancing.GetSectorRewardFactor(_Sector:getCoordinates())) --SET REWARD HERE
 
     local bulletin =
     {

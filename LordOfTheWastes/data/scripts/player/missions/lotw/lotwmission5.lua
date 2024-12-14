@@ -63,7 +63,7 @@ function initialize()
             mission.data.custom.dangerLevel = 5 --This is a story mission, so we keep things predictable.
             mission.data.custom.friendlyFaction = _Player:getValue("_lotw_faction")
 
-            local missionReward = ESCCUtil.clampToNearest(200000 + (50000 * Balancing.GetSectorRichnessFactor(_Sector:getCoordinates())), 5000, "Up")
+            local missionReward = ESCCUtil.clampToNearest(200000 + (50000 * Balancing.GetSectorRewardFactor(_Sector:getCoordinates())), 5000, "Up")
 
             missionData_in = {location = getNextLocation(), reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for destroying Swenks."}}
     
