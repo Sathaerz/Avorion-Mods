@@ -340,7 +340,7 @@ mission.makeBulletin = function(_Station)
     local _Difficulty = "Easy"
     local _Targets = _Rgen:getInt(5, _MaxTargets)
 
-    local _BaseReward = 4000
+    local _BaseReward = 5500
     if _DangerLevel == 10 then
         _BaseReward = _BaseReward + 1000
         _Targets = math.min(_Targets + 5, _MaxTargets) --Add a bias towards a higher target count, but don't push it over the maximum.
@@ -348,12 +348,8 @@ mission.makeBulletin = function(_Station)
     if insideBarrier then
         _BaseReward = _BaseReward * 2
     end
-    local _Version = GameVersion()
-    if _Version.major > 1 then
-        _BaseReward = _BaseReward * 1.33
-    end
 
-    reward = _BaseReward * _Targets * Balancing.GetSectorRichnessFactor(Sector():getCoordinates())
+    reward = _BaseReward * _Targets * Balancing.GetSectorRewardFactor(Sector():getCoordinates())
 
     local bulletin =
     {
@@ -370,7 +366,7 @@ mission.makeBulletin = function(_Station)
         checkAccept = [[
             local self, player = ...
             if player:hasScript("missions/piratebounty.lua") then
-                player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept additional bounty contracts! Abandon your current one or complete it.")
+                player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept additional pirate bounty contracts! Abandon your current one or complete it.")
                 return 0
             end
             return 1
