@@ -8,8 +8,10 @@ ESCCUtil = include("esccutil")
 local Balancing = include ("galaxy")
 local SectorGenerator = include ("SectorGenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
+local PirateGenerator = include("pirategenerator")
 local CaptainGenerator = include("captaingenerator")
 local AsyncShipGenerator = include("asyncshipgenerator")
+local ShipGenerator = include("shipgenerator")
 local SpawnUtility = include ("spawnutility")
 local Xsotan = include("story/xsotan")
 local Placer = include("placer")
@@ -148,14 +150,12 @@ mission.globalPhase.onAbandon = function()
     end
 
     if mission.data.location then
-        if atTargetLocation() then
-            minersDepart()
-        end
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
+    --miners departing is handled by doMissionEndCleanup in phase 2 onfail.
     if mission.data.location then
         runFullSectorCleanup(true)
     end
@@ -207,8 +207,8 @@ mission.phases[1] = {}
 mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
     local _random = random()
-    local missionTime = 25 * 60 --minimum 25 mins
-    missionTime = missionTime + (_random:getInt(1, 5) * 60) --add up to 5 minutes.
+    local missionTime = 20 * 60 --minimum 20 mins
+    missionTime = missionTime + (_random:getInt(2, 7) * 60) --add 2-7 minutes.
     missionTime = missionTime + (_random:getInt(1, mission.data.custom.dangerLevel) * 60) --add up to dangerlevel minutes.
 
     mission.data.timeLimit = mission.internals.timePassed + missionTime --Defend the miners for X minutes.
@@ -293,7 +293,10 @@ mission.phases[2].onAccomplish = function()
 end
 
 mission.phases[2].onFail = function()
-    doMissionEndCleanup()
+    doMissionEndCleanup() --minersDepart
+    if atTargetLocation() then
+        spawnKickoutWave()
+    end
 end
 
 mission.phases[2].onAbandon = function()
@@ -305,6 +308,11 @@ mission.phases[2].onAbandon = function()
 
         _Galaxy:setFactionRelations(_Faction, _FriendlyFaction, mission.data.custom.enemyRelationLevel2Giver)
         _Galaxy:setFactionRelationStatus(_Faction, _FriendlyFaction, mission.data.custom.enemyRelationStatus2Giver)
+    end
+
+    if atTargetLocation() then
+        minersDepart()
+        spawnKickoutWave()
     end
 end
 
@@ -410,7 +418,7 @@ function spawnMiningSector(x, y)
         if _random:test(0.5) then generator:createBigAsteroid(mat) end
     end
 
-    local numRichFields = _random:getInt(4, 6)
+    local numRichFields = _random:getInt(5, 7)
 
     for _ = 1, numRichFields do
         generator:createAsteroidField(1)
@@ -454,13 +462,19 @@ function onMinerFinished(_Generated)
     mission.Log(methodName, "Updating durability.")
     local _Dura = Durability(_Ship)
 
-    local _DurabilityBonus = 2
+    local _DurabilityBonus = 2.5
+    local _ShieldDurabilityBonus = 2.5
+
+    if mission.data.custom.inBarrier then
+        _DurabilityBonus = 4
+        _ShieldDurabilityBonus = 4
+    end
 
     local _Shield = Shield(_Ship)
     if _Shield then
-        _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * 2
+        _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * _ShieldDurabilityBonus
     else
-        _DurabilityBonus = _DurabilityBonus + 1
+        _DurabilityBonus = _DurabilityBonus * 2
     end
 
     if _Dura then
@@ -806,30 +820,108 @@ end
 
 function doMissionEndCleanup()
     if mission.data.custom.threatType == 1 then --enemy faction
-        local _Rgen = ESCCUtil.getRand()
         local _MissionDoer = Player().craftFaction or Player()
         local _Faction = Faction(mission.data.custom.enemyFaction)
         local _FriendlyFaction = Faction(mission.data.custom.friendlyFaction)
         local _Galaxy = Galaxy()
 
-        local _Entities = {Sector():getEntitiesByFaction(_Faction.index)}
-        for _, _E in pairs(_Entities) do
-            if _E.type == EntityType.Ship then
-                _E:addScriptOnce("entity/utility/delayeddelete.lua", _Rgen:getFloat(4, 8))
-            end
-        end
-
         _Galaxy:setFactionRelations(_Faction, _FriendlyFaction, mission.data.custom.enemyRelationLevel2Giver)
         _Galaxy:setFactionRelationStatus(_Faction, _FriendlyFaction, mission.data.custom.enemyRelationStatus2Giver)
         _Galaxy:setFactionRelations(_Faction, _MissionDoer, mission.data.custom.enemyRelationLevel - 10000)
         _Galaxy:setFactionRelationStatus(_Faction, _MissionDoer, mission.data.custom.enemyRelationStatus)
-    elseif mission.data.custom.threatType == 2 then --pirates
-        ESCCUtil.allPiratesDepart()
-    elseif mission.data.custom.threatType == 3 then --xsotan
-        ESCCUtil.allXsotanDepart()
     end
 
     minersDepart()
+end
+
+function spawnKickoutWave()
+    local methodName = "Spawn Kickout Wave"
+    mission.Log(methodName, "Starting")
+
+    local _sector = Sector()
+    local dist = 1500
+
+    local secGenerator = SectorGenerator(_sector:getCoordinates())
+    local players = {_sector:getPlayers()}
+
+    if mission.data.custom.threatType == 1 then --1 = faction
+        --can't do this async or the script is terminated before we make the ship.
+        local enemyFaction = Faction(mission.data.custom.enemyFaction)
+
+        local flagShip = ShipGenerator.createFlagShip(enemyFaction, secGenerator:getPositionInSector(dist))
+
+        flagShip:addScriptOnce("ironcurtain.lua", { _Duration = math.huge })
+        flagShip:addScriptOnce("avenger.lua")
+        flagShip:addScriptOnce("warcountdown.lua")
+        flagShip:setValue("_DefenseController_Manage_Own_Invincibility", true)
+
+        mission.Log(methodName, "Adding defense controller")
+        local defControlValues = {
+            _DefenseLeader = flagShip.index,
+            _DefenderCycleTime = 60,
+            _DangerLevel = 10,
+            _MaxDefenders = 12,
+            _AllDefenderDamageScale = 2,
+            _MaxDefendersSpawn = 6,
+            _DefenderDistance = 1500,
+            _LowTable = "High",
+            _IsPirate = false,
+            _Factionid = flagShip.factionIndex,
+            _DefenderHPThreshold = 0.5,
+            _DefenderOmicronThreshold = 0.5
+        }
+    
+        _sector:addScriptOnce("sector/background/defensecontroller.lua", defControlValues)
+    elseif mission.data.custom.threatType == 2 then --2 = pirates
+        --can't do this async or the script is terminated before we make the ship.
+        local motherShip = PirateGenerator.createScaledBoss(PirateGenerator.getGenericPosition())
+
+        motherShip:addScriptOnce("ironcurtain.lua", { _Duration = math.huge })
+        motherShip:addScriptOnce("avenger.lua")
+        motherShip:addScriptOnce("allybooster.lua")
+        motherShip:setValue("_DefenseController_Manage_Own_Invincibility", true)
+
+        mission.Log(methodName, "Adding defense controller")
+        local x, y = _sector:getCoordinates()
+
+        local defControlValues = {
+            _DefenseLeader = motherShip.index,
+            _DefenderCycleTime = 60,
+            _DangerLevel = 10,
+            _MaxDefenders = 12,
+            _AllDefenderDamageScale = 2,
+            _MaxDefendersSpawn = 6,
+            _DefenderDistance = 1500,
+            _LowTable = "High",
+            _IsPirate = true,
+            _Factionid = motherShip.factionIndex,
+            _PirateLevel = Balancing_GetPirateLevel(x, y),
+            _DefenderHPThreshold = 0.5,
+            _DefenderOmicronThreshold = 0.5
+        }
+    
+        _sector:addScriptOnce("sector/background/defensecontroller.lua", defControlValues)
+    else --3 = xsotan
+        local xParthenope = Xsotan.createParthenope(secGenerator:getPositionInSector(dist), nil)
+
+        if xParthenope and valid(xParthenope) then
+            local xsotanAI = ShipAI(xParthenope.id)
+
+            for _, p in pairs(players) do
+                xsotanAI:registerEnemyFaction(p.index)
+            end
+
+            xsotanAI:registerEnemyFaction(mission.data.custom.friendlyFaction)
+            
+            xsotanAI:setAggressive()
+        end
+
+        --the parthenope comes with avenger baked in.
+        xParthenope:addScriptOnce("ironcurtain.lua", { _Duration = math.huge, _SendMessage = false })
+        xParthenope:setValue("xsotan_no_despawn", true)
+    end
+
+    mission.Log(methodName, "finished")
 end
 
 function failAndPunish()
@@ -939,12 +1031,12 @@ mission.makeBulletin = function(_Station)
         end
     end
 
-    local baseReward = 50000
+    local baseReward = 52500
     if dangerLevel >= 5 then
-        baseReward = baseReward + 5000
+        baseReward = baseReward + 7500
     end
     if dangerLevel == 10 then
-        baseReward = baseReward + 5000
+        baseReward = baseReward + 7500
     end
 
     if threatType == 1 then --the faction version tends to be more difficult, even at danger 1.
@@ -955,7 +1047,7 @@ mission.makeBulletin = function(_Station)
         baseReward = baseReward * 2
     end
 
-    local baseRepReward = 1000 --Why is this so low? Becasue you get a ton of extra rep from killing the pirates or xsotan w/ the miners active.
+    local baseRepReward = 1000 --Why is this so low? Becasue you get a ton of extra rep from killing the enemies w/ the miners active.
 
     reward = baseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates()) --SET REWARD HERE
     repReward = baseRepReward
