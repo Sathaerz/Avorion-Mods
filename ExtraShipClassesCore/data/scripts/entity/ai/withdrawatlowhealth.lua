@@ -66,7 +66,7 @@ end
 --region #CLIENT / SERVER functions
 
 function LowHealthWithdraw.Log(_MethodName, _Msg)
-    if _Debug == 1 then
+    if self._Debug and self._Debug == 1 then
         print("[ESCC Withdraw on Low HP AI] - [" .. _MethodName .. "] - " .. _Msg)
     end
 end

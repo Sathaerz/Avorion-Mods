@@ -352,11 +352,8 @@ function TorpedoSlammer.generateTorpedo()
         _BodyType = _Rgen:getInt(1, 9)
     end
 
-    --The offest value does weird crap in the torp gen. It's calculated via length so if you're not careful and you put in too high of an offset, 
-    --you actually make your desired tech level worse. We solve this wacky unintuitive case by handling things ourselves. If you're an avo dev and you happen
-    --to read this, I'm not sorry for getting a little snarky here. Fix this by putting 'sector = math.max(sector, 0)' on line 106 of torpedogenerator.lua.
-    --I guarantee you that nobody is expecting to see the tech level wrapping from higher/lower offset values. Guarantee it. Especially since the Turret
-    --generator does it correctly. Look at line 95 in turretgenerator.lua! That's the correct approach!!!!
+    --Boxelware fixed this. Thanks guys! I'm glad you actually listened to my bug report :D
+    --The only reason I am leaving this code in here is just in case someone is still running an older version of the game.
     local _SimSector = math.floor(length(vec2(_TorpX, _TorpY))) + self._Data._TorpOffset
     _SimSector = math.max(_SimSector, 0) --Don't let it go below 0, otherwise we get an unexpected tech value.
 

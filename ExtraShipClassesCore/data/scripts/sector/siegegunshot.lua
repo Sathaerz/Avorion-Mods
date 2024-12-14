@@ -168,7 +168,7 @@ end
 function SiegeGunShot.explosionEffect(_Position)
     local _MethodName = "Explosion Effect"
     self.Log(_MethodName, "Showing explosion!!!")
-    local _Rgen = ESCCUtil.getRand()
+    local _Rgen = random()
 
     for _ = 1, 4 do
         local _Offset = vec3(_Rgen:getFloat(-3, 3), _Rgen:getFloat(-3, 3), _Rgen:getFloat(-3, 3))

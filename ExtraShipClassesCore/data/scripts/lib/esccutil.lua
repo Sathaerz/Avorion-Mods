@@ -333,6 +333,18 @@ function ESCCUtil.setDeadshot(_Ship)
     self.replaceIcon(_Ship, "data/textures/icons/pixel/laserboat.png")
 end
 
+function ESCCUtil.setMarksman(_Ship)
+    --Faction ships have less elaborate titles.
+    _Ship.title = "Marksman " .. _Ship.title
+    self.replaceIcon(_Ship, "data/textures/icons/pixel/laserboat.png")
+end
+
+function ESCCUtil.setFusilier(_Ship)
+    --Faction ships have less elaborate titles.
+    _Ship.title = "Fusilier " .. _Ship.title
+    self.replaceIcon(_Ship, "data/textures/icons/pixel/torpedoboatex.png")
+end
+
 function ESCCUtil.removeCivilScripts(_Ship)
     _Ship:removeScript("civilship.lua")
     _Ship:removeScript("dialogs/storyhints.lua")

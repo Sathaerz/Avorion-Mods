@@ -28,6 +28,8 @@ function AsyncShipGenerator:createDefenderByName(faction, position, _Name)
         _Ship = self:createCarrier(faction, position)
     elseif _Name == "BLOCKER" then
         _Ship = self:createBlockerShip(faction, position)
+    elseif _Name == "MS" then
+        _Ship = self:createMilitaryShip(faction, position)
     else
         print("ERROR: " .. tostring(_Name) .. " is not a valid name - spawning a standard defender instead.")
         _Ship = self:createDefender(faction, position)

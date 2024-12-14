@@ -7,22 +7,25 @@ local self = IronCurtain
 
 --Named after that old red alert unit that would give player units temporary invincibility
 self._Data = {}
-self._Data._Duration = nil
-self._Data._TimeActive = nil
-self._Data._MinDura = nil
-self._Data._Active = nil
-self._Data._SentMessage = false
 
 self._Debug = 0
 
-function IronCurtain.initialize(_MaxDuration, _MinDurability)
-    _MaxDuration = _MaxDuration or 120
-    _MinDurability = _MinDurability or 0.25
+function IronCurtain.initialize(_Values)
+    local methodName = "Initialize"
+    self.Log(methodName, "Initializing Iron Curtain v15")
 
-    self._Data._Duration = _MaxDuration
-    self._Data._MinDura = _MinDurability
+    self._Data = _Values or {}
+
+    self._Data._Duration = self._Data._Duration or 120
+    self._Data._MinDura = self._Data._MinDura or 0.25
+    if self._Data._SendMessage == nil then --only override this on a NIL, otherwise this will override a correctly sent false.
+        self._Data._SendMessage = true
+    end
+
+    --The player can't alter these.
     self._Data._TimeActive = 0
     self._Data._Active = false
+    self._Data._SentMessage = false
 
     if onServer() then
         Entity():registerCallback("onDamaged", "onDamaged")
@@ -30,29 +33,49 @@ function IronCurtain.initialize(_MaxDuration, _MinDurability)
 end
 
 function IronCurtain.getUpdateInterval()
-    return 5
+    return 2
 end
 
 function IronCurtain.updateServer(_TimeStep)
+    local methodName = "Update Server"
+
+    local _entity = Entity()
+    local _durability = Durability()
+
     if self._Data._Active then
         self._Data._TimeActive = self._Data._TimeActive + _TimeStep
+
+        local _random = random()
+
+        local direction = _random:getDirection()
+        local direction2 = _random:getDirection()
+        local direction3 = _random:getDirection()
+        broadcastInvokeClientFunction("animation", direction, direction2, direction3)
+
         if self._Data._TimeActive > self._Data._Duration then
-            Entity().invincible = false
+            self.Log(methodName, "Duration is up - resetting invincibility.")
+            _entity.invincible = false
+            _durability.invincibility = 0.0
+
             terminate()
             return
         end
+    else
+        _durability.invincibility = self._Data._MinDura --So we don't get blasted before invincibility can be set.
     end
 end
 
 function IronCurtain.onDamaged(_OwnID, _Amount, _InflictorID)
-    local _Sector = Sector()
-    
+    local methodName = "On Damaged"
+
     local _Entity = Entity()
     local _Ratio = _Entity.durability / _Entity.maxDurability
-    local _MinRatio = self._Data._MinDura
+    local _MinRatio = self._Data._MinDura + 0.01 --Fudge by 1%
 
-    if _Ratio < _MinRatio then
-        if not self._Data._SentMessage then
+    if _Ratio <= _MinRatio then
+        self.Log(methodName, "HP Ratio low enough - activating!")
+
+        if self._Data._SendMessage and not self._Data._SentMessage then
             self.sendMessage()
             self._Data._SentMessage = true
         end
@@ -64,6 +87,17 @@ end
 function IronCurtain.sendMessage()
     Sector():broadcastChatMessage(Entity(), ChatMessageType.Chatter, "Iron curtain activated!")
 end
+
+--region #CLIENT FUNCTIONS
+
+function IronCurtain.animation(direction, direction2, direction3)
+    local _Sector = Sector()
+    _Sector:createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(0.25, 0.25, 0.25), 0.4)
+    _Sector:createHyperspaceJumpAnimation(Entity(), direction2, ColorRGB(0.25, 0.25, 0.25), 0.4)
+    _Sector:createHyperspaceJumpAnimation(Entity(), direction3, ColorRGB(0.25, 0.25, 0.25), 0.4)
+end
+
+--endregion
 
 --region #CLIENT / SERVER functions
 

@@ -2,6 +2,7 @@
 
 --region #SERVER FUNCTIONS
 
+--This is obsolete. I will keep it in for a few more versions, but I will be removing it eventually.
 function getOnLocation(inSector)
     local _Sector = inSector or Sector()
     local _X, _Y = _Sector:getCoordinates()
@@ -14,12 +15,11 @@ end
 
 function runFullSectorCleanup(cleanAll)
     local _Sector = Sector()
-    local _OnLocation = getOnLocation(_Sector)
     if cleanAll == nil then --if it's not set, then set it to true. Can't do cleanAll = cleanAll or true b/c that will remove (correct) false values.
         cleanAll = true
     end
 
-    if _OnLocation then
+    if atTargetLocation() then
         --Just in case the mission doesn't include ESCCUtil. Deletes everything that clearMissionAssets would when not deleting everything (true/false)
         local _ESCCUtil = include("esccutil")
         local _EntityTypes = _ESCCUtil.majorEntityTypes()

@@ -95,13 +95,17 @@ function initUI()
     MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Frenzied", "onSpawnFrenziedButtonPressed")
     MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Secondaries", "onSpawnSecondariesButtonPressed")
     MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Thorns", "onSpawnThornsButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Xsotan Infestor", "onSpawnXsotanInfestorButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Xsotan Oppressor", "onSpawnXsotanOppressorButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Xsotan Sunmaker", "onSpawnXsotanSunmakerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Xsotan Ballistyx", "onSpawnXsotanBallistyxButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Xsotan Longinus", "onSpawnXsotanLonginusButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
+
+    local tabXsotan = window:createTab("Entity", "data/textures/icons/xsotan.png", "ESCC Xsotan")
+    numButtons = 0
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Infestor", "onSpawnXsotanInfestorButtonPressed")
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Oppressor", "onSpawnXsotanOppressorButtonPressed")
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Sunmaker", "onSpawnXsotanSunmakerButtonPressed")
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Ballistyx", "onSpawnXsotanBallistyxButtonPressed")
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Longinus", "onSpawnXsotanLonginusButtonPressed")
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Parthenope", "onSpawnXsotanParthenopeButtonPressed")
 
     local tab3 = window:createTab("Entity", "data/textures/icons/edge-crack.png", "ESCC Bosses")
     numButtons = 0
@@ -459,6 +463,24 @@ function getModTable()
             table.insert(_BulletinMissionData, {
                 _Caption = "Destroy Pirate Stronghold",
                 _Tooltip = "destroystronghold"
+            })
+        end
+        if p.id == "CollectXsotanBounty" then --Collect Xsotan Bounty
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Collect Xsotan Bounty",
+                _Tooltip = "xsotanbounty"
+            })
+        end
+        if p.id == "3373069547" then --The Dig
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "The Dig",
+                _Tooltip = "thedig"
             })
         end
     end
@@ -1045,6 +1067,10 @@ function onSpawnThornsButtonPressed()
 end
 callable(nil, "onSpawnThornsButtonPressed")
 
+--endregion
+
+--region #tabXostan
+
 function onSpawnXsotanInfestorButtonPressed()
     if onClient() then
         invokeServerFunction("onSpawnXsotanInfestorButtonPressed")
@@ -1149,6 +1175,21 @@ function onSpawnXsotanWarlockButtonPressed()
     Xsotan.createWarlock(MatrixLookUpPosition(-dir, up, pos))
 end
 callable(nil, "onSpawnXsotanWarlockButtonPressed")
+
+function onSpawnXsotanParthenopeButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanParthenopeButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createParthenope(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanParthenopeButtonPressed")
 
 --endregion
 

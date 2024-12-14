@@ -93,20 +93,6 @@ function PirateGenerator.getGenericPosition()
     return MatrixLookUpPosition(-_Pos, vec3(0, 1, 0), _Pos)
 end
 
---region #VANILLA BUGFIX
-
-local vanilla_createScaledRavager = PirateGenerator.createScaledRavager
-function PirateGenerator.createScaledRavager(position)
-    if random():test(0.2) then
-        return PirateGenerator.createScaledCarrier(position)
-    end
-
-    local scaling = PirateGenerator.getScaling()
-    return PirateGenerator.create(position, 6.0 * scaling, "Ravager"%_T)
-end
-
---endregion
-
 --Get a number of positions for spawning pirates in the standard positions they spawn in for attacks, so we don't need to do it in our missions / events.
 --region #CREATE SCALED
 

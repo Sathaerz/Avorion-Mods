@@ -20,6 +20,8 @@ function ShipGenerator.createDefenderByName(faction, position, _Name)
         _Ship = ShipGenerator.createLightDefender(faction, position)
     elseif _Name == "M" then
         _Ship = ShipGenerator.createDefender(faction, position)
+    elseif _Name == "MS" then
+        _Ship = ShipGenerator.createMilitaryShip(faction, position)
     else
         _Ship = ShipGenerator.createHeavyDefender(faction, position)
     end
@@ -39,7 +41,9 @@ function ShipGenerator.createLightDefender(faction, position)
     turrets = turrets + turrets * math.max(0, faction:getTrait("careful") or 0) * 0.5
 
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
+    ship.crew = ship.idealCrew
     ship.title = ShipUtility.getMilitaryNameByVolume(ship.volume)
+    ship.shieldDurability = ship.shieldMaxDurability
     ship.damageMultiplier = ship.damageMultiplier * 3 * _HighAmp
 
     ship:addScript("ai/patrol.lua")
@@ -68,7 +72,9 @@ function ShipGenerator.createHeavyDefender(faction, position)
     --Add two sets of turrets and give them x3 damage. This should result in roughly 50% more damage than a standard defender.
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
+    ship.crew = ship.idealCrew
     ship.title = ShipUtility.getMilitaryNameByVolume(ship.volume)
+    ship.shieldDurability = ship.shieldMaxDurability
     ship.damageMultiplier = ship.damageMultiplier * 3 * _HighAmp * _HighAmp
 
     ship:addScript("ai/patrol.lua")
@@ -122,6 +128,7 @@ function ShipGenerator.createHeavyCarrier(faction, position)
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
     ship.crew = ship.idealCrew
     ship.title = ShipUtility.getMilitaryNameByVolume(ship.volume)
+    ship.shieldDurability = ship.shieldMaxDurability
 
     ship:addScript("ai/patrol.lua")
     ship:setValue("is_armed", true)
@@ -147,8 +154,9 @@ function ShipGenerator.createAWACS(faction, position)
     --Add a standard armament and blocker equipment
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
     ShipUtility.addBlockerEquipment(ship)
-
+    ship.crew = ship.idealCrew
     ship.title = "AWACS Ship"%_t
+    ship.shieldDurability = ship.shieldMaxDurability
 
     ship:addScript("ai/patrol.lua")
     ship:setValue("is_armed", true)
@@ -174,7 +182,9 @@ function ShipGenerator.createScout(faction, position)
     turrets = turrets + turrets * math.max(0, faction:getTrait("careful") or 0) * 0.25
 
     ShipUtility.addArmedTurretsToCraft(ship, turrets)
+    ship.crew = ship.idealCrew
     ship.title = "Scout Ship"%_t
+    ship.shieldDurability = ship.shieldMaxDurability
 
     ship:addScript("ai/patrol.lua")
     ship:setValue("is_armed", true)
@@ -242,6 +252,24 @@ function ShipGenerator.createCivilTransport(faction, position, volume)
     ship:addScript("icon.lua", "data/textures/icons/pixel/civil-ship.png")
 
     ship:setTitle("Civilian Transport", {})
+
+    return ship
+end
+
+function ShipGenerator.createFlagShip(faction, position)
+    local _MethodName = "Create FlagShip"
+    ShipGenerator.Log(_MethodName, "Beginning...")
+
+    local volume = Balancing_GetSectorShipVolume(Sector():getCoordinates()) * Balancing_GetShipVolumeDeviation() * 40.0 * _Amp
+
+    local ship = ShipGenerator.createShip(faction, position, volume)
+
+    ShipUtility.addFlagShipEquipment(ship) --sets title already.
+    ship.crew = ship.idealCrew
+    ship.shieldDurability = ship.shieldMaxDurability
+
+    ship:addScript("ai/patrol.lua")
+    ship:setValue("is_flagship", true)
 
     return ship
 end

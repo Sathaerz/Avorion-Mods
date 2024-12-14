@@ -51,7 +51,7 @@ self._Data = {}
         _ForcedDefenderDamageScale* ==  All forcibly spawned defenders (see _ForceWaveAtThreshold / _InvincibleOnForced, etc.) will have their damage multiplier multiplied by this value.
         _AllDefenderDamageScale*    ==  Multiplies the damage of all ships spawned by this amount. Defaults to 1.
         _IsPirate                   ==  Whether or not to use faction ships or pirate ships.
-        _FactionId                  ==  The faction ID of the faction that the ships will spawn for. Important for picking a new defense leader, and for 
+        _Factionid                  ==  The faction ID of the faction that the ships will spawn for. Important for picking a new defense leader, and for 
         _PirateLevel                ==  The pirate level of the pirates that will spawn. Important for setting the async pirate generator.
         _AddToEachWave              ==  Automatically adds these to each wave. No questions asked. Set this to { "Jammer" } for instance, and a jammer will be added to each wave.
         _AddPctToEachWave           ==  Adds these to each wave based on a % chance. Set this to { pct = 0.35, name = "Jammer" } for instance, and a jammer will have a 35% chance to be added to each wave.
