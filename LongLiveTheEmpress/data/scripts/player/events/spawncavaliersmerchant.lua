@@ -68,7 +68,8 @@ function initialize()
     end
 
     ship.title = "Mobile Cavaliers Merchant"
-    ship.name = LLTEUtil.getFreighterName() 
+    ship.name = LLTEUtil.getFreighterName()
+    ship:invokeFunction("civilship.lua", "reinitializeInteractionText")
     ship:addScript("data/scripts/entity/merchants/cavaliersutilitymerchant.lua")
     ship:addScript("data/scripts/entity/merchants/cavaliersturretmerchant.lua")
     ship:addScript("data/scripts/entity/merchants/travellingmerchant.lua")

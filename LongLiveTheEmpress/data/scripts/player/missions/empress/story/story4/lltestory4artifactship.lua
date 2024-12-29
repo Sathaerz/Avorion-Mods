@@ -158,7 +158,7 @@ function ArtifactShip.Log(_MethodName, _Msg, _OverrideDebug)
     if _OverrideDebug then self._Debug = _TempDebug end
 end
 
---region #SECURE / RESTORE FUNCTIONS
+--region #SECURE / RESTORE CALLS
 
 function ArtifactShip.secure()
     return self._Data

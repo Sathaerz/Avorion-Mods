@@ -65,7 +65,21 @@ function LLTEUtil.getFreighterName()
         "Zweihander",
         "Zanbato",
         "Switchblade",
-        "Anlace"
+        "Anlace",
+        "Onager",
+        "Hwacha",
+        "Kpinga",
+        "Hunga Munga",
+        "Danisco",
+        "Goleyo",
+        "Khopesh",
+        "Mambele",
+        "Nimcha",
+        "Kaskara",
+        "Swordbreaker",
+        "Katar",
+        "Chakram",
+        "Falcata"
     }
 
     local _Postfix = {
@@ -82,7 +96,12 @@ function LLTEUtil.getFreighterName()
         "Merchandiser",
         "Broker",
         "Mediator",
-        "Bootlegger"
+        "Bootlegger",
+        "Negotiator",
+        "Dealer",
+        "Hawker",
+        "Purveyor",
+        "Enterpriser"
     }
 
     local _Rgen = ESCCUtil.getRand()
@@ -1423,8 +1442,7 @@ function LLTEUtil.spawnBladeOfEmpress(_DeleteOnLeft)
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
-    local _EmpressBlade = Sector():createShip(_Faction, "", _Plan, PirateGenerator.getGenericPosition())
-    _EmpressBlade.name = "Blade of the Empress"
+    local _EmpressBlade = Sector():createShip(_Faction, "Blade of the Empress", _Plan, PirateGenerator.getGenericPosition())
     _EmpressBlade.title = "Adriana's Flagship"
 
     ShipUtility.addBossAntiTorpedoEquipment(_EmpressBlade)
@@ -1482,8 +1500,7 @@ function LLTEUtil.spawnCavalierSupercap(_DeleteOnLeft)
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
-    local _SuperCap = Sector():createShip(_Faction, "", _Plan, PirateGenerator.getGenericPosition())
-    _SuperCap.name = self.getCapitalShipName()
+    local _SuperCap = Sector():createShip(_Faction, self.getCapitalShipName(), _Plan, PirateGenerator.getGenericPosition())
     _SuperCap.title = "Cavaliers Battleship"
 
     ShipUtility.addBossAntiTorpedoEquipment(_SuperCap)
@@ -1533,8 +1550,7 @@ function LLTEUtil.spawnAnimosity(_PirateLevel, _AddLoot)
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
-    local _Animosity = Sector():createShip(_Faction, "", _Plan, PirateGenerator.getGenericPosition())
-    _Animosity.name = "Animosity"
+    local _Animosity = Sector():createShip(_Faction, "Animosity", _Plan, PirateGenerator.getGenericPosition())
     _Animosity.title = "Animosity"
 
     ShipUtility.addScalableArtilleryEquipment(_Animosity, 5, 1, false)

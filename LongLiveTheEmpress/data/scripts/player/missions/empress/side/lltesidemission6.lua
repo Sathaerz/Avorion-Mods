@@ -103,7 +103,7 @@ function initialize()
                 end
             end
 
-            local _SectorFactor = Balancing.GetSectorRichnessFactor(Sector():getCoordinates())
+            local _SectorFactor = Balancing.GetSectorRewardFactor(Sector():getCoordinates())
             local _SectorFactor = math.max(_SectorFactor / 2, 1)
             mission.Log(_MethodName, "Sector factor is: " .. tostring(_SectorFactor))
             local missionReward = ESCCUtil.clampToNearest(_RewardBase * _SectorFactor, 5000, "Up")

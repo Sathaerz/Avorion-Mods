@@ -67,6 +67,7 @@ local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 local ShipUtility = include ("shiputility")
 local Placer = include ("placer")
+local UpgradeGenerator = include ("upgradegenerator")
 
 mission._Debug = 0
 mission._Name = "Destroy Entrenched Pirates"
@@ -189,7 +190,7 @@ function initialize()
                 _RewardBase = _RewardBase * 2
             end
 
-            local missionReward = ESCCUtil.clampToNearest(_RewardBase * Balancing.GetSectorRichnessFactor(Sector():getCoordinates()), 5000, "Up")
+            local missionReward = ESCCUtil.clampToNearest(_RewardBase * Balancing.GetSectorRewardFactor(Sector():getCoordinates()), 5000, "Up")
 
             missionData_in = {location = _Target, reward = {credits = missionReward}}
     
@@ -622,6 +623,14 @@ function buildObjectiveSector(_X, _Y)
             _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * _DuraFactor
         end
 
+        --finally, (maybe) add a military tcs to the station's loot table.
+        if _Rgen:test(math.max(0.25, mission.data.custom.dangerLevel * 0.05)) then
+            local _upgradeGenerator = UpgradeGenerator()
+            local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
+            local _seedInt = _Rgen:getInt(1, 20000)
+            Loot(_Station):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(getValueFromDistribution(_upgradeRarities)), Seed(_seedInt)))
+        end
+
         mission.data.custom.militaryStationid = _Station.id
 
         Placer.resolveIntersections()
@@ -645,6 +654,33 @@ function buildObjectiveSector(_X, _Y)
 end
 
 --endregion
+
+function getSectorRarityTables(_X, _Y, _upgradeGenerator)
+    local _dangerLevel = mission.data.custom.dangerLevel
+    local _rarities = _upgradeGenerator:getSectorRarityDistribution(_X, _Y)
+    _rarities[-1] = 0 --no petty
+    _rarities[0] = 0 --no common
+    _rarities[1] = 0 --no uncommon
+    _rarities[2] = 0 --no rare
+
+    local _dangerFactors = {
+        { _exceptional = 1, _exotic = 1}, --1
+        { _exceptional = 1, _exotic = 1}, --2
+        { _exceptional = 1, _exotic = 1}, --3
+        { _exceptional = 1, _exotic = 1}, --4
+        { _exceptional = 0.5, _exotic = 1}, --5
+        { _exceptional = 0.5, _exotic = 1}, --6
+        { _exceptional = 0.5, _exotic = 0.75}, --7
+        { _exceptional = 0.25, _exotic = 0.75}, --8
+        { _exceptional = 0.25, _exotic = 0.5}, --9
+        { _exceptional = 0.12, _exotic = 0.5} --10
+    }
+    
+    _rarities[3] = _rarities[3] * _dangerFactors[_dangerLevel]._exceptional
+    _rarities[4] = _rarities[4] * _dangerFactors[_dangerLevel]._exotic
+
+    return _rarities
+end
 
 function finishAndReward()
     local _MethodName = "Finish and Reward"

@@ -18,7 +18,7 @@ local self = CavaliersTorpedoLoader
 
 self._Torpedoes = {}
 
-self._Debug = 1
+self._Debug = 0
 
 -- if this function returns false, the script will not be listed in the interaction window,
 -- even though its UI may be registered
