@@ -1,10 +1,14 @@
 local Swenks = include("story/swenks")
 
 local LOTW_onSectorEntered = SpawnRandomBosses.onSectorEntered
-function SpawnRandomBosses.onSectorEntered(_Player, _X, _Y, _ChangeType)
-    LOTW_onSectorEntered(_Player, _X, _Y, _ChangeType)
+function SpawnRandomBosses.onSectorEntered(player, x, y, changeType)
+    LOTW_onSectorEntered(player, x, y, changeType)
 
-    self.trySpawningSwenks(_Player, _X, _Y)
+    if not (changeType == SectorChangeType.Jump) and not (changeType == SectorChangeType.Switch) then return end
+    if noSpawnTimer > 0 then return end
+    if self.getSpawningDisabled(x, y) then return end
+
+    self.trySpawningSwenks(player, x, y)
 end
 
 function SpawnRandomBosses.trySpawningSwenks(_Player, _X,  _Y)

@@ -18,13 +18,9 @@ include("structuredmission")
 
 ESCCUtil = include("esccutil")
 
-local AsyncPirateGenerator = include ("asyncpirategenerator")
 local PirateGenerator = include("pirategenerator")
-local AsyncShipGenerator = include("asyncshipgenerator")
 local Balancing = include ("galaxy")
-local SpawnUtility = include ("spawnutility")
 local SectorTurretGenerator = include ("sectorturretgenerator")
-local UpgradeGenerator = include ("upgradegenerator")
 
 mission._Debug = 0
 mission._Name = "Lord of the Wastes"
@@ -167,8 +163,6 @@ function spawnSwenks()
         local pos = random():getVector(-1000, 1000)
         return MatrixLookUpPosition(-pos, vec3(0, 1, 0), pos)
     end
-
-    local bossBeaten = Server():getValue("swoks_beaten")
 
     -- spawn
     local boss = PirateGenerator.createBoss(piratePosition())
