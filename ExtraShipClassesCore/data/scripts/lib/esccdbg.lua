@@ -338,35 +338,35 @@ function getModTable()
     local xmods = Mods()
 
     for _, p in pairs(xmods) do
-        if p.id == "2208370349" then
+        if p.name == "IncreasingThreat" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasIncreasingThreat = true
         end
-        if p.id == "2421751351" then
+        if p.name == "LongLiveTheEmpress" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasLongLiveTheEmpress = true
         end
-        if p.id == "RetrogradeCampaign" then
+        if p.name == "RetrogradeCampaign" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasRetrogradeCampaign = true
         end
-        if p.id == "Emergence" then
+        if p.name == "Emergence" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasEmergence = true
         end
-        if p.id == "2733586433" then
+        if p.name == "LordOfTheWastes" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasLOTW = true
         end
-        if p.id == "BusinessAsUsual" then
+        if p.name == "BusinessAsUsual" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasBusinessAsUsual = true
         end
-        if p.id == "3354090937" then
+        if p.name == "HorizonKeepers" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasHorizonKeepers = true
         end
-        if p.id == "2746663587" then --Ambush Raiders
+        if p.name == "AmbushRaiders" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
             
@@ -375,7 +375,7 @@ function getModTable()
                 _Tooltip = "ambushraiders"
             })
         end
-        if p.id == "2439444436" then --Attack Research Base
+        if p.name == "AttackResearchBase" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -384,7 +384,7 @@ function getModTable()
                 _Tooltip = "attackresearchbase"
             })
         end
-        if p.id == "2133506910" then --Destroy Prototype
+        if p.name == "DestroyPrototype" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -393,7 +393,7 @@ function getModTable()
                 _Tooltip = "destroyprototype2"
             })
         end
-        if p.id == "2379374382" then --Wrecking Havoc
+        if p.name == "WreckingHavoc" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -402,7 +402,7 @@ function getModTable()
                 _Tooltip = "wreckinghavoc"
             })
         end
-        if p.id == "2381708468" then --Collect Pirate Bounty
+        if p.name == "CollectPirateBounty" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -411,7 +411,7 @@ function getModTable()
                 _Tooltip = "piratebounty"
             })
         end
-        if p.id == "2743848682" then --Escort Civilian Transports
+        if p.name == "EscortCivilians" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -420,7 +420,7 @@ function getModTable()
                 _Tooltip = "escortcivilians"
             })
         end
-        if p.id == "2750680477" then --Transfer Satellite
+        if p.name == "TransferSatellite" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -429,7 +429,7 @@ function getModTable()
                 _Tooltip = "transfersatellite"
             })
         end
-        if p.id == "2901149152" then --Xsotan Infestation
+        if p.name == "EradicateXsotan" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -438,7 +438,7 @@ function getModTable()
                 _Tooltip = "eradicatexsotan"
             })
         end
-        if p.id == "3306700477" then --Defend Prototype
+        if p.name == "DefendPrototype" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -447,7 +447,7 @@ function getModTable()
                 _Tooltip = "defendprototype"
             })
         end
-        if p.id == "3341419631" then --Rescue Slaves
+        if p.name == "RescueSlaves" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -456,7 +456,7 @@ function getModTable()
                 _Tooltip = "rescueslaves"
             })
         end
-        if p.id == "DestroyStronghold" then --Destroy Stronghold
+        if p.name == "DestroyStronghold" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -465,7 +465,7 @@ function getModTable()
                 _Tooltip = "destroystronghold"
             })
         end
-        if p.id == "CollectXsotanBounty" then --Collect Xsotan Bounty
+        if p.name == "CollectXsotanBounty" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
@@ -474,13 +474,31 @@ function getModTable()
                 _Tooltip = "xsotanbounty"
             })
         end
-        if p.id == "3373069547" then --The Dig
+        if p.name == "TheDig" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
 
             table.insert(_BulletinMissionData, {
                 _Caption = "The Dig",
                 _Tooltip = "thedig"
+            })
+        end
+        if p.name == "AnalyzeXsotanSpecimen" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Analyze Xsotan Specimen",
+                _Tooltip = "xsotanspecimen"
+            })
+        end
+        if p.name == "ScanXsotanGroup" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Scan Xsotan Group",
+                _Tooltip = "scanxsotangroup"
             })
         end
     end
