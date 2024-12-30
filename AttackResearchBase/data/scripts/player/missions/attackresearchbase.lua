@@ -55,7 +55,7 @@ mission.data.title = "Attack Research Base"
 mission.data.description = {
     {text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     {text = "..." },
-    { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
+    { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
     { text = "Destroy all stations present", bulletPoint = true, fulfilled = false, visible = false }
 }
 
@@ -76,22 +76,9 @@ function initialize(_Data_in)
 
             local _Sector = Sector()
             local _Giver = Entity(_Data_in.giver)
+
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .pirates
-                .pirateLevel
-                .enemyFaction
-                .enemyRelationLevel
-                .enemyRelationStatus
-                .spawnMilitary
-                .initialDefenders
-                .respawningDefenders
-                .defenderRespawnTime
-                .researchStationid
-                .addChip
-                .supplyPerCycle
-                .supplyPerShip
+                CUSTOM MISSION DATA SETUP:
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.pirates = _Data_in.pirates
@@ -137,9 +124,13 @@ function initialize(_Data_in)
                 mission.data.custom.supplyPerShip = 600
             end
 
+            --[[=====================================================
+                MISSION DESCRIPTION SETUP:
+            =========================================================]]
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
-            mission.data.description[2].arguments = {x = _X, y = _Y, enemyName = mission.data.custom.enemyName }
+            mission.data.description[2].arguments = { x = _X, y = _Y, enemyName = mission.data.custom.enemyName }
+            mission.data.description[3].arguments = { _X = _X, _Y = _Y }
 
             --Run standard initialization
             AttackResearchBase_init(_Data_in)
@@ -509,44 +500,40 @@ function formatDescription(_Station, _DangerValue)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
-    local _DescriptionType = 1 --Neutral
+    local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
+        descriptionType = 2 --Aggressive.
     elseif _Aggressive < 0.5 then
-        _DescriptionType = 3 --Peaceful.
+        descriptionType = 3 --Peaceful.
     end
 
-    local _FinalDescription = ""
-    if _DescriptionType == 1 then 
-        --Neutral.
-        _FinalDescription = "We need your help. Our scouts have located a nearby research base belonging to an enemy faction. It is imperative that we destroy it as quickly as possible in order to disrupt any projects that are being researched there. Don't worry - we'll compensate you for your efforts. The reward should be sufficient for the task."
+    local descriptionP1Table = {
+        "We need your help. Our scouts have located a nearby research base belonging to an enemy faction. It is imperative that we destroy it as quickly as possible in order to disrupt any projects that are being researched there. Don't worry - we'll compensate you for your efforts. The reward should be sufficient for the task.", --Neutral
+        "Our scouts have found an enemy research base. It would normally be a trivial effort for our forces to destroy it, but our military is committed elsewhere and cannot commit to additional strategic objectives. Thus, we need to turn to outside help. We want you to attack the base, and destroy whatever is being created there.", --Aggressive
+        "We have located a nearby enemy research base. Unfortunately, our diplomatic efforts have failed and they have refused to relocate. We have no idea what they could possibly be researching at the site - it must be destroyed in order to protect our interests. Our military isn't strong enough to attack it. We will need your help." --Peaceful
+    }
 
-        if _DangerValue >= 6 then
-            _FinalDescription = _FinalDescription .. "\n\n" .. "Our intelligence indicates that the base is well defended. Take care when attacking."
-        end
+    local finalDescription = descriptionP1Table[descriptionType]
 
-        _FinalDescription = _FinalDescription .. "\n\n" .. "The base is located in Sector (${x}:${y}). It is controlled by ${enemyName}."
-    elseif _DescriptionType == 2 then 
-        --Aggressive.
-        _FinalDescription = "Our scouts have found an enemy research base. It would normally be a trivial effort for our forces to destroy it, but our military is committed elsewhere and cannot commit to additional strategic objectives. Thus, we need to turn to outside help. We want you to attack the base, and destroy whatever is being created there."
+    local descriptionP2Table = {
+        "\n\nOur intelligence indicates that the base is well defended. Take care when attacking.", --Neutral
+        "\n\nBy all indications, the base is well defended. Bring your best weapons.", --Aggressive
+        "\n\nWe believe that the base is heavily fortified. Take care when attacking." --Peaceful
+    }
 
-        if _DangerValue >= 6 then
-            _FinalDescription = _FinalDescription .. "\n\n" .. "By all indications, the base is well defended. Bring your best weapons."
-        end
-
-        _FinalDescription = _FinalDescription .. "\n\n" .. "The base is located in Sector (${x}:${y}). It is controlled by ${enemyName}. Burn it to the ground."
-    elseif _DescriptionType == 3 then 
-        --Peaceful.
-        _FinalDescription = "We have located a nearby enemy research base. Unfortunately, our diplomatic efforts have failed and they have refused to relocate. We have no idea what they could possibly be researching at the site - it must be destroyed in order to protect our interests. Our military isn't strong enough to attack it. We will need your help."
-
-        if _DangerValue >= 6 then
-            _FinalDescription = _FinalDescription .. "\n\n" .. "We believe that the base is heavily fortified. Take care when attacking."
-        end
-
-        _FinalDescription = _FinalDescription .. "\n\n" .. "The base is located in Sector (${x}:${y}). It is controlled by ${enemyName} - please do what needs to be done."
+    if _DangerValue >= 6 then
+        finalDescription = finalDescription .. descriptionP2Table[descriptionType]
     end
 
-    return _FinalDescription
+    local descriptionP3Table = {
+        "\n\nThe base is located in Sector (${x}:${y}). It is controlled by ${enemyName}.", --Neutral
+        "\n\nThe base is located in Sector (${x}:${y}). It is controlled by ${enemyName}. Burn it to the ground.", --Aggressive
+        "\n\nThe base is located in Sector (${x}:${y}). It is controlled by ${enemyName} - please do what needs to be done." --Peaceful
+    }
+
+    finalDescription = finalDescription .. descriptionP3Table[descriptionType]
+
+    return finalDescription
 end
 
 mission.makeBulletin = function(_Station)
@@ -589,6 +576,9 @@ mission.makeBulletin = function(_Station)
             _EnemyFactionName = "The " .. _Neighbors[1].baseName
             mission.Log(_MethodName, "Enemy faction name is " .. tostring(_EnemyFactionName))
         else
+            _Pirates = true
+        end
+        if _Station.factionIndex == _EnemyFaction then
             _Pirates = true
         end
     end
