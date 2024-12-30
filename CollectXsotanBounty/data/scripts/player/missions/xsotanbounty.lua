@@ -43,6 +43,7 @@ function initialize(_Data_in)
         mission.data.custom.dangerLevel = _Data_in.dangerLevel
         mission.data.custom.targets = _Data_in.targets
         mission.data.custom.killedTargets = 0
+        mission.data.custom.inBarrier = _Data_in.insideBarrier
 
         mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
         mission.data.description[2].text = _Data_in.initialDesc
@@ -82,7 +83,18 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _DestroyedEntity = Entity(_ID)
     local _EntityDestroyer = Entity(_LastDamageInflictor)
 
-    if (_DestroyedEntity.type == EntityType.Ship or _DestroyedEntity.type == EntityType.Station) and (_EntityDestroyer.type == EntityType.Ship or _EntityDestroyer.type == EntityType.Station) then
+    local x, y = Sector():getCoordinates()
+    local insideBarrierOK = false
+    if mission.data.custom.inBarrier == MissionUT.checkSectorInsideBarrier(x, y) then
+        insideBarrierOK = true
+    end
+
+    if not _EntityDestroyer or not valid(_EntityDestroyer) or not _DestroyedEntity or not valid(_DestroyedEntity) then
+        mission.Log(_MethodName, "Destroyed entity / destroyer entity is null - returning.")
+        return
+    end
+
+    if insideBarrierOK and (_DestroyedEntity.type == EntityType.Ship or _DestroyedEntity.type == EntityType.Station) and (_EntityDestroyer.type == EntityType.Ship or _EntityDestroyer.type == EntityType.Station) then
         mission.Log(_MethodName, "Both destroyer / destroyed were ships / stations - checking faction indexes.")
         local _dfindex = _EntityDestroyer.factionIndex -- "destroyer faction" index
         local _xfindex = Xsotan.getFaction().index -- xsotan faction index
@@ -193,7 +205,8 @@ mission.makeBulletin = function(_Station)
             reward = {credits = reward, relations = 6000, paymentMessage = "Earned %1% credits for collecting the Xsotan bounty."},
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
-            targets = _Targets
+            targets = _Targets,
+            insideBarrier = insideBarrier
         }},
     }
 

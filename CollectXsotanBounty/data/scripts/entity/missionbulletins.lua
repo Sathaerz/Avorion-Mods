@@ -8,7 +8,7 @@ function MissionBulletins.getPossibleMissions()
 
 	--Unlike other missions, you *can* get this from a player or alliance station.
 	if stationTitle == "Military Outpost" or stationTitle == "Research Station" or stationTitle == "Resistance Outpost" then
-		table.insert(scripts, {path = "data/scripts/player/missions/xsotanbounty.lua", prob = 15})
+		table.insert(scripts, {path = "data/scripts/player/missions/xsotanbounty.lua", prob = 15, maxDistToCenter = 500})
 	end
 
 	return scripts
