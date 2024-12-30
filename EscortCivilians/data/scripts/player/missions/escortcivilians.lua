@@ -50,7 +50,7 @@ mission.data.title = mission._Name
 mission.data.description = {
     {text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     {text = "..." },
-    { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
+    { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
     { text = "Defend the civilian transports until they warp out - ${_ESCORTED}/${_MAXESCORTED} Escorted", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Don't let too many transports be destroyed - ${_DESTROYED}/${_MAXDESTROYED} Lost", bulletPoint = true, fulfilled = false, visible = false }
 }
@@ -84,17 +84,7 @@ function initialize(_Data_in)
                 return
             end
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .friendlyFaction
-                .escorted
-                .maxEscorted
-                .destroyed
-                .maxDestroyed
-                .pirateSpawnTimer
-                .alphaWingThreat
-                .betaWingThreat
-                .piratesSpawned
+                CUSTOM MISSION DATA SETUP:
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.friendlyFaction = _Giver.factionIndex
@@ -102,6 +92,12 @@ function initialize(_Data_in)
             mission.data.custom.destroyed = 0
             mission.data.custom.timePassed = 0
             mission.data.custom.piratesSpawned = 0
+
+            if not mission.data.custom.friendlyFaction then
+                print("ERROR: Friendly faction is nil - aborting.")
+                terminate()
+                return
+            end
 
             local _MaxEscort = 3
             local _MaxDestroyed = 3
@@ -126,9 +122,13 @@ function initialize(_Data_in)
             mission.data.custom.alphaWingThreat = _AlphaThreat
             mission.data.custom.betaWingThreat = _BetaThreat
 
+            --[[=====================================================
+                MISSION DESCRIPTION SETUP:
+            =========================================================]]
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
-            mission.data.description[2].arguments = {x = _X, y = _Y }
+            mission.data.description[2].arguments = { x = _X, y = _Y }
+            mission.data.description[3].arguments = { _X = _X, _Y = _Y }
 
             --Run standard initialization
             EscortCivilians_init(_Data_in)
@@ -522,10 +522,10 @@ function onBetaBackgroundPiratesFinished(_Generated)
     local _SlamCt = #_Slammers
     local _SlamAdded = 0
 
-    local _DmgFactor = 4
+    local _DmgFactor = 8
     local _TorpROF = 8
     if MissionUT.checkSectorInsideBarrier(_X, _Y) then
-        _DmgFactor = 8
+        _DmgFactor = 10
         _TorpROF = 6
     end
 
@@ -534,10 +534,10 @@ function onBetaBackgroundPiratesFinished(_Generated)
     local _TorpTurningSpeedFactor = 1
     local _TorpDurabilityFactor = 10
     if mission.data.custom.dangerLevel == 10 then
-        _TorpDurabilityFactor = 20
         _TorpAccelFactor = 1.5
         _TorpVelocityFactor = 1.5
         _TorpTurningSpeedFactor = 1.5
+        _TorpDurabilityFactor = 20
     end
 
     local _TorpSlammerValues = {
@@ -611,27 +611,26 @@ function formatDescription(_Station, _DangerValue)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
-    local _DescriptionType = 1 --Neutral
+    local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
+        descriptionType = 2 --Aggressive.
     elseif _Aggressive <= -0.5 then
-        _DescriptionType = 3 --Peaceful.
+        descriptionType = 3 --Peaceful.
     end
 
-    local _FinalDescription = ""
-    if _DescriptionType == 1 then --Neutral.
-        _FinalDescription = "We're establishing a new colony, and to that end we'll need to relocate a number of our civilians to run it. Unfortunately, it's a good distance away and our transports will have to make multiple jumps to get there. We've received word that a group of pirates plans to attack them when they travel through (${x}:${y}). We'll pay you if you're able to protect the convoy while it travels through that sector."
-    elseif _DescriptionType == 2 then --Aggressive.
-        _FinalDescription = "We are establishing a forward operating base in another sector to deal with a particularly irritating pirate menace. We will need civilians to staff it, so we are moving a convoy of transports to the area to supply the personnel. The pirate scum seem to have gotten wind of this and plan to attack the convoy when it travels through (${x}:${y}). We cannot shift our military out of position to deal with this - they are busy dealing with the pirates. Keep our civilians safe. Leave no pirate survivors."
-    elseif _DescriptionType == 3 then --Peaceful.
-        _FinalDescription = "We have suffered from a disaster in one of our sectors, and need to relocate a number of civilians to another colony fit for habitation. In order to make the transit, they need to travel through (${x}:${y}). Our spies have received information that pirates intend to attack the convoy as it moves through this sector. Our military is busy cleaning up the disaster and is unable to help. Please protect our people while they are vulnerable."
-    end
+    local descriptionTable = {
+        "We're establishing a new colony, and to that end we'll need to relocate a number of our civilians to run it. Unfortunately, it's a good distance away and our transports will have to make multiple jumps to get there. We've received word that a group of pirates plans to attack them when they travel through (${x}:${y}). We'll pay you if you're able to protect the convoy while it travels through that sector.", --Neutral
+        "We are establishing a forward operating base in another sector to deal with a particularly irritating pirate menace. We will need civilians to staff it, so we are moving a convoy of transports to the area to supply the personnel. The pirate scum seem to have gotten wind of this and plan to attack the convoy when it travels through (${x}:${y}). We cannot shift our military out of position to deal with this - they are busy dealing with the pirates. Keep our civilians safe. Leave no pirate survivors.", --Aggressive
+        "We have suffered from a disaster in one of our sectors, and need to relocate a number of civilians to another colony fit for habitation. In order to make the transit, they need to travel through (${x}:${y}). Our spies have received information that pirates intend to attack the convoy as it moves through this sector. Our military is busy cleaning up the disaster and is unable to help. Please protect our people while they are vulnerable." --Peaceful
+    }
 
+    local finalDescription = descriptionTable[descriptionType]
+ 
     if _DangerValue >= 8 then
-        _FinalDescription = _FinalDescription .. "\n\n" .. "We anticipate the pirate attack to be quite intense. Come prepared."
+        finalDescription = finalDescription .. "\n\nWe anticipate the pirate attack to be quite intense. Come prepared."
     end
 
-    return _FinalDescription
+    return finalDescription
 end
 
 mission.makeBulletin = function(_Station)

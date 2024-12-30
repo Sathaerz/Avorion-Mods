@@ -10,7 +10,7 @@ function MissionBulletins.getPossibleMissions()
 	end
 
     --Slightly more likely to show up @ hq / habitats
-    if not station.playerOrAllianceOwned and stationTitle == "${faction} Headquarters" or stationTitle == "Habitat" then
+    if not station.playerOrAllianceOwned and (stationTitle == "${faction} Headquarters" or stationTitle == "Habitat") then
         table.insert(scripts, {path = "data/scripts/player/missions/escortcivilians.lua", prob = 3})
     end
 
