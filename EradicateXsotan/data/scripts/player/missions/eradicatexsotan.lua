@@ -49,7 +49,7 @@ mission.data.title = mission._Name
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." }, --Placeholder
-    { text = "Head to sector (${x}:${y}) and destroy all present Xsotan", bulletPoint = true, fulfilled = false },
+    { text = "Head to sector (${_X}:${_Y}) and destroy all present Xsotan", bulletPoint = true, fulfilled = false },
     { text = "Destroy the Xsotan Infestor", bulletPoint = true, fulfilled = false, visible = false }
 }
 mission.data.accomplishMessage = "Thank you for clearing out the Xsotan! We've transferred a reward to your account."
@@ -129,8 +129,8 @@ function initialize(_Data_in)
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
-            mission.data.description[2].arguments = {x = _X, y = _Y }
-            mission.data.description[3].arguments = {x = _X, y = _Y }
+            mission.data.description[2].arguments = { x = _X, y = _Y }
+            mission.data.description[3].arguments = { _X = _X, _Y = _Y }
 
             --Run standard initialization
             EradicateXsotan_init(_Data_in)
@@ -238,10 +238,8 @@ end
 
 mission.phases[2].onEntityDestroyed = function(id, lastDamageInflictor)
     local _MethodName = "Phase 2 On Entity Destroyed"
-    
-    local _OnLocation = getOnLocation(nil)
 
-    if _OnLocation then
+    if atTargetLocation() then
         local entity = Entity(id)
         if valid(entity) and entity:getValue("_infestation_xsotan") then
             mission.data.custom.xsotanKilled = mission.data.custom.xsotanKilled + 1
@@ -270,8 +268,7 @@ if onServer() then
 mission.phases[2].timers[1] = {
     time = 60,
     callback = function()
-        local _OnLocation = getOnLocation(nil)
-        if _OnLocation then
+        if atTargetLocation() then
             spawnXsotanWave()
         end
     end,
@@ -323,7 +320,7 @@ function spawnXsotanWave()
     local _AddSmn = false
     local _AddQuantum = false
     local _AddSpecial = false
-    if mission.data.custom.dangerLevel >= 6 and rgen:getInt(1, 2) - 1 == 1 then
+    if mission.data.custom.dangerLevel >= 6 and rgen:test(0.5) then
         mission.Log(_MethodName, "Adding danger 6 quantum to spawn table")
         _AddQuantum = true
     end
@@ -331,7 +328,7 @@ function spawnXsotanWave()
     if mission.data.custom.dangerLevel == 10 then
         mission.Log(_MethodName, "Adding danger 10 quantum to spawn table")
         _AddQuantum = true
-        if rgen:getInt(1, 4) - 1 == 1 then 
+        if rgen:test(0.25) == 1 then 
             mission.Log(_MethodName, "Adding summoner to spawn table")
             _AddSmn = true 
         end
@@ -348,15 +345,16 @@ function spawnXsotanWave()
         _AddQuantum = false
     end
 
-    if mission.data.custom.inBarrier and mission.data.custom.killedGuardian then
-        local _ChanceToAdd = mission.data.custom.dangerLevel * 2
-        local _Chance = rgen:getInt(1, 100)
-        if _Chance < _ChanceToAdd then
-            mission.Log(_MethodName, "Chance " .. tostring(_Chance) .. " was less than Chance to add " .. tostring(_ChanceToAdd) .. " adding special")
-            _AddSpecial = true
-        else
-            mission.Log(_MethodName, "Chance " .. tostring(_Chance) .. " was more than Chance to add " .. tostring(_ChanceToAdd) .. " not adding special")
-        end
+    local _ChanceToAddSpecialXsotan = mission.data.custom.dangerLevel * 0.02
+    if not mission.data.custom.inBarrier then
+        _ChanceToAddSpecialXsotan = _ChanceToAddSpecialXsotan / 2 --10% chance max outside barrier.
+    end
+    if (mission.data.custom.inBarrier and mission.data.custom.killedGuardian) then
+        _ChanceToAddSpecialXsotan = _ChanceToAddSpecialXsotan * 4 --Up to 80%
+    end
+    if rgen:test(_ChanceToAddSpecialXsotan) then
+        mission.Log(_MethodName, "Adding special xsotan.")
+        _AddSpecial = true
     end
 
     if mission._TestSpecials == 1 then
@@ -375,15 +373,15 @@ function spawnXsotanWave()
     
     mission.Log(_MethodName, "Spawning final count of " .. tostring(#_XsotanByNameTable) .. " Xsotan ships.")
     --Spawn Xsotan based on what's in the nametable.
-    for _ = 1, #_XsotanByNameTable do
+    for xidx = 1, #_XsotanByNameTable do
         local xsoSize = 1.0 + rgen:getInt(mission.data.custom.xsotanSizeBonus.min, mission.data.custom.xsotanSizeBonus.max)
         local _Xsotan = nil
         local _Dist = 1500
-        if _XsotanByNameTable[_] == "Summoner" then
+        if _XsotanByNameTable[xidx] == "Summoner" then
             _Xsotan = Xsotan.createSummoner(_Generator:getPositionInSector(_Dist), xsoSize)
-        elseif _XsotanByNameTable[_] == "Quantum" then
+        elseif _XsotanByNameTable[xidx] == "Quantum" then
             _Xsotan = Xsotan.createQuantum(_Generator:getPositionInSector(_Dist), xsoSize)
-        elseif _XsotanByNameTable[_] == "Special" then
+        elseif _XsotanByNameTable[xidx] == "Special" then
             local _SpecialSize = mission.data.custom.xsotanSizeBonus.max * 2
             local _XsotanFunction = getRandomEntry(Xsotan.getSpecialXsotanFunctions())
 
@@ -403,7 +401,7 @@ function spawnXsotanWave()
             _Xsotan.damageMultiplier = (_Xsotan.damageMultiplier or 1 ) * mission.data.custom.xsoDamageMultiplier
             table.insert(_XsotanTable, _Xsotan)
         else
-            Lmission.Log(_MethodName, "ERROR - Xsotan was nil")
+            mission.Log(_MethodName, "ERROR - Xsotan was nil")
         end
     end
 
@@ -416,11 +414,11 @@ function spawnXsotanInfestor()
 
     local _InfestorSize = mission.data.custom.xsotanSizeBonus.min + mission.data.custom.xsotanSizeBonus.max + 3
 
-    local _ExtraTurret = mission.data.custom.dangerLevel == 10
+    local extraLoot = mission.data.custom.dangerLevel == 10 --This doesn't just drop an extra turret :D
 
     local _X, _Y = Sector():getCoordinates()
     local _Generator = SectorGenerator(_X, _Y)
-    local _XsotanInfestor = Xsotan.createInfestor(_Generator:getPositionInSector(2500), _InfestorSize, _ExtraTurret)
+    local _XsotanInfestor = Xsotan.createInfestor(_Generator:getPositionInSector(2500), _InfestorSize, extraLoot)
 
     local _Players = {Sector():getPlayers()}
     if valid(_XsotanInfestor) then
@@ -519,7 +517,7 @@ mission.makeBulletin = function(_Station)
         _BaseRelReward = _BaseRelReward + 4000
     end
 
-    reward = _BaseReward * Balancing.GetSectorRichnessFactor(_Sector:getCoordinates()) --SET REWARD HERE
+    reward = _BaseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates()) --SET REWARD HERE
     relreward = _BaseRelReward
 
     local bulletin =

@@ -6,11 +6,11 @@ function MissionBulletins.getPossibleMissions()
 	local scripts = EradicateXsotan_getPossibleMissions()
 
 	if not station.playerOrAllianceOwned and stationTitle == "Military Outpost" then
-		table.insert(scripts, {path = "data/scripts/player/missions/eradicatexsotan.lua", prob = 1})
+		table.insert(scripts, {path = "data/scripts/player/missions/eradicatexsotan.lua", prob = 1, maxDistToCenter = 500})
 	end
 
 	if not station.playerOrAllianceOwned and stationTitle == "Resistance Outpost" then
-		table.insert(scripts, {path = "data/scripts/player/missions/eradicatexsotan.lua", prob = 3})
+		table.insert(scripts, {path = "data/scripts/player/missions/eradicatexsotan.lua", prob = 3, maxDistToCenter = 500})
 	end
 
 	return scripts
