@@ -1,5 +1,5 @@
 --[[
-    NAME HERE
+    Defend Prototype Battleship
     NOTES:
         - Had the idea for this for a while, but now I think I've got the tech to make this happen.
     ADDITIONAL REQUIREMENTS TO DO THIS MISSION:
@@ -26,6 +26,7 @@ local SpawnUtility = include ("spawnutility")
 local TorpedoUtility = include ("torpedoutility")
 local ShipGenerator = include("shipgenerator")
 local Placer = include("placer")
+local UpgradeGenerator = include ("upgradegenerator")
 
 mission._Debug = 0
 mission._Name = "Defend Prototype Battleship"
@@ -38,7 +39,7 @@ mission.data.title = mission._Name
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." }, --Placeholder
-    { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
+    { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
     { text = "Defend the Prototype", bulletPoint = true, fulfilled = false, visible = false }
 }
 mission.data.timeLimit = 10 * 60 --Player has 10 minutes to head to the sector. Take the time limit off when the player arrives.
@@ -68,11 +69,7 @@ function initialize(_Data_in)
                 return
             end
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .spawnedSecondWave
-                .friendlyFaction
-                .waveCounter
+                CUSTOM MISSION DATA SETUP:
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.friendlyFaction = _Giver.factionIndex
@@ -82,9 +79,19 @@ function initialize(_Data_in)
             mission.data.custom.piratesToKill = 30 + math.floor((mission.data.custom.dangerLevel * 1.5)) --From 30 to 45 at level 10.
             mission.data.custom.inBarrier = _Data_in.inbarrier
 
+            if not mission.data.custom.friendlyFaction then
+                print("ERROR: Friendly faction is nil - aborting.")
+                terminate()
+                return
+            end
+
+            --[[=====================================================
+                MISSION DESCRIPTION SETUP:
+            =========================================================]]
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = { x = _X, y = _Y }
+            mission.data.description[3].arguments = { _X = _X, _Y = _Y }
 
             mission.data.accomplishMessage = _Data_in.winMsg
             mission.data.failMessage = _Data_in.loseMsg
@@ -112,46 +119,25 @@ end
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
 mission.getRewardedItems = function()
-    if mission.data.custom.dangerLevel >= 7 then
-        local _LowRarity = Rarity(RarityType.Rare)
-        local _HighRarity = Rarity(RarityType.Exceptional)
-        if mission.data.custom.inBarrier then
-            _LowRarity = Rarity(RarityType.Exceptional)
-            _HighRarity = Rarity(RarityType.Exotic)
-        end
-
-        local _Raritylevel = _LowRarity
-        local _Rtest = 0.25
-
-        --50% chance on difficulty 8 or 9, or 10 outside barrier.
-        if mission.data.custom.dangerLevel > 7 then
-            _Rtest = 0.5
-        end
-
-        --Give better reward on difficulty 10.
-        if mission.data.custom.dangerLevel == 10 then
-            _Raritylevel = _HighRarity
-        end
-
-        local _GiveReward = random():test(_Rtest) or (mission.data.custom.inBarrier and mission.data.custom.dangerLevel == 10)
-
-        if _GiveReward then
-            local _SeedInt = random():getInt(1, 20000)
-        return SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", _Raritylevel, Seed(_SeedInt))
-        end
+    local _random = random()
+    
+    if _random:test(0.25) then
+        local _X, _Y = mission.data.location.x, mission.data.location.y
+        local _upgradeGenerator = UpgradeGenerator()
+        local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
+        local _seedInt = _random:getInt(1, 20000)
+        return SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(getValueFromDistribution(_upgradeRarities)), Seed(_seedInt))
     end
 end
 
 mission.globalPhase = {}
-mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
     failAndPunish() --Will run globalPhase.onFail and clean up the sector.
 end
 
 mission.globalPhase.onFail = function()
     if mission.data.location then
-        local _OnLocation = getOnLocation(nil)
-        if _OnLocation then
+        if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
         end
         runFullSectorCleanup(true)
@@ -160,8 +146,7 @@ end
 
 mission.globalPhase.onAccomplish = function()
     if mission.data.location then
-        local _OnLocation = getOnLocation(nil)
-        if _OnLocation then
+        if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
         end
         runFullSectorCleanup(false)
@@ -208,7 +193,7 @@ end
 
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _DestroyedEntity = Entity(_ID)
-    if getOnLocation(nil) then
+    if atTargetLocation() then
         if _DestroyedEntity:getValue("is_prototype") then
             failAndPunish()
         end
@@ -227,8 +212,7 @@ if onServer() then
 mission.phases[2].timers[1] = {
     time = 60,
     callback = function()
-        local _OnLocation = getOnLocation(nil)
-        if _OnLocation then
+        if atTargetLocation() then
             spawnBackgroundPirates()
         end
     end,
@@ -244,7 +228,7 @@ mission.phases[2].timers[2] = {
         mission.Log(_MethodName, "Number of pirates destroyed " .. tostring(mission.data.custom.piratesKilled))
 
         local _Sector = Sector()
-        local _OnLocation = getOnLocation(_Sector)
+        local _OnLocation = atTargetLocation()
         local _Prototypes = {_Sector:getEntitiesByScriptValue("is_prototype")}
 
         if _OnLocation and mission.data.custom.piratesKilled >= mission.data.custom.piratesToKill then
@@ -268,7 +252,6 @@ mission.phases[2].timers[3] = {
         --If the shipyard is up, it will repair the prototype. Repairs 5% by default, and +1% for each other station in the area.
 
         local _Sector = Sector()
-        local _OnLocation = getOnLocation(_Sector)
 
         --Get the shipyard
         local _Shipyards = {_Sector:getEntitiesByScript("data/scripts/entity/merchants/shipyard.lua")}
@@ -278,7 +261,7 @@ mission.phases[2].timers[3] = {
         local _Prototypes = {_Sector:getEntitiesByScriptValue("is_prototype")}
         local _Prototype = _Prototypes[1]
 
-        if _OnLocation and _Shipyard and valid(_Shipyard) and _Prototype and valid(_Prototype) then
+        if atTargetLocation() and _Shipyard and valid(_Shipyard) and _Prototype and valid(_Prototype) then
                 mission.Log(_MethodName, "On location and a shipyard is present. Repairing the prototype.")
                 --Get the # of other stations
                 local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
@@ -567,16 +550,17 @@ function onBetaBackgroundPiratesFinished(_Generated)
         _tta = 30
     end
 
-    local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = _tta
-    _TorpSlammerValues._ROF = 8
-    _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DamageFactor = _DmgFactor
-    _TorpSlammerValues._DurabilityFactor = 8
-    _TorpSlammerValues._ForwardAdjustFactor = 2
-    _TorpSlammerValues._PreferWarheadType = _PrefType
-    _TorpSlammerValues._TargetPriority = 2 --Target tag.
-    _TorpSlammerValues._TargetTag = "is_prototype"
+    local _TorpSlammerValues = {
+        _TimeToActive = _tta,
+        _ROF = 8,
+        _UpAdjust = false,
+        _DamageFactor = _DmgFactor,
+        _DurabilityFactor = 8,
+        _ForwardAdjustFactor = 2,
+        _PreferWarheadType = _PrefType,
+        _TargetPriority = 2, --Target tag.
+        _TargetTag = "is_prototype"
+    }
 
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_defendprototype_beta_wing", true)
@@ -625,7 +609,6 @@ function onBetaBackgroundPiratesFinished(_Generated)
             end
         end
     end
-    
 
     SpawnUtility.addEnemyBuffs(_Generated)
 end
@@ -647,6 +630,33 @@ function onGammaBackgroundPiratesFinished(_Generated)
         mission.data.custom.piratesSpawned = _PiratesSpawned
     end
     SpawnUtility.addEnemyBuffs(_Generated)
+end
+
+function getSectorRarityTables(_X, _Y, _upgradeGenerator)
+    local _dangerLevel = mission.data.custom.dangerLevel
+    local _rarities = _upgradeGenerator:getSectorRarityDistribution(_X, _Y)
+    _rarities[-1] = 0 --no petty
+    _rarities[0] = 0 --no common
+    _rarities[1] = 0 --no uncommon
+    _rarities[2] = 0 --no rare
+
+    local _dangerFactors = {
+        { _exceptional = 1, _exotic = 1}, --1
+        { _exceptional = 1, _exotic = 1}, --2
+        { _exceptional = 1, _exotic = 1}, --3
+        { _exceptional = 1, _exotic = 1}, --4
+        { _exceptional = 0.5, _exotic = 1}, --5
+        { _exceptional = 0.5, _exotic = 1}, --6
+        { _exceptional = 0.5, _exotic = 0.75}, --7
+        { _exceptional = 0.25, _exotic = 0.75}, --8
+        { _exceptional = 0.25, _exotic = 0.5}, --9
+        { _exceptional = 0.12, _exotic = 0.5} --10
+    }
+    
+    _rarities[3] = _rarities[3] * _dangerFactors[_dangerLevel]._exceptional
+    _rarities[4] = _rarities[4] * _dangerFactors[_dangerLevel]._exotic
+
+    return _rarities
 end
 
 function finishAndReward()
