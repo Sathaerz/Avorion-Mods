@@ -16,7 +16,7 @@ mission.data.brief = mission._Name
 mission.data.title = mission._Name
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
-    "", --Placeholder
+    { text = "" }, --Placeholder
     { text = "Drop scrap off in sector (${_X}:${_Y}) - Delivered so far:", bulletPoint = true, fulfilled = false },
     { text = "${_SCRAPAMT} ${_SCRAPTYPE}", bulletPoint = true, fulfilled = false }, --placeholder
     { text = "${_SCRAPAMT} ${_SCRAPTYPE}", bulletPoint = true, fulfilled = false }, --placeholder
@@ -60,7 +60,7 @@ mission.phases[1].onBegin = function()
     mission.Log(methodName, "Sector name is " .. tostring(_sector.name) .. " Giver title is " .. tostring(giver.translatedTitle))
 
     mission.data.description[1].arguments = { sectorName = _sector.name, giverTitle = giver.translatedTitle }
-    mission.data.description[2] = formatDescription(giver)
+    mission.data.description[2].text = formatDescription(giver)
     mission.data.description[3].arguments = { _X = x, _Y = y }
 
     local descidx = 4
@@ -154,7 +154,7 @@ function incrementScrapDelivery()
         scrapType.amount = scrapType.amount + holdAmount
 
         --Remove from hold
-        ship:removeCargo(scrapType.name, scrapType.amount)
+        ship:removeCargo(scrapType.name, holdAmount)
 
         --Update description & increment index
         mission.data.description[descidx].arguments = { _SCRAPAMT = scrapType.amount, _SCRAPTYPE = scrapType.name }
