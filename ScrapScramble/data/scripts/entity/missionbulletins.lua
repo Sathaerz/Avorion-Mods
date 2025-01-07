@@ -6,7 +6,7 @@ function MissionBulletins.getPossibleMissions()
 	local scripts = ScrapScramble_getPossibleMissions()
 
     if not station.playerOrAllianceOwned and stationTitle == "Scrapyard" then
-		table.insert(scripts, {path = "data/scripts/player/missions/scrapscramble.lua", prob = 5})
+		table.insert(scripts, {path = "data/scripts/player/missions/scrapscramble.lua", prob = 3})
 	end
 
 	return scripts
