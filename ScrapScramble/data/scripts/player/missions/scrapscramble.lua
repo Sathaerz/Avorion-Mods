@@ -5,6 +5,7 @@ include("structuredmission")
 include("player") --needed to use MissionUT.dockedDialogSelector
 
 local Balancing = include ("galaxy")
+local SectorTurretGenerator = include ("sectorturretgenerator")
 
 mission._Debug = 0
 mission._Name = "Scrap Scramble"
@@ -45,6 +46,42 @@ mission.data.custom.scrapTypes = {
 
 --region #PHASE CALLS
 
+mission.globalPhase.getRewardedItems = function()
+    local methodName = "Global Phase Get Rewarded Items"
+    mission.Log(methodName, "Getting reward items...")
+    
+    local xrand = random()
+    local items = {}
+    local totalScrap = mission.data.custom.totalScrapDelivered
+
+    local possibleRarities = {RarityType.Common, RarityType.Common, RarityType.Uncommon, RarityType.Uncommon, RarityType.Rare}
+    if mission.data.custom.inBarrier then
+        possibleRarities = {RarityType.Uncommon, RarityType.Uncommon, RarityType.Rare, RarityType.Rare, RarityType.Exceptional, RarityType.Exotic}
+    end
+
+    --25% chance of getting a random rarity cargo upgrade. Need to turn in at least 500 scrap.
+    if xrand:test(0.25) and totalScrap >= 500 then
+        mission.Log(methodName, "Getting cargo upgrade")
+
+        local _SeedInt = xrand:getInt(1, 20000)
+        local upgradeRarity = getRandomEntry(possibleRarities)
+        table.insert(items, SystemUpgradeTemplate("data/scripts/systems/cargoextension.lua", Rarity(upgradeRarity), Seed(_SeedInt)))
+    end
+
+    --12.5% chance of getting a r-salvaging turret. Need to turn in at least 1000 scrap.
+    if xrand:test(0.125) and totalScrap >= 1000 then
+        mission.Log(methodName, "Getting salvaging turret")
+
+        local x, y = mission.data.location.x, mission.data.location.y
+        local generator = SectorTurretGenerator()
+
+        local turretRarity = getRandomEntry(possibleRarities)
+        table.insert(items, InventoryTurret(generator:generate(x, y, 0, Rarity(turretRarity), WeaponType.RawSalvagingLaser, nil)))
+    end
+
+    return table.unpack(items)
+end
+
 mission.phases[1] = {}
 mission.phases[1].onBegin = function()
     local methodName = "Phase 1 On Begin"
@@ -56,6 +93,7 @@ mission.phases[1].onBegin = function()
     mission.data.accomplishMessage = mission.data.custom.failMessage
     mission.data.custom.droppedScrap = false
     mission.data.custom.stationId = mission.data.giver.id.string
+    mission.data.custom.totalScrapDelivered = 0
 
     mission.Log(methodName, "Sector name is " .. tostring(_sector.name) .. " Giver title is " .. tostring(giver.translatedTitle))
 
@@ -71,6 +109,10 @@ mission.phases[1].onBegin = function()
 end
 
 mission.phases[1].onBeginServer = function()
+    local x, y = mission.data.location.x, mission.data.location.y
+
+    mission.data.custom.inBarrier = MissionUT.checkSectorInsideBarrier(x, y)
+
     mission.internals.fulfilled = true --This mission will accomplish at the end, and not fail. The only question is how much money the player gets.
 end
 
@@ -101,13 +143,11 @@ mission.phases[1].onAccomplish = function()
 
         local x, y = mission.data.location.x, mission.data.location.y
         local thousands = 0
-        local totalScrap = 0
 
         --Calculate reward
         for matlidx, scrapData in pairs(mission.data.custom.scrapTypes) do
             local matl = Material(matlidx - 1)
             local matlCredits = (matl.costFactor * scrapData.amount * 10)
-            totalScrap = totalScrap + scrapData.amount
 
             mission.Log(methodName, "Material name is " .. tostring(matl.name) .. " turned in " .. tostring(scrapData.amount) .. " for " .. tostring(math.ceil(matlCredits)) .. " credits.")
 
@@ -115,10 +155,10 @@ mission.phases[1].onAccomplish = function()
             thousands = math.floor(scrapData.amount / 1000)
         end
 
-        mission.data.reward.paymentMessage = "Earned %1% credits for dropping off " .. tostring(totalScrap) .. " units of scrap."
+        mission.data.reward.paymentMessage = "Earned %1% credits for dropping off " .. tostring(mission.data.custom.totalScrapDelivered) .. " units of scrap."
         --Can't use the normal reward factor progression here - selling resources is already fairly profitable and I don't want to make things TOO easy for the player :P
         --Especially since you can stash and deliver, or do wrecking havoc to bring a bunch of wreckages in and salvage those @ the scrapyard - essentially getting paid 3 times.
-        mission.data.reward.credits = mission.data.reward.credits * (Balancing.GetSectorRewardFactor(x, y) * 0.25)
+        mission.data.reward.credits = mission.data.reward.credits * (Balancing.GetSectorRewardFactor(x, y) * 0.125)
         mission.data.reward.relations = thousands * 100
 
         reward()
@@ -152,6 +192,7 @@ function incrementScrapDelivery()
 
         --Add that to scrapType.amount
         scrapType.amount = scrapType.amount + holdAmount
+        mission.data.custom.totalScrapDelivered = mission.data.custom.totalScrapDelivered + holdAmount
 
         --Remove from hold
         ship:removeCargo(scrapType.name, holdAmount)
@@ -177,7 +218,26 @@ function onDeliverScrap(entityId)
     mission.Log(methodName, "Beginning. Entity ID is " .. tostring(entityId))
 
     local conditionFunc = function()
-        return true
+        --Check to make sure player has any scrap to deliver.
+        --print("Entering condition func")
+        local _player = Player()
+        local ship = _player.craft
+
+        if not _player or not ship then
+            return false
+        end
+
+        local conditionOK = false
+
+        for _, scrapType in pairs(mission.data.custom.scrapTypes) do
+            local holdAmount = ship:getCargoAmount(scrapType.name)
+            if holdAmount > 0 then
+                conditionOK = true
+                break
+            end
+        end
+
+        return conditionOK
     end
     
     local dockedFunc = function()
@@ -196,11 +256,14 @@ function onDeliverScrap(entityId)
     end
 
     local failedFunc = function()
-        return {}
+        local failedDialog = {}
+        failedDialog.text = "You do not have any scrap in your hold! Please ensure you have some to deliver."
+
+        return failedDialog
     end
 
     mission.Log(methodName, "Getting docked dialog selector.")
-    MissionUT.dockedDialogSelector(entityId, conditionFunc, failedFunc, undockedFunc, dockedFunc)
+    MissionUT.dockedDialogSelector(entityId, conditionFunc(), failedFunc, undockedFunc, dockedFunc)
 end
 
 --endregion
@@ -258,7 +321,7 @@ mission.makeBulletin = function(_Station)
         giverTitleArgs = _Station:getTitleArguments(),
         checkAccept = [[
             local self, player = ...
-            if player:hasScript("missions/scrapscramble.lua") then
+            if player:hasScript("missions/scrapscramble.lua") or player:hasScript("missions/scrapdelivery.lua") then
                 player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept additional scrap delivery contracts! Abandon your current one or complete it.")
                 return 0
             end

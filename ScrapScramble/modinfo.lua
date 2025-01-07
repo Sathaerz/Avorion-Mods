@@ -17,7 +17,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "Your local faction is running a little low on resources, so they've asked you to do some scrapping! Get paid for dropping off scrap resources at your local scrapyard today! This mission commonly appears at Scrapyards.",
+    description = "Your local faction is running a little low on resources, so they've asked you to do some scrapping! Get paid for dropping off scrap resources at your local scrapyard today! This mission uncommonly appears at Scrapyards.",
 
     -- Insert all authors into this list
     authors = {"KnifeHeart"},
@@ -26,7 +26,7 @@ meta =
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.0.1",
+    version = "1.0.2",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
