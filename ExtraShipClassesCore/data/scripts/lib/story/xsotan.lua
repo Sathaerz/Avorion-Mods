@@ -101,14 +101,15 @@ function Xsotan.createBallistyx(_position, _volumeFactor)
     _XsotanShip:setValue("xsotan_ballistyx", true)
 
     --Add Scripts
-    local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = 12
-    _TorpSlammerValues._ROF = 4
-    _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DurabilityFactor = 4
-    _TorpSlammerValues._ForwardAdjustFactor = 1
-    _TorpSlammerValues._UseEntityDamageMult = true
-    _TorpSlammerValues._TargetPriority = 3 --Random non-xsotan.
+    local _TorpSlammerValues = {
+        _TimeToActive = 12,
+        _ROF = 4,
+        _UpAdjust = false,
+        _DurabilityFactor = 4,
+        _ForwardAdjustFactor = 1,
+        _UseEntityDamageMult = true,
+        _TargetPriority = 3 --Random non-xsotan.
+    }
 
     _XsotanShip:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
 
@@ -197,6 +198,241 @@ function Xsotan.createHierophant(_position, _volumeFactor)
     return _XsotanShip
 end
 
+function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
+    dangerFactor = dangerFactor or 1 
+    dangerFactor = math.max(dangerFactor, 1) --Should be at least 1.
+
+    --Hammelpilaw's default config settings:
+    --[USED] recharges = 1
+    local shieldRecharges = 1
+    --[USED] damageMultiplier = 5 => Use 1 per dangerFactor up to 5, then 0.5 * dangerFactor afterwards
+    local bossDamageMultiplier = math.min(dangerFactor, 5)
+    if dangerFactor > 5 then
+        bossDamageMultiplier = bossDamageMultiplier + ((dangerFactor - 5) * 0.5)
+    end
+    --[USED] weaponRange = 20
+    local weaponRange = 20
+    --[USED] useTorps = true
+    local useTorps = true
+    --[USED] useTorpsCore = true
+    local useTorpsCore = true
+    --[USED] shieldMultiplier = 3 => Use 0.6 per dangerFactor
+    local shieldMultiplier = 0.6
+    --[USED] bossVolumeFactor = 50 => Use 10 per dangerFactor UP TO 5 - then add 10% HP per factor after that. Don't make it too big or it will spawn w/o engines.
+    local bossVolumeFactor = math.min(10 * dangerFactor, 50)
+    local bossDurabilityMultiplier = 1
+    if dangerFactor > 5 then
+        bossDurabilityMultiplier = bossDurabilityMultiplier + ((dangerFactor - 1) * 0.1)
+    end
+    --[USED] shipVolumeFactor = 2 => Use 1 + 0.2 per dangerFactor
+    local allyShipVolume = 1 + (dangerFactor * 0.2)
+    --[USED]shipAmount = 6 --Add a 50% chance for +1 per dangerFactor after 5
+    local numShipSpawns = 6
+    --[USED] upScale = true
+    local useUpscale = true
+    --[USED] coreDistance = 150 => Just use Balancing.BlockRingMin
+    local coreDist = Balancing_GetBlockRingMin()
+    --[USED] strongerAtCore = 250
+    local strongerAtCore = 250
+    --[USED] strongerAtCore2 = 150
+    local strongerAtCore2 = Balancing_GetBlockRingMin()
+    --[USED] bossVolumeFactorCore = 1
+    local coreVolumeFactor = 1
+    --[USED] damageMultiplierCore = 1
+    local coreDamageMultiplier = 1
+
+    local x, y = Sector():getCoordinates()
+    position = position or Matrix()
+    local dist = length(vec2(x, y))
+
+    local volume = Xsotan.getShipVolume()
+
+    if dist < coreDist then
+        coreVolumeFactor = 1 * (1 - (dist / coreDist))
+    end
+
+    volume = volume * bossVolumeFactor * coreVolumeFactor
+    
+    local probabilities = Balancing_GetTechnologyMaterialProbability(x, y)
+    local material = Material(getValueFromDistribution(probabilities))
+    local faction = Xsotan.getFaction()
+    local plan = PlanGenerator.makeXsotanShipPlan(volume, material)
+
+    --next, add shields.
+    if not plan:getStats().shield or plan:getStats().shield == 0 then
+        local shieldMatl = Material(MaterialType.Naonite)
+        plan:addBlock(vec3(0, 0, 0), vec3(1, 1, 1), plan.rootIndex, -1, Color(), shieldMatl, Matrix(), BlockType.ShieldGenerator) 
+    end
+
+    local ship = Sector():createShip(faction, "", plan, position, EntityArrivalType.Jump)
+
+    --add turrets
+    local numTurrets = math.max(2, Balancing_GetEnemySectorTurrets(x, y))
+    if dangerFactor >= 5 then
+        numTurrets = numTurrets + 1
+    end
+    if dangerFactor >= 9 then
+        numTurrets = numTurrets + 1
+    end
+    for idx = 1, 2 do
+		local turret = SectorTurretGenerator():generateArmed(x, y, 0, Rarity(RarityType.Rare))
+		local weapons = {turret:getWeapons()}
+		turret:clearWeapons()
+		for _, weapon in pairs(weapons) do
+			weapon.reach = weaponRange * 100
+			if weapon.isBeam then
+				weapon.blength = weaponRange * 100
+			else
+				weapon.pmaximumTime = weapon.reach / weapon.pvelocity
+			end
+			turret:addWeapon(weapon)
+		end
+
+		turret.coaxial = false
+		ShipUtility.addTurretsToCraft(ship, turret, numTurrets)
+	end
+	ShipUtility.addBossAntiTorpedoEquipment(ship)
+
+    --add upscale
+    if useUpscale then
+        Xsotan.applyCenterBuff(ship)
+    end
+
+    --add damage multiplier
+    local coreMulti = 1
+    if dist < coreDist and coreDamageMultiplier > 1 then --will not activate under normal circumstances unless someone messes w/ the coreDamageMultiplier
+        coreMulti = coreDamageMultiplier * (1 - (dist / coreDist))
+    end
+    ship.damageMultiplier = (ship.damageMultiplier or 1) * bossDamageMultiplier * coreMulti
+
+    --add durability multiplier for danger > 5
+    local shipDurability = Durability(ship)
+    if shipDurability then
+        shipDurability.maxDurabilityFactor = (shipDurability.maxDurabilityFactor or 1) * bossDurabilityMultiplier
+    end
+
+    ship:setTitle("${toughness}Xsotan ${ship}"%_T, {toughness = "", ship = "Dreadnought"})
+    ship.crew = ship.idealCrew
+    ship.shieldDurability = ship.shieldMaxDurability --This gets done again in the dreadnought script.
+
+    -- Reduce automatic shield recharge and movement speed, its annoying when it always moves directly in front of you...
+	ship:addBaseMultiplier(StatsBonuses.Velocity, -0.7)
+    ship:addBaseMultiplier(StatsBonuses.Acceleration, -0.7)
+	ship:addBaseMultiplier(StatsBonuses.ShieldRecharge, 10)
+    
+    Xsotan.applyDamageBuff(ship)
+
+    --add loot
+    local bonusAmount = 0
+    if dist < coreDist and killedGuardian then
+        bonusAmount = 1
+    end
+    local lootTable = {
+        {rarity = Rarity(RarityType.Common), amount = 6 + (bonusAmount * 3), odds = 1 },
+        {rarity = Rarity(RarityType.Uncommon), amount = 4 + (bonusAmount * 3), odds = 1 },
+        {rarity = Rarity(RarityType.Rare), amount = 3 + (bonusAmount * 2), odds = 1 },
+        {rarity = Rarity(RarityType.Exceptional), amount = 3 + bonusAmount, odds = 1 }
+    }
+    --A bit less generous than the original incarnation but I don't want to give the player an easy source of legendaries too far out.
+    if dist < 300 and dangerFactor >= 5 then
+        local useOdds = 0.5
+        if dist < coreDist and killedGuardian then
+            useOdds = 1.0
+        end
+        table.insert(lootTable, {rarity = Rarity(RarityType.Exotic), amount = 2 + bonusAmount, odds = useOdds })
+    end
+    if dist < 250 and dangerFactor >= 9 then
+        local useOdds = 0.25
+        if dist < coreDist and killedGuardian then
+            useOdds = 0.5
+        end
+        table.insert(lootTable, {rarity = Rarity(RarityType.Legendary), amount = 1 + bonusAmount, odds = useOdds })
+    end
+
+    local shipLoot = Loot(ship.index)
+    local xrand = random()
+    for _, p in pairs(lootTable) do
+        for i = 1, p.amount do
+			-- 60% upgrades, 40% weapons
+            if xrand:test(p.odds) then
+                if xrand:test(0.6) then
+                    shipLoot:insert(UpgradeGenerator():generateSectorSystem(x, y, p.rarity))
+                else
+                    shipLoot:insert(InventoryTurret(SectorTurretGenerator():generate(x, y, 0, p.rarity)))
+                end
+            end
+        end
+    end
+
+    --do normal ship things
+    AddDefaultShipScripts(ship)
+
+    local esccDreadnoughtValues = {
+        dangerFactor = dangerFactor,
+        shieldBonusMultiplier = shieldMultiplier,
+        shieldRecharges = shieldRecharges,
+        dist = dist,
+        allyShipVolume = allyShipVolume,
+        numShipSpawns = numShipSpawns,
+        strongerAtCore = strongerAtCore,
+        strongerAtCore2 = strongerAtCore2
+    }
+
+    if killedGuardian and dist < coreDist then
+        esccDreadnoughtValues.sickoMode = true
+    end
+
+    ship:addScriptOnce("ai/patrol.lua")
+    ship:addScriptOnce("story/xsotanbehaviour.lua")
+    ship:addScriptOnce("utility/aiundockable.lua")
+    ship:addScript("enemies/esccxsotandreadnought.lua", esccDreadnoughtValues)
+    ship:setValue("is_xsotan", true)
+    ship:setValue("xsotan_dreadnought", true)
+
+    --normally this is done much earlier, but we can't add the torpedo slammer until after we set is_xsotan otherwise it messes up the target priority.
+    --add torpedoes
+    if useTorps or (useTorpsCore and dist < coreDist) then
+        local torpDamageMultiplier = ship.damageMultiplier / 2
+        --add a torpedo slammer - similar values to the ballistyx, except we want _UpAdjust to be true.
+        --use a static multiplier that's half of what's given to the dreadnought.
+        local torpROF = 4
+        local torpDurability = 4
+        if dangerFactor == 10 then
+            torpROF = 2
+            torpDurability = 6
+        end 
+
+        local _TorpSlammerValues = {
+            _TimeToActive = 12,
+            _ROF = torpROF,
+            _DamageFactor = torpDamageMultiplier,
+            _DurabilityFactor = torpDurability,
+            _ForwardAdjustFactor = 1,
+            _TargetPriority = 3 --Random non-xsotan.
+        }
+    
+        ship:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
+    end
+
+    if dangerFactor == 10 then
+        local boosterValues = {
+            _MaxBoostCharges = 10
+        }
+
+        --basically boosts 4x as quickly
+        if killedGuardian and dist < coreDist then
+            boosterValues._ChargesMultiplier = 2
+            boosterValues._BoostCycle = 30
+        end
+
+        ship:addScriptOnce("allybooster.lua", boosterValues)
+    end
+
+    Boarding(ship).boardable = false
+
+    return ship
+end
+
 function Xsotan.createRevenant(_Wreckage)
     local _Sector = Sector()
     --Get plan from wreckage.
@@ -276,5 +512,5 @@ function Xsotan.createGenericShip(position, volumeFactor)
 
     Boarding(ship).boardable = false
 
-    return 
+    return ship
 end

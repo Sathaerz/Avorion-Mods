@@ -12,6 +12,7 @@ local TorpedoGenerator = include("torpedogenerator")
 local Xsotan = include ("story/xsotan")
 local EnvironmentalEffectUT = include("dlc/rift/sector/effects/environmentaleffectutility")
 local EnvironmentalEffectType = include("dlc/rift/sector/effects/environmentaleffecttype")
+local Balancing = include ("galaxy")
 
 --/run Entity():addScript("lib/esccdbg.lua")
 local window
@@ -106,6 +107,7 @@ function initUI()
     MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
     MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
     MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Parthenope", "onSpawnXsotanParthenopeButtonPressed")
+    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Dreadnought", "onSpawnXsotanDreadnoughtButtonPressed")
 
     local tab3 = window:createTab("Entity", "data/textures/icons/edge-crack.png", "ESCC Bosses")
     numButtons = 0
@@ -140,6 +142,8 @@ function initUI()
     MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Player Value Dump", "onPlayerValueDumpButtonPressed")
     MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Material Value Dump", "onMaterialDumpButtonPressed")
     MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Sector DPS Dump", "onSectorDPSDumpButtonPressed")
+    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Reward Data Dump", "onSectorRewardDumpButtonPressed")
+    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Material Cost Factor Dump", "onMaterialCostFactorDumpButtonPressed")
 
     local tab7 = window:createTab("Entity", "data/textures/icons/papers.png", "Other")
     numButtons = 0
@@ -281,8 +285,8 @@ function initUI()
             MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 3", "onLOTWMission3ButtonPressed")
             MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 4", "onLOTWMission4ButtonPressed")
             MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 5", "onLOTWMission5ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 6", "onLOTWMission6ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 7", "onLOTWMission7ButtonPressed")
+            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Side Mission 1", "onLOTWSide1ButtonPressed")
+            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Side Mission 2", "onLOTWSide2ButtonPressed")
             MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Clear Values", "onLOTWClearValuesPressed")
             MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Spawn Swenks", "onSpawnSwenksButtonPressed")
         end
@@ -338,10 +342,16 @@ function getModTable()
     local xmods = Mods()
 
     for _, p in pairs(xmods) do
+        --OTHER
         if p.name == "IncreasingThreat" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasIncreasingThreat = true
         end
+        if p.name == "Emergence" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasEmergence = true
+        end
+        --CAMPAIGNS
         if p.name == "LongLiveTheEmpress" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasLongLiveTheEmpress = true
@@ -349,10 +359,6 @@ function getModTable()
         if p.name == "RetrogradeCampaign" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasRetrogradeCampaign = true
-        end
-        if p.name == "Emergence" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasEmergence = true
         end
         if p.name == "LordOfTheWastes" then
             _ModTable.hasAnyCampaignMods = true
@@ -366,6 +372,7 @@ function getModTable()
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasHorizonKeepers = true
         end
+        --BULLETIN MISSIONS
         if p.name == "AmbushRaiders" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
@@ -373,114 +380,6 @@ function getModTable()
             table.insert(_BulletinMissionData, {
                 _Caption = "Ambush Pirate Raiders",
                 _Tooltip = "ambushraiders"
-            })
-        end
-        if p.name == "AttackResearchBase" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Attack Research Base",
-                _Tooltip = "attackresearchbase"
-            })
-        end
-        if p.name == "DestroyPrototype" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Destroy Prototype Battleship",
-                _Tooltip = "destroyprototype2"
-            })
-        end
-        if p.name == "WreckingHavoc" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Wrecking Havoc",
-                _Tooltip = "wreckinghavoc"
-            })
-        end
-        if p.name == "CollectPirateBounty" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Collect Pirate Bounty",
-                _Tooltip = "piratebounty"
-            })
-        end
-        if p.name == "EscortCivilians" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Escort Civilian Transports",
-                _Tooltip = "escortcivilians"
-            })
-        end
-        if p.name == "TransferSatellite" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Transfer Satellite",
-                _Tooltip = "transfersatellite"
-            })
-        end
-        if p.name == "EradicateXsotan" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Eradicate Xsotan Infestation",
-                _Tooltip = "eradicatexsotan"
-            })
-        end
-        if p.name == "DefendPrototype" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Defend Prototype Battleship",
-                _Tooltip = "defendprototype"
-            })
-        end
-        if p.name == "RescueSlaves" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Rescue Slaves",
-                _Tooltip = "rescueslaves"
-            })
-        end
-        if p.name == "DestroyStronghold" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Destroy Pirate Stronghold",
-                _Tooltip = "destroystronghold"
-            })
-        end
-        if p.name == "CollectXsotanBounty" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Collect Xsotan Bounty",
-                _Tooltip = "xsotanbounty"
-            })
-        end
-        if p.name == "TheDig" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "The Dig",
-                _Tooltip = "thedig"
             })
         end
         if p.name == "AnalyzeXsotanSpecimen" then
@@ -492,6 +391,96 @@ function getModTable()
                 _Tooltip = "xsotanspecimen"
             })
         end
+        if p.name == "AttackResearchBase" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Attack Research Base",
+                _Tooltip = "attackresearchbase"
+            })
+        end
+        if p.name == "CollectPirateBounty" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Collect Pirate Bounty",
+                _Tooltip = "piratebounty"
+            })
+        end
+        if p.name == "CollectXsotanBounty" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Collect Xsotan Bounty",
+                _Tooltip = "xsotanbounty"
+            })
+        end
+        if p.name == "DefendPrototype" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Defend Prototype Battleship",
+                _Tooltip = "defendprototype"
+            })
+        end
+        if p.name == "DestroyPrototype" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Destroy Prototype Battleship",
+                _Tooltip = "destroyprototype2"
+            })
+        end
+        if p.name == "DestroyStronghold" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Destroy Pirate Stronghold",
+                _Tooltip = "destroystronghold"
+            })
+        end
+        if p.name == "EradicateXsotan" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Eradicate Xsotan Infestation",
+                _Tooltip = "eradicatexsotan"
+            })
+        end
+        if p.name == "EscortCivilians" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Escort Civilian Transports",
+                _Tooltip = "escortcivilians"
+            })
+        end
+        if p.name == "MineralMadness" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Mineral Madness",
+                _Tooltip = "mineralmadness"
+            })
+        end
+        if p.name == "RescueSlaves" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Rescue Slaves",
+                _Tooltip = "rescueslaves"
+            })
+        end
         if p.name == "ScanXsotanGroup" then
             _ModTable.hasAnyCampaignMods = true
             _ModTable.hasAnyBulletinMods = true
@@ -499,6 +488,60 @@ function getModTable()
             table.insert(_BulletinMissionData, {
                 _Caption = "Scan Xsotan Group",
                 _Tooltip = "scanxsotangroup"
+            })
+        end
+        if p.name == "ScrapDelivery" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Scrap Delivery",
+                _Tooltip = "scrapdelivery"
+            })
+        end
+        if p.name == "ScrapScramble" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Scrap Scramble",
+                _Tooltip = "scrapscramble"
+            })
+        end
+        if p.name == "TheDig" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "The Dig",
+                _Tooltip = "thedig"
+            })
+        end
+        if p.name == "TransferSatellite" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Transfer Satellite",
+                _Tooltip = "transfersatellite"
+            })
+        end
+        if p.name == "WreckingHavoc" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Wrecking Havoc",
+                _Tooltip = "wreckinghavoc"
+            })
+        end
+        if p.name == "XsotanDreadnoughtMission" then
+            _ModTable.hasAnyCampaignMods = true
+            _ModTable.hasAnyBulletinMods = true
+
+            table.insert(_BulletinMissionData, {
+                _Caption = "Destroy Xsotan Dreadnought",
+                _Tooltip = "destroyxsodread"
             })
         end
     end
@@ -669,7 +712,7 @@ function onBoosterHealerEnemyGenerated(_Generated)
     onPiratesGenerated(_Generated)
     print("adding booster + args script to enemy.")
     for _, _S in pairs(_Generated) do
-        _S:addScript("allybooster.lua", {_HealWhenBoosting = true, _HealPctWhenBoosting = 33, _MaxBoostCharges = 3})
+        _S:addScript("allybooster.lua", {_HealWhenBoosting = true, _HealPctWhenBoosting = 33, _MaxBoostCharges = 5})
     end
 end
 
@@ -1208,6 +1251,19 @@ function onSpawnXsotanParthenopeButtonPressed()
     Xsotan.createParthenope(MatrixLookUpPosition(-dir, up, pos))
 end
 callable(nil, "onSpawnXsotanParthenopeButtonPressed")
+
+function onSpawnXsotanDreadnoughtButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanDreadnoughtButtonPressed")
+        return
+    end
+
+    local dangerFactor = random():getInt(1, 10)
+    print("Creating danger " .. tostring(dangerFactor) .. " Dreadnought")
+
+    Xsotan.createDreadnought(nil, dangerFactor)
+end
+callable(nil, "onSpawnXsotanDreadnoughtButtonPressed")
 
 --endregion
 
@@ -2164,6 +2220,37 @@ function onSectorDPSDumpButtonPressed()
 end
 callable(nil, "onSectorDPSDumpButtonPressed")
 
+function onSectorRewardDumpButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSectorRewardDumpButtonPressed")
+        return
+    end
+
+    local x, y = Sector():getCoordinates()
+
+    print("Sector richness factor: " .. tostring(Balancing.GetSectorRichnessFactor(x, y)))
+    print("Sector reward factor: " .. tostring(Balancing.GetSectorRewardFactor(x, y)))
+end
+callable(nil, "onSectorRewardDumpButtonPressed")
+
+function onMaterialCostFactorDumpButtonPressed()
+    if onClient() then
+        invokeServerFunction("onMaterialCostFactorDumpButtonPressed")
+        return
+    end
+
+    for matlIdx = 1, 7 do
+        local matl = Material(matlIdx - 1)
+
+        local matlName = matl.name
+        local matlCostFactor = matl.costFactor
+        local matlTypicalVal = matl.costFactor * 10
+
+        print("Material name: " .. tostring(matlName) .. " Cost factor: " .. tostring(matlCostFactor) .. " Typical value: " .. tostring(matlTypicalVal))
+    end
+end
+callable(nil, "onMaterialCostFactorDumpButtonPressed")
+
 --endregion
 
 --region #TAB7 (Other tab)
@@ -2652,7 +2739,7 @@ function onLOTWMission1ButtonPressed()
     end
 
     local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwmission1.lua"
+    local _Script = "missions/lotw/lotwstory1.lua"
     _Player:removeScript(_Script)
     _Player:addScript(_Script)
 end
@@ -2665,7 +2752,7 @@ function onLOTWMission2ButtonPressed()
     end
 
     local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwmission2.lua"
+    local _Script = "missions/lotw/lotwstory2.lua"
     _Player:removeScript(_Script)
     _Player:addScript(_Script)
 end
@@ -2678,7 +2765,7 @@ function onLOTWMission3ButtonPressed()
     end
 
     local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwmission3.lua"
+    local _Script = "missions/lotw/lotwstory3.lua"
     _Player:removeScript(_Script)
     _Player:addScript(_Script)
 end
@@ -2691,7 +2778,7 @@ function onLOTWMission4ButtonPressed()
     end
 
     local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwmission4.lua"
+    local _Script = "missions/lotw/lotwstory4.lua"
     _Player:removeScript(_Script)
     _Player:addScript(_Script)
 end
@@ -2704,37 +2791,37 @@ function onLOTWMission5ButtonPressed()
     end
 
     local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwmission5.lua"
+    local _Script = "missions/lotw/lotwstory5.lua"
     _Player:removeScript(_Script)
     _Player:addScript(_Script)
 end
 callable(nil, "onLOTWMission5ButtonPressed")
 
-function onLOTWMission6ButtonPressed()
+function onLOTWSide1ButtonPressed()
     if onClient() then
-        invokeServerFunction("onLOTWMission6ButtonPressed")
+        invokeServerFunction("onLOTWSide1ButtonPressed")
         return
     end
 
     local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwmission6.lua"
+    local _Script = "missions/lotw/lotwside1.lua"
     _Player:removeScript(_Script)
     _Player:addScript(_Script)
 end
-callable(nil, "onLOTWMission6ButtonPressed")
+callable(nil, "onLOTWSide1ButtonPressed")
 
-function onLOTWMission7ButtonPressed()
+function onLOTWSide2ButtonPressed()
     if onClient() then
-        invokeServerFunction("onLOTWMission7ButtonPressed")
+        invokeServerFunction("onLOTWSide2ButtonPressed")
         return
     end
 
     local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwmission7.lua"
+    local _Script = "missions/lotw/lotwside2.lua"
     _Player:removeScript(_Script)
     _Player:addScript(_Script)
 end
-callable(nil, "onLOTWMission7ButtonPressed")
+callable(nil, "onLOTWSide2ButtonPressed")
 
 function onLOTWClearValuesPressed()
     if onClient() then
@@ -2745,24 +2832,20 @@ function onLOTWClearValuesPressed()
     local _Player = Player(callingPlayer)
 
     local _Scripts = {
-        "missions/lotw/lotwmission1.lua",
-        "missions/lotw/lotwmission2.lua",
-        "missions/lotw/lotwmission3.lua",
-        "missions/lotw/lotwmission4.lua",
-        "missions/lotw/lotwmission5.lua",
-        "missions/lotw/lotwmission6.lua",
-        "missions/lotw/lotwmission7.lua",
+        "missions/lotw/lotwstory1.lua",
+        "missions/lotw/lotwstory2.lua",
+        "missions/lotw/lotwstory3.lua",
+        "missions/lotw/lotwstory4.lua",
+        "missions/lotw/lotwstory5.lua",
+        "missions/lotw/lotwside1.lua",
+        "missions/lotw/lotwside2.lua",
     }
 
     for _k, _v in pairs(_Scripts) do
         _Player:removeScript(_v)
     end
 
-    _Player:setValue("_lotw_story_1_accomplished", nil)
-    _Player:setValue("_lotw_story_2_accomplished", nil)
-    _Player:setValue("_lotw_story_3_accomplished", nil)
-    _Player:setValue("_lotw_story_4_accomplished", nil)
-    _Player:setValue("_lotw_story_5_accomplished", nil)
+    _Player:setValue("_lotw_story_stage", nil)
     _Player:setValue("_lotw_faction", nil)
     _Player:setValue("_lotw_mission2_failures", nil)
     _Player:setValue("_lotw_mission2_freighterskilled", nil)

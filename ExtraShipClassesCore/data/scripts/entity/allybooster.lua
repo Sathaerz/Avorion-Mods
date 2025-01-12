@@ -3,8 +3,6 @@ package.path = package.path .. ";data/scripts/?.lua"
 
 include("randomext")
 
-ESCCUtil = include("esccutil")
-
 --Don't remove the namespace comment!!! The script could break.
 --namespace AllyBooster
 AllyBooster = {}
@@ -13,26 +11,21 @@ local self = AllyBooster
 self._Debug = 0
 
 self._Data = {}
-self._Data._BoostTime = nil --Placeholder
-self._Data._BoostCharges = nil --Placeholder
-self._Data._HealWhenBoosting = nil
-self._Data._HealPctWhenBoosting = nil
-self._Data._BoostCycle = nil
-self._Data._MaxBoostCharges = nil
 
 function AllyBooster.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Ally Booster v16 script on entity.")
+    self.Log(_MethodName, "Initializing Ally Booster v19 script on entity.")
 
     self._Data = _Values or {}
-
-    self._Data._BoostTime = 0
-    self._Data._BoostCharges = 0
 
     self._Data._HealWhenBoosting = self._Data._HealWhenBoosting or false
     self._Data._HealPctWhenBoosting = self._Data._HealPctWhenBoosting or 0
     self._Data._BoostCycle = self._Data._BoostCycle or 60
-    self._Data._MaxBoostCharges = self._Data._MaxBoostCharges or 0
+    self._Data._MaxBoostCharges = self._Data._MaxBoostCharges or 3
+    self._Data._ChargesMultiplier = self._Data._ChargesMultiplier or 1
+
+    self._Data._BoostTime = 0
+    self._Data._BoostCharges = 0
 
     self.Log(_MethodName, "Heal when boosting : " .. tostring(self._Data._HealWhenBoosting) .. " -- Healing % when boosting : " .. tostring(self._Data._HealPctWhenBoosting))
 end
@@ -55,7 +48,7 @@ function AllyBooster.updateServer(_TimeStep)
     self._Data._BoostTime = self._Data._BoostTime + _TimeStep
 
     if self._Data._BoostTime >= self._Data._BoostCycle then
-        self._Data._BoostCharges = self._Data._BoostCharges + 1
+        self._Data._BoostCharges = self._Data._BoostCharges + (1 * self._Data._ChargesMultiplier)
         self._Data._BoostTime = 0
     end
 
@@ -78,10 +71,8 @@ function AllyBooster.boost()
         "frenzy.lua"
     }   
 
-    local _Rgen = ESCCUtil.getRand()
     local _Entity = Entity()
-    local _Faction = Faction(_Entity.factionIndex)
-    local _FactionEntities = {Sector():getEntitiesByFaction(_Faction.index)}
+    local _FactionEntities = {Sector():getEntitiesByFaction(_Entity.factionIndex)}
     local _Allies = {}
 
     for _, _FEn in pairs(_FactionEntities) do
@@ -89,58 +80,82 @@ function AllyBooster.boost()
             table.insert(_Allies, _FEn)
         end
     end
-    
-    shuffle(random(), _Allies)
-    
-    if #_Allies > 0 then
-        local _TargetAlly = _Allies[_Rgen:getInt(1, #_Allies)]
 
+    if #_Allies > 0 then
+        --Get ally to boost / script to boost with
+        local _TargetAlly = getRandomEntry(_Allies)
+
+         --Make this a bit smarter and don't try to double add a script to an ally.
+        local possibleScripts = {}
+        for _, script in pairs(_Scripts) do
+            if not _TargetAlly:hasScript(script) then
+                table.insert(possibleScripts, script)
+            end
+        end
+
+        local _AllyScript = getRandomEntry(possibleScripts)
+
+        --Get positions for laser
         local _AllyPosition = _TargetAlly.translationf
         local _MyPosition = _Entity.translationf
-    
-        local _AllyScript = _Scripts[_Rgen:getInt(1, #_Scripts)]
     
         self.Log(_MethodName, "Adding script " .. tostring(_AllyScript) .. " to ally.")
     
         _TargetAlly:addScriptOnce(_AllyScript)
-        Boarding(_TargetAlly).boardable = false
+        Boarding(_TargetAlly).boardable = false --Boarding boosted ships can cause bugs.
+
+        --Heal the boosted target if applicable.
+        if self._Data._HealWhenBoosting then
+            self.Log(_MethodName, "Healing!")
+            if not _TargetAlly.invincible then
+                self.Log(_MethodName, "Target ally not invincible!")
+                if _TargetAlly.durability < _TargetAlly.maxDurability then
+                    local _HealPct = self._Data._HealPctWhenBoosting / 100
+                    local _AllyMaxHull = _TargetAlly.maxDurability
+    
+                    self.Log(_MethodName, "Healing " .. tostring(_HealPct) .. "%!")
+    
+                    local _HealAmount = _AllyMaxHull * _HealPct
+    
+                    self.Log(_MethodName, "Healing " .. tostring(_HealAmount) .. "hp %!")
+
+                    --Don't overcap healing.
+                    if _TargetAlly.durability + _HealAmount > _AllyMaxHull then
+                        _HealAmount = _AllyMaxHull - _TargetAlly.durability
+                    end
+    
+                    _TargetAlly.durability = _TargetAlly.durability + _HealAmount
+                end
+            end
+        end
+
+        --Update ally title - only allow for this once or we can get weird crap like 'boosted boosted savage devastator'
         if not _TargetAlly:getValue("_increasingthreat_enhanced_title") and not _TargetAlly:getValue("_escc_enhanced_title") then
             _TargetAlly:setValue("_escc_enhanced_title", true)
 
-            if self._Data._HealWhenBoosting then
-                self.Log(_MethodName, "Healing!")
-                if not _TargetAlly.invincible then
-                    self.Log(_MethodName, "Target ally not invincible!")
-                    if _TargetAlly.durability < _TargetAlly.maxDurability then
-                        local _HealPct = self._Data._HealPctWhenBoosting / 100
-                        local _AllyMaxHull = _TargetAlly.maxDurability
-        
-                        self.Log(_MethodName, "Healing " .. tostring(_HealPct) .. "%!")
-        
-                        local _HealAmount = _AllyMaxHull * _HealPct
-        
-                        self.Log(_MethodName, "Healing " .. tostring(_HealAmount) .. "hp %!")
-        
-                        _TargetAlly.durability = _TargetAlly.durability + _HealAmount
-                    end
-                end
-            end
-
             local _TitleArgs = _TargetAlly:getTitleArguments()
+            _TitleArgs.script = "Boosted "
             local _AppendDirectlyToTitle = _TargetAlly:getValue("_escc_booster_append_title_direct")
             self.Log(_MethodName, "Title args are " .. tostring(_TitleArgs))
             if _AppendDirectlyToTitle then 
                 _TargetAlly.title = "Boosted " .. _TargetAlly.title
             else
-                _TargetAlly:setTitle("${script}${toughness}${title}", {toughness = _TitleArgs.toughness, title = _TitleArgs.title, script = "Boosted "})
+                local newTitle = "${script}" .. _TargetAlly.title
+
+                self.Log(_MethodName, "Title is : " .. tostring(_TargetAlly.title) .. " new title is: " .. tostring(newTitle))
+
+                _TargetAlly:setTitle(newTitle, _TitleArgs)
             end
         end
+
+        --Finally, consume the boost charge and make the laser.
         self.Log(_MethodName, "Consuming boost charge.")
         self._Data._BoostCharges = self._Data._BoostCharges - 1
         self.createLaser(_MyPosition, _AllyPosition)
     end
+
     --Regardless of what happens, if we're over the maximum number of charges, make sure to cull.
-    self.Log(_MethodName, "At " .. tostring(self._Data._BoostCharges) .. " out of " .. tostring(self._Data._MaxBoostCharges) .. " maximum.")
+    self.Log(_MethodName, "At " .. tostring(self._Data._BoostCharges) .. " out of " .. tostring(self._Data._MaxBoostCharges) .. " maximum charges.")
     if self._Data._BoostCharges > self._Data._MaxBoostCharges then
         self._Data._BoostCharges = self._Data._MaxBoostCharges
     end

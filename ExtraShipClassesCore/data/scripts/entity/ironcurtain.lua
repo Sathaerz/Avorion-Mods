@@ -12,15 +12,12 @@ self._Debug = 0
 
 function IronCurtain.initialize(_Values)
     local methodName = "Initialize"
-    self.Log(methodName, "Initializing Iron Curtain v15")
+    self.Log(methodName, "Initializing Iron Curtain v18")
 
     self._Data = _Values or {}
 
     self._Data._Duration = self._Data._Duration or 120
     self._Data._MinDura = self._Data._MinDura or 0.25
-    if self._Data._SendMessage == nil then --only override this on a NIL, otherwise this will override a correctly sent false.
-        self._Data._SendMessage = true
-    end
 
     --The player can't alter these.
     self._Data._TimeActive = 0
@@ -57,6 +54,7 @@ function IronCurtain.updateServer(_TimeStep)
             _entity.invincible = false
             _durability.invincibility = 0.0
 
+            Sector():broadcastChatMessage("", 3, "The ${_SHIP}'s iron curtain expires!" % { _SHIP = Entity().translatedTitle })
             terminate()
             return
         end
@@ -73,19 +71,17 @@ function IronCurtain.onDamaged(_OwnID, _Amount, _InflictorID)
     local _MinRatio = self._Data._MinDura + 0.01 --Fudge by 1%
 
     if _Ratio <= _MinRatio then
-        self.Log(methodName, "HP Ratio low enough - activating!")
+        --Super spammy
+        --self.Log(methodName, "HP Ratio low enough - activating!")
 
-        if self._Data._SendMessage and not self._Data._SentMessage then
-            self.sendMessage()
+        if not self._Data._SentMessage then
+            Sector():broadcastChatMessage("", 3, "The ${_SHIP} activates its iron curtain!" % { _SHIP = Entity().translatedTitle })
             self._Data._SentMessage = true
         end
+        
         _Entity.invincible = true
         self._Data._Active = true
     end
-end
-
-function IronCurtain.sendMessage()
-    Sector():broadcastChatMessage(Entity(), ChatMessageType.Chatter, "Iron curtain activated!")
 end
 
 --region #CLIENT FUNCTIONS

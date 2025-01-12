@@ -126,7 +126,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _APDValues._MaximumTargets = 4
 
             _Boss:addScriptOnce("adaptivedefense.lua")
-            _Boss:addScriptOnce("allybooster.lua", { _HealWhenBoosting = true, _HealPctWhenBoosting = 100, _MaxBoostCharges = 3})
+            _Boss:addScriptOnce("allybooster.lua", { _HealWhenBoosting = true, _HealPctWhenBoosting = 100, _MaxBoostCharges = 5})
             _Boss:addScriptOnce("absolutepointdefense.lua", _APDValues)
             _Boss:addScriptOnce("dialogs/encounters/vigilantshield.lua")
             _ShipUtil.addVigShieldCannons(_Boss)

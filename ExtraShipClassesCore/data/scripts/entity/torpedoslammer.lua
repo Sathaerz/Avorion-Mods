@@ -59,7 +59,7 @@ self._Data = {}
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v17 script on entity.", 1)
+    self.Log(_MethodName, "Initializing Torpedo Slammer v18 script on entity.", 1)
 
     self._Data = _Values or {}
 
@@ -99,9 +99,11 @@ function TorpedoSlammer.initialize(_Values)
 
     --Fix the target priority - if the ship isn't Xsotan make it use 4 instead of 3.
     if self._Data._TargetPriority == 3 and not self_is_xsotan then
+        self.Log(_MethodName, "Enttiy is not xsotan - adjusting target priority", 1)
         self._Data._TargetPriority = 4 --Just use 4. It's functionally the same as 3 but you won't target yourself due to the list of non-xsotan including you.
     end
     if self._Data._TargetPriority == 5 and self._Data._pindex == nil then
+        self.Log(_MethodName, "Player index not set - adjusting target priority", 1)
         self._Data._TargetPriority = 4
     end
 
