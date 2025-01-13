@@ -151,7 +151,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.custom.destroyed == 0 then
