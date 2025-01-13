@@ -142,8 +142,11 @@ end
 
 function StationSiegeGun.updateServer(_TimeStep)
     local _MethodName = "Update Server"
+    
+    local _entity = Entity()
+
     if self._Data._UseStaticDamageMult and not self._Data._StaticDamageMultSet then
-        local _Mult = (Entity().damageMultiplier or 1)
+        local _Mult = (_entity.damageMultiplier or 1)
         self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult))
         self._Data._StaticDamageMultValue = _Mult
         self._Data._StaticDamageMultSet = true
@@ -152,6 +155,14 @@ function StationSiegeGun.updateServer(_TimeStep)
     if self._Data._TimeToActive >= 0 then
         self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
         return
+    end
+
+    --If Xsotan, don't start blasting unless enemies are present.
+    if _entity:getValue("is_xsotan") then
+        local myAI = ShipAI()
+        if not myAI:isEnemyPresent(true) then
+            return
+        end
     end
 
     --Had frequent memory issues while dealing with this script. Added an emergency killswitch because of that.
@@ -169,7 +180,7 @@ function StationSiegeGun.updateServer(_TimeStep)
 
     if self._Data._ShotCycleTimer > (self._Data._ShotCycle - 5) then
         --JUST BECAUSE WE CAN SHOOT DOESN'T MEAN WE SHOULD. Check supply levels.
-        local _Supplies = Entity():getValue(self._SupplyTag) or 0
+        local _Supplies = _entity:getValue(self._SupplyTag) or 0
         --Remember, if you set _ShotCycleSupply to 0, you will bypass this entirely.
         if _Supplies - self._Data._ShotSupplyConsumed >= self._Data._ShotCycleSupply then
             self.Log(_MethodName, "Picking target and broadcasting shot.")

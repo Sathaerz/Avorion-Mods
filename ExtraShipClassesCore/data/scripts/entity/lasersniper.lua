@@ -88,9 +88,12 @@ end
 
 function LaserSniper.update(_TimeStep)
     local _MethodName = "Update"
+
+    local _entity = Entity()
+
     --If we're using a static damage multiplier, set it here. We only do this once.
     if self._Data._UseStaticDamageMult and not self._Data._StaticDamageMultSet then
-        local _Mult = (Entity().damageMultiplier or 1)
+        local _Mult = (_entity.damageMultiplier or 1)
         self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult), 1)
         self._Data._StaticDamageMultValue = _Mult
         self._Data._StaticDamageMultSet = true
@@ -99,6 +102,14 @@ function LaserSniper.update(_TimeStep)
     if self._Data._TimeToActive >= 0 then
         self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
         return
+    end
+
+    --If Xsotan, don't start blasting unless enemies are present.
+    if _entity:getValue("is_xsotan") then
+        local myAI = ShipAI()
+        if not myAI:isEnemyPresent(true) then
+            return
+        end
     end
 
     if self._Data._LookConstantOverride then

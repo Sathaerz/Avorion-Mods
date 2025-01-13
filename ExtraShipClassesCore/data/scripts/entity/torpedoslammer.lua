@@ -129,6 +129,14 @@ function TorpedoSlammer.updateServer(_TimeStep)
     if self._Data._TimeToActive >= 0 then
         self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
     else
+        --If Xsotan, don't start blasting unless enemies are present.
+        if Entity():getValue("is_xsotan") then
+            local myAI = ShipAI()
+            if not myAI:isEnemyPresent(true) then
+                return
+            end
+        end
+
         --check to see if we limit ammo. If we do limit ammo and the amount of ammo left is 0 or less! no negative ammo here, terminate and return.
         if self._Data._LimitAmmo then
             if self._Data._Ammo <= 0 then

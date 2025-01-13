@@ -178,7 +178,7 @@ function Xsotan.createParthenope(_position, _volumeFactor)
     _XsotanShip:setValue("xsotan_parthenope", true)
 
     --Add Scripts
-    _XsotanShip:addScriptOnce("parthenopexsotan.lua")
+    _XsotanShip:addScriptOnce("enemies/parthenopexsotan.lua")
     _XsotanShip:addScriptOnce("avenger.lua")
 
     return _XsotanShip
