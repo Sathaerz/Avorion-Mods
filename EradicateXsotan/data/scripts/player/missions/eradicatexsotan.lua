@@ -154,7 +154,6 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
-mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -420,6 +419,10 @@ function spawnXsotanInfestor()
     local _Generator = SectorGenerator(_X, _Y)
     local _XsotanInfestor = Xsotan.createInfestor(_Generator:getPositionInSector(2500), _InfestorSize, extraLoot)
 
+    if mission.data.custom.killedGuardian and mission.data.custom.dangerLevel == 10 then
+        _XsotanInfestor:addScript("internal/common/entity/background/legendaryloot.lua")
+    end
+
     local _Players = {Sector():getPlayers()}
     if valid(_XsotanInfestor) then
         for _, p in pairs(_Players) do
@@ -450,27 +453,28 @@ function formatDescription(_Station, _insideBarrier)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
-    local _DescriptionType = 1 --Neutral
+    local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
+        descriptionType = 2 --Aggressive.
     elseif _Aggressive <= -0.5 then
-        _DescriptionType = 3 --Peaceful.
+        descriptionType = 3 --Peaceful.
     end
 
-    local _FinalDescription = ""
-    if _insideBarrier then
-        _FinalDescription = "The tide of Xsotan is endless! So is our will to defeat them - but occasionally we need some help. There's an especially bad cluster of Xsotan signatures in Sector (${x}:${y}). We need some asssistance cleaning them up - our own forces are depleted and we'll need some time to rebuild."
-    else
-        if _DescriptionType == 1 then --Neutral.
-            _FinalDescription = "Our scouts have picked up Xsotan activity in Sector (${x}:${y}). This is a serious threat to our operations, and needs to be dealt with. We're offering a bounty for any captain brave enough to head into the sector and eradicate them. We'll await your return."
-        elseif _DescriptionType == 2 then --Aggressive.
-            _FinalDescription = "The Xsotan are a stain on the galaxy and must be eradicated. However, our forces are exhausted from several recent conflicts and aren't able to respond to them appropriately. We've picked up some Xsotan activity in Sector (${x}:${y}). Go there and destroy every one of their wretched ships you encounter."
-        elseif _DescriptionType == 3 then --Peaceful.
-            _FinalDescription = "We've recently detected a Xsotan incursion in Sector (${x}:${y}). Our forces are unprepared to respond, and if we leave the Xsotan to their own devices they could kill millions of people. We need your help. Please head there and wipe out any Xsotan ships you encounter. We will pay you for your efforts."
+    local descriptionTable = {
+        "Our scouts have picked up Xsotan activity in sector (${x}:${y}). This is a serious threat to our operations, and needs to be dealt with. We're offering a bounty for any captain brave enough to head into the sector and eradicate them. We'll await your return.", --Neutral
+        "The Xsotan are a stain on the galaxy and must be eradicated. However, our forces are exhausted from several recent conflicts and aren't able to respond to them appropriately. We've picked up some Xsotan activity in sector (${x}:${y}). Go there and destroy every one of their wretched ships you encounter.", --Aggressive
+        "We've recently detected a Xsotan incursion in sector (${x}:${y}). Our forces are unprepared to respond, and if we leave the Xsotan to their own devices they could kill millions of people. We need your help. Please head there and wipe out any Xsotan ships you encounter. We will pay you for your efforts." --Peaceful
+    }
+
+    local finalDescription = descriptionTable[descriptionType]
+
+    if _insideBarrier and _Station.title == "Resistance Outpost" then
+        if random():test(0.5) then
+            finalDescription = "The tide of Xsotan is endless! So is our will to defeat them - but occasionally we need some help. There's an especially bad cluster of Xsotan signatures in sector (${x}:${y}). We need some asssistance cleaning them up - our own forces are depleted and we'll need some time to rebuild."
         end
     end
 
-    return _FinalDescription
+    return finalDescription
 end
 
 mission.makeBulletin = function(_Station)
@@ -481,7 +485,7 @@ mission.makeBulletin = function(_Station)
     local target = {}
     local x, y = _Sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
-    target.x, target.y = MissionUT.getSector(x, y, 2, 15, false, false, false, false, insideBarrier)
+    target.x, target.y = MissionUT.getEmptySector(x, y, 2, 15, insideBarrier)
 
     if not target.x or not target.y then
         mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
