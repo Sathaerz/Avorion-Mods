@@ -86,8 +86,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase.timers = {}
-
 mission.globalPhase.getRewardedItems = function()
     --25% of getting a random rarity radar upgrade.
     if random():test(0.25) then
@@ -152,6 +150,10 @@ mission.phases[2].onBegin = function()
     if onClient() then
         registerMarkScannableXsotan()
     end
+end
+
+mission.phases[2].onRestore = function()
+    registerMarkScannableXsotan()
 end
 
 --region #PHASE 2 PLAYER CALLBACKS
