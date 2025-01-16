@@ -4,9 +4,9 @@ function WeaponGenerator.generateVaussCannon(rand, dps, tech, material, rarity)
     weapon:setProjectile()
 
     local fireDelay = rand:getFloat(0.05, 0.21) --Chaingun is 0.04 - 0.2
-    local reach = rand:getFloat(490, 640) --Chaingun is 300 - 450
+    local reach = rand:getFloat(470, 620) --Chaingun is 300 - 450
     local damage = dps * fireDelay
-    local speed = rand:getFloat(1200, 1300) --Chaingun is 300 - 400
+    local speed = rand:getFloat(1000, 1100) --Chaingun is 300 - 400
     local existingTime = reach / speed
 
     weapon.fireDelay = fireDelay
