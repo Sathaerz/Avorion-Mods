@@ -153,7 +153,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -526,9 +525,9 @@ function formatDescription(_Station, _DangerValue)
     end
 
     local descriptionP3Table = {
-        "\n\nThe base is located in Sector (${x}:${y}). It is controlled by ${enemyName}.", --Neutral
-        "\n\nThe base is located in Sector (${x}:${y}). It is controlled by ${enemyName}. Burn it to the ground.", --Aggressive
-        "\n\nThe base is located in Sector (${x}:${y}). It is controlled by ${enemyName} - please do what needs to be done." --Peaceful
+        "\n\nThe base is located in sector (${x}:${y}). It is controlled by ${enemyName}.", --Neutral
+        "\n\nThe base is located in sector (${x}:${y}). It is controlled by ${enemyName}. Burn it to the ground.", --Aggressive
+        "\n\nThe base is located in sector (${x}:${y}). It is controlled by ${enemyName} - please do what needs to be done." --Peaceful
     }
 
     finalDescription = finalDescription .. descriptionP3Table[descriptionType]

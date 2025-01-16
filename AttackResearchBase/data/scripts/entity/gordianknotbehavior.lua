@@ -20,6 +20,7 @@ function GordianKnotBehavior.initialize()
     local _MethodName = "Initialize"
     self.Log(_MethodName, "Beginning...")
     if onClient() then
+        Music():fadeOut(1.5)
         registerBoss(Entity().index, nil, nil, "data/music/special/mezame.ogg")
     end
     if onServer() then
