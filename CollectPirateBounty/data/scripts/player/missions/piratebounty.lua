@@ -302,23 +302,20 @@ function formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
-    local _DescriptionType = 1 --Neutral
+    local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
+        descriptionType = 2 --Aggressive.
     elseif _Aggressive <= -0.5 then
-        _DescriptionType = 3 --Peaceful.
+        descriptionType = 3 --Peaceful.
     end
 
-    local _FinalDescription = ""
-    if _DescriptionType == 1 then --Neutral.
-        _FinalDescription = "To any captains out there with a some combat experience - we'd like you to take on ${targetFaction} for us. We've had a lot of problems with them attacking freighters and other civilian targets, and we'd like you to put a stop to it. Destroying ${targets} of their ships or stations should be enough. You'll be compensated for your work."
-    elseif _DescriptionType == 2 then --Aggressive.
-        _FinalDescription = "Listen up captain! ${targetFaction} Need to be cut down a notch. We could easily destroy them ourselves, but our military is committed elsewhere and we cannot afford to split our forces. To that end, we're willing to pay you to hunt down ${targets} ships or stations belonging to ${targetFaction}. We don't care how or where you find them, as long as you get rid of them."
-    elseif _DescriptionType == 3 then --Peaceful.
-        _FinalDescription = "We need help. Our diplomatic efforts have failed, and ${targetFaction} have been running rampant in our sectors. We regret that it has come to this, but we need you to destroy ${targets} of their ships or stations. There's a reward in it for you as well. Please. If we don't put a stop to ${targetFaction} soon, there's no telling how much damage they'll cause."
-    end
+    local descriptionTable = {
+        "To any captains out there with a some combat experience - we'd like you to take on ${targetFaction} for us. We've had a lot of problems with them attacking freighters and other civilian targets, and we'd like you to put a stop to it. Destroying ${targets} of their ships or stations should be enough. You'll be compensated for your work.",
+        "Listen up Captain! ${targetFaction} Need to be cut down a notch. We could easily destroy them ourselves, but our military is committed elsewhere and we cannot afford to split our forces. To that end, we're willing to pay you to hunt down ${targets} ships or stations belonging to ${targetFaction}. We don't care how or where you find them, as long as you get rid of them.",
+        "Peace be with you, captain. Our diplomatic efforts have failed, and ${targetFaction} are running rampant in our sectors. We regret that it has come to this, but we need you to destroy ${targets} of their ships or stations. There's a reward in it for you as well. Please. If we don't put a stop to ${targetFaction} soon, there's no telling how much damage they'll cause."
+    }
 
-    return _FinalDescription
+    return descriptionTable[descriptionType]
 end
 
 mission.makeBulletin = function(_Station)
