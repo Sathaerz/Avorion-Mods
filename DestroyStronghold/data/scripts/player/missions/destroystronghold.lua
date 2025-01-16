@@ -41,6 +41,7 @@ mission.data.accomplishMessage = "..."
 --Some other custom data that has to be initialized here, since we need it on both client / server - or else we get weird errors elsewhere in the script.
 mission.data.custom.locations = {}
 mission.data.custom.wreckagePieceIds = {}
+mission.data.custom.wreckageScriptPath = "player/missions/destroystronghold/searchwreckage.lua"
 
 local DestroyStronghold_init = initialize
 function initialize(_Data_in)
@@ -145,7 +146,6 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
@@ -455,7 +455,7 @@ mission.phases[1].optionalUpdateServer = function(_TimeStep)
         --Attaches a script to all of the candidate wreckages that allows them to be searched, and marks them on the player's UI.
         for _, _Wreck in pairs(_CandidateWrecks) do
             table.insert(mission.data.custom.wreckagePieceIds, _Wreck.id)
-            _Wreck:addScriptOnce("entity/destroystrongholdsearch.lua")
+            _Wreck:addScriptOnce(mission.data.custom.wreckageScriptPath)
             _Wreck:setValue("_destroystronghold_optionalwreck_targetplayer", Player().index)
         end
         local _TargetWreck = Entity(mission.data.custom.wreckagePieceIds[_Rgen:getInt(1, #mission.data.custom.wreckagePieceIds)])
@@ -718,7 +718,7 @@ function onMarkWreckages()
         local entity = Entity(wreckId)
         if not entity then return end
         
-        if entity:hasScript("destroystrongholdsearch.lua") then
+        if entity:hasScript(mission.data.custom.wreckageScriptPath) then
             local _ContainerMarkOrange = ESCCUtil.getSaneColor(255, 173, 0)
 
             renderer:renderEntityTargeter(entity, _ContainerMarkOrange)
@@ -828,7 +828,7 @@ mission.makeBulletin = function(_Station)
     local _Description = formatDescription(_Station, _DangerLevel)
     local _WinMsg = formatWinMessage(_Station)
 
-    local _BaseReward = 160000
+    local _BaseReward = 170000
     if _DangerLevel >= 6 then
         _BaseReward = _BaseReward + 6000
     end
