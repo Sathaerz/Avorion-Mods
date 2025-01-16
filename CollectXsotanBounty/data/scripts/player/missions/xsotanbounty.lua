@@ -129,23 +129,20 @@ function formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
-    local _DescriptionType = 1 --Neutral
+    local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
+        descriptionType = 2 --Aggressive.
     elseif _Aggressive <= -0.5 then
-        _DescriptionType = 3 --Peaceful.
+        descriptionType = 3 --Peaceful.
     end
 
-    local _FinalDescription = ""
-    if _DescriptionType == 1 then --Neutral.
-        _FinalDescription = "We're looking for an enterprising captain to eliminate some Xsotan. All attempts at communicating with the strange ships have failed, and we cannot allow them to continue to wreak havoc on our trade routes and outlying sectors. ${targets} will be enough for the time being. We'll compensate you for each ship that you manage to take out."
-    elseif _DescriptionType == 2 then --Aggressive.
-        _FinalDescription = "The Xsotan have always been a real pain in our ass, and we're going to do something about it. Our military is otherwise engaged, so we're turning to independent captains to cull this menace. If you see a Xsotan, kill it. We'll pay you for each one that you destroy. You'll get paid once you slaughter ${targets} of them."
-    elseif _DescriptionType == 3 then --Peaceful.
-        _FinalDescription = "Peace be with you captain. Unfortunately, we cannot say the same for the Xsotan. We're usually willing to tolerate their presence - but their tendency to attack our traders and miners cannot be ignored. When this happens there is a great loss of life, and we cannot allow this to continue. Please remove ${targets} of their ships - we will pay you for each one eliminated."
-    end
+    local descriptionTable = {
+        "We're looking for an enterprising captain to eliminate some Xsotan. All attempts at communicating with the strange ships have failed, and we cannot allow them to continue to wreak havoc on our trade routes and outlying sectors. ${targets} will be enough for the time being. We'll compensate you for each ship that you manage to take out.",
+        "The Xsotan have always been a real pain in our ass, and we're going to do something about it. Our military is otherwise engaged, so we're turning to independent captains to cull this menace. If you see a Xsotan, kill it. We'll pay you for each one that you destroy. You'll get paid once you slaughter ${targets} of them.",
+        "Peace be with you captain. Unfortunately, we cannot say the same for the Xsotan. We're usually willing to tolerate their presence - but their tendency to attack our traders and miners cannot be ignored. When this happens there is a great loss of life, and we cannot allow this to continue. Please remove ${targets} of their ships - we will pay you for each one eliminated."
+    }
 
-    return _FinalDescription
+    return descriptionTable[descriptionType]
 end
 
 mission.makeBulletin = function(_Station)
