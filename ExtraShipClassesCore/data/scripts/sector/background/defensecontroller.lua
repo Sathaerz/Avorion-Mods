@@ -411,7 +411,7 @@ function DefenseController.initiateNextWave()
 
     local _WaveTable = nil
     if self._Data._IsPirate then
-        _WaveTable = ESCCUtil.getStandardWave(_DangerLevel, _DefendersToSpawn, _Threat)
+        _WaveTable = ESCCUtil.getStandardWave(_DangerLevel, _DefendersToSpawn, _Threat, false)
     else
         _WaveTable = ESCCUtil.getStandardWave(_DangerLevel, _DefendersToSpawn, _Threat, true)
     end

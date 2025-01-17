@@ -4,15 +4,17 @@ package.path = package.path .. ";data/scripts/?.lua"
 include("galaxy")
 include("callable")
 include("productions")
-local PirateGenerator = include("pirategenerator")
+
+local PirateGenerator = include("pirategenerator") --used for lotw
 local AsyncPirateGenerator = include("asyncpirategenerator")
 local SpawnUtility = include("spawnutility")
 local ShipUtility = include("shiputility")
 local TorpedoGenerator = include("torpedogenerator")
 local Xsotan = include ("story/xsotan")
+local Balancing = include ("galaxy")
+--ITR scripts
 local EnvironmentalEffectUT = include("dlc/rift/sector/effects/environmentaleffectutility")
 local EnvironmentalEffectType = include("dlc/rift/sector/effects/environmentaleffecttype")
-local Balancing = include ("galaxy")
 
 --/run Entity():addScript("lib/esccdbg.lua")
 local window
@@ -69,105 +71,105 @@ function initUI()
 
     local topLevelTab = tabbedWindow:createTab("Entity", "data/textures/icons/ship.png", "ESCC General")
     local window = topLevelTab:createTabbedWindow(Rect(topLevelTab.rect.size))
-    local tab = window:createTab("", "data/textures/icons/ship.png", "ESCC Ships")
+    local shipsTab = window:createTab("", "data/textures/icons/ship.png", "ESCC Ships")
     numButtons = 0
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Jammer", "onSpawnJammerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Stinger", "onSpawnStingerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Scorcher", "onSpawnScorcherButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Bomber", "onSpawnBomberButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Sinner", "onSpawnSinnerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Prowler", "onSpawnProwlerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Pillager", "onSpawnPillagerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Devastator", "onSpawnDevastatorButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Slammer", "onSpawnTorpedoSlammerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Deadshot", "onSpawnDeadshotButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "SeigeGun", "onSpawnSeigeGunButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Absolute PD", "onSpawnAbsolutePDButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Curtain", "onSpawnIronCurtainButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Eternal", "onSpawnEternalButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Overdrive", "onSpawnOverdriveButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Adaptive", "onSpawnAdaptiveButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Afterburn", "onSpawnAfterburnerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Avenger", "onSpawnAvengerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Meathook", "onSpawnMeathookButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Booster", "onSpawnBoosterButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Booster Healer", "onSpawnBoosterHealerButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Phaser", "onSpawnPhaserButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Frenzied", "onSpawnFrenziedButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Secondaries", "onSpawnSecondariesButtonPressed")
-    MakeButton(tab, ButtonRect(nil, nil, nil, tab.height), "Thorns", "onSpawnThornsButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Jammer", "onSpawnJammerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Stinger", "onSpawnStingerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Scorcher", "onSpawnScorcherButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Bomber", "onSpawnBomberButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Sinner", "onSpawnSinnerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Prowler", "onSpawnProwlerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Pillager", "onSpawnPillagerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Devastator", "onSpawnDevastatorButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Slammer", "onSpawnTorpedoSlammerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Deadshot", "onSpawnDeadshotButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "SeigeGun", "onSpawnSeigeGunButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Absolute PD", "onSpawnAbsolutePDButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Curtain", "onSpawnIronCurtainButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Eternal", "onSpawnEternalButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Overdrive", "onSpawnOverdriveButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Adaptive", "onSpawnAdaptiveButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Afterburn", "onSpawnAfterburnerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Avenger", "onSpawnAvengerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Meathook", "onSpawnMeathookButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Booster", "onSpawnBoosterButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Booster Healer", "onSpawnBoosterHealerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Phaser", "onSpawnPhaserButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Frenzied", "onSpawnFrenziedButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Secondaries", "onSpawnSecondariesButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Thorns", "onSpawnThornsButtonPressed")
 
-    local tabXsotan = window:createTab("Entity", "data/textures/icons/xsotan.png", "ESCC Xsotan")
+    local xsotanTab = window:createTab("Entity", "data/textures/icons/xsotan.png", "ESCC Xsotan")
     numButtons = 0
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Infestor", "onSpawnXsotanInfestorButtonPressed")
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Oppressor", "onSpawnXsotanOppressorButtonPressed")
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Sunmaker", "onSpawnXsotanSunmakerButtonPressed")
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Ballistyx", "onSpawnXsotanBallistyxButtonPressed")
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Longinus", "onSpawnXsotanLonginusButtonPressed")
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Parthenope", "onSpawnXsotanParthenopeButtonPressed")
-    MakeButton(tabXsotan, ButtonRect(nil, nil, nil, tabXsotan.height), "Xsotan Dreadnought", "onSpawnXsotanDreadnoughtButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Infestor", "onSpawnXsotanInfestorButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Oppressor", "onSpawnXsotanOppressorButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Sunmaker", "onSpawnXsotanSunmakerButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Ballistyx", "onSpawnXsotanBallistyxButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Longinus", "onSpawnXsotanLonginusButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Parthenope", "onSpawnXsotanParthenopeButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Dreadnought", "onSpawnXsotanDreadnoughtButtonPressed")
 
-    local tab3 = window:createTab("Entity", "data/textures/icons/edge-crack.png", "ESCC Bosses")
+    local bossTab = window:createTab("Entity", "data/textures/icons/edge-crack.png", "ESCC Bosses")
     numButtons = 0
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Executioner", "onSpawnExecutionerButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Executioner II", "onSpawnExecutioner2ButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Executioner III", "onSpawnExecutioner3ButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Executioner IV", "onSpawnExecutioner4ButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Executioner V", "onSpawnExecutioner5ButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Executioner VI", "onSpawnExecutioner6ButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Executioner VII", "onSpawnExecutioner7ButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Executioner VIII", "onSpawnExecutioner8ButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Spawn Katana BOSS", "onKatanaBossButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Spawn Phoenix BOSS", "onPhoenixBossButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Spawn Hunter BOSS", "onHunterBossButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Spawn Hellcat BOSS", "onHellcatBossButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Spawn Goliath BOSS", "onGoliathBossButtonPressed")
-    MakeButton(tab3, ButtonRect(nil, nil, nil, tab3.height), "Spawn Shield BOSS", "onShieldBossButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Executioner", "onSpawnExecutionerButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Executioner II", "onSpawnExecutioner2ButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Executioner III", "onSpawnExecutioner3ButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Executioner IV", "onSpawnExecutioner4ButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Executioner V", "onSpawnExecutioner5ButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Executioner VI", "onSpawnExecutioner6ButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Executioner VII", "onSpawnExecutioner7ButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Executioner VIII", "onSpawnExecutioner8ButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Spawn Katana BOSS", "onKatanaBossButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Spawn Phoenix BOSS", "onPhoenixBossButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Spawn Hunter BOSS", "onHunterBossButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Spawn Hellcat BOSS", "onHellcatBossButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Spawn Goliath BOSS", "onGoliathBossButtonPressed")
+    MakeButton(bossTab, ButtonRect(nil, nil, nil, bossTab.height), "Spawn Shield BOSS", "onShieldBossButtonPressed")
 
-    local tab4 = window:createTab("Entity", "data/textures/icons/computation-mainframe.png", "AI Test")
+    local aiTestTab = window:createTab("Entity", "data/textures/icons/computation-mainframe.png", "AI Test")
     numButtons = 0
-    MakeButton(tab4, ButtonRect(nil, nil, nil, tab4.height), "Fly to me", "onFlyToMeButtonPressed")
-    MakeButton(tab4, ButtonRect(nil, nil, nil, tab4.height), "Shoot me", "onShootMeButtonPressed")
-    MakeButton(tab4, ButtonRect(nil, nil, nil, tab4.height), "Use Pursuit", "onAttachTindalosButtonPressed")
+    MakeButton(aiTestTab, ButtonRect(nil, nil, nil, aiTestTab.height), "Fly to me", "onFlyToMeButtonPressed")
+    MakeButton(aiTestTab, ButtonRect(nil, nil, nil, aiTestTab.height), "Shoot me", "onShootMeButtonPressed")
+    MakeButton(aiTestTab, ButtonRect(nil, nil, nil, aiTestTab.height), "Use Pursuit", "onAttachTindalosButtonPressed")
 
-    local tab6 = window:createTab("Entity", "data/textures/icons/solar-cell.png", "Data Dumps")
+    local dataDumpTab = window:createTab("Entity", "data/textures/icons/solar-cell.png", "Data Dumps")
     numButtons = 0
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Turret Data Dump", "onTurretDataDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Upgrade Data Dump", "onUpgradeDataDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Trait Data Dump", "onTraitDataDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Station List Dump", "onStationListDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Server Value Dump", "onServerValueDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Player Value Dump", "onPlayerValueDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Material Value Dump", "onMaterialDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Sector DPS Dump", "onSectorDPSDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Reward Data Dump", "onSectorRewardDumpButtonPressed")
-    MakeButton(tab6, ButtonRect(nil, nil, nil, tab6.height), "Material Cost Factor Dump", "onMaterialCostFactorDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Turret Data Dump", "onTurretDataDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Upgrade Data Dump", "onUpgradeDataDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Trait Data Dump", "onTraitDataDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Station List Dump", "onStationListDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Server Value Dump", "onServerValueDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Player Value Dump", "onPlayerValueDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Material Value Dump", "onMaterialDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Sector DPS Dump", "onSectorDPSDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Reward Data Dump", "onSectorRewardDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Material Cost Factor Dump", "onMaterialCostFactorDumpButtonPressed")
 
-    local tab7 = window:createTab("Entity", "data/textures/icons/papers.png", "Other")
+    local otherTab = window:createTab("Entity", "data/textures/icons/papers.png", "Other")
     numButtons = 0
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Run Scratch Script", "onRunScratchScriptButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Load Torpedoes", "onLoadTorpedoesButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Zero Resources", "onZeroOutResourcesButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Test Pariah Spawn", "onTestPariahSpawnButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Repair All Ships", "onRepairAllShipsButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Run SectorDPS", "onRunSectorDPSPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Get Position", "onGetPositionPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Center Position", "onCenterPositionPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Get Distance", "onDistanceButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Test OOS Attack", "onTestOOSButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Reset XWG", "onLLTEResetXWGButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Add Acid Fog Intensity 1", "onAcidFogIntensity1Pressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Add Acid Fog Intensity 2", "onAcidFogIntensity2Pressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Add Acid Fog Intensity 3", "onAcidFogIntensity3Pressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Add Radiation Intensity 1", "onRadiationIntensity1Pressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Remove All Weather", "onRemoveWeatherPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Run ESCC MinVec Test", "onRunESCCMinVecTestButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil, nil, tab7.height), "Get Distance To Center", "onRunGetDistToCenterButtonPressed")
-    MakeButton(tab7, ButtonRect(nil, nil,nil, tab7.height), "Get Own Translation", "onGetTranslationButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Run Scratch Script", "onRunScratchScriptButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Load Torpedoes", "onLoadTorpedoesButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Zero Resources", "onZeroOutResourcesButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Test Pariah Spawn", "onTestPariahSpawnButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Repair All Ships", "onRepairAllShipsButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Run SectorDPS", "onRunSectorDPSPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Position", "onGetPositionPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Center Position", "onCenterPositionPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Distance", "onDistanceButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Test OOS Attack", "onTestOOSButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Reset XWG", "onLLTEResetXWGButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Add Acid Fog Intensity 1", "onAcidFogIntensity1Pressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Add Acid Fog Intensity 2", "onAcidFogIntensity2Pressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Add Acid Fog Intensity 3", "onAcidFogIntensity3Pressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Add Radiation Intensity 1", "onRadiationIntensity1Pressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Remove All Weather", "onRemoveWeatherPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Run ESCC MinVec Test", "onRunESCCMinVecTestButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Distance To Center", "onRunGetDistToCenterButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Own Translation", "onGetTranslationButtonPressed")
     
-    local tab8 = tabbedWindow:createTab("Entity", "data/textures/icons/gunner.png", "ESCC Turrets")
+    local weaponTab = tabbedWindow:createTab("Entity", "data/textures/icons/gunner.png", "ESCC Turrets")
     numButtons = 0
     local _TurretNames = {
         "Tesla",
@@ -186,371 +188,137 @@ function initUI()
         "Bolter"
     }
     for _, _Name in pairs(_TurretNames) do
-        local _Button = MakeButton(tab8, ButtonRect(nil, nil, nil, tab8.height), "Build " .. tostring(_Name), "onBuildATurretButtonPressed")
+        local _Button = MakeButton(weaponTab, ButtonRect(nil, nil, nil, weaponTab.height), "Build " .. tostring(_Name), "onBuildATurretButtonPressed")
         _Button.tooltip = _Name
     end
 
-    local _ModTable = getModTable()
+    --Build ESCC campaign mod table.
+    local modTable = {}
+    local bulletinTable = {}
 
-    if _ModTable.hasAnyCampaignMods then
+    modTable = getDebugModules(modTable)
+    bulletinTable = getBulletinMissionTable(bulletinTable)
+
+    if #modTable > 0 or #bulletinTable > 0 then
 
         local topLevelTab = tabbedWindow:createTab("Entity", "data/textures/icons/wormhole.png", "ESCC Campaigns")
         local window = topLevelTab:createTabbedWindow(Rect(topLevelTab.rect.size))
 
-        if _ModTable.hasAnyBulletinMods then
-
+        if #bulletinTable > 0 then
             local missionTab = window:createTab("", "data/textures/icons/bars.png", "Bulletin Missions")
             numButtons = 0
 
-            for _, _bulletinMission in pairs (_ModTable._BulletinMissionTable) do
-                local _Button = MakeButton(missionTab, ButtonRect(nil, nil, nil, missionTab.height), _bulletinMission._Caption, "onAddBulletinButtonPressed")
-                _Button.tooltip = _bulletinMission._Tooltip
+            for idx, mBulletin in pairs(bulletinTable) do
+                local _Button = MakeButton(missionTab, ButtonRect(nil, nil, nil, missionTab.height), mBulletin._Caption, "onAddBulletinButtonPressed")
+                _Button.tooltip = mBulletin._Tooltip
             end
         end
 
-        if _ModTable.hasIncreasingThreat then
-        --print("adding Inreasing Threat tab to esccdbg")
-            local tab2 = window:createTab("", "data/textures/icons/gunner.png", "Increasing Threat")
-            numButtons = 0
-            
-            MakeButton(tab2, ButtonRect(nil, nil, nil, tab2.height), "Pirate Attack", "onPirateAttackButtonPressed")
-            MakeButton(tab2, ButtonRect(nil, nil, nil, tab2.height), "Decapitation Strike", "onDecapStrikeButtonPressed")
-            MakeButton(tab2, ButtonRect(nil, nil, nil, tab2.height), "Deepfake Distress Call", "onDeepfakeDistressButtonPressed")
-            MakeButton(tab2, ButtonRect(nil, nil, nil, tab2.height), "Fake Distress Call", "onFakeDistressButtonPressed")
+        if #modTable > 0 then
+            for idx, dbgmodule in pairs(modTable) do
+                dbgmodule(window)
+            end
         end
-
-        if _ModTable.hasLongLiveTheEmpress then
-            local tab5 = window:createTab("", "data/textures/icons/cavaliers.png", "Long Live The Empress")
-            numButtons = 0
-
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Test Name Generator", "onNameGeneratorButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Regenerate Weapons", "onRegenWeaponsButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Story Mission 1", "onLLTEStoryMission1ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Story Mission 2", "onLLTEStoryMission2ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Story Mission 3", "onLLTEStoryMission3ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Story Mission 4", "onLLTEStoryMission4ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Story Mission 5", "onLLTEStoryMission5ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 1", "onLLTESideMission1ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 2", "onLLTESideMission2ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 3", "onLLTESideMission3ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 4", "onLLTESideMission4ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 5", "onLLTESideMission5ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Side Mission 6", "onLLTESideMission6ButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Give Cav Reinforcement Caller", "onCavReinforcementsCallerButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Cav Merchant", "onCavMerchantButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Get Excalibur", "onGetExcaliburButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Reset LLTE Vars", "onResetLLTEVarsButtonPressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Set Rep Level 1", "onLLTERep1Pressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Set Rep Level 3", "onLLTERep3Pressed")
-            MakeButton(tab5, ButtonRect(nil, nil, nil, tab5.height), "Set Rep Level 5", "onLLTERep5Pressed")
-        end
-
-        if _ModTable.hasBusinessAsUsual then
-            local BAUtab = window:createTab("", "data/textures/icons/family.png", "Business As Usual")
-            numButtons = 0
-
-            --Misison tabs.
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Story Mission 1", "onBAUStoryMission1ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Story Mission 2", "onBAUStoryMission2ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Story Mission 3", "onBAUStoryMission3ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Story Mission 4", "onBAUStoryMission4ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Story Mission 5", "onBAUStoryMission5ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Side Mission 1", "onBAUSideMission1ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Side Mission 2", "onBAUSideMission2ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Side Mission 3", "onBAUSideMission3ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Side Mission 4", "onBAUSideMission4ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Side Mission 5", "onBAUSideMission5ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Side Mission 6", "onBAUSideMission6ButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Reset BAU Vars", "onResetBAUVarsButtonPressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Set Rep Level 1", "onBAURep1Pressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Set Rep Level 3", "onBAURep3Pressed")
-            MakeButton(BAUtab, ButtonRect(nil, nil, nil, BAUtab.height), "Set Rep Level 5", "onBAURep5Pressed")
-        end
-
-        if _ModTable.hasRetrogradeCampaign then
-            local tab9 = window:createTab("", "data/textures/icons/cannon.png", "Retrograde Solutions")
-            numButtons = 0
-
-            MakeButton(tab9, ButtonRect(nil, nil, nil, tab9.height), "Spawn Hellhound", "onSpawnHellhoundButtonPressed")
-            MakeButton(tab9, ButtonRect(nil, nil, nil, tab9.height), "Spawn Cerberus", "onSpawnCerberusButtonPressed")
-            MakeButton(tab9, ButtonRect(nil, nil, nil, tab9.height), "Spawn Tiberius", "onSpawnTiberiusButtonPressed")
-        end
-
-        if _ModTable.hasLOTW then
-            local tab11 = window:createTab("", "data/textures/icons/silicium.png", "Lord of the Wastes")
-            numButtons = 0
-
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 1", "onLOTWMission1ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 2", "onLOTWMission2ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 3", "onLOTWMission3ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 4", "onLOTWMission4ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 5", "onLOTWMission5ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Side Mission 1", "onLOTWSide1ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Side Mission 2", "onLOTWSide2ButtonPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Clear Values", "onLOTWClearValuesPressed")
-            MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Spawn Swenks", "onSpawnSwenksButtonPressed")
-        end
-
-        if _ModTable.hasHorizonKeepers then
-            local HKTab = window:createTab("", "data/textures/icons/snowflake-2.png", "Horizon Keepers")
-            numButtons = 0
-
-            --MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "", "")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 1", "onHKTabMission1ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 2", "onHKTabMission2ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 3", "onHKTabMission3ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 4", "onHKTabMission4ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 5", "onHKTabMission5ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 6", "onHKTabMission6ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 7", "onHKTabMission7ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 8", "onHKTabMission8ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Mission 9", "onHKTabMission9ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Side Mission 1", "onHKTabSideMission1ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Side Mission 2", "onHKTabSideMission2ButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Frostbite Torp Loader", "onSpawnFrostbiteTorpLoaderButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Frostbite AWACS", "onSpawnFrostibteAWACSButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Frostbite Warship", "onSpawnFrostbiteWarshipButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Frostbite Relief", "onSpawnFrostbiteReliefButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Varlance", "onSpawnVarlanceButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Ice Nova", "onSpawnIceNovaButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn HK Freighter", "onSpawnHKFreightButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn HK Artillery Cruiser", "onSpawnHKACruiseButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn HK Combat Cruiser", "onSpawnHKCCruiseButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn HK AWACS", "onSpawnHKAWACSButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn HK Battleship", "onSpawnHKBshipButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn HK Hansel", "onSpawnHKHanselButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn HK Gretel", "onSpawnHKGretelButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn XSOLOGIZE", "onSpawnXsologizeButtonPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Horizon Shipyard 1", "onHKShipyard1Pressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Horizon Shipyard 2", "onHKShipyard2Pressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Spawn Horizon Research 1", "onHKResearchPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Give Frostbite Torpedo Loader Beacon", "onFBTorpedoLoaderBeaconPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Reset Cooldowns", "onResetFBCooldownsPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Unlock Encyclopedia", "onUnlockAllKOTHEncyclopediaPressed")
-            MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Clear Values", "onHKClearValuesPressed")
-        end
-
     end
 end
 
-function getModTable()
+--How to add a tab:
+--1 - add esccdbg.lua to your mod folder
+--2 - add a local replacement of getDebugModule - i.e. lotw_getDebugModules = getDebugModules
+--3 - table.insert a function building the tab into modTable, define a new tab, make buttons, etc.
+--4 - define appropriate functions inside esccdbg on that file
+--5 - return the defined local replacement (so in the above exampel, return lotw_getDebugModules(modTable))
+--6 - this will chain call the process for all mods and add a campaign tab for each
+--[[Example:
 
-    local _ModTable = {}
-    local _BulletinMissionData = {}
+local lotw_getDebugModules = getDebugModules
+function getDebugModules(modTable)
+    local dbgmodule = function(window)
+        numButtons = 0
+        local tab11 = window:createTab("", "data/textures/icons/silicium.png", "Lord of the Wastes")
 
-    --MODDED CAMPAIGNS BELOW
-    local xmods = Mods()
+        MakeButton(tab11, ButtonRect(nil, nil, nil, tab11.height), "Mission 1", "onLOTWMission1ButtonPressed")
+        --cut some for brevity
+    end
 
-    for _, p in pairs(xmods) do
-        --OTHER
-        if p.name == "IncreasingThreat" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasIncreasingThreat = true
-        end
-        if p.name == "Emergence" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasEmergence = true
-        end
-        --CAMPAIGNS
-        if p.name == "LongLiveTheEmpress" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasLongLiveTheEmpress = true
-        end
-        if p.name == "RetrogradeCampaign" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasRetrogradeCampaign = true
-        end
-        if p.name == "LordOfTheWastes" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasLOTW = true
-        end
-        if p.name == "BusinessAsUsual" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasBusinessAsUsual = true
-        end
-        if p.name == "HorizonKeepers" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasHorizonKeepers = true
-        end
-        --BULLETIN MISSIONS
-        if p.name == "AmbushRaiders" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-            
-            table.insert(_BulletinMissionData, {
-                _Caption = "Ambush Pirate Raiders",
-                _Tooltip = "ambushraiders"
-            })
-        end
-        if p.name == "AnalyzeXsotanSpecimen" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
+    table.insert(modTable, dbgmodule)
 
-            table.insert(_BulletinMissionData, {
-                _Caption = "Analyze Xsotan Specimen",
-                _Tooltip = "xsotanspecimen"
-            })
-        end
-        if p.name == "AttackResearchBase" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
+    return lotw_getDebugModules(modTable)
+end
 
-            table.insert(_BulletinMissionData, {
-                _Caption = "Attack Research Base",
-                _Tooltip = "attackresearchbase"
-            })
-        end
-        if p.name == "CollectPirateBounty" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
+--Other functions are defined below.
 
-            table.insert(_BulletinMissionData, {
-                _Caption = "Collect Pirate Bounty",
-                _Tooltip = "piratebounty"
-            })
-        end
-        if p.name == "CollectXsotanBounty" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
+]]
+function getDebugModules(modTable)
+    return modTable
+end
 
-            table.insert(_BulletinMissionData, {
-                _Caption = "Collect Xsotan Bounty",
-                _Tooltip = "xsotanbounty"
-            })
+function getBulletinMissionTable(modTable)
+    local xMods = Mods()
+    for _, mod in pairs(xMods) do
+        if mod.name == "AmbushRaiders" then
+            table.insert(modTable, { _Caption = "Ambush Pirate Raiders", _Tooltip = "ambushraiders" })
         end
-        if p.name == "DefendPrototype" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Defend Prototype Battleship",
-                _Tooltip = "defendprototype"
-            })
+        if mod.name == "Annihilatorium" then
+            table.insert(modTable, { _Caption = "Annihilatorium", _Tooltip = "annihilatorium" })
         end
-        if p.name == "DestroyPrototype" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Destroy Prototype Battleship",
-                _Tooltip = "destroyprototype2"
-            })
+        if mod.name == "AnalyzeXsotanSpecimen" then
+            table.insert(modTable, { _Caption = "Analyze Xsotan Specimen", _Tooltip = "xsotanspecimen" })
         end
-        if p.name == "DestroyStronghold" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Destroy Pirate Stronghold",
-                _Tooltip = "destroystronghold"
-            })
+        if mod.name == "AttackResearchBase" then
+            table.insert(modTable, { _Caption = "Attack Research Base", _Tooltip = "attackresearchbase" })
         end
-        if p.name == "EradicateXsotan" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Eradicate Xsotan Infestation",
-                _Tooltip = "eradicatexsotan"
-            })
+        if mod.name == "CollectPirateBounty" then
+            table.insert(modTable, { _Caption = "Collect Pirate Bounty", _Tooltip = "piratebounty" })
         end
-        if p.name == "EscortCivilians" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Escort Civilian Transports",
-                _Tooltip = "escortcivilians"
-            })
+        if mod.name == "CollectXsotanBounty" then
+            table.insert(modTable, { _Caption = "Collect Xsotan Bounty", _Tooltip = "xsotanbounty" })
         end
-        if p.name == "MineralMadness" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Mineral Madness",
-                _Tooltip = "mineralmadness"
-            })
+        if mod.name == "DefendPrototype" then
+            table.insert(modTable, { _Caption = "Defend Prototype Battleship", _Tooltip = "defendprototype" })
         end
-        if p.name == "RescueSlaves" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Rescue Slaves",
-                _Tooltip = "rescueslaves"
-            })
+        if mod.name == "DestroyPrototype" then
+            table.insert(modTable, { _Caption = "Destroy Prototype Battleship", _Tooltip = "destroyprototype2" })
         end
-        if p.name == "ScanXsotanGroup" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Scan Xsotan Group",
-                _Tooltip = "scanxsotangroup"
-            })
+        if mod.name == "DestroyStronghold" then
+            table.insert(modTable, { _Caption = "Destroy Pirate Stronghold", _Tooltip = "destroystronghold" })
         end
-        if p.name == "ScrapDelivery" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Scrap Delivery",
-                _Tooltip = "scrapdelivery"
-            })
+        if mod.name == "EradicateXsotan" then
+            table.insert(modTable, { _Caption = "Eradicate Xsotan Infestation", _Tooltip = "eradicatexsotan" })
         end
-        if p.name == "ScrapScramble" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Scrap Scramble",
-                _Tooltip = "scrapscramble"
-            })
+        if mod.name == "EscortCivilians" then
+            table.insert(modTable, { _Caption = "Escort Civilian Transports", _Tooltip = "escortcivilians" })
         end
-        if p.name == "TheDig" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "The Dig",
-                _Tooltip = "thedig"
-            })
+        if mod.name == "MineralMadness" then
+            table.insert(modTable, { _Caption = "Mineral Madness", _Tooltip = "mineralmadness" })
         end
-        if p.name == "TransferSatellite" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Transfer Satellite",
-                _Tooltip = "transfersatellite"
-            })
+        if mod.name == "RescueSlaves" then
+            table.insert(modTable, { _Caption = "Rescue Slaves", _Tooltip = "rescueslaves" })
         end
-        if p.name == "WreckingHavoc" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Wrecking Havoc",
-                _Tooltip = "wreckinghavoc"
-            })
+        if mod.name == "ScanXsotanGroup" then
+            table.insert(modTable, { _Caption = "Scan Xsotan Group", _Tooltip = "scanxsotangroup" })
         end
-        if p.name == "XsotanDreadnoughtMission" then
-            _ModTable.hasAnyCampaignMods = true
-            _ModTable.hasAnyBulletinMods = true
-
-            table.insert(_BulletinMissionData, {
-                _Caption = "Destroy Xsotan Dreadnought",
-                _Tooltip = "destroyxsodread"
-            })
+        if mod.name == "ScrapDelivery" then
+            table.insert(modTable, { _Caption = "Scrap Delivery", _Tooltip = "scrapdelivery" })
+        end
+        if mod.name == "ScrapScramble" then
+            table.insert(modTable, { _Caption = "Scrap Scramble", _Tooltip = "scrapscramble" })
+        end
+        if mod.name == "TheDig" then
+            table.insert(modTable, { _Caption = "The Dig", _Tooltip = "thedig" })
+        end
+        if mod.name == "TransferSatellite" then
+            table.insert(modTable, { _Caption = "Transfer Satellite", _Tooltip = "transfersatellite" })
+        end
+        if mod.name == "WreckingHavoc" then
+            table.insert(modTable, { _Caption = "Wrecking Havoc", _Tooltip = "wreckinghavoc" })
+        end
+        if mod.name == "XsotanDreadnoughtMission" then
+            table.insert(modTable, { _Caption = "Destroy Xsotan Dreadnought", _Tooltip = "destroyxsodread" })
         end
     end
 
-    if _ModTable.hasAnyBulletinMods then
-        _ModTable._BulletinMissionTable = _BulletinMissionData
-    end
-
-    return _ModTable    
+    return modTable
 end
 
 --region #OTHER
@@ -750,7 +518,7 @@ end
 
 --endregion
 
---region #TAB1
+--region #SHIPSTAB
 
 function onSpawnJammerButtonPressed()
     if onClient() then
@@ -1130,7 +898,7 @@ callable(nil, "onSpawnThornsButtonPressed")
 
 --endregion
 
---region #tabXostan
+--region #XSOTANTAB
 
 function onSpawnXsotanInfestorButtonPressed()
     if onClient() then
@@ -1267,7 +1035,7 @@ callable(nil, "onSpawnXsotanDreadnoughtButtonPressed")
 
 --endregion
 
---region #TAB3
+--region #BOSSTAB
 
 function tab3SpawnExecutioner(_Power)
     local generator = AsyncPirateGenerator(nil, onPiratesGenerated)
@@ -1358,57 +1126,11 @@ function onSpawnExecutioner8ButtonPressed()
 end
 callable(nil, "onSpawnExecutioner8ButtonPressed")
 
---endregion
-
---region #TAB2 (Increasing Threat)
-
 function spawnITBoss(_BossType)
     local generator = AsyncPirateGenerator(nil, nil)
     local ESCCBoss = include("esccbossutil")
     ESCCBoss.spawnESCCBoss(generator:getPirateFaction(), _BossType)
 end
-
-function onPirateAttackButtonPressed()
-    if onClient() then
-        invokeServerFunction("onPirateAttackButtonPressed")
-        return
-    end
-
-    Sector():addScript("pirateattack.lua")
-end
-callable(nil, "onPirateAttackButtonPressed")
-
-function onDecapStrikeButtonPressed()
-    if onClient() then
-        invokeServerFunction("onDecapStrikeButtonPressed")
-        return
-    end
-
-    Sector():addScript("decapstrike.lua")
-end
-callable(nil, "onDecapStrikeButtonPressed")
-
-function onDeepfakeDistressButtonPressed()
-    if onClient() then
-        invokeServerFunction("onDeepfakeDistressButtonPressed")
-        return
-    end
-
-    local player = Player(callingPlayer)
-    player:addScript("events/deepfakedistress.lua", true)
-end
-callable(nil, "onDeepfakeDistressButtonPressed")
-
-function onFakeDistressButtonPressed()
-    if onClient() then
-        invokeServerFunction("onFakeDistressButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    _Player:addScript("events/itfakedistresssignal.lua", true)
-end
-callable(nil, "onFakeDistressButtonPressed")
 
 function onKatanaBossButtonPressed()
     if onClient() then
@@ -1472,7 +1194,7 @@ callable(nil, "onShieldBossButtonPressed")
 
 --endregion
 
---region #TAB4
+--region #AITESTTAB
 
 function onFlyToMeButtonPressed()
     if onClient() then
@@ -1532,546 +1254,7 @@ callable(nil, "onAttachTindalosButtonPressed")
 
 --endregion
 
---region #TAB5 (Long Live The Empress)
-
-function onNameGeneratorButtonPressed()
-    LLTEUtil = include("llteutil")
-    local _TestName = LLTEUtil.getRandomName(true, true)
-
-    print("Test Name is " .. tostring(_TestName.name))
-    print("Test Gender is " .. tostring(_TestName.gender))
-end
-callable(nil, "onNameGeneratorButtonPressed")
-
-function onRegenWeaponsButtonPressed()
-    if onClient() then
-        invokeServerFunction("onRegenWeaponsButtonPressed")
-        return
-    end
-
-    local _Cavs = Galaxy():findFaction("The Cavaliers")
-    if not _Cavs then
-        print("Haven't found The Cavaliers")
-        return
-    end
-    _Cavs:setValue("_llte_cavaliers_regenArsenal", 1)
-end
-callable(nil, "onRegenWeaponsButtonPressed")
-
-function onLLTEStoryMission1ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTEStoryMission1ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/empress/story/lltestorymission1.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTEStoryMission1ButtonPressed")
-
-function onLLTEStoryMission2ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTEStoryMission2ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/empress/story/lltestorymission2.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTEStoryMission2ButtonPressed")
-
-function onLLTEStoryMission3ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTEStoryMission3ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/empress/story/lltestorymission3.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTEStoryMission3ButtonPressed")
-
-function onLLTEStoryMission4ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTEStoryMission4ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/empress/story/lltestorymission4.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTEStoryMission4ButtonPressed")
-
-function onLLTEStoryMission5ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTEStoryMission5ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/empress/story/lltestorymission5.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTEStoryMission5ButtonPressed")
-
-function onLLTESideMission1ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTESideMission1ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "data/scripts/player/missions/empress/side/lltesidemission1.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTESideMission1ButtonPressed")
-
-function onLLTESideMission2ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTESideMission2ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "data/scripts/player/missions/empress/side/lltesidemission2.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTESideMission2ButtonPressed")
-
-function onLLTESideMission3ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTESideMission3ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "data/scripts/player/missions/empress/side/lltesidemission3.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTESideMission3ButtonPressed")
-
-function onLLTESideMission4ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTESideMission4ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "data/scripts/player/missions/empress/side/lltesidemission4.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTESideMission4ButtonPressed")
-
-function onLLTESideMission5ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTESideMission5ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "data/scripts/player/missions/empress/side/lltesidemission5.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTESideMission5ButtonPressed")
-
-function onLLTESideMission6ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLLTESideMission6ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "data/scripts/player/missions/empress/side/lltesidemission6.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLLTESideMission6ButtonPressed")
-
-function onCavReinforcementsCallerButtonPressed()
-    if onClient() then
-        invokeServerFunction("onCavReinforcementsCallerButtonPressed")
-        return
-    end
-
-    print("Adding Cavaliers reinforcement beacon")
-    local _Player = Player(callingPlayer)
-    local _AllyFaction = Galaxy():findFaction("The Cavaliers")
-
-    _Player:getInventory():addOrDrop(
-        UsableInventoryItem("cavaliersreinforcementtransmitter.lua", Rarity(RarityType.Exotic), _AllyFaction.index)
-    )
-end
-callable(nil, "onCavReinforcementsCallerButtonPressed")
-
-function onCavMerchantButtonPressed()
-    if onClient() then
-        invokeServerFunction("onCavMerchantButtonPressed")
-        return
-    end
-
-    print("Spawning Cavaliers Merchant")
-    local _Player = Player(callingPlayer)
-    _Player:addScript("events/spawncavaliersmerchant.lua")
-end
-callable(nil, "onCavMerchantButtonPressed")
-
-function onGetExcaliburButtonPressed()
-    if onClient() then
-        invokeServerFunction("onGetExcaliburButtonPressed")
-        return
-    end
-
-    print("Getting EXCALIBUR railgun")
-
-    LLTEUtil = include("llteutil")
-
-    local _Player = Player(callingPlayer)
-    _Player:getInventory():addOrDrop(LLTEUtil.getSpecialRailguns())
-end
-callable(nil, "onGetExcaliburButtonPressed")
-
-function onResetLLTEVarsButtonPressed()
-    if onClient() then
-        invokeServerFunction("onResetLLTEVarsButtonPressed")
-        return
-    end
-
-    print("Resetting LLTE Vars")
-
-    local player = Player(callingPlayer)
-
-    player:setValue("_llte_cavaliers_ranklevel", nil)
-    player:setValue("_llte_cavaliers_rank", nil)
-    player:setValue("_llte_cavaliers_rep", nil)
-    player:setValue("_llte_cavaliers_nextcontact", nil)
-    player:setValue("_llte_cavaliers_startstory", nil)
-    player:setValue("_llte_story_1_accomplished", nil)
-    player:setValue("_llte_story_2_accomplished", nil)
-    player:setValue("_llte_story_3_accomplished", nil)
-    player:setValue("_llte_story_4_accomplished", nil)
-    player:setValue("_llte_story_5_accomplished", nil)
-    player:setValue("_llte_failedstory2", nil)
-    player:setValue("_llte_pirate_faction_vengeance", nil)
-    player:setValue("_llte_got_animosity_loot", nil)
-    player:setValue("_llte_cavaliers_have_avorion", nil)
-    player:setValue("_llte_cavaliers_strength", nil)
-    player:setValue("_llte_cavaliers_inbarrier", nil)
-    --Remove all scripts, and I mean ALL scripts.
-    local _Scripts = {
-        "missions/empress/story/lltestorymission1.lua",
-        "missions/empress/story/lltestorymission2.lua",
-        "missions/empress/story/lltestorymission3.lua",
-        "missions/empress/story/lltestorymission4.lua",
-        "missions/empress/story/lltestorymission5.lua",
-        "missions/empress/side/lltesidemission1.lua",
-        "missions/empress/side/lltesidemission2.lua",
-        "missions/empress/side/lltesidemission3.lua",
-        "missions/empress/side/lltesidemission4.lua",
-        "missions/empress/side/lltesidemission5.lua",
-        "missions/empress/side/lltesidemission6.lua"
-    }
-    for _, _Script in pairs(_Scripts) do
-        if player:hasScript(_Script) then
-            print("Invoking fail method of " .. _Script)
-            player:invokeFunction(_Script, "fail")
-        end
-    end
-end
-callable(nil, "onResetLLTEVarsButtonPressed")
-
-function onLLTERep1Pressed()
-    if onClient() then
-        invokeServerFunction("onLLTERep1Pressed")
-        return
-    end
-
-    print("Resetting Reputational LLTE Vars")
-
-    local player = Player(callingPlayer)
-
-    player:setValue("_llte_cavaliers_ranklevel", 1)
-    player:setValue("_llte_cavaliers_rank", "Squire")
-    player:setValue("_llte_cavaliers_rep", 4)
-end
-callable(nil, "onLLTERep1Pressed")
-
-function onLLTERep3Pressed()
-    if onClient() then
-        invokeServerFunction("onLLTERep3Pressed")
-        return
-    end
-
-    print("Resetting Reputational LLTE Vars")
-
-    local player = Player(callingPlayer)
-
-    player:setValue("_llte_cavaliers_ranklevel", 3)
-    player:setValue("_llte_cavaliers_rank", "Crusader")
-    player:setValue("_llte_cavaliers_rep", 29)
-end
-callable(nil, "onLLTERep3Pressed")
-
-function onLLTERep5Pressed()
-    if onClient() then
-        invokeServerFunction("onLLTERep5Pressed")
-        return
-    end
-
-    print("Resetting Reputational LLTE Vars")
-
-    local player = Player(callingPlayer)
-
-    player:setValue("_llte_cavaliers_ranklevel", 5)
-    player:setValue("_llte_cavaliers_rank", "Paladin")
-    player:setValue("_llte_cavaliers_rep", 51)
-end
-callable(nil, "onLLTERep5Pressed")
-
---endregion
-
---region #TAB BAU (Business As Usual)
-
-function onBAUStoryMission1ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUStoryMission1ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/story/baustory1.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUStoryMission1ButtonPressed")
-
-function onBAUStoryMission2ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUStoryMission2ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/story/baustory2.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUStoryMission2ButtonPressed")
-
-function onBAUStoryMission3ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUStoryMission3ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/story/baustory3.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUStoryMission3ButtonPressed")
-
-function onBAUStoryMission4ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUStoryMission4ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/story/baustory4.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUStoryMission4ButtonPressed")
-
-function onBAUStoryMission5ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUStoryMission5ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/story/baustory5.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUStoryMission5ButtonPressed")
-
-function onBAUSideMission1ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUSideMission1ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/side/bauside1.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUSideMission1ButtonPressed")
-
-function onBAUSideMission2ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUSideMission2ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/side/bauside2.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUSideMission2ButtonPressed")
-
-function onBAUSideMission3ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUSideMission3ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/side/bauside3.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUSideMission3ButtonPressed")
-
-function onBAUSideMission4ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUSideMission4ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/side/bauside4.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUSideMission4ButtonPressed")
-
-function onBAUSideMission5ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onBAUSideMission5ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/family/side/bauside5.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onBAUSideMission5ButtonPressed")
-
-function onResetBAUVarsButtonPressed()
-    if onClient() then
-        invokeServerFunction("onResetBAUVarsButtonPressed")
-        return
-    end
-
-    print("Resetting BAU Vars")
-
-    local player = Player(callingPlayer)
-
-    --Set all values to nil
-    local _values = {
-        "_bau_family_inbarrier",
-        "_bau_family_ranklevel",
-        "_bau_family_rank",
-        "_bau_family_rep",
-        "_bau_family_nextcontact",
-        "_bau_family_startstory",
-        "_bau_story_1_accomplished",
-        "_bau_story_2_accomplished",
-        "_bau_story_3_accomplished",
-        "_bau_story_4_accomplished",
-        "_bau_story_5_accomplished",
-        "_bau_family_have_avorion",
-        "_bau_family_strength",
-        "_bau_family_inbarrier"
-    }
-
-    for _, _val in pairs(_values) do
-        player:setValue(_val, nil)
-    end
-
-    --Remove all scripts, and I mean ALL scripts.
-    local _Scripts = {
-        "missions/family/story/baustory1.lua",
-        "missions/family/story/baustory2.lua",
-        "missions/family/story/baustory3.lua",
-        "missions/family/story/baustory4.lua",
-        "missions/family/story/baustory5.lua",
-        "missions/family/side/bauside1.lua",
-        "missions/family/side/bauside2.lua",
-        "missions/family/side/bauside3.lua",
-        "missions/family/side/bauside4.lua",
-        "missions/family/side/bauside5.lua"
-    }
-    for _, _Script in pairs(_Scripts) do
-        if player:hasScript(_Script) then
-            print("Invoking fail method of " .. _Script)
-            player:invokeFunction(_Script, "fail")
-        end
-    end
-end
-callable(nil, "onResetBAUVarsButtonPressed")
-
-function onBAURep1Pressed()
-    if onClient() then
-        invokeServerFunction("onBAURep1Pressed")
-        return
-    end
-
-    print("Resetting Reputational BAU Vars")
-
-    local player = Player(callingPlayer)
-
-    player:setValue("_bau_family_ranklevel", 1)
-    player:setValue("_bau_family_rank", "Associate")
-    player:setValue("_bau_family_rep", 4)
-end
-callable(nil, "onBAURep1Pressed")
-
-function onBAURep3Pressed()
-    if onClient() then
-        invokeServerFunction("onBAURep3Pressed")
-        return
-    end
-
-    player:setValue("_bau_family_ranklevel", 3)
-    player:setValue("_bau_family_rank", "Capo")
-    player:setValue("_bau_family_rep", 29)
-end
-callable(nil, "onBAURep3Pressed")
-
-function onBAURep5Pressed()
-    if onClient() then
-        invokeServerFunction("onBAURep5Pressed")
-        return
-    end
-
-    player:setValue("_bau_family_ranklevel", 5)
-    player:setValue("_bau_family_rank", "Underboss")
-    player:setValue("_bau_family_rep", 51)
-end
-callable(nil, "onBAURep5Pressed")
-
---endregion
-
---region #TAB6
+--region #DATADUMPTAB
 
 function onTurretDataDumpButtonPressed()
     if onClient() then
@@ -2253,7 +1436,7 @@ callable(nil, "onMaterialCostFactorDumpButtonPressed")
 
 --endregion
 
---region #TAB7 (Other tab)
+--region #OTHERTAB
 
 function onRunScratchScriptButtonPressed()
     if onClient() then
@@ -2263,6 +1446,7 @@ function onRunScratchScriptButtonPressed()
         return
     end
     --Put server script here.
+
 end
 callable(nil, "onRunScratchScriptButtonPressed")
 
@@ -2520,7 +1704,7 @@ end
 
 --endregion
 
---region #TAB8 SUPPORT
+--region #WEAPONTAB
 
 function getGoodsForTurret(_TurretName)
     local _ExtendedGoodsTable = {}
@@ -2659,10 +1843,6 @@ function getGoodsForTurret(_TurretName)
     return _ExtendedGoodsTable[_TurretName]
 end
 
---endregion
-
---region #TAB8
-
 function onBuildATurretButtonPressed(_Button)
     if onClient() then
         invokeServerFunction("onBuildATurretButtonPressed", _Button.tooltip)
@@ -2684,709 +1864,6 @@ function onBuildATurretButtonPressed(_Button)
     end
 end
 callable(nil, "onBuildATurretButtonPressed")
-
---endregion
-
---region #TAB9 (Retrograde Solutions)
-
-function onSpawnHellhoundButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnHellhoundButtonPressed")
-        return
-    end
-
-    local _Position = getPositionInFrontOfPlayer()
-
-    local RetrogradeUtil = include("retrogradeutil")
-    RetrogradeUtil.spawnHellhound(_Position)
-end
-callable(nil, "onSpawnHellhoundButtonPressed")
-
-function onSpawnCerberusButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnCerberusButtonPressed")
-        return
-    end
-
-    local _Position = getPositionInFrontOfPlayer()
-
-    local RetrogradeUtil = include("retrogradeutil")
-    RetrogradeUtil.spawnCerberus(_Position)
-end
-callable(nil, "onSpawnCerberusButtonPressed")
-
-function onSpawnTiberiusButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnTiberiusButtonPressed")
-        return
-    end
-
-    local _Position = getPositionInFrontOfPlayer()
-
-    local RetrogradeUtil = include("retrogradeutil")
-    RetrogradeUtil.spawnTiberius(_Position)
-end
-callable(nil, "onSpawnTiberiusButtonPressed")
-
---endregion
-
---region #TAB11 (Lord of the Wastes)
-
-function onLOTWMission1ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLOTWMission1ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwstory1.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLOTWMission1ButtonPressed")
-
-function onLOTWMission2ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLOTWMission2ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwstory2.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLOTWMission2ButtonPressed")
-
-function onLOTWMission3ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLOTWMission3ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwstory3.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLOTWMission3ButtonPressed")
-
-function onLOTWMission4ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLOTWMission4ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwstory4.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLOTWMission4ButtonPressed")
-
-function onLOTWMission5ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLOTWMission5ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwstory5.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLOTWMission5ButtonPressed")
-
-function onLOTWSide1ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLOTWSide1ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwside1.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLOTWSide1ButtonPressed")
-
-function onLOTWSide2ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onLOTWSide2ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwside2.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onLOTWSide2ButtonPressed")
-
-function onLOTWClearValuesPressed()
-    if onClient() then
-        invokeServerFunction("onLOTWClearValuesPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-
-    local _Scripts = {
-        "missions/lotw/lotwstory1.lua",
-        "missions/lotw/lotwstory2.lua",
-        "missions/lotw/lotwstory3.lua",
-        "missions/lotw/lotwstory4.lua",
-        "missions/lotw/lotwstory5.lua",
-        "missions/lotw/lotwside1.lua",
-        "missions/lotw/lotwside2.lua",
-    }
-
-    for _k, _v in pairs(_Scripts) do
-        _Player:removeScript(_v)
-    end
-
-    _Player:setValue("_lotw_story_stage", nil)
-    _Player:setValue("_lotw_faction", nil)
-    _Player:setValue("_lotw_mission2_failures", nil)
-    _Player:setValue("_lotw_mission2_freighterskilled", nil)
-    _Player:setValue("_lotw_mission3_failures", nil)
-    _Player:setValue("_lotw_mission3_freighterskilled", nil)
-    _Player:setValue("_lotw_mission4_failures", nil)
-    _Player:setValue("swenks_beaten", nil)
-    _Player:setValue("_lotw_faction_verified", nil)
-
-    local _msg = "All Lord of the Wastes data cleared."
-    print(_msg)
-    _Player:sendChatMessage("Server", ChatMessageType.Information, _msg)
-end
-callable(nil, "onLOTWClearValuesPressed")
-
-function onSpawnSwenksButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnSwenksButtonPressed")
-        return
-    end
-
-    local function piratePosition()
-        local pos = random():getVector(-1000, 1000)
-        return MatrixLookUpPosition(-pos, vec3(0, 1, 0), pos)
-    end
-
-    -- spawn
-    local boss = PirateGenerator.createBoss(piratePosition())
-    boss:setTitle("Boss Swenks"%_T, {})
-    boss.dockable = false
-
-    local _pirates = {}
-    table.insert(_pirates, boss)
-
-    for _, pirate in pairs(_pirates) do
-        pirate:addScript("deleteonplayersleft.lua")
-
-        local _Player = Player()
-        if not _Player then break end
-        local allianceIndex = _Player.allianceIndex
-        local ai = ShipAI(pirate.index)
-        ai:registerFriendFaction(_Player.index)
-        if allianceIndex then
-            ai:registerFriendFaction(allianceIndex)
-        end
-    end
-
-    if Server():getValue("swoks_beaten") then
-        boss:setValue("swoks_beaten", true)
-    end
-    
-    boss:removeScript("icon.lua")
-    boss:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
-    boss:addScript("player/missions/lotw/mission5/swenks.lua")
-    boss:addScript("swenksspecial.lua")
-    boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
-    boss:addScriptOnce("avenger.lua", {_Multiplier = 1.1})
-    boss:setValue("is_pirate", true)
-    boss:setValue("is_swenks", true)
-
-    Boarding(boss).boardable = false
-end
-callable(nil, "onSpawnSwenksButtonPressed")
-
---endregion
-
---region #HKTab (Horizon Keepers)
-
-function onHKTabMission1ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission1ButtonPressed")
-        return
-    end
-
-    local _station = Entity()
-    if _station.type ~= EntityType.Station then
-        print("Can't add missions to non-station entities.")
-    else
-        if _station.playerOrAllianceOwned then
-            print("Can't add missions to player or alliance stations.")
-        else
-            print("Adding Horizon 1 bulletin.")
-            local _MissionPath = "data/scripts/player/missions/horizon/horizonstory1.lua"
-            local ok, bulletin=run(_MissionPath, "getBulletin", _station)
-            _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
-        end
-    end
-end
-callable(nil, "onHKTabMission1ButtonPressed")
-
-function onHKTabMission2ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission2ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/horizon/horizonstory2.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onHKTabMission2ButtonPressed")
-
-function onHKTabMission3ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission3ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/horizon/horizonstory3.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onHKTabMission3ButtonPressed")
-
-function onHKTabMission4ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission4ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/horizon/horizonstory4.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onHKTabMission4ButtonPressed")
-
-function onHKTabMission5ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission5ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/horizon/horizonstory5.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onHKTabMission5ButtonPressed")
-
-function onHKTabMission6ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission6ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/horizon/horizonstory6.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onHKTabMission6ButtonPressed")
-
-function onHKTabMission7ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission7ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/horizon/horizonstory7.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onHKTabMission7ButtonPressed")
-
-function onHKTabMission8ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission8ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/horizon/horizonstory8.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onHKTabMission8ButtonPressed")
-
-function onHKTabMission9ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabMission9ButtonPressed")
-        return
-    end
-
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/horizon/horizonstory9.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
-end
-callable(nil, "onHKTabMission9ButtonPressed")
-
-function onHKTabSideMission1ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabSideMission1ButtonPressed")
-        return
-    end
-
-    local _station = Entity()
-    if _station.type ~= EntityType.Station then
-        print("Can't add missions to non-station entities.")
-    else
-        if _station.playerOrAllianceOwned then
-            print("Can't add missions to player or alliance stations.")
-        else
-            print("Adding Horizon Side 1 bulletin.")
-            local _MissionPath = "data/scripts/player/missions/horizon/horizonside1.lua"
-            local ok, bulletin=run(_MissionPath, "getBulletin", _station)
-            _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
-        end
-    end    
-end
-callable(nil, "onHKTabSideMission1ButtonPressed")
-
-function onHKTabSideMission2ButtonPressed()
-    if onClient() then
-        invokeServerFunction("onHKTabSideMission2ButtonPressed")
-        return
-    end
-
-    local _station = Entity()
-    if _station.type ~= EntityType.Station then
-        print("Can't add missions to non-station entities.")
-    else
-        if _station.playerOrAllianceOwned then
-            print("Can't add missions to player or alliance stations.")
-        else
-            print("Adding Horizon Side 1 bulletin.")
-            local _MissionPath = "data/scripts/player/missions/horizon/horizonside2.lua"
-            local ok, bulletin=run(_MissionPath, "getBulletin", _station)
-            _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
-        end
-    end    
-end
-callable(nil, "onHKTabSideMission2ButtonPressed")
-
-local torpLoaderSpawns = 0
-function onSpawnFrostbiteTorpLoaderButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnFrostbiteTorpLoaderButtonPressed")
-        return
-    end
-
-    local sabotOnly = true
-    if math.fmod(torpLoaderSpawns, 2) == 1 then
-        sabotOnly = false
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnFrostbiteTorpedoLoader(false, sabotOnly)
-
-    torpLoaderSpawns = torpLoaderSpawns + 1
-end
-callable(nil, "onSpawnFrostbiteTorpLoaderButtonPressed")
-
-function onSpawnFrostibteAWACSButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnFrostibteAWACSButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnFrostbiteAWACS(false)
-end
-callable(nil, "onSpawnFrostibteAWACSButtonPressed")
-
-function onSpawnFrostbiteWarshipButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnFrostbiteWarshipButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnFrostbiteWarship(false)
-end
-callable(nil, "onSpawnFrostbiteWarshipButtonPressed")
-
-function onSpawnFrostbiteReliefButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnFrostbiteReliefButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnFrostbiteReliefShip(false)
-end
-callable(nil, "onSpawnFrostbiteReliefButtonPressed")
-
-function onSpawnVarlanceButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnVarlanceButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnVarlanceNormal(false)
-end
-callable(nil, "onSpawnVarlanceButtonPressed")
-
-function onSpawnIceNovaButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnIceNovaButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnVarlanceBattleship(false)
-end
-callable(nil, "onSpawnIceNovaButtonPressed")
-
-function onSpawnHKFreightButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnHKFreightButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnHorizonFreighter(false, nil, nil)
-end
-callable(nil, "onSpawnHKFreightButtonPressed")
-
-function onSpawnHKACruiseButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnHKACruiseButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnHorizonArtyCruiser(false, nil, nil)
-end
-callable(nil, "onSpawnHKACruiseButtonPressed")
-
-function onSpawnHKCCruiseButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnHKCCruiseButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnHorizonCombatCruiser(false, nil, nil)
-end
-callable(nil, "onSpawnHKCCruiseButtonPressed")
-
-function onSpawnHKAWACSButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnHKAWACSButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnHorizonAWACS(false, nil, nil)
-end
-callable(nil, "onSpawnHKAWACSButtonPressed")
-
-function onSpawnHKBshipButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnHKBshipButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnHorizonBattleship(false, nil, nil)
-end
-callable(nil, "onSpawnHKBshipButtonPressed")
-
-function onSpawnHKHanselButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnHKHanselButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnAlphaHansel(false, nil, false)
-end
-callable(nil, "onSpawnHKHanselButtonPressed")
-
-function onSpawnHKGretelButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnHKGretelButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnBetaGretel(false, nil, false)
-end
-callable(nil, "onSpawnHKGretelButtonPressed")
-
-function onSpawnXsologizeButtonPressed()
-    if onClient() then
-        invokeServerFunction("onSpawnXsologizeButtonPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnProjectXsologize(false, nil)
-end
-callable(nil, "onSpawnXsologizeButtonPressed")
-
-function onHKShipyard1Pressed()
-    if onClient() then
-        invokeServerFunction("onHKShipyard1Pressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnHorizonShipyard1(false, nil)
-end
-callable(nil, "onHKShipyard1Pressed")
-
-function onHKShipyard2Pressed()
-    if onClient() then
-        invokeServerFunction("onHKShipyard2Pressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnHorizonShipyard2(false, nil)
-end
-callable(nil, "onHKShipyard2Pressed")
-
-function onHKResearchPressed()
-    if onClient() then
-        invokeServerFunction("onHKResearchPressed")
-        return
-    end
-
-    local HorizonUtil = include("horizonutil")
-    HorizonUtil.spawnHorizonResearchStation(false, nil)
-end
-callable(nil, "onHKResearchPressed")
-
-function onFBTorpedoLoaderBeaconPressed()
-    if onClient() then
-        invokeServerFunction("onFBTorpedoLoaderBeaconPressed")
-        return
-    end
-
-    print("Adding Frostbite torpedo loader beacon")
-    local HorizonUtil = include("horizonutil")
-
-    local _Player = Player(callingPlayer)
-    local friendlyFaction = HorizonUtil.getFriendlyFaction()
-
-    _Player:getInventory():addOrDrop(
-        UsableInventoryItem("frostbitetorpedoloadercaller.lua", Rarity(RarityType.Legendary), friendlyFaction.index)
-    )
-end
-callable(nil, "onFBTorpedoLoaderBeaconPressed")
-
-function onResetFBCooldownsPressed()
-    if onClient() then
-        invokeServerFunction("onResetFBCooldownsPressed")
-        return
-    end
-
-    print("Resetting Horizon Keepers Cooldowns")
-    local HorizonUtil = include("horizonutil")
-
-    local _player = Player(callingPlayer)
-    local friendlyFaction = HorizonUtil.getFriendlyFaction()
-
-    _player:setValue("torploader_requested_" .. friendlyFaction.index, 0)
-    _player:setValue("_horizonkeepers_last_side1", 0)
-    _player:setValue("_horizonkeepers_last_side2", 0)
-end
-callable(nil, "onResetFBCooldownsPressed")
-
-function onUnlockAllKOTHEncyclopediaPressed()
-    if onClient() then
-        invokeServerFunction("onUnlockAllKOTHEncyclopediaPressed")
-        return
-    end
-
-    print("Unlocking Horizon Keeper Encyclopedia entries")
-
-    local _player = Player(callingPlayer)
-    _player:setValue("encyclopedia_koth_frostbite", true)
-    _player:setValue("encyclopedia_koth_varlance", true)
-    _player:setValue("encyclopedia_koth_horizonkeepers", true)
-    _player:setValue("encyclopedia_koth_sophie", true)
-    _player:setValue("encyclopedia_koth_hanselgretel", true)
-    _player:setValue("encyclopedia_koth_torploader", true)
-    _player:setValue("encyclopedia_koth_xsologize", true)
-    _player:setValue("encyclopedia_koth_01macedon", true)
-end
-callable(nil, "onUnlockAllKOTHEncyclopediaPressed")
-
-function onHKClearValuesPressed()
-    if onClient() then
-        invokeServerFunction("onHKClearValuesPressed")
-        return
-    end
-
-    local _player = Player(callingPlayer)
-    local HorizonUtil = include("horizonutil")
-
-    local _Scripts = {
-        "missions/horizon/horizonstory1.lua",
-        "missions/horizon/horizonstory2.lua",
-        "missions/horizon/horizonstory3.lua",
-        "missions/horizon/horizonstory4.lua",
-        "missions/horizon/horizonstory5.lua",
-        "missions/horizon/horizonstory6.lua",
-        "missions/horizon/horizonstory7.lua",
-        "missions/horizon/horizonstory8.lua",
-        "missions/horizon/horizonstory9.lua",
-        "missions/horizon/horizonside1.lua",
-        "missions/horizon/horizonside2.lua"
-    }
-
-    for _k, _v in pairs(_Scripts) do
-        _player:removeScript(_v)
-    end
-
-    _player:setValue("_horizonkeepers_story_stage", 1)
-    _player:setValue("_horizonkeepers_story_complete", nil)
-    _player:setValue("_horizonkeepers_story3_cargolooted", nil)
-    _player:setValue("_horizonkeepers_killed_hansel", nil)
-    _player:setValue("_horizonkeepers_killed_gretel", nil)
-    _player:setValue("_horizonkeepers_last_side1", nil)
-    _player:setValue("_horizonkeepers_last_side2", nil)
-    _player:setValue("_horizonkeepers_side1_complete", nil)
-    _player:setValue("_horizonkeepers_side2_complete", nil)
-    _player:setValue("encyclopedia_koth_frostbite", nil)
-    _player:setValue("encyclopedia_koth_varlance", nil)
-    _player:setValue("encyclopedia_koth_horizonkeepers", nil)
-    _player:setValue("encyclopedia_koth_sophie", nil)
-    _player:setValue("encyclopedia_koth_hanselgretel", nil)
-    _player:setValue("encyclopedia_koth_torploader", nil)
-    _player:setValue("encyclopedia_koth_xsologize", nil)
-    _player:setValue("encyclopedia_koth_01macedon", nil)
-   
-    HorizonUtil.setFriendlyFactionRep(_player, 0)
-
-    local _msg = "All Horizon Keepers data cleared."
-    print(_msg)
-    _player:sendChatMessage("Server", ChatMessageType.Information, _msg)
-end
-callable(nil, "onHKClearValuesPressed")
 
 --endregion
 

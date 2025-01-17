@@ -28,6 +28,7 @@ function IncreasingThreatBossBehavior.initialize(_BossType)
     self.Log(_MethodName, "Boss type is " .. tostring(self._Data._BossType))
 
     if onClient() then
+        Music():fadeOut(1.5)
         registerBoss(Entity().index, nil, nil, "data/music/special/givingchase.ogg")
     end
 

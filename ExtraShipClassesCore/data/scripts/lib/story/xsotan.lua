@@ -51,17 +51,53 @@ function Xsotan.createInfestor(_position, _volumeFactor, _extraLoot)
 end
 
 function Xsotan.createOppressor(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+    _position = _position or Matrix()
+    local volume = Xsotan.getShipVolume()
 
-    local name = "Oppressor"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_oppressor", true)
-    _XsotanShip:setValue("xsotan_oppressor", true)
+    volume = volume * (_volumeFactor or 1)
 
-    --Add Scripts
-    _XsotanShip:addScriptOnce("oppressor.lua")
+    local classification = { volume = 2.5, damage = 4.0, name = "Oppressor" }
+    volume = volume * classification.volume
 
-    return _XsotanShip
+    local x, y = Sector():getCoordinates()
+    local probabilities = Balancing_GetTechnologyMaterialProbability(x, y)
+    local material = Material(getValueFromDistribution(probabilities))
+    local faction = Xsotan.getFaction()
+    local plan = PlanGenerator.makeXsotanShipPlan(volume, material)
+    local ship = Sector():createShip(faction, "", plan, _position, EntityArrivalType.Jump)
+
+    --Add turrets
+    local generator = SectorTurretGenerator()
+    generator.coaxialAllowed = false
+
+    local turret = generator:generateArmed(x, y, 0, Rarity(RarityType.Exceptional))
+    local numTurrets = math.max(2, Balancing_GetEnemySectorTurrets(x, y))
+
+    ShipUtility.addTurretsToCraft(ship, turret, numTurrets)
+
+    ship:setTitle("${toughness}Xsotan ${ship}"%_T, {toughness = "", ship = classification.name})
+    ship.crew = ship.idealCrew
+    ship.shieldDurability = ship.shieldMaxDurability
+    ship.damageMultiplier = ship.damageMultiplier * classification.damage
+
+    Xsotan.applyCenterBuff(ship)
+    Xsotan.applyDamageBuff(ship)
+
+    AddDefaultShipScripts(ship)
+
+    ship:addScriptOnce("ai/patrol.lua")
+    ship:addScriptOnce("story/xsotanbehaviour.lua")
+    ship:addScriptOnce("utility/aiundockable.lua")
+    ship:addScriptOnce("enemies/oppressor.lua")
+    ship:addScriptOnce("avenger.lua")
+    ship:setValue("is_xsotan", true)
+    ship:setValue("is_oppressor", true)
+    ship:setValue("xsotan_oppressor", true)
+
+    Boarding(ship).boardable = false
+    ship.dockable = false
+
+    return ship
 end
 
 function Xsotan.createSunmaker(_position, _volumeFactor)
@@ -164,7 +200,7 @@ function Xsotan.createWarlock(_position, _volumeFactor)
     _XsotanShip:setValue("xsotan_warlock", true)
 
     --Add Scripts
-    _XsotanShip:addScriptOnce("reanimator.lua")
+    _XsotanShip:addScriptOnce("enemies/reanimator.lua")
 
     return _XsotanShip
 end
@@ -178,7 +214,7 @@ function Xsotan.createParthenope(_position, _volumeFactor)
     _XsotanShip:setValue("xsotan_parthenope", true)
 
     --Add Scripts
-    _XsotanShip:addScriptOnce("enemies/parthenopexsotan.lua")
+    _XsotanShip:addScriptOnce("enemies/parthenope.lua")
     _XsotanShip:addScriptOnce("avenger.lua")
 
     return _XsotanShip
@@ -193,7 +229,7 @@ function Xsotan.createHierophant(_position, _volumeFactor)
     _XsotanShip:setValue("xsotan_hierophant", true)
 
     --Add Scripts
-    _XsotanShip:addScriptOnce("reanimator.lua")
+    _XsotanShip:addScriptOnce("enemies/reanimator.lua")
 
     return _XsotanShip
 end
@@ -429,6 +465,7 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     end
 
     Boarding(ship).boardable = false
+    ship.dockable = false
 
     return ship
 end
@@ -461,6 +498,7 @@ function Xsotan.createRevenant(_Wreckage)
     ship:setValue("xsotan_revenant", true)
 
     Boarding(ship).boardable = false
+    ship.dockable = false
 
     _Sector:deleteEntity(_Wreckage)
 
@@ -511,6 +549,7 @@ function Xsotan.createGenericShip(position, volumeFactor)
     ship:setValue("is_xsotan", true)
 
     Boarding(ship).boardable = false
+    ship.dockable = false
 
     return ship
 end

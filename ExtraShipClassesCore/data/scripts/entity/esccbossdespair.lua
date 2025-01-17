@@ -9,6 +9,7 @@ function ESCCBossBlades.initialize()
     local _MethodName = "Initialize"
 
     if onClient() then
+        Music():fadeOut(1.5)
         registerBoss(Entity().index, nil, nil, "data/music/special/despair.ogg")
     end
 
