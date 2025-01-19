@@ -6,7 +6,7 @@ function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, 
     local fireDelay = _ROF or rand:getFloat(0.15, 0.25)
     local reach = _RANGE or rand:getFloat(350, 575)
     local damage = dps * fireDelay * 1.15
-    local speed = _VELOCITY or rand:getFloat(430, 630)
+    local speed = _VELOCITY or rand:getFloat(450, 650)
     local weaponcolor = _COLOR or ColorHSV(rand:getFloat(135, 180), 1, 1)
     local weaponaccuracy =  _ACC or 0.99 - rand:getFloat(0, 0.01) --Favor the more accurate variety for just the weapon generation.
     local projectilesize = _SIZE or rand:getFloat(0.4, 0.8)
