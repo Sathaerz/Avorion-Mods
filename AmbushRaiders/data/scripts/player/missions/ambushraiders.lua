@@ -40,7 +40,7 @@ mission.data.title = mission._Name
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." },
-    { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
+    { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
     { text = "Destroy the arriving pirates", bulletPoint = true, fulfilled = false, visible = false }
 }
 mission.data.timeLimit = 30 * 60 --Player has 30 minutes.
@@ -76,7 +76,8 @@ function initialize(_Data_in)
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
-            mission.data.description[2].arguments = {x = _X, y = _Y }
+            mission.data.description[2].arguments = { x = _X, y = _Y }
+            mission.data.description[3].arguments = { _X = _X, _Y = _Y }
 
             --Run standard initialization
             AmbushRaiders_init(_Data_in)
@@ -100,8 +101,9 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].timers = {}
 
 --region #PHASE 1 TIMERS
@@ -113,10 +115,9 @@ mission.phases[1].timers[1] = {
     callback = function() 
         local _MethodName = "Phase 1 Timer 1 Callback"
         local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
         local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
         mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.timerAdvance and #_Pirates == 0 then
+        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
             mission.data.custom.timerAdvance = false
             nextPhase()
         end
@@ -128,22 +129,23 @@ end
 
 --endregion
 
+
 mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
-
+    showMissionUpdated()
+    
     if onServer() then
         mission.phases[1].timers[2] = {
             time = 15,
             callback = function()
                 spawnPirateWave(false)
             end
-            }
+        }
     end
 end
 
 mission.phases[2] = {}
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].timers = {}
 
 --region #PHASE 2 TIMERS
@@ -155,10 +157,9 @@ mission.phases[2].timers[1] = {
     callback = function() 
         local _MethodName = "Phase 2 Timer 1 Callback"
         local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
         local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
         mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.timerAdvance and #_Pirates == 0 then
+        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
             mission.data.custom.timerAdvance = false
             nextPhase()
         end
@@ -175,7 +176,6 @@ mission.phases[2].onBeginServer = function()
 end
 
 mission.phases[3] = {}
-mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].timers = {}
 
 --region #PHASE 3 TIMERS
@@ -187,11 +187,10 @@ mission.phases[3].timers[1] = {
     callback = function() 
         local _MethodName = "Phase 3 Timer 1 Callback"
         local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
         local _DangerLevel = mission.data.custom.dangerLevel
         local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
         mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.timerAdvance and #_Pirates == 0 then
+        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
             if _DangerLevel >= 6 then
                 mission.data.custom.timerAdvance = false
                 nextPhase()
@@ -219,7 +218,6 @@ mission.phases[3].onBeginServer = function()
 end
 
 mission.phases[4] = {}
-mission.phases[4].noBossEncountersTargetSector = true
 mission.phases[4].timers = {}
 
 --region #PHASE 4 TIMERS
@@ -231,11 +229,10 @@ mission.phases[4].timers[1] = {
     callback = function() 
         local _MethodName = "Phase 4 Timer 1 Callback"
         local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
         local _DangerLevel = mission.data.custom.dangerLevel
         local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
         mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.timerAdvance and #_Pirates == 0 then
+        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
             if _DangerLevel == 10 then
                 mission.data.custom.timerAdvance = false
                 nextPhase()
@@ -263,7 +260,6 @@ mission.phases[4].onBeginServer = function()
 end
 
 mission.phases[5] = {}
-mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].timers = {}
 
 --region #MISSION 5 TIMERS
@@ -275,10 +271,9 @@ mission.phases[5].timers[1] = {
     callback = function() 
         local _MethodName = "Phase 5 Timer 1 Callback"
         local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
         local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
         mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.timerAdvance and #_Pirates == 0 then
+        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
             finishAndReward()
         end
     end,
@@ -374,28 +369,23 @@ end
 --region #MAKEBULLETIN CALL
 
 function formatDescription()
-    local xrand = random()
-
-    local _Chance = xrand:getInt(1, 100)
-
     --"please help, nobody believes me" (DONE)
     --"please help, there's no time" (DONE)
     --"please help, they're after me" (DONE)
-    local _Descriptions = {
+    local descriptionTable = {
         "Just a few hours ago, we picked up some subspace signals in (${x}:${y}). They were consistent with pirate signatures, so we left the sector right away. Unfortunately, since we left the sector immediately after picking them up, we can't prove that they belonged to pirates! We think that a pirate raid may be imminent on a nearby sector, but nobody that we've told believes us! Please help! You're our last hope of defeating these pirates before they attack an unsuspecting colony!",
         "We've received credible intelligence that a group of pirates is planning on raiding a nearby sector. Normally we'd do this by the book, but the raid is imminent - there's not enough time to alert the proper authorities. We're putting this request out to any independent captain who happens to see it. Please hurry! If you manage to stop these pirates in time, you could save hundreds of lives. If our sources are correct, they should be gathering in (${x}:${y}).",
         "We were minding our own business mining in a nearby sector when a bunch of pirates warped in! Obviously, we warped out immediately but... we think that they might still be after us! I swear we've been seeing pirate subspace signals on our radar ever since we left that sector. We think that they're going to be coming after us through (${x}:${y}) - please head there and attack them first! Please! I don't want to spend the rest of my life looking over my shoulder!"
     }
 
-    if _Chance <= 5 then
+    if random():test(0.05) then
         --"please help, I don't want there to be any competition." (DONE)
-        _Descriptions = {
+        descriptionTable = {
             "There's a gang of pirate rabble that intends to attack a nearby sector. They're going to be mustering their strength in (${x}:${y}). Head there first and wipe them out. Why, you ask? Simple. I'd rather not have any comp-ah. I see what you did there. No. You should do it because killing pirates is its own reward. They'll drop turrets and systems, and in addition to that I'll pay you quite well for your efforts. Not a bad deal, wouldn't you say?"
         }
     end
-    shuffle(xrand, _Descriptions)
 
-    return _Descriptions[1]
+    return getRandomEntry(descriptionTable)
 end
 
 mission.makeBulletin = function(_Station)
