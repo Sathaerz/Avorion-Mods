@@ -118,9 +118,13 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
-mission.getRewardedItems = function()
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
+mission.globalPhase.getRewardedItems = function()
     local _random = random()
-    
+
     if _random:test(0.25) then
         local _X, _Y = mission.data.location.x, mission.data.location.y
         local _upgradeGenerator = UpgradeGenerator()
@@ -130,7 +134,6 @@ mission.getRewardedItems = function()
     end
 end
 
-mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     failAndPunish() --Will run globalPhase.onFail and clean up the sector.
 end
@@ -156,13 +159,10 @@ end
 --PHASE 1
 
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     mission.data.timeLimit = nil 
     mission.data.timeLimitInDescription = false 
-
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
 
@@ -176,9 +176,6 @@ end
 --PHASE 2
 
 mission.phases[2] = {}
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
 mission.phases[2].sectorCallbacks = {}
 mission.phases[2].timers = {}
 mission.phases[2].onTargetLocationEntered = function(_X, _Y)
