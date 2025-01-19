@@ -58,11 +58,9 @@ function initialize(_Data_in)
 
             local _Sector = Sector()
             local _Giver = Entity(_Data_in.giver)
+
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .playerAttacked
-                .inBarrier
+                CUSTOM MISSION DATA SETUP:
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.playerAttacked =  false
@@ -72,6 +70,9 @@ function initialize(_Data_in)
             end
             mission.data.custom.inBarrier = _Data_in.inBarrier
 
+            --[[=====================================================
+                MISSION DESCRIPTION SETUP:
+            =========================================================]]
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
@@ -98,7 +99,7 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
-mission.getRewardedItems = function()
+mission.globalPhase.getRewardedItems = function()
     --25% of getting a random rarity hyperspace upgrade.
     if random():test(0.25) then
         local _SeedInt = random():getInt(1, 20000)
@@ -114,7 +115,6 @@ mission.getRewardedItems = function()
     end
 end
 
-mission.globalPhase = {}
 mission.globalPhase.onEntityDestroyed = function(id, lastDamageInflictor)
     local _DestroyedEntity = Entity(id)
 
@@ -125,6 +125,7 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].sectorCallbacks = {}
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].sectorCallbacks[1] = {
     name = "onEntityDocked",
     func = function(_DockerID, _DockeeID)
@@ -181,10 +182,8 @@ mission.phases[2].sectorCallbacks[1] = {
     name = "onEntityUndocked",
     func = function(_DockerID, _DockeeID)
         local _UndockedEntity = Entity(_DockeeID)
-        local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
 
-        if _X == mission.data.location.x and _Y == mission.data.location.y then
+        if atTargetLocation() then
             MissionUT.deleteOnPlayersLeft(_UndockedEntity)
             if _UndockedEntity:getValue("_transfersatellite_objective") then
                 if mission.data.custom.playerAttacked then
@@ -202,6 +201,7 @@ mission.phases[2].onBeginServer = function()
 end
 
 mission.phases[3] = {}
+mission.phases[3].showUpdateOnStart = true
 mission.phases[3].timers = {}
 
 --region #PHASE 3 TIMER CALLS
@@ -213,10 +213,9 @@ mission.phases[3].timers[2] = {
     callback = function() 
         local _MethodName = "Phase 3 Timer 2 Callback"
         local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
         local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
         mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if _X == mission.data.location.x and _Y == mission.data.location.y and mission.data.custom.timerAdvance and #_Pirates == 0 then
+        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
             finishAndReward()
         end
     end,
@@ -316,23 +315,20 @@ function formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
-    local _DescriptionType = 1 --Neutral
+    local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
+        descriptionType = 2 --Aggressive.
     elseif _Aggressive <= -0.5 then
-        _DescriptionType = 3 --Peaceful.
+        descriptionType = 3 --Peaceful.
     end
 
-    local _FinalDescription = ""
-    if _DescriptionType == 1 then --Neutral.
-        _FinalDescription = "We'd like to expand our survelliance network. We've got a satellite ready to deploy, but unfortunately we're not able to spare any ships to move it. If you can take it to sector (${x}:${y}) and drop it off, we'll pay you handsomely for it. It's not the most glamorous work, but it's easy money for an easy job. What do you say, captain?"
-    elseif _DescriptionType == 2 then --Aggressive.
-        _FinalDescription = "We need the ability to keep better track of a faction of pirates that has been a particular thorn in our side. To that end, we are deploying a spy satellite in sector (${x}:${y}). Unfortunately, we cannot spare the ships to move it. That's where you come in. We recognize that this may be seen as demeaning work, but it's an easy job. We will obviously pay you for your efforts."
-    elseif _DescriptionType == 3 then --Peaceful.
-        _FinalDescription = "We're scouting out new sectors to create a settlement in. Sector (${x}:${y}) looks particularly promising, but we would like to gather some more data before we actually commit to sending a group of colonists. We've put together a satellite that should be able to give us the data that we need, but unfortunately we don't have any ships to spare to move it. If you can move the satellite for us, we will pay you for your time."
-    end
+    local descriptionTable = {
+        "We'd like to expand our survelliance network. We've got a satellite ready to deploy, but unfortunately we're not able to spare any ships to move it. If you can take it to sector (${x}:${y}) and drop it off, we'll pay you handsomely for it. It's not the most glamorous work, but it's easy money for an easy job. What do you say, captain?", --Neutral
+        "We need the ability to keep better track of a faction of pirates that has been a particular thorn in our side. To that end, we are deploying a spy satellite in sector (${x}:${y}). Unfortunately, we cannot spare the ships to move it. That's where you come in. We recognize that this may be seen as demeaning work, but it's an easy job. We will obviously pay you for your efforts.", --Aggressive
+        "We're scouting out new sectors to create a settlement in. Sector (${x}:${y}) looks particularly promising, but we would like to gather some more data before we actually commit to sending a group of colonists. We've put together a satellite that should be able to give us the data that we need, but unfortunately we don't have any ships to spare to move it. If you can move the satellite for us, we will pay you for your time." --Peaceful    
+    }
 
-    return _FinalDescription
+    return descriptionTable[descriptionType]
 end
 
 mission.makeBulletin = function(_Station)
@@ -342,7 +338,7 @@ mission.makeBulletin = function(_Station)
     local target = {}
     local x, y = Sector():getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
-    target.x, target.y = MissionUT.getSector(x, y, 12, 30, false, false, false, false, insideBarrier)
+    target.x, target.y = MissionUT.getEmptySector(x, y, 12, 30, insideBarrier)
 
     if not target.x or not target.y then
         mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
