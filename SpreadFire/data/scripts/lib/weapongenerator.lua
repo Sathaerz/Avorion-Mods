@@ -6,7 +6,7 @@ function WeaponGenerator.generateSpreadFire(rand, dps, tech, material, rarity, _
     local fireDelay = _ROF or rand:getFloat(0.28, 0.38) --In case it is nil
     local reach = _RANGE or rand:getFloat(620, 920)
     local damage = dps * fireDelay
-    local speed = _VELOCITY or rand:getFloat(400, 600)
+    local speed = _VELOCITY or rand:getFloat(500, 700)
     local weaponcolor = _COLOR or ColorHSV(rand:getFloat(195, 240), 1, 1)
     local weaponaccuracy =  _ACC or 0.99 - rand:getFloat(0, 0.01) --Favor the more accurate variety for just the weapon generation.
     local projectilesize = _SIZE or rand:getFloat(0.4, 0.7)
