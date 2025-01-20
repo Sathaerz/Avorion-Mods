@@ -86,6 +86,8 @@ end
 
 --region #PHASE CALLS
 
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.getRewardedItems = function()
     --25% of getting a random rarity radar upgrade.
     if random():test(0.25) then
@@ -124,7 +126,7 @@ mission.globalPhase.onAccomplish = function()
 end
 
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(_X, _Y) 
     local _MethodName = "Phase 1 on Target Location Entered"
     
@@ -145,7 +147,6 @@ end
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBegin = function()
     if onClient() then
         registerMarkScannableXsotan()
