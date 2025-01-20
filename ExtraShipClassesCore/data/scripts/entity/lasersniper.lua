@@ -10,6 +10,7 @@ local self = LaserSniper
 --All of the various messages come with a _RequireDebugLevel parameter baked in. If you wish to see some specific messages, you can find those and set
 --_RequireDebugLevel to 0 for those messages. You can also set self._Debug to match it. Most messages are going to require level 1 but some require more.
 self._Debug = 0
+self._Target_Invincible_Debug = 0
 
 self._Data = {}
 
@@ -25,7 +26,7 @@ self._LaserData._TargetPoint = nil
 
 function LaserSniper.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Laser Sniper v66 script on entity.", 1)
+    self.Log(_MethodName, "Initializing Laser Sniper v67 script on entity.", 1)
 
     self._Data = _Values or {}
 
@@ -68,6 +69,7 @@ function LaserSniper.initialize(_Values)
     -- 2 - Any non-Xsotan ship or station.
     -- 3 - Any entity with a specified scriptvalue - chosen by self._Data._TargetTag - for example, is_pirate would target any enemies with is_pirate set.
     -- 4 - The target player's current ship. Set with _pindex. Works similarly to TorpedoSlammer's priority 5.
+    -- 5 - a random player or alliance owned ship / station.
     self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
     --Target priority 3 goes off of self._Data._TargetTag which can be nil - it is deliberately not set here, I did not miss it.
 
@@ -212,7 +214,7 @@ function LaserSniper.updateIntersection(_TimeStep)
             local _DamageToShield = self._Data._DamagePerFrame * _EntityDamageMultiplier
             local _DamageToHull = 0
 
-            self.Log(_MethodName, "Inflicting " .. tostring(_DamageToShield) .. " damage", 1)
+            self.Log(_MethodName, "Inflicting " .. tostring(_DamageToShield) .. " damage", 3)
 
             --We'll be nice and not bypass shields this time, unlike IHDTX-style lasers.
             if _Shield and not self._Data._ShieldPen then
@@ -272,7 +274,7 @@ function LaserSniper.pickNewTarget()
 
             for _, _Candidate in pairs(_Stations) do
                 if not _Candidate:getValue("is_xsotan") then
-                table.insert(_TargetCandidates, _Candidate)
+                    table.insert(_TargetCandidates, _Candidate)
                 end
             end
         end,
@@ -291,18 +293,50 @@ function LaserSniper.pickNewTarget()
                     table.insert(_TargetCandidates, _PlayerTargetShip)
                 end
             end
+        end,
+        function() --5 - random player or alliance ship or station
+            local _Entities = { _Sector:getEntities() }
+            for _, _Candidate in pairs(_Entities) do
+                if (_Candidate.type == EntityType.Ship or _Candidate.type == EntityType.Station) and _Candidate.playerOrAllianceOwned then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
+            end
         end
     }
 
      _TargetPriorityFunctions[_TargetPriority]()
 
     if #_TargetCandidates > 0 then
-        shuffle(random(), _TargetCandidates)
+        local chosenCandidate = nil
+        local attempts = 0
+
         self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
-        return _TargetCandidates[1]
+
+        while not chosenCandidate and attempts < 10 do
+            local randomPick = getRandomEntry(_TargetCandidates)
+            if self.invincibleTargetCheck(randomPick) then
+                chosenCandidate = randomPick
+            end
+            attempts = attempts + 1
+        end
+
+        if not chosenCandidate then
+            self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random", 1)
+            chosenCandidate = getRandomEntry(_TargetCandidates)
+        end
+        
+        return chosenCandidate
     else
         self.Log(_MethodName, "WARNING - Could not find any target candidates.", 1)
         return nil
+    end
+end
+
+function LaserSniper.invincibleTargetCheck(entity)
+    if not entity.invincible or self._Target_Invincible_Debug == 1 then
+        return true
+    else
+        return false
     end
 end
 
@@ -561,7 +595,10 @@ function LaserSniper.syncLaserData(_Data_In)
 end
 callable(LaserSniper, "syncLaserData")
 
---Log function
+--endregion
+
+--region #LOG / SECURE / RESTORE
+
 function LaserSniper.Log(_MethodName, _Msg, _RequireDebugLevel)
     _RequireDebugLevel = _RequireDebugLevel or 1
 
@@ -569,10 +606,6 @@ function LaserSniper.Log(_MethodName, _Msg, _RequireDebugLevel)
         print("[LaserSniper] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end
-
---endregion
-
---region #SECURE / RESTORE
 
 function LaserSniper.secure()
     local _MethodName = "Secure"

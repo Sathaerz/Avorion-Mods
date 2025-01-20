@@ -279,10 +279,7 @@ function Oppressor.pickHookTarget()
         local xsotanEntities = { _sector:getEntitiesByScriptValue("is_xsotan") }
         for _, xsotan in pairs(xsotanEntities) do
             --Don't eat summoner xsotans.
-            if xsotan.index ~= _entity.index and 
-                not xsotan:getValue("xsotan_warlock") and 
-                not xsotan:getValue("xsotan_summoner") and 
-                not xsotan:getValue("xsotan_parthenope") then
+            if xsotan.index ~= _entity.index and self.targetTagCheck(xsotan) then
                 table.insert(targetCandidates, xsotan)
             end
         end
@@ -295,6 +292,39 @@ function Oppressor.pickHookTarget()
         self.Log(methodName, "WARNING - Could not find any target candidates.")
         return nil
     end    
+end
+
+function Oppressor.targetTagCheck(entity)
+    local forbiddenTags = self.getForbiddenTags()
+
+    for _, tag in pairs(forbiddenTags) do
+        if entity:getValue(tag) then
+            return false
+        end
+    end
+
+    return true
+end
+
+--[[
+    Added for moddability! If you add a special Xsotan type and you don't want it to get eaten, you can modify this list by doing the following:
+
+    local YourModName_getForbiddenTags = Oppressor.getForbiddenTags()
+    function Oppressor.getForbiddenTags()
+        local tags = YourModName_getForbiddenTags()
+
+        table.insert(tags, "xsotan_YourXsotanType")
+
+        return tags
+    end
+]]
+function Oppressor.getForbiddenTags()
+    return {
+        "xsotan_warlock",
+        "xsotan_summoner",
+        "xsotan_parthenope",
+        "xsotan_dreadnought"
+    }
 end
 
 function Oppressor.repositionTarget()

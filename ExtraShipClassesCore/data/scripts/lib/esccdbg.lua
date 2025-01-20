@@ -98,6 +98,8 @@ function initUI()
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Frenzied", "onSpawnFrenziedButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Secondaries", "onSpawnSecondariesButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Thorns", "onSpawnThornsButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Linker", "onSpawnLinkerButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Nemean", "onSpawnNemeanButtonPressed")
 
     local xsotanTab = window:createTab("Entity", "data/textures/icons/xsotan.png", "ESCC Xsotan")
     numButtons = 0
@@ -146,6 +148,7 @@ function initUI()
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Sector DPS Dump", "onSectorDPSDumpButtonPressed")
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Reward Data Dump", "onSectorRewardDumpButtonPressed")
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Material Cost Factor Dump", "onMaterialCostFactorDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Invincibility Data Dump", "onInvincibilityDataDumpButtonPressed")
 
     local otherTab = window:createTab("Entity", "data/textures/icons/papers.png", "Other")
     numButtons = 0
@@ -480,7 +483,12 @@ function onBoosterHealerEnemyGenerated(_Generated)
     onPiratesGenerated(_Generated)
     print("adding booster + args script to enemy.")
     for _, _S in pairs(_Generated) do
-        _S:addScript("allybooster.lua", {_HealWhenBoosting = true, _HealPctWhenBoosting = 33, _MaxBoostCharges = 5})
+        local boosterValues = {
+            _HealWhenBoosting = true, 
+            _HealPctWhenBoosting = 33, 
+            _MaxBoostCharges = 5
+            }
+        _S:addScript("allybooster.lua", boosterValues)
     end
 end
 
@@ -513,6 +521,23 @@ function onThornsEnemyGenerated(_Generated)
     print("adding thorns script to enemy.")
     for _, _S in pairs(_Generated) do
         _S:addScript("thorns.lua")        
+    end
+end
+
+function onLinkerEnemyGenerated(generated)
+    onPiratesGenerated(generated)
+    print("adding linker script to enemy")
+    for _, ship in pairs(generated) do
+        ship:addScript("escclinker.lua")
+    end
+end
+
+function onNemeanEnemyGenerated(generated)
+    onPiratesGenerated(generated)
+    print("adding ironcurtain / phasemode to enemy.")
+    for _, ship in pairs(generated) do
+        ship:addScriptOnce("phasemode.lua")
+        ship:addScriptOnce("ironcurtain.lua")
     end
 end
 
@@ -895,6 +920,36 @@ function onSpawnThornsButtonPressed()
     generator:endBatch()
 end
 callable(nil, "onSpawnThornsButtonPressed")
+
+function onSpawnLinkerButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnLinkerButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onLinkerEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnLinkerButtonPressed")
+
+function onSpawnNemeanButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnNemeanButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onNemeanEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnNemeanButtonPressed")
 
 --endregion
 
@@ -1433,6 +1488,18 @@ function onMaterialCostFactorDumpButtonPressed()
     end
 end
 callable(nil, "onMaterialCostFactorDumpButtonPressed")
+
+function onInvincibilityDataDumpButtonPressed()
+    if onClient() then
+        invokeServerFunction("onInvincibilityDataDumpButtonPressed")
+        return
+    end
+
+    local _entity = Entity()
+    local _durability = Durability(_entity)
+    print("Entity invincible: " .. tostring(_entity.invincible) .. " Entity invincibility: " .. tostring(_durability.invincibility))
+end
+callable(nil, "onInvincibilityDataDumpButtonPressed")
 
 --endregion
 

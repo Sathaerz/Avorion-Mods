@@ -11,7 +11,7 @@ local SpawnUtility = include ("spawnutility")
 ESCCXsotanDreadnought = {}
 local self = ESCCXsotanDreadnought
 
-self._Debug = 1
+self._Debug = 0
 
 self.data = {}
 self.lasers = {}
@@ -28,7 +28,7 @@ self.state = State.Fighting
 
 function ESCCXsotanDreadnought.initialize(values)
     local methodName = "Initialize"
-    self.Log(methodName, "Initializing v6 of esccxsotandreadnought")
+    self.Log(methodName, "Initializing v7 of esccxsotandreadnought")
 
     local dreadnought = Entity()
 
@@ -183,7 +183,11 @@ function ESCCXsotanDreadnought.aggroAllies()
                     ai:registerEnemyFaction(factionIndex)
                 end
             end
-            ai:setAggressive()
+
+            if not ally:getValue("escc_xsotandreadnought_aggroed") then
+                ai:setAggressive()
+                ally:setValue("escc_xsotandreadnought_aggroed", true) --repeatedly setting this does weird stuff to the AI.
+            end
         end
     end
 

@@ -4,7 +4,7 @@ include ("galaxy")
 include ("stringutility")
 include ("callable")
 include ("relations")
-ESCCUtil = include("esccutil")
+include ("randomext")
 
 --Also known as the "Blob Gun" - this will shoot glowing blobs at the player, essentially simulating a projectile.
 --Don't remove this or else the script might break. You know the drill by now.
@@ -13,6 +13,7 @@ StationSiegeGun = {}
 local self = StationSiegeGun
 
 self._Debug = 0
+self._Target_Invincible_Debug = 0
 
 self._Data = {}
 --[[
@@ -184,7 +185,7 @@ function StationSiegeGun.updateServer(_TimeStep)
         --Remember, if you set _ShotCycleSupply to 0, you will bypass this entirely.
         if _Supplies - self._Data._ShotSupplyConsumed >= self._Data._ShotCycleSupply then
             self.Log(_MethodName, "Picking target and broadcasting shot.")
-            self._NextTarget = self.getNextTarget()
+            self._NextTarget = self.pickNewTarget()
             if self._NextTarget then
                 self.Log(_MethodName, "Shot Cycle Timer is " .. tostring(self._Data._ShotCycleTimer) .. "/" .. tostring(self._Data._ShotCycle) .. "Successfully picked a target. Broadcasting and firing.")
                 if self._Data._CodesCracked and not self._SentTauntForShot then
@@ -207,11 +208,10 @@ end
 
 --region #SERVER CALLS
 
-function StationSiegeGun.getNextTarget()
+function StationSiegeGun.pickNewTarget()
     local _MethodName = "Get Next Target"
     local _Factionidx = Entity().factionIndex
     local _TargetPriority = self._Data._TargetPriority
-    local _Rgen = ESCCUtil.getRand()
 
     --Get the list of enemies. This is a bit of work since it includes wacky crap like turrets.
     local _RawEnemies = {Sector():getEnemies(_Factionidx)}
@@ -225,102 +225,140 @@ function StationSiegeGun.getNextTarget()
 
     self.Log(_MethodName, "Beginning... _TargetPriority is " .. tostring(_TargetPriority))
 
-    if _TargetPriority == 1 then --This is a random pick, so just add all enemies as candidates.
-        for _, _Candidate in pairs(_Enemies) do
-            table.insert(_TargetCandidates, _Candidate)
-        end
-    elseif _TargetPriority == 2 then --Go through and find the highest combined max HP + shield total of all enemies, then put any enemies that match that into a table.
-        local _TargetValue = 0
-        for _, _Candidate in pairs(_Enemies) do
-            if self.getEntityMaxHP(_Candidate) > _TargetValue then
-                _TargetValue = self.getEntityMaxHP(_Entity)
+    local _TargetPriorityFunctions = {
+        function() -- 1 - Pick a random enemy
+            for _, _Candidate in pairs(_Enemies) do
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end,
+        function() -- 2 - Pick highest combined shield + hp total of all enemies
+            local _TargetValue = 0
+            for _, _Candidate in pairs(_Enemies) do
+                if self.getEntityMaxHP(_Candidate) > _TargetValue then
+                    _TargetValue = self.getEntityMaxHP(_Entity)
+                end
+            end
+    
+            for _, _Candidate in pairs(_Enemies) do
+                if self.getEntityMaxHP(_Candidate) == _TargetValue then 
+                    table.insert(_TargetCandidates, _Candidate)
+                end
+            end
+        end,
+        function() -- 3 - Pick highest firepower of all enemies
+            local _TargetValue = 0
+            for _, _Candidate in pairs(_Enemies) do
+                if _Candidate.firePower > _TargetValue then
+                    _TargetValue = _Candidate.firePower
+                end
+            end
+    
+            for _, _Candidate in pairs(_Enemies) do
+                if _Candidate.firePower == _TargetValue then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
+            end
+        end,
+        function() -- 4 - Pick lowest % health of all enemies
+            local _TargetValue = 0
+            for _, _Candidate in pairs(_Enemies) do
+                local _HPFactor = self.getEntityCurrentHP(_Candidate) / self.getEntityMaxHP(_Candidate)
+                if _HPFactor > _TargetValue then
+                    _TargetValue = _HPFactor
+                end
+            end
+    
+            for _, _Candidate in pairs(_Enemies) do
+                local _HPFactor = self.getEntityCurrentHP(_Candidate) / self.getEntityMaxHP(_Candidate)
+                if _HPFactor == _TargetValue then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
+            end
+        end,
+        function() -- 5 - Pick highest % health of all enemies
+            local _TargetValue = 1.0
+            for _, _Candidate in pairs(_Enemies) do
+                local _HPFactor = self.getEntityCurrentHP(_Candidate) / self.getEntityMaxHP(_Candidate)
+                if _HPFactor < _TargetValue then
+                    _TargetValue = _HPFactor
+                end
+            end
+    
+            for _, _Candidate in pairs(_Enemies) do
+                local _HPFactor = self.getEntityCurrentHP(_Candidate) / self.getEntityMaxHP(_Candidate)
+                if _HPFactor == _TargetValue then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
+            end
+        end,
+        function() -- 6 - Pick enemy by target script value - i.e. "is_pirate"
+            for _, _Candidate in pairs(_Enemies) do
+                --If _TargetTag is not defined (or is set to false???? (not sure why you'd do this)) no candidates will be added
+                if self._Data._TargetTag and _Candidate:getValue(self._Data._TargetTag) then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
+            end
+        end,
+        function() -- 7 - Pick enemy station at random
+            for _, _Candidate in pairs(_Enemies) do
+                if _Candidate.type == EntityType.Station then
+                    table.insert(_TargetCandidates, _Candidate)
+                end 
+            end
+        end,
+        function() -- 8 - Pick random non-xsotan
+            local _Ships = {Sector():getEntitiesByType(EntityType.Ship)}
+            local _Stations = {Sector():getEntitiesByType(EntityType.Station)}
+    
+            for _, _Candidate in pairs(_Ships) do
+                if not _Candidate:getValue("is_xsotan") then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
+            end
+    
+            for _, _Candidate in pairs(_Stations) do
+                if not _Candidate:getValue("is_xsotan") then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
             end
         end
+    }
 
-        for _, _Candidate in pairs(_Enemies) do
-            if self.getEntityMaxHP(_Candidate) == _TargetValue then 
-                table.insert(_TargetCandidates, _Candidate)
-            end
-        end
-    elseif _TargetPriority == 3 then --Go through and find the highest firepower total of all enemies, then put any enemies that match that into a table.
-        local _TargetValue = 0
-        for _, _Candidate in pairs(_Enemies) do
-            if _Candidate.firePower > _TargetValue then
-                _TargetValue = _Candidate.firePower
-            end
-        end
+    self.Log(_MethodName, "Beginning... _TargetPriority is " .. tostring(_TargetPriority))
 
-        for _, _Candidate in pairs(_Enemies) do
-            if _Candidate.firePower == _TargetValue then
-                table.insert(_TargetCandidates, _Candidate)
-            end
-        end
-    elseif _TargetPriority == 4 then --Go through and find the lowest % health, then put any enemies that match that into a table.
-        local _TargetValue = 0
-        for _, _Candidate in pairs(_Enemies) do
-            local _HPFactor = self.getEntityCurrentHP(_Candidate) / self.getEntityMaxHP(_Candidate)
-            if _HPFactor > _TargetValue then
-                _TargetValue = _HPFactor
-            end
-        end
-
-        for _, _Candidate in pairs(_Enemies) do
-            local _HPFactor = self.getEntityCurrentHP(_Candidate) / self.getEntityMaxHP(_Candidate)
-            if _HPFactor == _TargetValue then
-                table.insert(_TargetCandidates, _Candidate)
-            end
-        end
-    elseif _TargetPriority == 5 then --Go through and find the highest % health, then put any enemies that match that into a table.
-        local _TargetValue = 1.0
-        for _, _Candidate in pairs(_Enemies) do
-            local _HPFactor = self.getEntityCurrentHP(_Candidate) / self.getEntityMaxHP(_Candidate)
-            if _HPFactor < _TargetValue then
-                _TargetValue = _HPFactor
-            end
-        end
-
-        for _, _Candidate in pairs(_Enemies) do
-            local _HPFactor = self.getEntityCurrentHP(_Candidate) / self.getEntityMaxHP(_Candidate)
-            if _HPFactor == _TargetValue then
-                table.insert(_TargetCandidates, _Candidate)
-            end
-        end
-    elseif _TargetPriority == 6 then --Go through and find all enemies with a specific script value - those go in the table.
-        for _, _Candidate in pairs(_Enemies) do
-            --If _TargetTag is not defined (or is set to false???? (not sure why you'd do this)) no candidates will be added
-            if self._Data._TargetTag and _Candidate:getValue(self._Data._TargetTag) then
-                table.insert(_TargetCandidates, _Candidate)
-            end
-        end
-    elseif _TargetPriority == 7 then --stations only.
-        for _, _Candidate in pairs(_Enemies) do
-            if _Candidate.type == EntityType.Station then
-                table.insert(_TargetCandidates, _Candidate)
-            end 
-        end
-    elseif _TargetPriority == 8 then --random non-xsotan.
-        local _Ships = {Sector():getEntitiesByType(EntityType.Ship)}
-        local _Stations = {Sector():getEntitiesByType(EntityType.Station)}
-
-        for _, _Candidate in pairs(_Ships) do
-            if not _Candidate:getValue("is_xsotan") then
-                table.insert(_TargetCandidates, _Candidate)
-            end
-        end
-
-        for _, _Candidate in pairs(_Stations) do
-            if not _Candidate:getValue("is_xsotan") then
-                table.insert(_TargetCandidates, _Candidate)
-            end
-        end
-    end
+    _TargetPriorityFunctions[_TargetPriority]()
 
     if #_TargetCandidates > 0 then
-        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.")
-        return _TargetCandidates[_Rgen:getInt(1, #_TargetCandidates)]
+        local chosenCandidate = nil
+        local attempts = 0
+
+        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
+
+        while not chosenCandidate and attempts < 10 do
+            local randomPick = getRandomEntry(_TargetCandidates)
+            if self.invincibleTargetCheck(randomPick) then
+                chosenCandidate = randomPick
+            end
+            attempts = attempts + 1
+        end
+
+        if not chosenCandidate then
+            self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random", 1)
+            chosenCandidate = getRandomEntry(_TargetCandidates)
+        end
+        
+        return chosenCandidate
     else
         self.Log(_MethodName, "WARNING - Could not find any target candidates.")
         return nil
+    end
+end
+
+function StationSiegeGun.invincibleTargetCheck(entity)
+    if not entity.invincible or self._Target_Invincible_Debug == 1 then
+        return true
+    else
+        return false
     end
 end
 
@@ -352,9 +390,9 @@ function StationSiegeGun.broadcastPrepForShotCall(_Target)
     self.Log(_MethodName, "Target is " .. tostring(_Target))
 
     local _Lines = {
-        "CHRRK....Secure...main....CHRRRK...pass...CHRRRK...FIRE!...CHRRK", --Zone of the Enders 2 reference that people aren't going to get.
+        "CHRRK....Secure...main...pass...CHRRRK...FIRE!...CHRRK", --Zone of the Enders 2 reference that people aren't going to get.
         "CHRRK...Main...CHRRRK...gun...CHRRRK",
-        "CHRRK...Targeting...CHRRRK..." .. _Target.name .. "...CHRRRK...die...CHRRK",
+        "CHRRK...Targeting...CHRRRK..." .. _Target.name .. "...CHRRRK",
         "CHRRK...Round...CHRRRK...loaded...CHRRK....main....CHRRRRRK",
         "CHRRK...Destroy...CHRRRRK...enemy....CHRRK"
     }
@@ -420,20 +458,15 @@ end
 
 --endregion
 
---region #CLIENT / SERVER CALLS
+--region #LOG / SECURE / RESTORE
 
-function StationSiegeGun.Log(_MethodName, _Msg, _OverrideDebug)
-    local _TempDebug = self._Debug
-    if _OverrideDebug then self._Debug = _OverrideDebug end
-    if self._Debug and self._Debug == 1 then
+function StationSiegeGun.Log(_MethodName, _Msg, _RequireDebugLevel)
+    _RequireDebugLevel = _RequireDebugLevel or 1
+
+    if self._Debug >= _RequireDebugLevel then
         print("[ESCC Station Siege Gun] - [" .. _MethodName .. "] - " .. _Msg)
     end
-    if _OverrideDebug then self._Debug = _TempDebug end
 end
-
---endregion
-
---region #SECURE / RESTORE
 
 function StationSiegeGun.secure()
     local _MethodName = "Secure"

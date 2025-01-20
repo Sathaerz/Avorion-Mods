@@ -1,6 +1,8 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
+include("randomext")
+
 ESCCUtil = include("esccutil")
 
 --Don't remove this or else the script might break.
@@ -168,13 +170,21 @@ end
 function SiegeGunShot.explosionEffect(_Position)
     local _MethodName = "Explosion Effect"
     self.Log(_MethodName, "Showing explosion!!!")
-    local _Rgen = random()
 
-    for _ = 1, 4 do
-        local _Offset = vec3(_Rgen:getFloat(-3, 3), _Rgen:getFloat(-3, 3), _Rgen:getFloat(-3, 3))
+    local rand = random()
+    local offMin = -12
+    local offMax = 12
+
+    for idx = 1, 4 do
+        local f1 = rand:getFloat(offMin, offMax)
+        local f2 = rand:getFloat(offMin, offMax)
+        local f3 = rand:getFloat(offMin, offMax)
+        local boomSize = rand:getFloat(20, 28)
+
+        local _Offset = vec3(f1, f2, f3)
         local _ExplosionPos = _Position + _Offset
-        local _Size = _Rgen:getFloat(12, 18)
-        Sector():createExplosion(_ExplosionPos, _Size, false)
+
+        Sector():createExplosion(_ExplosionPos, boomSize, false)
     end
 end
 

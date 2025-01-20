@@ -1,10 +1,13 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 
+include("randomext")
+
 --namespace PriorityAttacker
 PriorityAttacker = {}
 local self = PriorityAttacker
 
 self._Debug = 0
+self._Target_Invincible_Debug = 0
 
 self._Data = {}
 --[[
@@ -18,7 +21,7 @@ self._Data = {}
 
 function PriorityAttacker.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing AI Priority Attacker v4 script on entity.")
+    self.Log(_MethodName, "Initializing AI Priority Attacker v6 script on entity.")
 
     self._Data = _Values or {}
 
@@ -34,6 +37,7 @@ function PriorityAttacker.updateServer(_TimeStep)
     self.Log(_MethodName, "Running. Looking for tag " .. tostring(self._Data._TargetTag))
 
     local _ShipAI = ShipAI()
+    local aiState = _ShipAI.state
 
     --Pick a new target and attack that target.
     if self._Data._CurrentTarget == nil or not valid(self._Data._CurrentTarget) then
@@ -42,9 +46,15 @@ function PriorityAttacker.updateServer(_TimeStep)
 
     --If we couldn't find a new, valid target, just set the AI to aggressive.
     if self._Data._CurrentTarget == nil or not valid(self._Data._CurrentTarget) then
-        _ShipAI:setAggressive()
+        if aiState ~= AIState.Attack and aiState ~= AIState.Aggressive then
+            self.Log(_MethodName, "Picked target is dead and ship AI is not aggressive state - setting to general attacking state.")
+            _ShipAI:setAggressive()
+        end
     else
-        _ShipAI:setAttack(self._Data._CurrentTarget)
+        if _ShipAI.attackedEntity ~= self._Data._CurrentTarget.index then
+            self.Log(_MethodName, "Ship not attacking picked target - attacking picked target.")
+            _ShipAI:setAttack(self._Data._CurrentTarget)
+        end
     end
 end
 
@@ -85,12 +95,36 @@ function PriorityAttacker.pickNewTarget()
     _TargetPriorityFunctions[_TargetPriority]()
 
     if #_TargetCandidates > 0 then
-        shuffle(random(), _TargetCandidates)
-        self.Log(_MethodName, "Found " .. tostring(#_TargetCandidates) .. " suitable target. Picking a random one.")
-        return _TargetCandidates[1]
+        local chosenCandidate = nil
+        local attempts = 0
+
+        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.")
+
+        while not chosenCandidate and attempts < 10 do
+            local randomPick = getRandomEntry(_TargetCandidates)
+            if self.invincibleTargetCheck(randomPick) then
+                chosenCandidate = randomPick
+            end
+            attempts = attempts + 1
+        end
+
+        if not chosenCandidate then
+            self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random")
+            chosenCandidate = getRandomEntry(_TargetCandidates)
+        end
+        
+        return chosenCandidate
     else
         self.Log(_MethodName, "WARNING - Could not find any target candidates.")
         return nil
+    end
+end
+
+function PriorityAttacker.invincibleTargetCheck(entity)
+    if not entity.invincible or self._Target_Invincible_Debug == 1 then
+        return true
+    else
+        return false
     end
 end
 

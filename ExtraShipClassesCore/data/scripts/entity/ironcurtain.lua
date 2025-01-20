@@ -54,9 +54,14 @@ function IronCurtain.updateServer(_TimeStep)
             _entity.invincible = false
             _durability.invincibility = 0.0
 
+            _entity:setValue("escc_active_ironcurtain", nil) --Get rid of value before terminating.
+
             Sector():broadcastChatMessage("", 3, "The ${_SHIP}'s iron curtain expires!" % { _SHIP = Entity().translatedTitle })
             terminate()
             return
+        else
+            _entity:setValue("escc_active_ironcurtain", true)
+            _entity.invincible = true
         end
     else
         _durability.invincibility = self._Data._MinDura --So we don't get blasted before invincibility can be set.
@@ -79,6 +84,7 @@ function IronCurtain.onDamaged(_OwnID, _Amount, _InflictorID)
             self._Data._SentMessage = true
         end
         
+        _Entity:setValue("escc_active_ironcurtain", true)
         _Entity.invincible = true
         self._Data._Active = true
     end

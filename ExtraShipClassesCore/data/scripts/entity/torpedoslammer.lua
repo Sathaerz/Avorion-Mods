@@ -10,6 +10,7 @@ TorpedoSlammer = {}
 local self = TorpedoSlammer
 
 self._Debug = 0
+self._Target_Invincible_Debug = 0
 
 self._Data = {}
 --[[
@@ -19,6 +20,7 @@ self._Data = {}
         _TimeToActive           = Time in seconds until this script becomes active.
         _CurrentTarget          = The current target of the script
         _PreferWarheadType      = This script will always use this warhead type if this value is supplied. Otherwise a random type is used.
+        _PreferSecondaryWarheadType     = If _PreferWarheadType is also set, this allows a second type of warhead to be picked at random. Does nothing if _PreferWarheadType is not set.
         _PreferBodyType         = This script will always use this body type if this value is supplied. Otherwise a random type is used.
         _UpAdjust               = Adjusts the spawned torpedo upwards or not. Used for not spawning a torpedo in the ship's bounding box which does weird shit to the AI.
         _UpAdjustFactor         = Determines how much upwards to adjust the spawned torpedo. Defaults to 1.
@@ -27,7 +29,14 @@ self._Data = {}
         _DurabilityFactor       = Multiplies the durability of torpedoes by this amount. Useful for making torpedoes that are hard to shoot down.
         _UseEntityDamageMult    = Multiplies the damage of the torpedoes by the attached entity's damage multiplier. Useful for overdrive or avenger enemies.
         _UseStaticDamageMult    = Sets a multiplier on the first update and does not dynamically use the entity's damage multiplier.
-        _TargetPriority         = 1 = most firepower, 2 = by script value, 3 = random non-xsotan, 4 = random enemy, 5 = player's current ship - specified by _pindex, 6 = random pirate / xsotan
+        _TargetPriority         = Target priority set per below:
+            1 = most firepower
+            2 = by script value
+            3 = random non-xsotan
+            4 = random enemy
+            5 = player's current ship - specified by _pindex
+            6 = random pirate or xsotan
+            7 = random player or alliance ship or station
         _TargetTag              = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
         _TorpOffset             = Applies an offset to torpedo generation. Defaults to 0. Set to a negative value for higher tech level torpedoes.
         _pindex                 = The index of the player to target w/ _TargetPriority 5. _TargetPriority cannot be set to 5 if this value is nil.
@@ -59,7 +68,7 @@ self._Data = {}
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v18 script on entity.", 1)
+    self.Log(_MethodName, "Initializing Torpedo Slammer v19 script on entity.", 1)
 
     self._Data = _Values or {}
 
@@ -226,7 +235,7 @@ function TorpedoSlammer.pickNewTarget()
         end,
         function() --4 = Pick a random enemy.
             for _, _Candidate in pairs(_Enemies) do
-                table.insert(_TargetCandidates, _Candidate)            
+                table.insert(_TargetCandidates, _Candidate)
             end
         end,
         function () --5 = Pick the player's current ship.
@@ -239,16 +248,24 @@ function TorpedoSlammer.pickNewTarget()
                 end
             end
         end,
-        function () --6 = Random pirate / xsotan
+        function () --6 = Random pirate or xsotan
             local _Pirates = { _Sector:getEntitiesByScriptValue("is_pirate") }
             local _Xsotan = { _Sector:getEntitiesByScriptValue("is_xsotan") }
 
-            for _, _Pirate in pairs(_Pirates) do
-                table.insert(_TargetCandidates, _Pirate)
+            for _, _Candidate in pairs(_Pirates) do
+                table.insert(_TargetCandidates, _Candidate)
             end
 
-            for _, _Xsotan in pairs(_Xsotan) do
-                table.insert(_TargetCandidates, _Xsotan)
+            for _, _Candidate in pairs(_Xsotan) do
+                table.insert(_TargetCandidates, _Candidate)
+            end
+        end,
+        function() --7 - random player or alliance ship or station
+            local _Entities = { _Sector:getEntities() }
+            for _, _Candidate in pairs(_Entities) do
+                if (_Candidate.type == EntityType.Ship or _Candidate.type == EntityType.Station) and _Candidate.playerOrAllianceOwned then
+                    table.insert(_TargetCandidates, _Candidate)
+                end
             end
         end
     }
@@ -256,12 +273,36 @@ function TorpedoSlammer.pickNewTarget()
     _TargetPriorityFunctions[_TargetPriority]()
 
     if #_TargetCandidates > 0 then
-        shuffle(random(), _TargetCandidates)
+        local chosenCandidate = nil
+        local attempts = 0
+
         self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
-        return _TargetCandidates[1]
+
+        while not chosenCandidate and attempts < 10 do
+            local randomPick = getRandomEntry(_TargetCandidates)
+            if self.invincibleTargetCheck(randomPick) then
+                chosenCandidate = randomPick
+            end
+            attempts = attempts + 1
+        end
+
+        if not chosenCandidate then
+            self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random", 1)
+            chosenCandidate = getRandomEntry(_TargetCandidates)
+        end
+        
+        return chosenCandidate
     else
         self.Log(_MethodName, "WARNING - Could not find any target candidates.", 1)
         return nil
+    end
+end
+
+function TorpedoSlammer.invincibleTargetCheck(entity)
+    if not entity.invincible or self._Target_Invincible_Debug == 1 then
+        return true
+    else
+        return false
     end
 end
 
@@ -346,16 +387,35 @@ function TorpedoSlammer.fireAtTarget()
     Sector():createEntity(_Desc)
 end
 
+function TorpedoSlammer.getWarheadType(rgen)
+    local methodName = "Get Warhead Type"
+    local _WarheadType = nil
+
+    if self._Data._PreferWarheadType then
+        self.Log(methodName, "Has preferred warhead type - checking for secondary type.", 1)
+        --Check to see if we have a secondary preferred warhead type
+        if self._Data._PreferSecondaryWarheadType then
+            self.Log(methodName, "Has secondary preferred type - picking randomly.", 1)
+            local warheadTable = { self._Data._PreferWarheadType, self._Data._PreferSecondaryWarheadType }
+            _WarheadType = getRandomEntry(warheadTable)
+        else
+            self.Log(methodName, "No secondary type - using primary.", 1)
+            _WarheadType = self._Data._PreferWarheadType
+        end
+    else
+        _WarheadType = rgen:getInt(1, 10)
+    end
+
+    return _WarheadType
+end
+
 function TorpedoSlammer.generateTorpedo()
     local _MethodName = "Generate Torepedo"
     local _Rgen = random()
     local _TorpX, _TorpY = Sector():getCoordinates()
     local _Generator = TorpedoGenerator()
 
-    local _WarheadType = self._Data._PreferWarheadType
-    if not _WarheadType then
-        _WarheadType = _Rgen:getInt(1, 10)
-    end
+    local _WarheadType = self.getWarheadType(_Rgen)
 
     local _BodyType = self._Data._PreferBodyType
     if not _BodyType then
@@ -377,17 +437,15 @@ function TorpedoSlammer.resetTimeToActive(_Time)
     self._Data._TimeToActive = _Time
 end
 
---region #CLIENT / SERVER CALLS
+--region #LOG / SECURE / RESTORE
 
-function TorpedoSlammer.Log(_MethodName, _Msg, _RequireLogLevel)
-    if self._Debug >= _RequireLogLevel then
+function TorpedoSlammer.Log(_MethodName, _Msg, _RequireDebugLevel)
+    _RequireDebugLevel = _RequireDebugLevel or 1
+
+    if self._Debug >= _RequireDebugLevel then
         print("[TorpedoSlammer] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end
-
---endregion
-
---region #SECURE / RESTORE
 
 function TorpedoSlammer.secure()
     local _MethodName = "Secure"

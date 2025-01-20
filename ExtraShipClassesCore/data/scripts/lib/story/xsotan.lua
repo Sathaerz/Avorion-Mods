@@ -351,7 +351,7 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     ship.crew = ship.idealCrew
     ship.shieldDurability = ship.shieldMaxDurability --This gets done again in the dreadnought script.
 
-    -- Reduce automatic shield recharge and movement speed, its annoying when it always moves directly in front of you...
+    -- From Hammelpilaw: Reduce automatic shield recharge and movement speed, its annoying when it always moves directly in front of you...
 	ship:addBaseMultiplier(StatsBonuses.Velocity, -0.7)
     ship:addBaseMultiplier(StatsBonuses.Acceleration, -0.7)
 	ship:addBaseMultiplier(StatsBonuses.ShieldRecharge, 10)
@@ -369,8 +369,9 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
         {rarity = Rarity(RarityType.Rare), amount = 3 + (bonusAmount * 2), odds = 1 },
         {rarity = Rarity(RarityType.Exceptional), amount = 3 + bonusAmount, odds = 1 }
     }
-    --A bit less generous than the original incarnation but I don't want to give the player an easy source of legendaries too far out.
-    if dist < 300 and dangerFactor >= 5 then
+    --A bit less generous than the original incarnation but I don't want to give the player an easy source of legendaries too far out. (or too often)
+    --The original was balanced around occurring at a fixed schedule, but the player can take this mission as often as they want - especially if they have the extra mission mod.
+    if dist < 350 and dangerFactor >= 5 then
         local useOdds = 0.5
         if dist < coreDist and killedGuardian then
             useOdds = 1.0
@@ -424,6 +425,9 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     ship:addScript("enemies/esccxsotandreadnought.lua", esccDreadnoughtValues)
     ship:setValue("is_xsotan", true)
     ship:setValue("xsotan_dreadnought", true)
+    if dangerFactor >= 5 then
+        ship:addScript("internal/common/entity/background/legendaryloot.lua")
+    end
 
     --normally this is done much earlier, but we can't add the torpedo slammer until after we set is_xsotan otherwise it messes up the target priority.
     --add torpedoes
@@ -431,15 +435,21 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
         local torpDamageMultiplier = ship.damageMultiplier / 2
         --add a torpedo slammer - similar values to the ballistyx, except we want _UpAdjust to be true.
         --use a static multiplier that's half of what's given to the dreadnought.
-        local torpROF = 4
+        local torpROF = 6
         local torpDurability = 4
         if dangerFactor == 10 then
-            torpROF = 2
-            torpDurability = 6
+            torpROF = 4
+            torpDurability = 8
+
+            --much more dangerous on sicko mode.
+            if killedGuardian and dist < coreDist then
+                torpROF = 2
+                torpDurability = 16
+            end
         end 
 
         local _TorpSlammerValues = {
-            _TimeToActive = 12,
+            _TimeToActive = 15,
             _ROF = torpROF,
             _DamageFactor = torpDamageMultiplier,
             _DurabilityFactor = torpDurability,
@@ -455,7 +465,7 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
             _MaxBoostCharges = 10
         }
 
-        --basically boosts 4x as quickly
+        --basically boosts 4x as quickly on sicko mode
         if killedGuardian and dist < coreDist then
             boosterValues._ChargesMultiplier = 2
             boosterValues._BoostCycle = 30

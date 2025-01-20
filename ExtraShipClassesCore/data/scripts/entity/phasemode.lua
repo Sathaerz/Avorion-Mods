@@ -24,27 +24,37 @@ function Unreal.updateServer(timeStep)
     local entity = Entity()
     local shield = Shield(entity)
     local showAnimation = false
+    local activeIronCurtain = entity:getValue("escc_active_ironcurtain")
     --1 minute out, 10 seconds in.
     if self.phaseMode then
+        if not activeIronCurtain then
+            --In phasemode and no iron curtain active - set ship to invincible.
+            entity.invincible = true
+            shield.invincible = true
+        end
+
         if self.timeInPhase >= 10 then
             --10 seconds have passed. Flip us to being OUT of the phaseMode.
             self.Log(_MethodName, "Exiting PhaseMode")
             self.phaseMode = false
             self.timeInPhase = 0
-            entity.invincible = false
-            shield.invincible = false
         else
             --blink to give a visual indication of the ship being phased out.
             showAnimation = true
         end
     else
+        if not activeIronCurtain then
+            --Not in phasemode and no iron curtain active - ship is no longer invincible.
+            entity.invincible = false
+            shield.invincible = false
+        end
+
         if self.timeInPhase >= 30 then
             --30 seconds have passed. Flip us to being IN the phaseMode.
             self.Log(_MethodName, "Entering PhaseMode")
             self.phaseMode = true
             self.timeInPhase = 0
-            entity.invincible = true
-            shield.invincible = true
+            
             showAnimation = true
         end
     end
