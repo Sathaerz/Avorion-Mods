@@ -27,7 +27,7 @@ mission.data.title = mission._Name
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." },
-    { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
+    { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
     { text = "Defend the miners", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Don't let too many miners be destroyed - ${_DESTROYED}/${_MAXDESTROYED} Lost", bulletPoint = true, fulfilled = false, visible = false },
     { text = "(Optional) Harvest resources", bulletPoint = true, fulfilled = false, visible = false }
@@ -102,12 +102,19 @@ function initialize(_Data_in, bulletin)
         mission.data.custom.destroyed = 0
         mission.data.custom.inBarrier = _Data_in.inBarrier
 
+        if not mission.data.custom.friendlyFaction then
+            print("ERROR: Friendly faction is nil - aborting.")
+            terminate()
+            return
+        end
+
         --[[=====================================================
             MISSION DESCRIPTION SETUP:
         =========================================================]]
         mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
         mission.data.description[2].text = _Data_in.initialDesc
-        mission.data.description[2].arguments = { x = _X, y = _Y, enemyName = mission.data.custom.enemyName }
+        mission.data.description[2].arguments = { _X = _X, _Y = _Y, enemyName = mission.data.custom.enemyName }
+        mission.data.description[3].arguments = { _X = _X, _Y = _Y }
         mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
     end
 
@@ -119,7 +126,11 @@ end
 
 --region #PHASE CALLS
 
-mission.getRewardedItems = function()
+mission.globalPhase.timers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+
+mission.globalPhase.getRewardedItems = function()
     --25% of getting a random rarity mining upgrade.
     if random():test(0.25) then
         local _SeedInt = random():getInt(1, 20000)
@@ -135,8 +146,6 @@ mission.getRewardedItems = function()
     end
 end
 
-mission.globalPhase = {}
-mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
     local methodName = "Global Phase On Abandon"
 
@@ -204,7 +213,7 @@ end
 --endregion
 
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
     local _random = random()
     local missionTime = 20 * 60 --minimum 20 mins
@@ -230,7 +239,6 @@ end
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBeginServer = function()
     local methodName = "Phase 2 On Begin Server"
     mission.Log(methodName, "Starting.")
@@ -418,10 +426,14 @@ function spawnMiningSector(x, y)
         if _random:test(0.5) then generator:createBigAsteroid(mat) end
     end
 
+    --Always do 1 @ maximum
+    generator:createAsteroidField(1)
+
+    --Then do 4-6 that are rich depending on danger level
     local numRichFields = _random:getInt(5, 7)
 
     for _ = 1, numRichFields do
-        generator:createAsteroidField(1)
+        generator:createAsteroidField(0.1 * mission.data.custom.dangerLevel)
     end
 
     local numSmallFields = _random:getInt(8, 15)
@@ -458,21 +470,18 @@ function onMinerFinished(_Generated)
 
     local _Ship = _Generated[1]
 
-    --Multiply durability so the ship isn't instakilled.
+    --Multiply durability so the ship isn't instakilled. The miner can still be killed fairly easily by say... a hardcore prowler. So bring good firepower!
     mission.Log(methodName, "Updating durability.")
     local _Dura = Durability(_Ship)
 
-    local _DurabilityBonus = 2.5
-    local _ShieldDurabilityBonus = 2.5
-
+    local _DurabilityBonus = 3
     if mission.data.custom.inBarrier then
-        _DurabilityBonus = 4
-        _ShieldDurabilityBonus = 4
+        _DurabilityBonus = 5
     end
 
     local _Shield = Shield(_Ship)
     if _Shield then
-        _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * _ShieldDurabilityBonus
+        _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * _DurabilityBonus
     else
         _DurabilityBonus = _DurabilityBonus * 2
     end
@@ -917,7 +926,7 @@ function spawnKickoutWave()
         end
 
         --the parthenope comes with avenger baked in.
-        xParthenope:addScriptOnce("ironcurtain.lua", { _Duration = math.huge, _SendMessage = false })
+        xParthenope:addScriptOnce("ironcurtain.lua", { _Duration = math.huge })
         xParthenope:setValue("xsotan_no_despawn", true)
     end
 
@@ -939,45 +948,31 @@ end
 function formatDescription(_Station, _ThreatType)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
+    local threatIdx = 1
+    if _ThreatType ~= 1 then
+        threatIdx = 2
+    end
 
-    local _DescriptionType = 1 --Neutral
+    local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
+        descriptionType = 2 --Aggressive.
     elseif _Aggressive <= -0.5 then
-        _DescriptionType = 3 --Peaceful.
+        descriptionType = 3 --Peaceful.
     end
 
-    local _FinalDescription = ""
-    if _DescriptionType == 1 then --Neutral.
-        _FinalDescription = "We've received reports that some solar wind currents have blown a number of disparate asteroid belts into a converging course. We believe they'll meet in sector (${x}:${y}). We're putting together a task force to take advantage of this, and we're looking for a captain to lead it. Protect our mining operation. We'll pay you for your efforts. You're also welcome to mine as much as you want."
-    
-        if _ThreatType == 1 then
-            _FinalDescription = _FinalDescription .. "\n\nA nearby faction - ${enemyName} - has claimed the sector. Protect our ships from any aggression."
-        else
-            _FinalDescription = _FinalDescription .. "\n\nWe're not sure what threats are out there. Proceed with caution."
-        end
+    local descriptionTable = {
+        "We've received reports that some solar wind currents have blown a number of disparate asteroid belts into a converging course. We believe they'll meet in sector (${_X}:${_Y}). We're putting together a task force to take advantage of this, and we're looking for a captain to lead it. Protect our mining operation. We'll pay you for your efforts. You're also welcome to mine as much as you want.",
+        "Some asteroid fields will be converging in sector (${_X}:${_Y}) on solar currents. We're getting ready to take advantage of this, but our military is engaged elsewhere and cannot respond. It displeases us to have to turn to an independent captain, but we have no other options. You will protect our miners - for compensation, of course. You may also mine the field - how magnanimous of us, yes?",
+        "Peace be upon you, captain. We've received word that a few scattered belts of asteroids will be merging in sector (${_X}:${_Y}) due to the local solar winds. We're putting together a group of miners to harvest the bounty of resources, but our military is ill-suited for anything more than peacekeeping. We need your help. Please protect our miners. You are welcome to mine as well."
+    }
 
-    elseif _DescriptionType == 2 then --Aggressive.
-        _FinalDescription = "Some asteroid fields will be converging in sector (${x}:${y}) on solar currents. We're getting ready to take advantage of this, but our military is engaged elsewhere and cannot respond. It displeases us to have to turn to an independent captain, but we have no other options. You will protect our miners - for compensation, of course. You may also mine the field - how magnanimous of us, yes?"
-    
-        if _ThreatType == 1 then
-            _FinalDescription = _FinalDescription .. "\n\nA nearby faction - ${enemyName} - has claimed the sector. How laughable. Crush them if they dare attack."
-        else
-            _FinalDescription = _FinalDescription .. "\n\nThe pirate and xsotan scum are always lurking. Crush them if they dare attack us."
-        end
+    local descriptionThreatTable = {
+        { "\n\nA nearby faction - ${enemyName} - has claimed the sector. Protect our ships from any aggression.", "\n\nWe're not sure what threats are out there. Proceed with caution." },
+        { "\n\nA nearby faction - ${enemyName} - has claimed the sector. How laughable. Crush them if they dare attack.", "\n\nThe pirate and xsotan scum are always lurking. Crush them if they dare attack us." },
+        { "\n\nA nearby faciton - ${enemyName} - has claimed to the sector. We fear a peaceful solution can't be found.", "\n\nWe don't know what threats are out there. Please keep our people safe." }
+    }
 
-    elseif _DescriptionType == 3 then --Peaceful.
-        _FinalDescription = "Peace be upon you, captain. We've received word that a few scattered belts of asteroids will be merging in sector (${x}:${y}) due to the local solar winds. We're putting together a group of miners to harvest the bounty of resources, but our military is ill-suited for anything more than peacekeeping. We need your help. Please protect our miners. You are welcome to mine as well."
-    
-        if _ThreatType == 1 then
-            _FinalDescription = _FinalDescription .. "\n\nA nearby faciton - ${enemyName} - has claimed to the sector. We fear a peaceful solution can't be found."
-        else
-            _FinalDescription = _FinalDescription .. "\n\nWe don't know what threats are out there. Please keep our people safe."
-        end
-
-    end
-
-    return _FinalDescription
+    return descriptionTable[descriptionType] .. descriptionThreatTable[descriptionType][threatIdx]
 end
 
 mission.makeBulletin = function(_Station)
@@ -1029,6 +1024,9 @@ mission.makeBulletin = function(_Station)
         else
             threatType = _Rgen:getInt(1, 2) + 1 --pirates or xsotan.
         end
+        if giverFaction == enemyFaction then
+            threatType = _Rgen:getInt(1, 2) + 1 --pirates or xsotan.
+        end
     end
 
     local baseReward = 52500
@@ -1060,13 +1058,13 @@ mission.makeBulletin = function(_Station)
         difficulty =  _Difficulty,
         reward = "¢${reward}",
         script = "missions/thedig.lua",
-        formatArguments = {x = target.x, y = target.y, reward = createMonetaryString(reward), enemyName = enemyFactionName},
+        formatArguments = {_X = target.x, _Y = target.y, reward = createMonetaryString(reward), enemyName = enemyFactionName},
         msg = "Thank you. Please meet our miners in sector \\s(%1%:%2%).",
         giverTitle = _Station.title,
         giverTitleArgs = _Station:getTitleArguments(),
         onAccept = [[
             local self, player = ...
-            player:sendChatMessage(Entity(self.arguments[1].giver), 0, self.msg, self.formatArguments.x, self.formatArguments.y)
+            player:sendChatMessage(Entity(self.arguments[1].giver), 0, self.msg, self.formatArguments._X, self.formatArguments._Y)
         ]],
 
         -- data that's important for our own mission
