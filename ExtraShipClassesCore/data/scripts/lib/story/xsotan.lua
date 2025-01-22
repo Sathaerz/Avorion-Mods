@@ -432,7 +432,7 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     --normally this is done much earlier, but we can't add the torpedo slammer until after we set is_xsotan otherwise it messes up the target priority.
     --add torpedoes
     if useTorps or (useTorpsCore and dist < coreDist) then
-        local torpDamageMultiplier = ship.damageMultiplier / 2
+        local torpDamageMultiplier = math.max(ship.damageMultiplier / 2, 1) --We want 1 as a minimum value
         --add a torpedo slammer - similar values to the ballistyx, except we want _UpAdjust to be true.
         --use a static multiplier that's half of what's given to the dreadnought.
         local torpROF = 6
