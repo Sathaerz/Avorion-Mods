@@ -152,6 +152,11 @@ end
 --region #PHASE CALLS
 
 mission.globalPhase.timers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     if mission.data.custom.destroyed == 0 then
         mission.data.punishment.relations = mission.data.punishment.relations / 2
@@ -222,13 +227,13 @@ end
 --endregion
 
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.timeLimit = nil 
     mission.data.timeLimitInDescription = false 
+end
 
+mission.phases[1].onTargetLocationArrivalConfirmed = function(x, y)
     nextPhase()
 end
 
@@ -294,9 +299,6 @@ end
 
 --endregion
 
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
 mission.phases[2].onBeginServer = function()
     mission.data.description[3].fulfilled = true
     mission.data.description[4].arguments = { _ESCORTED = mission.data.custom.escorted, _MAXESCORTED = mission.data.custom.maxEscorted }
