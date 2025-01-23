@@ -283,7 +283,7 @@ function onHuntersFinished(_Generated)
         "Time to die, ${player}."
     }
 
-    _Player:sendChatMessage(_Generated[1], ChatMessageType.Chatter, randomEntry(headhunterMessages) % {player = _Player.name})
+    _Player:sendChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(headhunterMessages) % {player = _Player.name})
 end
 
 function finishAndReward()
