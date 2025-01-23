@@ -6,7 +6,7 @@ include ("randomext")
 
 local Balancing = include("galaxy")
 
-mission._Debug = 1
+mission._Debug = 0
 mission._Name = "Analyze Xsotan Specimen"
 
 --region #INIT
