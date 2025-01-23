@@ -240,7 +240,7 @@ function ESCCXsotanDreadnought.setCharging()
     for i = 1, numShips do
         if numSpecialXsotanSpawned < maxSpecialXsotan and xrand:test(specialXsotanChance) then
             local potentialSpawns = { "Quantum", "Summoner", "Special" }
-            table.insert(spawnTable, getRandomEntry(potentialSpawns))
+            table.insert(spawnTable, randomEntry(potentialSpawns))
             numSpecialXsotanSpawned = numSpecialXsotanSpawned + 1 --cap at 3 @ danger 10.
         else
             table.insert(spawnTable, "Ship")
@@ -261,7 +261,7 @@ function ESCCXsotanDreadnought.setCharging()
         elseif shipType == "Summoner" then
             alliedXsotan = Xsotan.createSummoner(position, shipVolumeFactor)
         else
-            local xsotanFunction = getRandomEntry(Xsotan.getSpecialXsotanFunctions())
+            local xsotanFunction = randomEntry(Xsotan.getSpecialXsotanFunctions())
 
             alliedXsotan = xsotanFunction(position, shipVolumeFactor)
         end

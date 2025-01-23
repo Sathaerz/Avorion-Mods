@@ -287,7 +287,7 @@ function Oppressor.pickHookTarget()
 
     if #targetCandidates > 0 then
         self.Log(methodName, "Found at least one suitable candidate. Picking a random one.")
-        return getRandomEntry(targetCandidates)
+        return randomEntry(targetCandidates)
     else
         self.Log(methodName, "WARNING - Could not find any target candidates.")
         return nil

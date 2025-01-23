@@ -313,7 +313,7 @@ function LaserSniper.pickNewTarget()
         self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
 
         while not chosenCandidate and attempts < 10 do
-            local randomPick = getRandomEntry(_TargetCandidates)
+            local randomPick = randomEntry(_TargetCandidates)
             if self.invincibleTargetCheck(randomPick) then
                 chosenCandidate = randomPick
             end
@@ -322,7 +322,7 @@ function LaserSniper.pickNewTarget()
 
         if not chosenCandidate then
             self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random", 1)
-            chosenCandidate = getRandomEntry(_TargetCandidates)
+            chosenCandidate = randomEntry(_TargetCandidates)
         end
         
         return chosenCandidate

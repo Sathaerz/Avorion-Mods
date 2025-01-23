@@ -75,7 +75,7 @@ function Parthenope.spawnMinion()
 
     local specialSpawnChance = math.min(0.5,  xSpawned * 0.005) --maxes out at 50% after 100 spawns
     if random():test(specialSpawnChance) then
-        local _XsotanFunction = getRandomEntry(Xsotan.getSpecialXsotanFunctions())
+        local _XsotanFunction = randomEntry(Xsotan.getSpecialXsotanFunctions())
 
         minion = _XsotanFunction(matrix, 1)
     else

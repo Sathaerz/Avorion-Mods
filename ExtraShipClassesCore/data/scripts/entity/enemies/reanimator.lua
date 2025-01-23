@@ -81,7 +81,7 @@ function Reanimator.findSuitableWreck()
     end
 
     if #_CandidateWrecks > 0 then
-        return getRandomEntry(_CandidateWrecks)
+        return randomEntry(_CandidateWrecks)
     else
         return
     end

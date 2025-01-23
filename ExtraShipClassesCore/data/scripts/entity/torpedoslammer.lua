@@ -279,7 +279,7 @@ function TorpedoSlammer.pickNewTarget()
         self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
 
         while not chosenCandidate and attempts < 10 do
-            local randomPick = getRandomEntry(_TargetCandidates)
+            local randomPick = randomEntry(_TargetCandidates)
             if self.invincibleTargetCheck(randomPick) then
                 chosenCandidate = randomPick
             end
@@ -288,7 +288,7 @@ function TorpedoSlammer.pickNewTarget()
 
         if not chosenCandidate then
             self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random", 1)
-            chosenCandidate = getRandomEntry(_TargetCandidates)
+            chosenCandidate = randomEntry(_TargetCandidates)
         end
         
         return chosenCandidate
@@ -397,7 +397,7 @@ function TorpedoSlammer.getWarheadType(rgen)
         if self._Data._PreferSecondaryWarheadType then
             self.Log(methodName, "Has secondary preferred type - picking randomly.", 1)
             local warheadTable = { self._Data._PreferWarheadType, self._Data._PreferSecondaryWarheadType }
-            _WarheadType = getRandomEntry(warheadTable)
+            _WarheadType = randomEntry(warheadTable)
         else
             self.Log(methodName, "No secondary type - using primary.", 1)
             _WarheadType = self._Data._PreferWarheadType

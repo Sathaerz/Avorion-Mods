@@ -10,6 +10,8 @@ include ("galaxy")
 include ("stringutility")
 include ("callable")
 include ("relations")
+include ("randomext")
+
 ESCCUtil = include("esccutil")
 
 --Don't remove this or else the script might break. You know the drill by now.

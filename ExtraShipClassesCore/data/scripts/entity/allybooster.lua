@@ -90,7 +90,7 @@ function AllyBooster.boost()
 
     if #_Allies > 0 then
         --Get ally to boost / script to boost with
-        local _TargetAlly = getRandomEntry(_Allies)
+        local _TargetAlly = randomEntry(_Allies)
 
          --Make this a bit smarter and don't try to double add a script to an ally.
         local possibleScripts = {}
@@ -100,7 +100,7 @@ function AllyBooster.boost()
             end
         end
 
-        local _AllyScript = getRandomEntry(possibleScripts)
+        local _AllyScript = randomEntry(possibleScripts)
 
         --Get positions for laser
         local _AllyPosition = _TargetAlly.translationf
