@@ -86,17 +86,16 @@ function initialize(_Data_in)
             local _Sector = Sector()
             local _Giver = Entity(_Data_in.giver)
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .spawnedSecondWave
-                .friendlyFaction
-                .battleshipName
+                CUSTOM MISSION DATA SETUP
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.spawnedSecondWave = false
             mission.data.custom.friendlyFaction = _Giver.factionIndex
             mission.data.custom.battleshipName = ""
 
+            --[[=====================================================
+                MISSION DESCRIPTION SETUP:
+            =========================================================]]
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y }
@@ -127,8 +126,11 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
 
 --region #GLOBALPHASE TIMERS
 
@@ -140,13 +142,7 @@ mission.globalPhase.timers[1] = {
         local _MethodName = "Global Phase Timer"
         mission.Log(_MethodName, "Beginning.")
 
-        local _X, _Y = Sector():getCoordinates()
-        local _onLocation = false
-        if _X == mission.data.location.x and _Y == mission.data.location.y then
-            _onLocation = true
-        end
-
-        if _onLocation and mission.data.custom.dangerLevel >= 8 and not mission.data.custom.spawnedSecondWave then
+        if atTargetLocation() and mission.data.custom.dangerLevel >= 8 and not mission.data.custom.spawnedSecondWave then
             local _Pirates = {Sector():getEntitiesByScriptValue("is_pirate")}
 
             if #_Pirates == 1 then
@@ -163,9 +159,7 @@ end
 --endregion
 
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
@@ -183,17 +177,15 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
         "I guess this is it. At least we'll be taking you with us.",
         "Witness us!",
         "Never thought we'd die running from a do-gooder.",
-        "To infinity! And beyond!"
+        "To infinity! And beyond!",
+        "One shall stand! One shall fall!"
     }
 
-    Sector():broadcastChatMessage(_Prototypes[1], ChatMessageType.Chatter, randomEntry(_Taunts))
+    Sector():broadcastChatMessage(_Prototypes[1], ChatMessageType.Chatter, getRandomEntry(_Taunts))
     nextPhase()
 end
 
 mission.phases[2] = {}
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
 mission.phases[2].sectorCallbacks = {}
 mission.phases[2].onTargetLocationEntered = function(_X, _Y)
     local _func = "resetTimeToActive"
@@ -240,13 +232,8 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _DestroyedEntity = Entity(_ID)
 
     local _Sector = Sector()
-    local _X, _Y = _Sector:getCoordinates()
-    local _onLocation = false
-    if _X == mission.data.location.x and _Y == mission.data.location.y then
-        _onLocation = true
-    end
 
-    if _onLocation and _DestroyedEntity:getValue("is_prototype") then
+    if atTargetLocation() and _DestroyedEntity:getValue("is_prototype") then
         local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
 
         if #_Pirates > 0 then
@@ -261,7 +248,7 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
                         "The day is yours, but revenge will be ours!"
                     }
         
-                    _Sector:broadcastChatMessage(_Pirate, ChatMessageType.Chatter, randomEntry(_Lines))
+                    _Sector:broadcastChatMessage(_Pirate, ChatMessageType.Chatter, getRandomEntry(_Lines))
     
                     break
                 end
@@ -530,7 +517,7 @@ function onSecondWaveFinished(_Generated)
         "Mind if we cut in?"
     }
 
-    Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, randomEntry(_Taunts))
+    Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(_Taunts))
 end
 
 function finishAndReward()
@@ -621,7 +608,7 @@ mission.makeBulletin = function(_Station)
     local target = {}
     local x, y = Sector():getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
-    target.x, target.y = MissionUT.getSector(x, y, 7, 20, false, false, false, false, insideBarrier)
+    target.x, target.y = MissionUT.getEmptySector(x, y, 7, 20, insideBarrier)
 
     if not target.x or not target.y then
         mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
@@ -685,8 +672,8 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = reputation, paymentMessage = "Earned %1% for destroying the prototype."},
-            punishment = {relations = 8000 },
+            reward = { credits = reward, relations = reputation, paymentMessage = "Earned %1% for destroying the prototype."},
+            punishment = { relations = 8000 },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
             winMsg = _WinMsg,
