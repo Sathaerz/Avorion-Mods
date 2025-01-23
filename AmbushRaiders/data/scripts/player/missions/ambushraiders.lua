@@ -351,7 +351,7 @@ function pirateTaunt()
             "Looks like we found a stray one."
         }
 
-        Sector():broadcastChatMessage(_Pirates[1], ChatMessageType.Chatter, randomEntry(_Lines))
+        Sector():broadcastChatMessage(_Pirates[1], ChatMessageType.Chatter, getRandomEntry(_Lines))
         mission.data.custom.firstWaveTaunt = true
     end
 end
