@@ -154,7 +154,8 @@ mission.phases[2].onBegin = function()
 end
 
 mission.phases[2].onRestore = function()
-    registerMarkScannableXsotan()
+    --I don't exactly like doing this, but if we call it immediately it will attempt to invoke before the script initializes clientside.
+    deferredCallback(2, "registerMarkScannableXsotan")
 end
 
 --region #PHASE 2 PLAYER CALLBACKS
