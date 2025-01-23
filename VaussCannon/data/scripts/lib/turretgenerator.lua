@@ -15,7 +15,6 @@ possibleSpecialties[WeaponType.VaussCannon] = {
 }
 
 function TurretGenerator.generateVaussCannonTurret(rand, dps, tech, material, rarity)
-    local _Version = GameVersion()
     local result = TurretTemplate()
 
     -- generate turret
@@ -38,30 +37,26 @@ function TurretGenerator.generateVaussCannonTurret(rand, dps, tech, material, ra
     local specialties = TurretGenerator.addSpecialties(rand, result, WeaponType.VaussCannon)
 
     --Have to set it to an armed turret, otherwise it will default to unarmed.
-    if _Version.major > 1 then
-        result.slotType = TurretSlotType.Armed
-    end
+    result.slotType = TurretSlotType.Armed
 
     result:updateStaticStats()
 
-    if _Version.major > 1 then
-        local name = "Vauss Cannon"
+    local name = "Vauss Cannon"
 
-        if specialties[Specialty.HighDamage] and specialties[Specialty.HighFireRate] then
-            name = "Vauss Sweeper"
-            specialties[Specialty.HighDamage] = nil
-            specialties[Specialty.HighFireRate] = nil
-        elseif specialties[Specialty.HighDamage] then
-            name = "Vauss Ripper"
-            specialties[Specialty.HighDamage] = nil
-        elseif specialties[Specialty.HighFireRate] then
-            name = "Vauss Shredder"
-            specialties[Specialty.HighFireRate] = nil
-        end
-
-        local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Physical)
-        result.title = Format("%1%%2%%3%%4%%5%%6%", outerAdjective, barrel, dmgAdjective, multishot, name, serial)
+    if specialties[Specialty.HighDamage] and specialties[Specialty.HighFireRate] then
+        name = "Vauss Sweeper"
+        specialties[Specialty.HighDamage] = nil
+        specialties[Specialty.HighFireRate] = nil
+    elseif specialties[Specialty.HighDamage] then
+        name = "Vauss Ripper"
+        specialties[Specialty.HighDamage] = nil
+    elseif specialties[Specialty.HighFireRate] then
+        name = "Vauss Shredder"
+        specialties[Specialty.HighFireRate] = nil
     end
+
+    local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Physical)
+    result.title = Format("%1%%2%%3%%4%%5%%6%", outerAdjective, barrel, dmgAdjective, multishot, name, serial)
 
     --Final check.
     if not result.coaxial then

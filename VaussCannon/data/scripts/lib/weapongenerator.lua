@@ -1,5 +1,4 @@
 function WeaponGenerator.generateVaussCannon(rand, dps, tech, material, rarity)
-    local _Version = GameVersion()
     local weapon = Weapon()
     weapon:setProjectile()
 
@@ -36,19 +35,13 @@ function WeaponGenerator.generateVaussCannon(rand, dps, tech, material, rarity)
         weapon.damage = (weapon.damage * 1.5) / weapon.shotsFired
     end
 
-    if _Version.major > 1 then
-        -- 7.5 % chance for anti matter damage / plasma damage
-        if rand:test(0.075) then
-            WeaponGenerator.addAntiMatterDamage(rand, weapon, rarity, 1.5, 0.15, 0.2)
-        elseif rand:test(0.075) then
-            WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 1.5, 0.1, 0.15)
-        elseif rand:test(0.05) then
-            WeaponGenerator.addElectricDamage(weapon)
-        end
-    else
-        if rand:test(0.05) then
-            WeaponGenerator.addAntiMatterDamage(rand, weapon, rarity, 1.5, 0.15, 0.2)
-        end
+    -- 7.5 % chance for anti matter damage / plasma damage
+    if rand:test(0.075) then
+        WeaponGenerator.addAntiMatterDamage(rand, weapon, rarity, 1.5, 0.15, 0.2)
+    elseif rand:test(0.075) then
+        WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 1.5, 0.1, 0.15)
+    elseif rand:test(0.05) then
+        WeaponGenerator.addElectricDamage(weapon)
     end
 
     WeaponGenerator.adaptWeapon(rand, weapon, tech, material, rarity)
