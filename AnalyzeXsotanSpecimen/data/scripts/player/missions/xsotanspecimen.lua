@@ -63,6 +63,10 @@ function initialize(_Data_in)
         mission.data.description[3].arguments = { _TARGETS = tostring(mission.data.custom.targets), _ANALYZED = tostring(mission.data.custom.analyzed), _XSOTANTYPE = xsotanType.longName }
     end
 
+    if onClient() then
+        registerMarkAnalyzableXsotan()
+    end
+
     XsotanSpecimen_init(_Data_in)
 end
 
@@ -172,14 +176,6 @@ end
 mission.phases[1].onSectorArrivalConfirmed = function(x, y)
     --Something about adding the scripts before the sector is fully loaded absolutely borks the prerender call, so we clean them on jumping in.
     runSectorScriptAndValueCleanup()
-end
-
-mission.phases[1].onRestore = function()
-    local methodName = "Phase 1 On Restore"
-    mission.Log(methodName, "Beginning...")
-    
-    --I don't exactly like doing this, but if we call it immediately it will attempt to invoke before the script initializes clientside.
-    deferredCallback(2, "registerMarkAnalyzableXsotan")
 end
 
 --region #PHASE 1 TIMER CALLS
