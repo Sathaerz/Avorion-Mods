@@ -78,6 +78,10 @@ function initialize(_Data_in, bulletin)
         mission.data.description[4].arguments = { _SCANNED = mission.data.custom.scannedXsotan , _SCANNEDMAX = mission.data.custom.scannedXsotanTgt }
     end
 
+    if onClient() then
+        registerMarkScannableXsotan()
+    end
+
     --Run vanilla init. Managers _restoring on its own.
     ScanXsotanGroup_init(_Data_in, bulletin)
 end
@@ -151,11 +155,6 @@ mission.phases[2].onBegin = function()
     if onClient() then
         registerMarkScannableXsotan()
     end
-end
-
-mission.phases[2].onRestore = function()
-    --I don't exactly like doing this, but if we call it immediately it will attempt to invoke before the script initializes clientside.
-    deferredCallback(2, "registerMarkScannableXsotan")
 end
 
 --region #PHASE 2 PLAYER CALLBACKS
@@ -430,17 +429,20 @@ function onMarkScannableXsotan()
     local renderer = UIRenderer()
 
     local _sector = Sector()
-    for idx = 1, #mission.data.custom.scannableXsotanShips do
-        local color = ColorRGB(0.2, 0.5, 0.2)
-        local entity = _sector:getEntity(Uuid(mission.data.custom.scannableXsotanShips[idx]))
-        if entity and entity:hasScript("player/missions/scanxsotan/scannablexsotan.lua") then
-
-            local _, size = renderer:calculateEntityTargeter(entity)
-
-            renderer:renderEntityTargeter(entity, color, size * 1.25)
-            renderer:renderEntityArrow(entity, 30, 10, 250, color)
+    if mission.data.custom.scannableXsotanShips then
+        for idx = 1, #mission.data.custom.scannableXsotanShips do
+            local color = ColorRGB(0.2, 0.5, 0.2)
+            local entity = _sector:getEntity(Uuid(mission.data.custom.scannableXsotanShips[idx]))
+            if entity and entity:hasScript("player/missions/scanxsotan/scannablexsotan.lua") then
+    
+                local _, size = renderer:calculateEntityTargeter(entity)
+    
+                renderer:renderEntityTargeter(entity, color, size * 1.25)
+                renderer:renderEntityArrow(entity, 30, 10, 250, color)
+            end
         end
     end
+
 
     renderer:display()
 end
