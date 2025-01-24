@@ -222,13 +222,13 @@ function TorpedoSlammer.pickNewTarget()
             local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
     
             for _, _Candidate in pairs(_Ships) do
-                if not _Candidate:getValue("is_xsotan") then
+                if not self.isXsotanCheck(_Candidate) then
                     table.insert(_TargetCandidates, _Candidate)
                 end
             end
     
             for _, _Candidate in pairs(_Stations) do
-                if not _Candidate:getValue("is_xsotan") then
+                if not self.isXsotanCheck(_Candidate) then
                     table.insert(_TargetCandidates, _Candidate)
                 end
             end
@@ -248,7 +248,7 @@ function TorpedoSlammer.pickNewTarget()
                 end
             end
         end,
-        function () --6 = Random pirate or xsotan
+        function () --6 = Random pirate or xsotan (NOTE: will not target minions / revenants)
             local _Pirates = { _Sector:getEntitiesByScriptValue("is_pirate") }
             local _Xsotan = { _Sector:getEntitiesByScriptValue("is_xsotan") }
 
@@ -304,6 +304,23 @@ function TorpedoSlammer.invincibleTargetCheck(entity)
     else
         return false
     end
+end
+
+function TorpedoSlammer.isXsotanCheck(entity)
+    local xsotanTags = {
+        "is_xsotan",
+        "xsotan_summoner_minion",
+        "xsotan_master_summoner_minion", --We're unlikely to see these, but hey! you never know.
+        "xsotan_revenant"
+    }
+
+    for idx, tag in pairs(xsotanTags) do
+        if entity:getValue(tag) then
+            return true
+        end
+    end
+
+    return false
 end
 
 function TorpedoSlammer.fireAtTarget()

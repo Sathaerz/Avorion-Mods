@@ -9,9 +9,27 @@ local self = Afterburn
 
 self._Debug = 0
 
-self._Data = {}
-self._Data._TimeInPhase = 0
-self._Data._BoostMode = false
+self.data = {}
+
+function Afterburn.initialize(values)
+    local methodName = "Initialize"
+    self.Log(methodName, "Adding v3 of Afterburn script to enemy.")
+
+    if not _restoring then
+        self.Log(methodName, "Not restoring - running normal init.")
+
+        self.data = values or {}
+
+        self.data.speedFactor = self.data.speedFactor or 16
+        self.data.accelFactor = self.data.accelFactor or 1
+        self.data.velocityFactor = self.data.velocityFactor or 1
+    
+        self.data.timeInPhase = 0
+        self.data.boostMode = false
+    else
+        self.Log(methodName, "Data will be restored.")
+    end
+end
 
 function Afterburn.getUpdateInterval()
     return 2 --Update every 2 seconds.
@@ -19,33 +37,48 @@ end
 
 function Afterburn.updateServer(_TimeStep)
     local _MethodName = "Update Server"
-    self._Data._TimeInPhase = self._Data._TimeInPhase + _TimeStep
-    local _Entity = Entity()
+    self.data.timeInPhase = self.data.timeInPhase + _TimeStep
+    local _entity = Entity()
     local _ShowAnimation = false
 
     --1 minute out, 30 seconds in.
-    if self._Data._BoostMode then
-        if self._Data._TimeInPhase >= 20 then
+    if self.data.boostMode then
+        if self.data.timeInPhase >= 20 then
             --20 seconds have passed. Flip us to being OUT of the mode
-            self._Data._BoostMode = false
-            self._Data._TimeInPhase = 0
+            self.data.boostMode = false
+            self.data.timeInPhase = 0
 
-            Afterburn.Log(_MethodName, "Exiting boost mode.")
-            _Entity:addMultiplier(acceleration, 0.125)
-            _Entity:addMultiplier(velocity, 0.125)
+            _entity:addKeyedMultiplier(StatsBonuses.Acceleration, 2207469437, 1)
+            _entity:addKeyedMultiplier(StatsBonuses.Velocity, 2207469437, 1)
+
+            if self._Debug == 1 then
+                --Don't want to do all of this unless we're debugging.
+                local _engine = Engine()
+                self.Log(_MethodName, "Exiting boost mode. Velocity is " .. tostring(_engine.maxVelocity) .. " Acceleration is " .. tostring(_engine.acceleration))
+            end
         else
             --blink to give a visual indication of the ship being in MAXIMUM Afterburn
             _ShowAnimation = true
         end
     else
-        if self._Data._TimeInPhase >= 30 then
+        if self.data.timeInPhase >= 30 then
             --30 seconds have passed. Flip us to being IN the mode.
-            self._Data._BoostMode = true
-            self._Data._TimeInPhase = 0
+            self.data.boostMode = true
+            self.data.timeInPhase = 0
 
-            Afterburn.Log(_MethodName, "Entering boost mode.")
-            _Entity:addMultiplier(acceleration, 8)
-            _Entity:addMultiplier(velocity, 8)
+            local accelMultiplier = self.data.speedFactor * self.data.accelFactor
+            local velocityMultiplier = self.data.speedFactor * self.data.velocityFactor
+
+            self.Log(_MethodName, "Setting bonus - final velocity is " .. tostring(velocityMultiplier) .. " Final accel is " .. tostring(accelMultiplier))
+
+            _entity:addKeyedMultiplier(StatsBonuses.Acceleration, 2207469437, accelMultiplier)
+            _entity:addKeyedMultiplier(StatsBonuses.Velocity, 2207469437, velocityMultiplier)
+
+            if self._Debug == 1 then
+                --Don't want to do all of this unless we're debugging.
+                local _engine = Engine()
+                self.Log(_MethodName, "Entering boost mode. Velocity is " .. tostring(_engine.maxVelocity) .. " Acceleration is " .. tostring(_engine.acceleration))
+            end
 
             _ShowAnimation = true
         end
@@ -61,12 +94,24 @@ function Afterburn.animation(direction)
     Sector():createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(1.0, 1.0, 0.0), 0.2)
 end
 
---region #CLIENT / SERVER functions
+--region #LOG / SECURE / RESTORE
 
 function Afterburn.Log(_MethodName, _Msg)
     if self._Debug == 1 then
         print("[Afterburn] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
+end
+
+function Afterburn.secure()
+    local _MethodName = "Secure"
+    self.Log(_MethodName, "Securing self.data")
+    return self.data
+end
+
+function Afterburn.restore(_Values)
+    local _MethodName = "Restore"
+    self.Log(_MethodName, "Restoring self.data")
+    self.data = _Values
 end
 
 --endregion

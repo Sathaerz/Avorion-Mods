@@ -311,13 +311,13 @@ function StationSiegeGun.pickNewTarget()
             local _Stations = {Sector():getEntitiesByType(EntityType.Station)}
     
             for _, _Candidate in pairs(_Ships) do
-                if not _Candidate:getValue("is_xsotan") then
+                if not self.isXsotanCheck(_Candidate) then
                     table.insert(_TargetCandidates, _Candidate)
                 end
             end
     
             for _, _Candidate in pairs(_Stations) do
-                if not _Candidate:getValue("is_xsotan") then
+                if not self.isXsotanCheck(_Candidate) then
                     table.insert(_TargetCandidates, _Candidate)
                 end
             end
@@ -360,6 +360,23 @@ function StationSiegeGun.invincibleTargetCheck(entity)
     else
         return false
     end
+end
+
+function LaserSniper.isXsotanCheck(entity)
+    local xsotanTags = {
+        "is_xsotan",
+        "xsotan_summoner_minion",
+        "xsotan_master_summoner_minion", --We're unlikely to see these, but hey! you never know.
+        "xsotan_revenant"
+    }
+
+    for idx, tag in pairs(xsotanTags) do
+        if entity:getValue(tag) then
+            return true
+        end
+    end
+
+    return false
 end
 
 function StationSiegeGun.getEntityMaxHP(_Entity)
