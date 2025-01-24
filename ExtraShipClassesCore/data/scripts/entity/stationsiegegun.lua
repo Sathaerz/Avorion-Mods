@@ -362,7 +362,7 @@ function StationSiegeGun.invincibleTargetCheck(entity)
     end
 end
 
-function LaserSniper.isXsotanCheck(entity)
+function StationSiegeGun.isXsotanCheck(entity)
     local xsotanTags = {
         "is_xsotan",
         "xsotan_summoner_minion",
