@@ -2,7 +2,7 @@ function WeaponGenerator.generateMassDriver(rand, dps, tech, material, rarity)
     local weapon = Weapon()
     weapon:setProjectile()
 
-    local fireDelay = rand:getFloat(4.20, 5.20)
+    local fireDelay = rand:getFloat(4.15, 5.15)
     local reach = rand:getFloat(3000, 3400)
     local damage = dps * fireDelay * 0.6 --These things are way too good if they're not weakened a bit. Insane burst damage, range, and accuracy. Something has to go.
     local speed = rand:getFloat(2600, 2800)

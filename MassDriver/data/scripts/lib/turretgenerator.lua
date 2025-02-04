@@ -28,7 +28,7 @@ function TurretGenerator.generateMassDriverTurret(rand, dps, tech, material, rar
     -- attach weapons to turret
     TurretGenerator.attachWeapons(rand, result, weapon, numWeapons)
 
-    local shootingTime = 20 * rand:getFloat(0.8, 1.2)
+    local shootingTime = 22 * rand:getFloat(0.8, 1.2)
     local coolingTime = 14 * rand:getFloat(0.8, 1.2)
 
     TurretGenerator.createStandardCooling(result, coolingTime, shootingTime)

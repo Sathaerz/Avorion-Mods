@@ -17,7 +17,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "A long-range, high-damage, low fire rate turret with a massive projectile velocity. Excellent burst damage, but low sustained DPS. A love letter for the sniper in all of us.",
+    description = "A long-range, moderate-damage, low fire rate turret with a massive projectile velocity. Excellent burst damage, but low sustained DPS. A love letter for the sniper in all of us.",
 
     -- Insert all authors into this list
     authors = {"KnifeHeart"},
@@ -26,7 +26,7 @@ meta =
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.0.1",
+    version = "1.0.2",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
