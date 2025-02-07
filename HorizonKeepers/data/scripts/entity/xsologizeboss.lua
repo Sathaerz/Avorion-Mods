@@ -149,7 +149,7 @@ function XsologizeBossHierophant.createWormhole(pirate, position)
     desc:addComponents(ComponentType.DeletionTimer)
     desc.position = MatrixLookUpPosition(vec3(0, 1, 0), vec3(1, 0, 0), position)
 
-    local size = pirate.radius
+    local size = pirate.radius + random():getFloat(10, 15)
     local wormhole = desc:getComponent(ComponentType.WormHole)
     wormhole:setTargetCoordinates(random():getInt(-50, 50), random():getInt(-50, 50))
     wormhole.visible = true
@@ -247,7 +247,7 @@ function XsologizeBossHierophant.findSuitableWreck()
     end
 
     if #_CandidateWrecks > 0 then
-        return getRandomEntry(_CandidateWrecks)
+        return randomEntry(_CandidateWrecks)
     else
         return
     end
@@ -469,7 +469,7 @@ end
 
 --endregion
 
---region #LOG / SECURE / RESTORE / SYNC
+--region #SECURE / RESTORE / LOG / SYNC CALLS
 
 function XsologizeBossHierophant.Log(methodName, msg)
     if self._Debug == 1 then

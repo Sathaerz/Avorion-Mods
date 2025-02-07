@@ -70,8 +70,12 @@ mission.data.custom.phase7FinishEventDone = false
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     unregisterMarkCloseShips()
     if mission.data.location then
@@ -115,9 +119,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     --Get a sector that's very close to the outer edge of the barrier.
@@ -157,9 +158,6 @@ mission.phases[1].playerCallbacks = {
 
 mission.phases[2] = {}
 mission.phases[2].showUpdateOnEnd = true
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
 mission.phases[2].onBegin = function()
     local _MethodName = "Phase 2 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -194,9 +192,6 @@ end)
 
 mission.phases[3] = {}
 mission.phases[3].showUpdateOnEnd = true
-mission.phases[3].noBossEncountersTargetSector = true
-mission.phases[3].noPlayerEventsTargetSector = true
-mission.phases[3].noLocalPlayerEventsTargetSector = true
 mission.phases[3].onBegin = function()
     local _MethodName = "Phase 3 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -221,9 +216,6 @@ end
 
 mission.phases[4] = {}
 mission.phases[4].showUpdateOnEnd = true
-mission.phases[4].noBossEncountersTargetSector = true
-mission.phases[4].noPlayerEventsTargetSector = true
-mission.phases[4].noLocalPlayerEventsTargetSector = true
 mission.phases[4].onBegin = function()
     local _MethodName = "Phase 4 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -285,9 +277,6 @@ mission.phases[5] = {}
 mission.phases[5].timers = {}
 mission.phases[5].sectorCallbacks = {}
 mission.phases[5].showUpdateOnEnd = true
-mission.phases[5].noBossEncountersTargetSector = true
-mission.phases[5].noPlayerEventsTargetSector = true
-mission.phases[5].noLocalPlayerEventsTargetSector = true
 mission.phases[5].onBeginServer = function()
     local _MethodName = "Phase 5 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
@@ -457,7 +446,7 @@ mission.phases[5].sectorCallbacks[1] = {
 
                         local _sector = Sector()
 
-                        if getOnLocation(_sector) then
+                        if atTargetLocation() then
                             local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
                             local playerShips = {}
                             for _, _e in pairs(playerEntities) do
@@ -515,7 +504,7 @@ mission.phases[5].timers[1] = {
     time = 10,
     callback = function()
         local _sector = Sector()
-        if getOnLocation(_sector) then
+        if atTargetLocation() then
             local militaryOutpost = Entity(mission.data.custom.militaryOutpostID)
             local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
             local playerShips = {}
@@ -542,7 +531,7 @@ mission.phases[5].timers[1] = {
 
                             local _sector = Sector()
 
-                            if getOnLocation(_sector) then
+                            if atTargetLocation() then
                                 local militaryOutpost = Entity(mission.data.custom.militaryOutpostID)
                                 local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
                                 local playerShips = {}
@@ -600,7 +589,7 @@ mission.phases[5].timers[3] = {
     time = 10,
     callback = function()
         local _sector = Sector()
-        if getOnLocation(_sector) then
+        if atTargetLocation() then
             local freighter = Entity(mission.data.custom.freighterID)
             local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
             local playerShips = {}
@@ -635,7 +624,7 @@ mission.phases[5].timers[3] = {
                     callback = function()
                         local _sector = Sector()
 
-                        if getOnLocation(_sector) then
+                        if atTargetLocation() then
                             local freighter = Entity(mission.data.custom.freighterID)
                             local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
                             local playerShips = {}
@@ -677,9 +666,6 @@ end
 mission.phases[6] = {}
 mission.phases[6].timers = {}
 mission.phases[6].showUpdateOnEnd = true
-mission.phases[6].noBossEncountersTargetSector = true
-mission.phases[6].noPlayerEventsTargetSector = true
-mission.phases[6].noLocalPlayerEventsTargetSector = true
 mission.phases[6].onBegin = function()
     local _MethodName = "Phase 6 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -755,6 +741,10 @@ mission.phases[6].onEntityDestroyed = function(id, lastDamageInflictor)
     if id == mission.data.custom.freighterID then
         onFreighterDestroyed()
     end
+
+    if id == mission.data.custom.shipyardID then
+        onShipyardDestroyed()
+    end
 end
 
 --region #PHASE 6 TIMER CALLS
@@ -768,7 +758,7 @@ mission.phases[6].timers[1] = {
         mission.Log(_MethodName, "Running...")
 
         --Don't do anything if we're not on location. Technically not needed since the player jumping out fails the mission at this point.
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             if mission.data.custom.waveState == 1 and mission.data.custom.waveNumber < 4 then
                 mission.Log(_MethodName, "Spawning pirate wave " .. tostring(mission.data.custom.waveNumber))
                 spawnPirateWave(mission.data.custom.waveNumber == 3)
@@ -786,7 +776,7 @@ mission.phases[6].timers[1] = {
 mission.phases[6].timers[2] = {
     time = 15,
     callback = function()
-        if getOnLocation(nil) and not mission.data.custom.phase6Chatter1Sent then
+        if atTargetLocation() and not mission.data.custom.phase6Chatter1Sent then
             mission.data.custom.phase6Chatter1Sent = true
 
             local militaryOutpost = Entity(mission.data.custom.militaryOutpostID)
@@ -802,9 +792,6 @@ end
 --endregion
 
 mission.phases[7] = {}
-mission.phases[7].noBossEncountersTargetSector = true
-mission.phases[7].noPlayerEventsTargetSector = true
-mission.phases[7].noLocalPlayerEventsTargetSector = true
 mission.phases[7].onBegin = function()
     mission.data.description[9].fulfilled = true
     mission.data.description[10].fulfilled = true
@@ -967,6 +954,7 @@ function buildObjectiveSector(x, y)
     mission.data.custom.militaryOutpostID = mo.index
     local moDura = Durability(mo)
     moDura.invincibility = 0.94
+    mo:setValue("_DefenseController_Manage_Own_Invincibility", true)
     mo:addScriptOnce("player/missions/horizon/story7/horizonstory7miloutpost.lua")
 
     local frostbiteFaction = HorizonUtil.getFriendlyFaction()
@@ -1250,6 +1238,26 @@ function onFreighterDestroyed()
         HorizonUtil.varlanceChatter("We lost the freighter! Break off! Break off!")
 
         sophie:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
+    end
+
+    invokeClientFunction(Player(), "changeOutpostTrack", mission.data.custom.militaryOutpostID)
+
+    fail()
+end
+
+function onShipyardDestroyed()
+    local sophie = Entity(mission.data.custom.varlanceID)
+
+    if sophie then
+        HorizonUtil.varlanceChatter("We lost the shipyard! Break off! Break off!")
+
+        sophie:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
+    end
+
+    local freighter = Entity(mission.data.custom.freighterID)
+
+    if freighter and valid(freighter) then
+        freighter:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
     end
 
     invokeClientFunction(Player(), "changeOutpostTrack", mission.data.custom.militaryOutpostID)

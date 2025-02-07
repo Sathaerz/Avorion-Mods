@@ -164,7 +164,7 @@ callable(HorizonStory2Dialog5, "removeChip")
 
 --endregion
 
---region #SECURE / RESTORE / LOG
+--region #SECURE / RESTORE / LOG CALLS
 
 function HorizonStory2Dialog5.secure()
     return self._Data

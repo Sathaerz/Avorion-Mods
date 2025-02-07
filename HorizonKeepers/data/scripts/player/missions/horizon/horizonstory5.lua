@@ -47,11 +47,13 @@ mission.data.custom.waveNumber = 1
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             frostbiteDeparts()
         end
         runFullSectorCleanup(true)
@@ -60,7 +62,7 @@ end
 
 mission.globalPhase.onFail = function()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             frostbiteDeparts()
         end
         runFullSectorCleanup(true)
@@ -92,7 +94,7 @@ mission.globalPhase.timers[1] = {
     callback = function()
         local _MethodName = "Global Phase Timer 1 Callback"
 
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
             spawnVarlance()
@@ -107,7 +109,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     --Get a sector that's very close to the outer edge of the barrier.
@@ -149,7 +150,6 @@ mission.phases[1].playerCallbacks = {
 
 mission.phases[2] = {}
 mission.phases[2].showUpdateOnEnd = true
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBegin = function()
     local _MethodName = "Phase 2 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -174,7 +174,6 @@ end
 mission.phases[3] = {}
 mission.phases[3].timers = {}
 mission.phases[3].showUpdateOnEnd = true
-mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBegin = function()
     local _MethodName = "Phase 3 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -209,7 +208,7 @@ if onServer() then
 mission.phases[3].timers[1] = {
     time = 5,
     callback = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             --phase 3 ends and we go into phase 4 after the installation sends the distress call.
             local defenderCt = ESCCUtil.countEntitiesByValue("is_horizon_defender")
             local defenderObjectiveDone = false
@@ -259,7 +258,6 @@ end
 mission.phases[4] = {}
 mission.phases[4].timers = {}
 mission.phases[4].showUpdateOnEnd = true
-mission.phases[4].noBossEncountersTargetSector = true
 mission.phases[4].onBegin = function()
     mission.data.description[7].visible = true
 end
@@ -277,7 +275,7 @@ mission.phases[4].timers[1] = {
     time = 60,
     callback = function()
         --Don't do anything if we're not in the sector in question.
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             --Send chatter if needed.
             if not mission.data.custom.varlanceP4ChatterSent then
                 HorizonUtil.varlanceChatter("There they are. Eliminate them as they jump in. Sweep the installation too if you get the chance - it already served its purpose.")
@@ -304,7 +302,7 @@ mission.phases[4].timers[2] = {
     time = 5,
     callback = function()
         --Don't do anything if not on location.
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             --Mark fleet destroyed if applicable.
             local horizonShipCt = ESCCUtil.countEntitiesByValue("is_horizon_ship")
             if horizonShipCt == 0 and mission.data.custom.waveNumber == 4 then
@@ -335,7 +333,6 @@ end
 --endregion
 
 mission.phases[5] = {}
-mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].onBeginServer = function()
     spawnVarlance()
 

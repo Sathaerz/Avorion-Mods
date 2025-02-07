@@ -275,7 +275,7 @@ end
 
 --endregion
 
---region #SECURE / RESTORE / LOG / SYNC
+--region #SECURE / RESTORE / LOG / SYNC CALLS
 
 function HorizonStory2Dialog3.sync(_Data_In)
     if onServer() then

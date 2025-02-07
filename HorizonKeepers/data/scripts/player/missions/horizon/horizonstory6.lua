@@ -52,11 +52,15 @@ mission.data.custom.gretelOverdriveActive = false
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             frostbiteDeparts()
         end
         runFullSectorCleanup(true)
@@ -65,7 +69,7 @@ end
 
 mission.globalPhase.onFail = function()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             frostbiteDeparts()
         end
         runFullSectorCleanup(true)
@@ -103,7 +107,7 @@ mission.globalPhase.timers[1] = {
     callback = function()
         local _MethodName = "Global Phase Timer 1 Callback"
 
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
             spawnVarlance()
@@ -118,9 +122,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     --Get a sector that's very close to the outer edge of the barrier.
@@ -161,9 +162,6 @@ mission.phases[1].playerCallbacks = {
 mission.phases[2] = {}
 mission.phases[2].timers = {}
 mission.phases[2].showUpdateOnEnd = true
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
 mission.phases[2].onBegin = function()
     local _MethodName = "Phase 2 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -199,7 +197,7 @@ if onServer() then
 mission.phases[2].timers[1] = {
     time = 1,
     callback = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local ships = {Sector():getEntitiesByType(EntityType.Ship)}
             for _, ship in pairs(ships) do
                 if ship.playerOrAllianceOwned then
@@ -219,9 +217,6 @@ end
 mission.phases[3] = {}
 mission.phases[3].timers = {}
 mission.phases[3].showUpdateOnEnd = true
-mission.phases[3].noBossEncountersTargetSector = true
-mission.phases[3].noPlayerEventsTargetSector = true
-mission.phases[3].noLocalPlayerEventsTargetSector = true
 mission.phases[3].onBegin = function()
     mission.data.description[5].visible = true
 end
@@ -254,7 +249,7 @@ mission.phases[3].timers[1] = {
     time = 5,
     callback = function()
         --Don't do anything if we're not in the location.
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local cruiserCt = ESCCUtil.countEntitiesByValue("is_horizon_combatcruiser")
             if cruiserCt == 0 and not mission.data.custom.stage2OrdersSet and not mission.data.custom.playerRushedBattleships then
                 mission.data.custom.stage2OrdersSet = true
@@ -276,7 +271,7 @@ mission.phases[3].timers[1] = {
 mission.phases[3].timers[2] = {
     time = 5,
     callback = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local cruiserCt = ESCCUtil.countEntitiesByValue("is_horizon_combatcruiser")
             local bshipCt = ESCCUtil.countEntitiesByValue("is_horizon_battleship")
 
@@ -302,9 +297,6 @@ end
 mission.phases[4] = {}
 mission.phases[4].timers = {}
 mission.phases[4].showUpdateOnEnd = true
-mission.phases[4].noBossEncountersTargetSector = true
-mission.phases[4].noPlayerEventsTargetSector = true
-mission.phases[4].noLocalPlayerEventsTargetSector = true
 mission.phases[4].onBegin = function()
     mission.data.description[4].fulfilled = true
     mission.data.description[5].fulfilled = true
@@ -381,7 +373,7 @@ mission.phases[4].timers[1] = {
 
         local _sector = Sector()
 
-        if getOnLocation(_sector) and mission.data.custom.phase4CallSupports then
+        if atTargetLocation() and mission.data.custom.phase4CallSupports then
             mission.Log(_MethodName, "Spawning torpedo loader.")
 
             if not mission.data.custom.varlanceP4ChatterSent and _sector:exists(mission.data.custom.varlanceID) then
@@ -411,7 +403,7 @@ mission.phases[4].timers[1] = {
 mission.phases[4].timers[2] = {
     time = 5,
     callback = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local hanselCt = ESCCUtil.countEntitiesByValue("is_alpha_hansel")
             local gretelCt = ESCCUtil.countEntitiesByValue("is_beta_gretel")
 
@@ -452,7 +444,7 @@ mission.phases[4].timers[3] = {
     time = 1,
     callback = function()
         --Stops our ships from shooting the bosses down during the dialog.
-        if getOnLocation(nil) and not mission.data.custom.phase4CallSupports then
+        if atTargetLocation() and not mission.data.custom.phase4CallSupports then
             local ships = {Sector():getEntitiesByType(EntityType.Ship)}
             for _, ship in pairs(ships) do
                 if ship.playerOrAllianceOwned then
@@ -470,9 +462,6 @@ end
 --endregion
 
 mission.phases[5] = {}
-mission.phases[5].noBossEncountersTargetSector = true
-mission.phases[5].noPlayerEventsTargetSector = true
-mission.phases[5].noLocalPlayerEventsTargetSector = true
 mission.phases[5].onBegin = function()
     mission.data.description[7].fulfilled = true
     mission.data.description[8].fulfilled = true

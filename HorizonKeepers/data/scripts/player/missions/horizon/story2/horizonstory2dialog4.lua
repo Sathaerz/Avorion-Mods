@@ -2,6 +2,8 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include("stringutility")
 include("callable")
+include("player")
+
 MissionUT = include("missionutility")
 HorizonUtil = include("horizonutil")
 
@@ -84,7 +86,7 @@ function HorizonStory2Dialog4.onPickup(_EntityIndex)
     end
 
     self.Log(_MethodName, "Getting docked dialog selector.")
-    MissionUT.dockedDialogSelector(Entity().index, _Condition, _FailedMaker, _UndockedMaker, _DockedMaker)    
+    MissionUT.dockedDialogSelector(Entity().index, _Condition(), _FailedMaker, _UndockedMaker, _DockedMaker)    
 end
 
 function HorizonStory2Dialog4.onDockedEnd()
@@ -128,7 +130,7 @@ callable(HorizonStory2Dialog4, "retrieveArtifactServer")
 
 --endregion
 
---region #SECURE / RESTORE / LOG
+--region #SECURE / RESTORE / LOG CALLS
 
 function HorizonStory2Dialog4.secure()
     return self._Data

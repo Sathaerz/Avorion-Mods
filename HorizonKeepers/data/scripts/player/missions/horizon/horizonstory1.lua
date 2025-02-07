@@ -42,13 +42,17 @@ mission.data.accomplishMessage = "Good work, Captain - Frostbite Company thanks 
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
 mission.data.custom.advancePhase = false --Allows for the phase to advance.
 mission.data.custom.givenChip = false
+mission.data.custom.spawnedRemnants = false
+mission.data.custom.spawnedAsteroids = false
 
 --endregion
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -86,7 +90,7 @@ mission.globalPhase.timers[1] = {
     callback = function() 
         local _MethodName = "Global Phase Timer 1 Callback"
 
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             --Don't do any of this unless we're on location
             local _pirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
 
@@ -106,7 +110,7 @@ mission.globalPhase.timers[2] = {
     callback = function()
         local _MethodName = "Global Phase Timer 2 Callback"
 
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
             spawnVarlance()
@@ -120,7 +124,6 @@ end
 --endregion
 
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBegin = function()
     local _Giver = Entity(mission.data.giver.id)
 
@@ -130,7 +133,7 @@ mission.phases[1].onBegin = function()
 end
 
 mission.phases[1].updateServer = function(_timestep)
-    if getOnLocation(nil) then
+    if atTargetLocation() then
         local _pirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
 
         if _pirateCt == 1 and not mission.data.custom.sentDistress then
@@ -150,12 +153,13 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
         createAsteroidFields(x, y)
         spawnVarlance()
         spawnPirateRemnants()
-        Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+
+        showMissionUpdated(mission._Name)
     end
 end
 
 mission.phases[2] = {}
-mission.phases[2].noBossEncountersTargetSector = true
+mission.phases[2].showUpdateOnStart = true
 mission.phases[2].onBegin = function()
     mission.data.description[4].fulfilled = true
     mission.data.description[5].visible = true
@@ -168,8 +172,8 @@ mission.phases[2].onBeginServer = function()
 end
 
 mission.phases[3] = {}
+mission.phases[3].showUpdateOnStart = true
 mission.phases[3].timers = {}
-mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBegin = function()
     mission.data.description[5].fulfilled = true
     mission.data.description[6].visible = true
@@ -188,7 +192,7 @@ if onServer() then
 mission.phases[3].timers[1] = {
     time = 15,
     callback = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             spawnTorpedoStrike()
         end
     end,
@@ -200,7 +204,7 @@ end
 --endregion
 
 mission.phases[4] = {}
-mission.phases[4].noBossEncountersTargetSector = true
+mission.phases[4].showUpdateOnStart = true
 mission.phases[4].onBegin = function()
     mission.data.description[6].fulfilled = true
     mission.data.description[7].visible = true
@@ -214,13 +218,12 @@ end
 
 mission.phases[4].updateServer = function(_timeStep)
     --If the chip has not been given yet...
-    if getOnLocation(nil) and mission.data.custom.advancePhase then
+    if atTargetLocation() and mission.data.custom.advancePhase then
         givePlayerChip()
     end
 end
 
 mission.phases[5] = {}
-mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].onBegin = function()
     mission.data.description[7].fulfilled = true
 end
@@ -250,14 +253,20 @@ end)
 --region #SERVER CALLS
 
 function createAsteroidFields(x, y)
-    local _Generator = SectorGenerator(x, y)
+    if not mission.data.custom.spawnedAsteroids then
+        local _Generator = SectorGenerator(x, y)
 
-    _Generator:createAsteroidField()
+        _Generator:createAsteroidField()
+    
+        local _fields = random():getInt(3, 5)
+        --Add: 3-5 small asteroid fields.
+        for _ = 1, _fields do
+            _Generator:createSmallAsteroidField()
+        end
 
-    local _fields = random():getInt(3, 5)
-    --Add: 3-5 small asteroid fields.
-    for _ = 1, _fields do
-        _Generator:createSmallAsteroidField()
+        Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+
+        mission.data.custom.spawnedAsteroids = true
     end
 end
 
@@ -288,20 +297,24 @@ function spawnPirateRemnants()
     local _MethodName = "Create Pirate Remnants"
     mission.Log(_MethodName, "Running.")
 
-    local generator = AsyncPirateGenerator(nil, onPirateRemnantsFinished)
+    if not mission.data.custom.spawnedRemnants then
+        local generator = AsyncPirateGenerator(nil, onPirateRemnantsFinished)
 
-    generator:startBatch()
+        generator:startBatch()
+    
+        generator:createScaledPirateByName("Outlaw", generator.getGenericPosition())
+        generator:createScaledPirateByName("Outlaw", generator.getGenericPosition())
+        generator:createScaledPirateByName("Outlaw", generator.getGenericPosition())
+        generator:createScaledPirateByName("Bandit", generator.getGenericPosition())
+        generator:createScaledPirateByName("Bandit", generator.getGenericPosition())
+        generator:createScaledPirateByName("Pirate", generator.getGenericPosition())
+        generator:createScaledPirateByName("Scorcher", generator.getGenericPosition())
+        generator:createScaledPirateByName("Devastator", generator.getGenericPosition())
+    
+        generator:endBatch()
 
-    generator:createScaledPirateByName("Outlaw", generator.getGenericPosition())
-    generator:createScaledPirateByName("Outlaw", generator.getGenericPosition())
-    generator:createScaledPirateByName("Outlaw", generator.getGenericPosition())
-    generator:createScaledPirateByName("Bandit", generator.getGenericPosition())
-    generator:createScaledPirateByName("Bandit", generator.getGenericPosition())
-    generator:createScaledPirateByName("Pirate", generator.getGenericPosition())
-    generator:createScaledPirateByName("Scorcher", generator.getGenericPosition())
-    generator:createScaledPirateByName("Devastator", generator.getGenericPosition())
-
-    generator:endBatch()
+        mission.data.custom.spawnedRemnants = true
+    end
 end
 
 function onPirateRemnantsFinished(_Generated)

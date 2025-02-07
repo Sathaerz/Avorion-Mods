@@ -42,7 +42,6 @@ mission.data.custom.allowPhase3Advance = false
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
@@ -84,7 +83,7 @@ mission.phases[1].onBeginServer = function()
     local firstX = mission.data.custom.firstLocation.x
     local firstY = mission.data.custom.firstLocation.y
 
-    mission.data.description[6].arguments = { _X = firstX, _Y = firstY }
+    mission.data.description[3].arguments = { _X = firstX, _Y = firstY }
 
     --Send mail to player.
     local _Player = Player()
@@ -133,7 +132,7 @@ mission.phases[2].onBeginServer = function()
     local secondX = mission.data.custom.secondLocation.x
     local secondY = mission.data.custom.secondLocation.y
 
-    mission.data.description[3].arguments = { _X = secondX, _Y = secondY }
+    mission.data.description[6].arguments = { _X = secondX, _Y = secondY }
 end
 
 mission.phases[2].onTargetLocationEntered = function(_X, _Y)
@@ -216,7 +215,7 @@ mission.phases[3].timers[2] = {
     callback = function()
         local methodName = "Phase 3 Timer 2 Callback"
 
-        if getOnLocation(nil) and not mission.data.custom.setPhase3DeathLaser then
+        if atTargetLocation() and not mission.data.custom.setPhase3DeathLaser then
             mission.Log(methodName, "Setting death laser")
 
             mission.data.custom.setPhase3DeathLaser = true
@@ -253,7 +252,7 @@ if onServer() then
 
 mission.phases[3].triggers[1] = {
     condition = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             if ESCCUtil.countEntitiesByValue("is_frostbite_warship") == 0 then
                 return true
             end
@@ -282,7 +281,7 @@ mission.phases[3].triggers[1] = {
 
 mission.phases[3].triggers[2] = {
     condition = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local varlance = Entity(mission.data.custom.varlanceID)
             local varlanceHPThreshold = varlance.durability / varlance.maxDurability
 
@@ -308,7 +307,7 @@ mission.phases[3].triggers[2] = {
 
 mission.phases[3].triggers[3] = {
     condition = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local _sector = Sector()
             if mission.data.custom.allowPhase3Advance and not _sector:exists(mission.data.custom.xsologizeID) then
                 return true
@@ -411,7 +410,7 @@ mission.phases[5].timers[2] = {
     time = 1,
     callback = function()
         --We still set the shield to invincible, but this works as well.
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local ships = {Sector():getEntitiesByType(EntityType.Ship)}
             for _, ship in pairs(ships) do
                 if ship.playerOrAllianceOwned then
@@ -434,7 +433,7 @@ if onServer() then
 
 mission.phases[5].triggers[1] = {
     condition = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local xsologize = Entity(mission.data.custom.xsologizeID)
             if xsologize and xsologize:getValue("_horizon_story9_laserexplosion") then
                 return true
@@ -466,7 +465,7 @@ if onServer() then
 mission.phases[6].timers[1] = {
     time = 10,
     callback = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             if ESCCUtil.countEntitiesByValue("is_project_xsologize") == 0 then
                 finishAndReward()
             end

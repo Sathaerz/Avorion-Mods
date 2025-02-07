@@ -59,11 +59,12 @@ mission.data.custom.ambushPiratesSpawned = false
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     unregisterMarkContainer()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
         end
         runFullSectorCleanup(true)
@@ -73,7 +74,7 @@ end
 mission.globalPhase.onFail = function()
     unregisterMarkContainer()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
         end
         runFullSectorCleanup(true)
@@ -83,7 +84,7 @@ end
 mission.globalPhase.onAccomplish = function()
     unregisterMarkContainer()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
         end
         runFullSectorCleanup(true)
@@ -92,7 +93,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     --Get a sector that's very close to the outer edge of the barrier.
@@ -134,7 +134,6 @@ mission.phases[1].playerCallbacks =
 
 mission.phases[2] = {}
 mission.phases[2].showUpdateOnEnd = true
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBegin= function()
     local _MethodName = "Phase 2 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -165,7 +164,6 @@ end
 
 mission.phases[3] = {}
 mission.phases[3].showUpdateOnEnd = true
-mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBegin = function()
     local _MethodName = "Phase 3 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -193,7 +191,6 @@ end)
 
 mission.phases[4] = {}
 mission.phases[4].showUpdateOnEnd = true
-mission.phases[4].noBossEncountersTargetSector = true
 mission.phases[4].onBegin = function()
     local _MethodName = "Phase 4 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -214,7 +211,6 @@ end
 mission.phases[5] = {}
 mission.phases[5].timers = {}
 mission.phases[5].showUpdateOnEnd = true
-mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].onBegin = function()
     local _MethodName = "Phase 5 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -248,7 +244,7 @@ mission.phases[5].timers[1] = { --Check asteroid job.
     callback = function()
         local _MethodName = "Phase 5 Timer 1 Callback"
         local _Sector = Sector()
-        if getOnLocation(_Sector) and not mission.data.custom.destroyAsteroidJob then
+        if atTargetLocation() and not mission.data.custom.destroyAsteroidJob then
             local _AsteroidCt = #{ _Sector:getEntitiesByType(EntityType.Asteroid) }
             local _TargetAsteroidNumber = math.floor(mission.data.custom.asteroidCount * 0.95)
 
@@ -275,7 +271,7 @@ mission.phases[5].timers[2] = { --Check satellite job
     callback = function()
         local _MethodName = "Phase 5 Timer 2 Callback"
         local _Sector = Sector()
-        if getOnLocation(_Sector) and not mission.data.custom.doneSatelliteJob then
+        if atTargetLocation() and not mission.data.custom.doneSatelliteJob then
             local _Satellites = { _Sector:getEntitiesByScriptValue("horizon2_research_satellite") }
 
             if #_Satellites > 0 then
@@ -311,7 +307,7 @@ mission.phases[5].timers[3] = { --Check container job
         local _Sector = Sector()
 
         --If the player somehow destroys all the containers in the sector, fail. Otherwise, we just pick a new one.
-        if getOnLocation(_Sector) and not mission.data.custom.doneContainerJob then
+        if atTargetLocation() and not mission.data.custom.doneContainerJob then
             local _Container = Entity(mission.data.custom.targetContainer)
 
             if not _Container or not valid(_Container) then
@@ -378,7 +374,6 @@ end
 
 mission.phases[6] = {}
 mission.phases[6].showUpdateOnEnd = true
-mission.phases[6].noBossEncountersTargetSector = true
 mission.phases[6].onBegin = function()
     local _MethodName = "Phase 6 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -419,7 +414,6 @@ end
 mission.phases[7] = {}
 mission.phases[7].timers = {}
 mission.phases[7].showUpdateOnEnd = true
-mission.phases[7].noBossEncountersTargetSector = true
 mission.phases[7].onBegin  = function()
     local _MethodName = "Phase 7 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -516,7 +510,7 @@ mission.phases[7].timers[1] = {
 
         local _PirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
 
-        if getOnLocation(nil) and _PirateCt <= 5 and not mission.data.custom.ambushPiratesSpawned then
+        if atTargetLocation() and _PirateCt <= 5 and not mission.data.custom.ambushPiratesSpawned then
             spawnPirateAmbush()
         end
     end,
@@ -530,7 +524,7 @@ mission.phases[7].timers[2] = {
 
         local _PirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
 
-        if getOnLocation(nil) and _PirateCt == 0 and mission.data.custom.ambushPiratesSpawned then
+        if atTargetLocation() and _PirateCt == 0 and mission.data.custom.ambushPiratesSpawned then
             nextPhase()
         end
     end,
@@ -543,7 +537,6 @@ end
 
 mission.phases[8] = {}
 mission.phases[8].timers = {}
-mission.phases[8].noBossEncountersTargetSector = true
 mission.phases[8].onBegin = function()
     local _MethodName = "Phase 8 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -840,7 +833,7 @@ function onPirateAmbushFinished(_Generated)
         "Kill them all! Hahahaha!"
     }
 
-    Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, randomEntry(_Lines))  
+    Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(_Lines))  
 end
 
 function onTorpStrikePirateSpawned(_Generated)

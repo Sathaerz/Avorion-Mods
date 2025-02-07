@@ -68,7 +68,6 @@ mission.data.custom.phase8DialogStarted = false
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
@@ -198,7 +197,7 @@ end)
 mission.phases[3].timers[1] = {
     time = 15,
     callback = function()
-        if onServer() and getOnLocation(nil) and not mission.data.custom.phase3DialogStarted then
+        if onServer() and atTargetLocation() and not mission.data.custom.phase3DialogStarted then
             mission.data.custom.phase3DialogStarted = true
 
             invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.varlanceID)
@@ -242,7 +241,7 @@ if onServer() then
 
 mission.phases[4].triggers[1] = {
     condition = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local outpost = Entity(mission.data.custom.smugglerOutpostID)
             local varlance = Entity(mission.data.custom.varlanceID)
     
@@ -322,7 +321,7 @@ end)
 mission.phases[5].timers[1] = {
     time = 60,
     callback = function()
-        if onServer() and getOnLocation(nil) and not mission.data.custom.phase5DialogStarted then
+        if onServer() and atTargetLocation() and not mission.data.custom.phase5DialogStarted then
             mission.data.custom.phase5DialogStarted = true
 
             invokeClientFunction(Player(), "onPhase5Dialog", mission.data.custom.smugglerOutpostID)
@@ -339,7 +338,7 @@ if onServer() then
 
 mission.phases[5].triggers[1] = {
     condition = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             local frostbiteRelief = Entity(mission.data.custom.frostbiteReliefID)
             local smugglerHideout = Entity(mission.data.custom.smugglerOutpostID)
 
@@ -454,7 +453,7 @@ end)
 mission.phases[7].timers[1] = {
     time = 15,
     callback = function()
-        if onServer() and getOnLocation(nil) and not mission.data.custom.phase7DialogStarted then
+        if onServer() and atTargetLocation() and not mission.data.custom.phase7DialogStarted then
             mission.data.custom.phase7DialogStarted = true
 
             invokeClientFunction(Player(), "onPhase7Dialog", mission.data.custom.smugglerOutpostID)
@@ -487,7 +486,7 @@ end)
 mission.phases[8].timers[1] = {
     time = 15,
     callback = function()
-        if onServer() and getOnLocation(nil) and not mission.data.custom.phase8DialogStarted then
+        if onServer() and atTargetLocation() and not mission.data.custom.phase8DialogStarted then
             mission.data.custom.phase8DialogStarted = true
 
             invokeClientFunction(Player(), "onPhase8Dialog", mission.data.custom.varlanceID)

@@ -330,6 +330,7 @@ function HorizonUtil.spawnFrostbiteShip(_Data, _DeleteOnLeft)
     _Ship:setValue("is_frostbite", true)
     _Ship:setValue("is_frostbite_ship", true)
     _Ship:setValue("_ESCC_bypass_hazard", true)
+    _Ship:setValue("bDisableXAI", true) --Disable any Xavorion AI
     for _, _value in pairs(_Data._ScriptValues) do
         _Ship:setValue(_value, true)
     end
@@ -589,14 +590,12 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
             ShipUtility.addBossAntiTorpedoEquipment(_ship)
 
             local x, y = Sector():getCoordinates()
-            --This makes it roughly as powerful as a stock longinus beam due to _ShipDamageMultiplier.
-            local _dpf = Balancing_GetSectorWeaponDPS(x, y) * 25 
+            local _dpf = Balancing_GetSectorWeaponDPS(x, y) * 125 
 
-            local _LaserSniperValues = {
+            local _LaserSniperValues = { --#LONGINUS_SNIPER
                 _DamagePerFrame = _dpf,
                 _TimeToActive = 30,
-                _TargetPriority = 1,
-                _UseEntityDamageMult = true
+                _TargetPriority = 1
             }
 
             _ship:addScriptOnce("entity/xsologizeboss.lua")
@@ -767,6 +766,7 @@ function HorizonUtil.spawnHorizonShip(_Data)
     _HorizonShip:setValue("is_horizon", true)
     _HorizonShip:setValue("is_horizon_ship", true)
     _HorizonShip:setValue("_ESCC_bypass_hazard", true)
+    _HorizonShip:setValue("bDisableXAI", true) --Disable any Xavorion AI
     if _Data._ShipClassValue then
         for _, _val in pairs(_Data._ShipClassValue) do
             _HorizonShip:setValue(_val, true)
@@ -910,6 +910,7 @@ function HorizonUtil.spawnHorizonStation(_Data)
     _Station:setValue("is_horizon", true)
     _Station:setValue("is_horizon_station", true)
     _Station:setValue("_ESCC_bypass_hazard", true)
+    _Station:setValue("bDisableXAI", true) --Disable any Xavorion AI
     if _Data._StationValues then
         for _, _value in pairs(_Data._StationValues) do
             _Station:setValue(_value, true)

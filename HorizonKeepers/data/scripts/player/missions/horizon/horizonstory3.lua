@@ -55,23 +55,24 @@ mission.data.custom.hyperspaceCounter = 0
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.onAbandon = function()
-    if getOnLocation(nil) then
+    if atTargetLocation() then
         ESCCUtil.allPiratesDepart()
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
-    if getOnLocation(nil) then
+    if atTargetLocation() then
         ESCCUtil.allPiratesDepart()
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onAccomplish = function()
-    if getOnLocation(nil) then
+    if atTargetLocation() then
         ESCCUtil.allPiratesDepart()
         runFullSectorCleanup(false)
     end
@@ -89,7 +90,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     --Get a sector that's very close to the outer edge of the barrier.
@@ -132,7 +132,6 @@ mission.phases[1].playerCallbacks = {
 mission.phases[2] = {}
 mission.phases[2].timers = {}
 mission.phases[2].showUpdateOnEnd = true
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBegin = function()
     local _MethodName = "Phase 2 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -170,7 +169,7 @@ if onServer() then
 mission.phases[2].timers[1] = {
     time = 15,
     callback = function()
-        if getOnLocation(nil) and not mission.data.custom.transportsSpawned then
+        if atTargetLocation() and not mission.data.custom.transportsSpawned then
             mission.data.description[3].fulfilled = true
             mission.data.description[4].visible = true
 
@@ -188,7 +187,7 @@ mission.phases[2].timers[1] = {
 mission.phases[2].timers[2] = {
     time = 5,
     callback = function()
-        if getOnLocation(nil) and mission.data.custom.transportsSpawned and mission.data.custom.hyperspaceCounter >= 180 then
+        if atTargetLocation() and mission.data.custom.transportsSpawned and mission.data.custom.hyperspaceCounter >= 180 then
             jumpTransports()
             
             mission.data.custom.hyperspaceCounter = 0
@@ -206,7 +205,6 @@ end
 mission.phases[3] = {}
 mission.phases[3].timers = {}
 mission.phases[3].showUpdateOnEnd = true
-mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBegin = function()
     local _MethodName = "Phase 3 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -252,7 +250,7 @@ if onServer() then
 mission.phases[3].timers[2] = {
     time = 5,
     callback = function()
-        if getOnLocation(nil) and mission.data.custom.transportsSpawned and mission.data.custom.hyperspaceCounter >= 180 then
+        if atTargetLocation() and mission.data.custom.transportsSpawned and mission.data.custom.hyperspaceCounter >= 180 then
             jumpTransports2() --This fails the mission so no need to worry about anything else here.
         end
     end,
@@ -266,7 +264,6 @@ end
 mission.phases[4] = {}
 mission.phases[4].timers = {}
 mission.phases[4].showUpdateOnEnd = true
-mission.phases[4].noBossEncountersTargetSector = true
 mission.phases[4].onBegin = function()
     local _MethodName = "Phase 4 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -321,7 +318,6 @@ mission.phases[5] = {}
 mission.phases[5].timers = {}
 mission.phases[5].sectorCallbacks = {}
 mission.phases[5].showUpdateOnEnd = true
-mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].onBegin = function()
     local _MethodName = "Phase 5 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -377,7 +373,7 @@ mission.phases[5].timers[1] = {
     time = 10,
     callback = function()
         local _MethodName = "Phae 5 Timer 1 Callback"
-        if getOnLocation(nil) and mission.data.custom.phase5MiniBossTimer >= 10 and not mission.data.custom.phase5MiniBossesSpawned then
+        if atTargetLocation() and mission.data.custom.phase5MiniBossTimer >= 10 and not mission.data.custom.phase5MiniBossesSpawned then
             local _pirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
             mission.Log(_MethodName, "Player is on location and minibosses not yet spawned - there are " .. tostring(_pirateCt) .. " pirates.")
 
@@ -396,7 +392,7 @@ mission.phases[5].timers[2] = {
     callback = function()
         local _MethodName = "Phase 5 Timer 2 Callback"
 
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
             spawnVarlance()
@@ -412,7 +408,7 @@ mission.phases[5].timers[3] = {
 
         local _PirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
 
-        if getOnLocation(nil) and _PirateCt == 1 and mission.data.custom.phase5PirateKOd and mission.data.custom.phase5MiniBossesSpawned then
+        if atTargetLocation() and _PirateCt == 1 and mission.data.custom.phase5PirateKOd and mission.data.custom.phase5MiniBossesSpawned then
             nextPhase()
         end
     end,
@@ -424,7 +420,6 @@ end
 --endregion
 
 mission.phases[6] = {}
-mission.phases[6].noBossEncountersTargetSector = true
 mission.phases[6].onBegin = function()
     local _MethodName = "Phase 5 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -722,6 +717,7 @@ function onPirateBossesSpawned(_Generated)
 
     ESCCUtil.setDeadshot(_Deadshot)
     _Deadshot:addScriptOnce("lasersniper.lua", _LaserSniperValues)
+    _Deadshot:addScriptOnce("player/missions/horizon/story3/horizonstory3miniboss.lua")
 
     local _Bombard = _Generated[2]
 
@@ -737,6 +733,7 @@ function onPirateBossesSpawned(_Generated)
 
     ESCCUtil.setBombardier(_Bombard)
     _Bombard:addScriptOnce("torpedoslammer.lua", _TorpSlamValues)
+    _Bombard:addScriptOnce("player/missions/horizon/story3/horizonstory3miniboss.lua")
 
     SpawnUtility.addEnemyBuffs(_Generated)
 
@@ -832,7 +829,7 @@ function onPhase6PirateDialog(_PirateID, _PirateTitle)
         { answer = "Stop being cryptic.", followUp = d10 }
     }
 
-    d10.text = "No. The company is literally called Horizon Keepers LTD. You can look it up yourself."
+    d10.text = "No. The company is literally called Horizon Keepers, LTD. You can look it up yourself."
     d10.followUp = d11
 
     d11.text = "... Anything else?"
@@ -861,13 +858,16 @@ function onPhase6PirateDialog(_PirateID, _PirateTitle)
     d14.followUp = d15
 
     local d15values = { _PIRATE = _PirateTitle }
-    d15.text = "I said no such thing. Weapons, full spread on the ${_PIRATE}." % d15values --v
+    d15.text = "I said no such thing. Weapons, full spread on the ${_PIRATE}." % d15values
     d15.followUp = d16
 
     d16.text = "I should have known. See you in hell, you piece of s-"
     d16.onEnd = onPhase6PirateDialogEnd
 
     ESCCUtil.setTalkerTextColors({d1, d3, d15}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
+
+    --Fade out the music, then show the script.
+    Music():fadeOut(1.5)
 
     ScriptUI(_PirateID):interactShowDialog(d0, false)
 end

@@ -40,8 +40,8 @@ mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
-mission.globalPhase.timers = {}
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -72,7 +72,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBegin = function()
     local _Giver = Entity(mission.data.giver.id)
 
@@ -112,7 +111,6 @@ end)
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBegin = function()
     mission.data.location = mission.data.custom.secondLocation
     
@@ -144,7 +142,7 @@ mission.phases[2].timers[1] = {
     callback = function()
         local _MethodName = "Phase 2 Timer 1 Callback"
 
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
             spawnVarlance(false)
@@ -161,7 +159,7 @@ mission.phases[2].timers[2] = {
 
         local _sector = Sector()
 
-        if getOnLocation(_sector) then
+        if atTargetLocation() then
             if not _sector:exists(mission.data.custom.xsologizeID) and not mission.data.custom.allowPayment then
                 mission.data.custom.allowPayment = true
                 mission.data.description[5].fulfilled = true
@@ -183,7 +181,6 @@ end
 --endregion
 
 mission.phases[3] = {}
-mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBegin = function()
     local _MethodName = "Phase 3 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -411,6 +408,10 @@ mission.makeBulletin = function(_Station)
             local self, player = ...
             if not player:getValue("_horizonkeepers_story_complete") then
                 player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept this mission.")
+                return 0
+            end
+            if player:hasScript("horizonside2.lua") then
+                player:sendChatMessage((Entity(self.arguments[1].giver), 1, "You cannot accept this mission again!")
                 return 0
             end
             return 1

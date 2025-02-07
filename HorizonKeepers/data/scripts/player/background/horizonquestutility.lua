@@ -5,6 +5,7 @@ include("randomext")
 include("structuredmission")
 
 mission._Debug = 0
+mission._StoryStageValue = "_horizonkeepers_story_stage"
 
 --mission.tracing = true
 mission.data.silent = true
@@ -21,10 +22,10 @@ mission.globalPhase.updateServer = function()
         _player:setValue("_horizonkeepers_last_side2", 0)
     end
 
-    if not _player:getValue("_horizonkeepers_story_stage") then
-        _player:setValue("_horizonkeepers_story_stage", 1)
+    if not _player:getValue(mission._StoryStageValue) then
+        _player:setValue(mission._StoryStageValue, 1)
     else
-        local phaseID = _player:getValue("_horizonkeepers_story_stage")
+        local phaseID = _player:getValue(mission._StoryStageValue)
         setPhase(phaseID)
     end
 end
@@ -32,8 +33,8 @@ end
 mission.globalPhase.onRestore = function()
     local _player = Player()
 
-    if not _player:getValue("_horizonkeepers_story_stage") then
-        _player:setValue("_horizonkeepers_story_stage", 1)
+    if not _player:getValue(mission._StoryStageValue) then
+        _player:setValue(mission._StoryStageValue, 1)
     end
 end
 
@@ -55,7 +56,7 @@ mission.phases[2].updateServer = function()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory2.lua"
     local stageReq = 2
 
-    local horizonStage = _player:getValue("_horizonkeepers_story_stage")
+    local horizonStage = _player:getValue(mission._StoryStageValue)
     if horizonStage and horizonStage == stageReq then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
@@ -69,7 +70,7 @@ mission.phases[3].updateServer = function()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory3.lua"
     local stageReq = 3
 
-    local horizonStage = _player:getValue("_horizonkeepers_story_stage")
+    local horizonStage = _player:getValue(mission._StoryStageValue)
     if horizonStage and horizonStage == stageReq then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
@@ -83,7 +84,7 @@ mission.phases[4].updateServer = function()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory4.lua"
     local stageReq = 4
 
-    local horizonStage = _player:getValue("_horizonkeepers_story_stage")
+    local horizonStage = _player:getValue(mission._StoryStageValue)
     if horizonStage and horizonStage == stageReq then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
@@ -97,7 +98,7 @@ mission.phases[5].updateServer = function()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory5.lua"
     local stageReq = 5
 
-    local horizonStage = _player:getValue("_horizonkeepers_story_stage")
+    local horizonStage = _player:getValue(mission._StoryStageValue)
     if horizonStage and horizonStage == stageReq then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
@@ -111,7 +112,7 @@ mission.phases[6].updateServer = function()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory6.lua"
     local stageReq = 6
 
-    local horizonStage = _player:getValue("_horizonkeepers_story_stage")
+    local horizonStage = _player:getValue(mission._StoryStageValue)
     if horizonStage and horizonStage == stageReq then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
@@ -125,7 +126,7 @@ mission.phases[7].updateServer = function()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory7.lua"
     local stageReq = 7
 
-    local horizonStage = _player:getValue("_horizonkeepers_story_stage")
+    local horizonStage = _player:getValue(mission._StoryStageValue)
     if horizonStage and horizonStage == stageReq then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
@@ -139,7 +140,7 @@ mission.phases[8].updateServer = function()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory8.lua"
     local stageReq = 8
 
-    local horizonStage = _player:getValue("_horizonkeepers_story_stage")
+    local horizonStage = _player:getValue(mission._StoryStageValue)
     if horizonStage and horizonStage == stageReq then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
@@ -153,7 +154,7 @@ mission.phases[9].updateServer = function()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory9.lua"
     local stageReq = 9
 
-    local horizonStage = _player:getValue("_horizonkeepers_story_stage")
+    local horizonStage = _player:getValue(mission._StoryStageValue)
     if horizonStage and horizonStage == stageReq then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)

@@ -55,11 +55,13 @@ mission.data.custom.awacsTimer = 0
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
             awacsDeparts()
         end
@@ -69,7 +71,7 @@ end
 
 mission.globalPhase.onFail = function()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
             awacsDeparts()
         end
@@ -79,7 +81,7 @@ end
 
 mission.globalPhase.onAccomplish = function()
     if mission.data.location then
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
             awacsDeparts()
         end
@@ -112,7 +114,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     --Get a sector that's very close to the outer edge of the barrier.
@@ -154,7 +155,6 @@ mission.phases[1].playerCallbacks = {
 
 mission.phases[2] = {}
 mission.phases[2].showUpdateOnEnd = true
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBegin = function()
     local _MethodName = "Phase 2 On Begin"
     mission.Log(_MethodName, "Beginning...")
@@ -230,7 +230,6 @@ end
 
 mission.phases[3] = {}
 mission.phases[3].showUpdateOnEnd = true
-mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBegin = function()
     mission.data.description[7].visible = true
 end
@@ -271,7 +270,6 @@ end
 mission.phases[4] = {}
 mission.phases[4].timers = {}
 mission.phases[4].showUpdateOnEnd = true
-mission.phases[4].noBossEncountersTargetSector = true
 mission.phases[4].onBegin = function()
     mission.data.description[7].fulfilled = true
     mission.data.description[8].visible = true
@@ -361,7 +359,7 @@ mission.phases[4].timers[1] = {
         mission.Log(_MethodName, "Running phase 4 timer 1")
 
         --Don't do anything if we're not on location. Technically not needed since the player jumping out fails the mission at this point.
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             if mission.data.custom.waveState == 1 and mission.data.custom.waveNumber < 7 then
                 mission.Log(_MethodName, "Spawning pirate wave " .. tostring(mission.data.custom.waveNumber))
                 spawnPirateWave()
@@ -400,7 +398,6 @@ end
 
 mission.phases[5] = {}
 mission.phases[5].timers = {}
-mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].onBeginServer = function()
     local _hBattleship = Entity(mission.data.custom.horizonBattleshipid)
     local _Faciton = HorizonUtil.getFriendlyFaction()
@@ -538,6 +535,7 @@ function onTowingShipFinished(_Generated)
     ESCCUtil.removeCivilScripts(_Generated)
     _Generated:setValue("is_pirate", true)
     _Generated:setValue("_horizon4_towship", true)
+    _Generated:setValue("bDisableXAI", true) --Disable any Xavorion AI
 
     local _ShipAI = ShipAI(_Generated)
     local _ShipPos = _Generated.position
@@ -776,7 +774,7 @@ function spawnHorizonWave()
     _awacsAI:setFlyLinear(hBshipPos, 4000, false)
     _awacsAI:setPassiveShooting(true)
 
-    HorizonUtil.varlanceChatter("Tired of sending their pawns at last, I see. Prioritize the AWACS - its coordinating with those artillery cruisers.")
+    HorizonUtil.varlanceChatter("Tired of sending their pawns at last, I see. Prioritize the AWACS - it's coordinating with those artillery cruisers.")
     mission.data.description[9].visible = true
     sync()
 end

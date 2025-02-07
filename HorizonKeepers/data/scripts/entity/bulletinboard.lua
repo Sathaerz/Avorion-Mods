@@ -19,6 +19,10 @@ function BulletinBoard.refreshIcon()
                 break
             end
         end
+
+        if hasHorizonBulletin then
+            break
+        end
     end
 
     if hasHorizonBulletin then
