@@ -543,6 +543,7 @@ function spawnTransports()
     for _, _ship in pairs(_Freighters) do
         _ship:setValue("_horizon3_freighter", true)
         _ship:setValue("is_pirate", true)
+        _ship:setValue("bDisableXAI", true) --Disable any Xavorion AI
         ESCCUtil.removeCivilScripts(_ship)
         Boarding(_ship).boardable = false
 
