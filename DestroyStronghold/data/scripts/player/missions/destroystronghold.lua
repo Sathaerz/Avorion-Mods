@@ -146,7 +146,6 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
-mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         dumpMilitaryStationCargo()
@@ -406,7 +405,7 @@ mission.phases[1].onOptionalLocationArrivalConfirmed = function(_X, _Y)
                 "What's this? We'll kill you!"
             }
 
-            Sector():broadcastChatMessage(_Pirates[1], ChatMessageType.Chatter, randomEntry(_Lines))
+            Sector():broadcastChatMessage(_Pirates[1], ChatMessageType.Chatter, getRandomEntry(_Lines))
         end
 
         mission.data.custom.optionalPiratesTaunted = true
@@ -462,7 +461,7 @@ mission.phases[1].optionalUpdateServer = function(_TimeStep)
         _TargetWreck:setValue("_destroystronghold_optionalwreck_hascode", true)
 
         registerMarkWreckages()
-        showMissionUpdated("Destroy Entrenched Pirates")
+        showMissionUpdated("Destroy Pirate Stronghold")
         mission.data.description[4].fulfilled = true
         mission.data.description[5].visible = true
 
@@ -582,6 +581,8 @@ function buildObjectiveSector(_X, _Y)
         Placer.resolveIntersections()
 
         Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+
+        showMissionUpdated("Destroy Pirate Stronghold")
 
         mission.data.custom.builtMainSector = true
     end
