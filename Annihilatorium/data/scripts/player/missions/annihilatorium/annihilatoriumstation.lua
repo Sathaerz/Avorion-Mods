@@ -26,7 +26,7 @@ function Annihilatorium.interactionPossible(playerIndex, option)
     return CheckFactionInteraction(playerIndex, Annihilatorium.interactionThreshold)
 end
 
-function Annihilatorium.initialize()
+function Annihilatorium.initialize(dangerLevel)
     if onServer() then
         local _Station = Entity()
         _Station.title = "Annihilatorium"
@@ -35,6 +35,9 @@ function Annihilatorium.initialize()
 
         Annihilatorium.data.cleanWreckages = true
         Annihilatorium.data.pullLoot = true
+        Annihilatorium.data.dangerLevel = dangerLevel
+
+        Annihilatorium.sync()
     end
 
     if onClient() then
@@ -43,30 +46,85 @@ function Annihilatorium.initialize()
 end
 
 function Annihilatorium.initUI()
+    if Annihilatorium._Debug == 1 then
+        print("Running initUI")
+    end
+
     local res = getResolution()
-    local size = vec2(600, 75)
-
     local menu = ScriptUI()
-    local window = menu:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5))
 
-    local _Splitter = UIArbitraryVerticalSplitter(Rect(window.size), 10, 15, 325, 575)
+    --[[=====================================================
+        CREATE NEXT WAVE WINDOW:
+    =========================================================]]
+    local nextWaveSize = vec2(600, 75)
 
-    local labelRect = _Splitter:partition(0)
-    local lrUpper = labelRect.topLeft
-    local lrLower = labelRect.bottomRight
-    lrUpper = lrUpper + vec2(0, 15)
-    local descLabel = window:createLabel(Rect(lrUpper, lrLower), "Make sure you're ready. There's no going back.", 14)
+    local nextWaveWindow = menu:createWindow(Rect(res * 0.5 - nextWaveSize * 0.5, res * 0.5 + nextWaveSize * 0.5))
 
-    local buttonRect = _Splitter:partition(1)
-    local button = window:createButton(buttonRect, "Start", "onStartPressed")
+    local nextWaveSplitter = UIArbitraryVerticalSplitter(Rect(nextWaveWindow.size), 10, 15, 325, 575)
 
-    window.caption = "Start Next Wave"
-    window.showCloseButton = 1
-    window.moveable = 1
-    menu:registerWindow(window, "Start Next Wave", 3)
-    menu:registerInteraction("Clean Wreckages", "onToggleCleanWrecks", 2)
- 
-    Annihilatorium.uiInitialized = true
+    local nextWaveLabelRect = nextWaveSplitter:partition(0)
+    local nextWavelrUpper = nextWaveLabelRect.topLeft
+    local nextWavelrLower = nextWaveLabelRect.bottomRight
+    nextWavelrUpper = nextWavelrUpper + vec2(0, 15)
+    local descLabel = nextWaveWindow:createLabel(Rect(nextWavelrUpper, nextWavelrLower), "Make sure you're ready. There's no going back.", 14)
+
+    local buttonRect = nextWaveSplitter:partition(1)
+    local button = nextWaveWindow:createButton(buttonRect, "Start", "onStartPressed")
+
+    nextWaveWindow.caption = "Start Next Wave"
+    nextWaveWindow.showCloseButton = 1
+    nextWaveWindow.moveable = 1
+
+    --[[=====================================================
+        REGISTER UI:
+    =========================================================]]
+    menu:registerWindow(nextWaveWindow, "Start Next Wave", 3)
+
+    if Annihilatorium.data.dangerLevel > 5 then
+        --[[=====================================================
+            CREATE MASTER OF THE ARENA WINDOW:
+        =========================================================]]
+        local motaSize = vec2(600, 280)
+
+        local motaWindow = menu:createWindow(Rect(res * 0.5 - motaSize * 0.5, res * 0.5 + motaSize * 0.5))
+
+        local motaSplitter = UIArbitraryVerticalSplitter(Rect(motaWindow.size), 10, 15, 325, 575)
+
+        local motaDescriptionSplitter = UIArbitraryHorizontalSplitter(motaSplitter:partition(0), 10, 15, 40, 65, 90, 115, 140, 165, 195)
+
+        local labelTable = {
+            "Enable Master Of The Arena Mode.",
+            "This will do the following:",
+            " - Normal enemies x4 hp / damage",
+            " - All bosses replaced with Executioners",
+            " - All bosses guaranteed to be Hardcore+",
+            " - Leaving the sector results in defeat",
+            " - x3 reward for bosses / finishing all waves",
+            "Good luck!"
+        }
+
+        for idx, txt in pairs(labelTable) do
+            local partitionidx = idx - 1
+            local motaLabelRect = motaDescriptionSplitter:partition(partitionidx)
+            local motalrUpper = motaLabelRect.topLeft
+            local motalrLower = motaLabelRect.bottomRight
+
+            local motaDescLabel = motaWindow:createLabel(Rect(motalrUpper, motalrLower), txt, 14)
+        end
+
+        local motaButtonSplitter = UIArbitraryHorizontalSplitter(motaSplitter:partition(1), 10, 15, 170)
+
+        local motaButtonRect = motaButtonSplitter:partition(1)
+        local motaButton = motaWindow:createButton(motaButtonRect, "Engage", "onEnableMOTAPressed")
+
+        motaWindow.caption = "Master Of The Arena"
+        motaWindow.showCloseButton = 1
+        motaWindow.moveable = 1
+
+        menu:registerWindow(motaWindow, "Master Of The Arena", 2)
+    end
+    
+    menu:registerInteraction("Clean Wreckages", "onToggleCleanWrecks", 1)
 end
 
 function Annihilatorium.getUpdateInterval()
@@ -75,7 +133,6 @@ end
 
 function Annihilatorium.updateServer(timeStep)
     local _sector = Sector()
-    local _entity = Entity()
     local pirates = { _sector:getEntitiesByScriptValue("is_pirate") }
 
     if #pirates == 0 and Annihilatorium.data.cleanWreckages then
@@ -93,17 +150,6 @@ function Annihilatorium.updateServer(timeStep)
         end
     end
 
-    --local entityPos = _entity.translationf
-    --if #pirates == 0 and Annihilatorium.data.pullLoot then
-    --    local loots = { _sector:getEntitiesByType(EntityType.Loot) }
-    --    local lootCt = 0
-    --
-    --    for _, loot in pairs(loots) do
-    --        loot.translation = dvec3(entityPos.x, entityPos.y, entityPos.z)
-    --    end
-    --end
-
-    --Sync after each update in addition to at set points.
     Annihilatorium.sync()
 end
 
@@ -138,6 +184,38 @@ function Annihilatorium.sendNextWave()
     end
 end
 callable(Annihilatorium, "sendNextWave")
+
+--endregion
+
+--region #MASTER OF THE ARENA
+
+function Annihilatorium.onEnableMOTAPressed()
+    if Annihilatorium._Debug == 1 then
+        print("Enable MOTA pressed")
+    end
+    invokeServerFunction("enableMOTA")
+    ScriptUI():stopInteraction()
+end
+
+function Annihilatorium.enableMOTA()
+    if Annihilatorium._Debug == 1 then
+        print("Enabling MOTA")
+    end
+
+    local _sector = Sector()
+    local players = {_sector:getPlayers()}
+    local playerHasMissionScript = false
+    for idx, _player in pairs(players) do
+        if _player:hasScript("annihilatorium.lua") then
+            playerHasMissionScript = true
+        end
+    end
+
+    if playerHasMissionScript then
+        _sector:sendCallback("onEnableMOTAMode")
+    end
+end
+callable(Annihilatorium, "enableMOTA")
 
 --endregion
 
@@ -177,8 +255,9 @@ end
 callable(Annihilatorium, "onToggleCleanWrecks")
 
 function Annihilatorium.zapWreckage(from, to, idx, anims)
+    --Spams like crazy. Be careful enabling this.
     if Annihilatorium._Debug == 1 then
-        print("Zapping Wreckages")
+        --print("Zapping Wreckages")
     end
 
     local _Sector = Sector()
@@ -201,8 +280,9 @@ end
 --region #SYNC / SECURE / RESTORE
 
 function Annihilatorium.sync(data_in)
+    --This spams like crazy. Be careful enabling it.
     if Annihilatorium._Debug == 1 then
-        print("Syncing Annihilatorium data")
+        --print("Syncing Annihilatorium data") 
     end
 
     if onServer() then
@@ -231,6 +311,8 @@ function Annihilatorium.restore(values)
     end
 
     Annihilatorium.data = values
+
+    Annihilatorium.sync() --need to sync on restore.
 end
 
 --endregion

@@ -39,7 +39,8 @@ mission.data.description = {
     { text = "Come on down to (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
     { text = "Defeat ${_OVERALLWAVES} waves", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Waves Defeated: ${_SURVIVEDWAVES} / ${_OVERALLWAVES}", bulletPoint = true, fulfilled = false, visible = false },
-    { text = "Speak with the Annihilatorium when ready to proceed", bulletPoint = true, fulfilled = false, visible = false }
+    { text = "Speak with the Annihilatorium when ready to proceed", bulletPoint = true, fulfilled = false, visible = false },
+    { text = "Master Of The Arena mode is engaged", bulletPoint = true, fulfilled = false, visible = false }
 }
 mission.data.accomplishMessage = "Never seen a show like that in my life! Here's your money!"
 
@@ -54,6 +55,7 @@ mission.data.custom.waveTracks = {
     "data/music/background/omfstadium.ogg"
 }
 mission.data.custom.bossTrack = "data/music/special/lasselyxminiboss.ogg"
+mission.data.custom.motaBossTrack = "data/music/special/acmoaapexincircle.ogg"
 
 local Annihilatorium_init = initialize
 function initialize(_Data_in, bulletin)
@@ -78,6 +80,7 @@ function initialize(_Data_in, bulletin)
         mission.data.custom.spawnedBossThisWave = false
         mission.data.custom.spawnedBossTitle = nil
         mission.data.custom.bossBountyFactor = 1
+        mission.data.custom.masterOfTheArena = false --Master of the Arena mode - makes the mission much more difficult but the payout is more.
 
         --[[=====================================================
             MISSION DESCRIPTION SETUP:
@@ -132,7 +135,16 @@ mission.globalPhase.onRestore = function()
 end
 
 mission.globalPhase.onTargetLocationLeft = function(x, y)
+    local methodName = "On Target Location Left"
+    mission.Log(methodName, "Running.")
+
     mission.data.custom.checkForWaveVanquish = false
+
+    if onServer() then
+        if mission.data.custom.masterOfTheArena then
+            fail()
+        end
+    end
 
     if onClient() then
         stopArenaMusic()
@@ -176,14 +188,30 @@ mission.phases[2].onTargetLocationArrivalConfirmed = function(x, y)
 end
 
 mission.phases[2].updateTargetLocationServer = function(timeStep)
-    local warzoneShips = { Sector():getEntitiesByScriptValue("war_zone_reinforcement") }
+    local _sector = Sector()
+
+    local delScriptPath = "entity/utility/delayeddelete.lua"
+
+    --Remove Warzone ships
+    local warzoneShips = { _sector:getEntitiesByScriptValue("war_zone_reinforcement") }
     for _, wzShip in pairs(warzoneShips) do
         if not wzShip.playerOrAllianceOwned then
-            wzShip:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 8))
+            wzShip:addScriptOnce(delScriptPath, random():getFloat(4, 8))
         end
     end
 
-    local stations = { Sector():getEntitiesByType(EntityType.Station)}
+    --Remove Xsotan ships (local events are suppressed, but player could have gone into the sector w/ alien attack on)
+    local xsotanTags = { "is_xsotan", "xsotan_summoner_minion", "xsotan_master_summoner_minion", "xsotan_revenant" }
+
+    for idx, tag in pairs(xsotanTags) do
+        local xsotans = { _sector:getEntitiesByScriptValue(tag)}
+        for idx2, xsotan in pairs(xsotans) do
+            xsotan:addScriptOnce(delScriptPath, random():getFloat(4, 8))
+        end
+    end
+
+    --Fail the mission if the player builds a station in the sector.
+    local stations = { _sector:getEntitiesByType(EntityType.Station)}
     for _, station in pairs(stations) do
         if station.playerOrAllianceOwned then
             mission.data.failMessage = "You can't build a station here!!! That clearly violates the terms of your liability waiver!"
@@ -268,6 +296,26 @@ mission.phases[2].sectorCallbacks[1] = {
     end
 }
 
+mission.phases[2].sectorCallbacks[2] = {
+    name = "onEnableMOTAMode",
+    func = function()
+        local _sector = Sector()
+
+        if mission.data.custom.masterOfTheArena then
+            _sector:broadcastChatMessage("", 1, "You've already engaged Master Of The Arena mode!")
+        else
+            if mission.data.custom.survivedWaves == 0 then
+                mission.data.custom.masterOfTheArena = true
+                mission.data.description[7].visible = true
+                _sector:broadcastChatMessage("", 2, "Master Of The Arena mode is engaged! Leaving the area will result in failure.")
+                sync()
+            else
+                _sector:broadcastChatMessage("", 1, "Cannot engage Master Of The Arena mode after clearing waves!")
+            end
+        end
+    end
+}
+
 end
 
 --endregion
@@ -293,7 +341,7 @@ function makeSector(_X, _Y)
     _AnnihilatoriumStation:removeScript("crewboard.lua")
     _AnnihilatoriumStation:removeScript("bulletinboard.lua")
     _AnnihilatoriumStation:removeScript("militaryoutpost.lua")
-    _AnnihilatoriumStation:addScriptOnce(mission.data.custom.stationScriptPath)
+    _AnnihilatoriumStation:addScriptOnce(mission.data.custom.stationScriptPath, mission.data.custom.dangerLevel)
 
     mission.data.custom.annihilatoriumStationIndex = _AnnihilatoriumStation.index.string
 
@@ -337,7 +385,7 @@ function getWaveTable(waveNumber)
         { waveDanger = 2, waveShips = {4}, bonus = 1.225 },
         { waveDanger = 2, waveShips = {4}, bonus = 1.225 },
         { waveDanger = 2, waveShips = {4}, bonus = 1.225 },
-        { waveDanger = 2, waveShips = {3}, bonus = 1.225, boss = true }, --Boss is created separately
+        { waveDanger = 2, waveShips = {4}, bonus = 1.225, boss = true },
         { waveDanger = 3, waveShips = {4, 1}, bonus = 1.2 },
         { waveDanger = 3, waveShips = {4, 1}, bonus = 1.2 },
         { waveDanger = 3, waveShips = {4, 1}, bonus = 1.2 },
@@ -347,7 +395,7 @@ function getWaveTable(waveNumber)
         { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175 },
         { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175 },
         { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175 },
-        { waveDanger = 4, waveShips = {4}, bonus = 1.175, boss = true }, --Boss is created separately
+        { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175, boss = true },
         { waveDanger = 5, waveShips = {4, 2}, bonus = 1.15 },
         { waveDanger = 5, waveShips = {4, 2}, bonus = 1.15 },
         { waveDanger = 5, waveShips = {4, 2}, bonus = 1.15 },
@@ -357,7 +405,7 @@ function getWaveTable(waveNumber)
         { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125 },
         { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125 },
         { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125 },
-        { waveDanger = 6, waveShips = {4, 1}, bonus = 1.125, boss = true }, --Boss is created separately
+        { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125, boss = true },
         { waveDanger = 7, waveShips = {4, 3}, bonus = 1.1 },
         { waveDanger = 7, waveShips = {4, 3}, bonus = 1.1 },
         { waveDanger = 7, waveShips = {4, 3}, bonus = 1.1 },
@@ -367,7 +415,7 @@ function getWaveTable(waveNumber)
         { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075 },
         { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075 },
         { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075 },
-        { waveDanger = 8, waveShips = {4, 2}, bonus = 1.075, boss = true }, --Boss is created separately
+        { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075, boss = true },
         { waveDanger = 9, waveShips = {4, 4}, bonus = 1.05 },
         { waveDanger = 9, waveShips = {4, 4}, bonus = 1.05 },
         { waveDanger = 9, waveShips = {4, 4}, bonus = 1.05 },
@@ -377,7 +425,7 @@ function getWaveTable(waveNumber)
         { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025 },
         { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025 },
         { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025 },
-        { waveDanger = 10, waveShips = {4, 3}, bonus = 1.025, boss = true }, --Boss is created separately
+        { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025, boss = true }
     }
 
     return waveTables[waveNumber]
@@ -395,11 +443,23 @@ function spawnWave()
     local waveDanger = useWaveTable.waveDanger
     local waveShipTable = useWaveTable.waveShips
     local useBossMusic = false
+    local shouldSpawnBoss = false
 
+    --Spawn ship in table.
     for _, waveShips in pairs(waveShipTable) do
         mission.Log(methodName, "Spawning wave table with " .. tostring(waveShips))
+
+        local waveShipsToSpawn = waveShips
+        if not mission.data.custom.spawnedBossThisWave and (useWaveTable.bossOnDangerLevel == mission.data.custom.dangerLevel or useWaveTable.boss) then
+            mission.Log(methodName, "Spawning one less enemy in this group in favor of a boss")
+
+            mission.data.custom.spawnedBossThisWave = true
+            waveShipsToSpawn = waveShipsToSpawn - 1
+            shouldSpawnBoss = true
+        end
+
         --Get ESCC wave table for the danger level / # of ships
-        local waveSpawnTable = ESCCUtil.getStandardWave(waveDanger, waveShips, "Standard", false)
+        local waveSpawnTable = ESCCUtil.getStandardWave(waveDanger, waveShipsToSpawn, "Standard", false)
         local distance = 250 --_#DistAdj
 
         --Spawn the ships
@@ -417,11 +477,7 @@ function spawnWave()
         pirateGenerator:endBatch()
     end
 
-    if useWaveTable.bossOnDangerLevel == mission.data.custom.dangerLevel then
-        useBossMusic = true
-    end
-
-    if useWaveTable.boss or mission._Spawn_Boss_Debug == 1 then
+    if shouldSpawnBoss or mission._Spawn_Boss_Debug == 1 then
         useBossMusic = true
         spawnBoss(waveDanger)
     end
@@ -446,22 +502,38 @@ function onWaveSpawned(generated)
 
         pirate.damageMultiplier = (pirate.damageMultiplier or 1) * useWaveTable.bonus * getDifficultyBonus()
 
+        local durabilityBonus = useWaveTable.bonus * getDifficultyBonus()
+
+        local pirateShield = Shield(pirate.index)
+        if pirateShield then
+            pirateShield.maxDurabilityFactor = (pirateShield.maxDurabilityFactor or 1) * durabilityBonus
+        else
+            durabilityBonus = durabilityBonus * 1.5
+        end
+
         local pirateDurability = Durability(pirate.index)
         if pirateDurability then
-            pirateDurability.maxDurabilityFactor = (pirateDurability.maxDurabilityFactor or 1) * useWaveTable.bonus * getDifficultyBonus()
+            pirateDurability.maxDurabilityFactor = (pirateDurability.maxDurabilityFactor or 1) * durabilityBonus
+        end
+
+        if mission.data.custom.masterOfTheArena then
+            pirate.damageMultiplier= (pirate.damageMultiplier or 1) * 4
+
+            local motaDurabilityBonus = 4
+
+            if pirateShield then
+                pirateShield.maxDurabilityFactor = (pirateShield.maxDurabilityFactor) * motaDurabilityBonus
+            else
+                motaDurabilityBonus = motaDurabilityBonus * 1.5
+            end
+
+            if pirateDurability then
+                pirateDurability.maxDurabilityFactor = (pirateDurability.maxDurabilityFactor or 1) * motaDurabilityBonus
+            end
         end
 
         MissionUT.deleteOnPlayersLeft(pirate)
         pirate:removeScript("fleeondamaged.lua") --No running! Fight until you die!
-    end
-
-    --Make one of the pirates a boss if appropriate
-    if not mission.data.custom.spawnedBossThisWave and useWaveTable.bossOnDangerLevel == mission.data.custom.dangerLevel then
-        mission.Log(methodName, "Bossing up a random pirate in this group")
-        mission.data.custom.spawnedBossThisWave = true
-
-        local bossPirate = getRandomEntry(generated)
-        makeBossEnemy(bossPirate)
     end
 
     --Set appropriate custom data values
@@ -493,12 +565,17 @@ function spawnBoss(waveDanger)
 
     pirateGenerator:startBatch()
 
-    pirateGenerator:createScaledPirateByName(bossTypes[waveDanger], pirateGenerator:getGenericPosition())
-    
+    if mission.data.custom.masterOfTheArena then
+        pirateGenerator:createScaledExecutioner(pirateGenerator:getGenericPosition(), waveDanger * 100)
+    else
+        pirateGenerator:createScaledPirateByName(bossTypes[waveDanger], pirateGenerator:getGenericPosition())
+    end
+
     pirateGenerator:endBatch()
 end
 
 function onBossSpawned(generated)
+    local methodName = "On Boss Spawned"
     local bossEnemy = generated[1]
 
     local _SmugglerFaction = MissionUT.getMissionSmugglerFaction()
@@ -506,34 +583,14 @@ function onBossSpawned(generated)
     local pirateAI = ShipAI(bossEnemy)
     pirateAI:registerFriendFaction(_SmugglerFaction.index)
     
-    makeBossEnemy(bossEnemy)
+    mission.Log(methodName, "Making Boss Enemy")
 
-    --With the player having to kill five of these enemies, this makes this the best mission for farming legendary turrets.
-    --But we don't want to make things too easy for the player :)
-    if mission.data.custom.dangerLevel == 10 then
-        bossEnemy:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
-        
-        local bossDurability = Durability(bossEnemy.index)
-        if bossDurability then
-            bossDurability.maxDurabilityFactor = (bossDurability.maxDurabilityFactor or 1) * 1.25
-        end
-
-        bossEnemy.damageMultiplier = (bossEnemy.damageMultiplier or 1) * 1.5
-    end
-
-    SpawnUtility.addEnemyBuffs(generated)
-    Placer.resolveIntersections(generated)
-end
-
-function makeBossEnemy(enemy)
-    local methodName = "Make Boss Enemy"
-    mission.Log(methodName, "Running.")
-
-    local newTitle = "${script}" .. enemy.title
-    local titleArgs = enemy:getTitleArguments() --We mess with the titleArgs in bossFuncs.
+    local newTitle = "${script}" .. bossEnemy.title
+    local titleArgs = bossEnemy:getTitleArguments() --We mess with the titleArgs in bossFuncs.
 
     local x, y = Sector():getCoordinates()
 
+    mission.Log(methodName, "Setting script value tables")
     local laserSniperDamage = Balancing_GetSectorWeaponDPS(x, y) * 32 --Roughly 1/4 the damage of a longinus, but enemies will use their damge multiplier.
     local laserSniperValues = {
         _DamagePerFrame = laserSniperDamage,
@@ -576,38 +633,39 @@ function makeBossEnemy(enemy)
         _MaxTargets = math.floor(math.max(2, apdBaseValue / 8.5))
     }
 
+    mission.Log(methodName, "Defining boss function table")
     local bossFuncs = {
         function() --1 Relentless (eternal / phasemode)
-            enemy:addScriptOnce("eternal.lua")
-            enemy:addScriptOnce("phasemode.lua")
+            bossEnemy:addScriptOnce("eternal.lua")
+            bossEnemy:addScriptOnce("phasemode.lua")
 
             titleArgs.script = "Relentless "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for eternal / +0.25 for phasemode
         end,
         function() --2 Overgrown (eternal / thorns)
-            enemy:addScriptOnce("eternal.lua")
-            enemy:addScriptOnce("thorns.lua")
+            bossEnemy:addScriptOnce("eternal.lua")
+            bossEnemy:addScriptOnce("thorns.lua")
 
             titleArgs.script = "Overgrown "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for eternal / +0.25 for thorns
         end,
         function() --3 Berserking (eternal / frenzy)
-            enemy:addScriptOnce("eternal.lua")
-            enemy:addScriptOnce("frenzy.lua")
+            bossEnemy:addScriptOnce("eternal.lua")
+            bossEnemy:addScriptOnce("frenzy.lua")
 
             titleArgs.script = "Berserking "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for eternal / +0.25 for frenzy
         end,
         function() --4 Unbreakable (adaptive / ironcurtain)
-            enemy:addScriptOnce("ironcurtain.lua")
-            enemy:addScriptOnce("adaptivedefense.lua")
+            bossEnemy:addScriptOnce("ironcurtain.lua")
+            bossEnemy:addScriptOnce("adaptivedefense.lua")
 
             titleArgs.script = "Unbreakable "
             mission.data.custom.bossBountyFactor = 2.5 -- +1 for ironcurtain / +0.5 for adaptivedefense
         end,
         function() --5 Blackguard (allybooster / avenger)
-            enemy:addScriptOnce("allybooster.lua", allyBoosterValues)
-            enemy:addScriptOnce("avenger.lua")
+            bossEnemy:addScriptOnce("allybooster.lua", allyBoosterValues)
+            bossEnemy:addScriptOnce("avenger.lua")
 
             titleArgs.script = "Blackguard "
             mission.data.custom.bossBountyFactor = 1.75 -- +0.5 for allybooster / +0.25 for avenger
@@ -619,36 +677,36 @@ function makeBossEnemy(enemy)
                 _UpdateCycle = 5
             }
 
-            enemy:addScriptOnce("ironcurtain.lua")
-            enemy:addScriptOnce("frenzy.lua", frenzyValues)
+            bossEnemy:addScriptOnce("ironcurtain.lua")
+            bossEnemy:addScriptOnce("frenzy.lua", frenzyValues)
 
             titleArgs.script = "Rampaging "
             mission.data.custom.bossBountyFactor = 2.5 -- +1 for ironcurtain / +0.5 for (buffed) frenzy
         end,
         function() --7 Juggernaut (ironcurtain / lasersniper)
-            enemy:addScriptOnce("ironcurtain.lua")
-            enemy:addScriptOnce("lasersniper.lua", laserSniperValues)
+            bossEnemy:addScriptOnce("ironcurtain.lua")
+            bossEnemy:addScriptOnce("lasersniper.lua", laserSniperValues)
 
             titleArgs.script = "Juggernaut "
             mission.data.custom.bossBountyFactor = 3 -- +1 for ironcurtain / +1 for lasersniper
         end,
         function() --8 Assassin (phasemode / lasersniper)
-            enemy:addScriptOnce("phasemode.lua")
-            enemy:addScriptOnce("lasersniper.lua", laserSniperValues)
+            bossEnemy:addScriptOnce("phasemode.lua")
+            bossEnemy:addScriptOnce("lasersniper.lua", laserSniperValues)
 
             titleArgs.script = "Assassin "
             mission.data.custom.bossBountyFactor = 2.25 -- +0.25 for phasemode / +1 for lasersniper
         end,
         function() --9 Brimstone (overdrive / lasersniper)
-            enemy:addScriptOnce("overdrive.lua")
-            enemy:addScriptOnce("lasersniper.lua", laserSniperValues)
+            bossEnemy:addScriptOnce("overdrive.lua")
+            bossEnemy:addScriptOnce("lasersniper.lua", laserSniperValues)
 
             titleArgs.script = "Brimstone "
             mission.data.custom.bossBountyFactor = 2.25 -- +1 for lasersniper / +0.25 for overdrive
         end,
         function() --10 Raving (apd / lasersniper)
-            enemy:addScriptOnce("absolutepointdefense.lua", apdValues)
-            enemy:addScriptOnce("lasersniper.lua", laserSniperValues)
+            bossEnemy:addScriptOnce("absolutepointdefense.lua", apdValues)
+            bossEnemy:addScriptOnce("lasersniper.lua", laserSniperValues)
 
             titleArgs.script = "Raving "
             mission.data.custom.bossBountyFactor = 2 -- +1 for lasersniper / +0 for apd
@@ -656,22 +714,22 @@ function makeBossEnemy(enemy)
         function() --11 Penetrator (afterburn / (buffed) lasersniper)
             laserSniperValues._ShieldPen = true
 
-            enemy:addScriptOnce("afterburn.lua")
-            enemy:addScriptOnce("lasersniper.lua", laserSniperValues)
+            bossEnemy:addScriptOnce("afterburn.lua")
+            bossEnemy:addScriptOnce("lasersniper.lua", laserSniperValues)
 
             titleArgs.script = "Penetrator "
             mission.data.custom.bossBountyFactor = 2.75 -- +1.5 for (buffed) lasersniper / +0.25 for afterburn
         end,
         function() --12 Punisher (avenger / torpslammer)
-            enemy:addScriptOnce("avenger.lua")
-            enemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
+            bossEnemy:addScriptOnce("avenger.lua")
+            bossEnemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
 
             titleArgs.script = "Punisher "
             mission.data.custom.bossBountyFactor = 2.25 -- +1 for torpslammer / +0.25 for avenger
         end,
         function() --13 Saboteur (phasemode / torpslammer)
-            enemy:addScriptOnce("phasemode.lua")
-            enemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
+            bossEnemy:addScriptOnce("phasemode.lua")
+            bossEnemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
 
             titleArgs.script = "Saboteur "
             mission.data.custom.bossBountyFactor = 2.25 -- +1 for torpslammer / +0.25 for phasemode
@@ -682,8 +740,8 @@ function makeBossEnemy(enemy)
             torpedoSlammerValues._VelocityFactor = 16
             torpedoSlammerValues._TurningSpeedFactor = 8
 
-            enemy:addScriptOnce("afterburn.lua")
-            enemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
+            bossEnemy:addScriptOnce("afterburn.lua")
+            bossEnemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
 
             titleArgs.script = "Mercurial "
             mission.data.custom.bossBountyFactor = 2.75 -- +1.5 for (buffed) torpedoslammer / +0.25 for afterburn
@@ -692,8 +750,8 @@ function makeBossEnemy(enemy)
             torpedoSlammerValues._PreferWarheadType = 2 --Neutron
             torpedoSlammerValues._PreferSecondaryWarheadType = 3 --Fusion
 
-            enemy:addScriptOnce("overdrive.lua")
-            enemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
+            bossEnemy:addScriptOnce("overdrive.lua")
+            bossEnemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
 
             titleArgs.script = "Vindictive "
             mission.data.custom.bossBountyFactor = 2.75 -- +1.5 for (buffed) torpedoslammer / +0.25 for overdrive
@@ -703,43 +761,43 @@ function makeBossEnemy(enemy)
             torpedoSlammerValues._PreferSecondaryWarheadType = 9 --EMP
             torpedoSlammerValues._ROF = 4
 
-            enemy:addScriptOnce("adaptivedefense.lua")
-            enemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
+            bossEnemy:addScriptOnce("adaptivedefense.lua")
+            bossEnemy:addScriptOnce("torpedoslammer.lua", torpedoSlammerValues)
 
             titleArgs.script = "Thunderstrike "
             mission.data.custom.bossBountyFactor = 3 -- +1.5 for (buffed) torpedoslammer / +0.5 for adaptivedefense
         end,
         function() --17 Charlatan ((healing) allybooster / eternal)
-            enemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
-            enemy:addScriptOnce("eternal.lua")
+            bossEnemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
+            bossEnemy:addScriptOnce("eternal.lua")
 
             titleArgs.script = "Charlatan "
             mission.data.custom.bossBountyFactor = 1.91 -- +0.66 for (healing) allybooster / +0.25 for eternal
         end,
         function() --18 Traditor ((healing) allybooster / ironcurtain)
-            enemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
-            enemy:addScriptOnce("ironcurtain.lua")
+            bossEnemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
+            bossEnemy:addScriptOnce("ironcurtain.lua")
 
             titleArgs.script = "Traditor "
             mission.data.custom.bossBountyFactor = 2.66 -- +1 for ironcurtain / +0.66 for (healing) allybooster
         end,
         function() --19 Seeker (eternal / evenger)
-            enemy:addScriptOnce("eternal.lua", 0.015, 0)
-            enemy:addScriptOnce("avenger.lua")
+            bossEnemy:addScriptOnce("eternal.lua", 0.015, 0)
+            bossEnemy:addScriptOnce("avenger.lua")
 
             titleArgs.script = "Seeker "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for eternal and +0.25 for avenger
         end,
         function() --20 Bastion ((healing) allybooster / apd)
-            enemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
-            enemy:addScriptOnce("absolutepointdefense.lua", apdValues)
+            bossEnemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
+            bossEnemy:addScriptOnce("absolutepointdefense.lua", apdValues)
 
             titleArgs.script = "Bastion "
             mission.data.custom.bossBountyFactor = 1.66 -- +0.66 for (healing) allybooster and +0 for absolutepointdefense
         end,
         function() --21 Overclocked (overdrive / afterburn)
-            enemy:addScriptOnce("overdrive.lua")
-            enemy:addScriptOnce("afterburn.lua")
+            bossEnemy:addScriptOnce("overdrive.lua")
+            bossEnemy:addScriptOnce("afterburn.lua")
 
             titleArgs.script = "Overclocked "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for afterburn / +0.25 for overdrive
@@ -750,22 +808,22 @@ function makeBossEnemy(enemy)
                 boostDamageWhenLinking = true
             }
 
-            enemy:addScriptOnce("adaptivedefense.lua")
-            enemy:addScriptOnce("escclinker.lua", linkerArgs)
+            bossEnemy:addScriptOnce("adaptivedefense.lua")
+            bossEnemy:addScriptOnce("escclinker.lua", linkerArgs)
 
             titleArgs.script = "Synapse "
             mission.data.custom.bossBountyFactor = 2 -- +0.5 for adaptive defense / +0.5 for (dmg booster) linker
         end,
         function() --23 Holistic (linker / eternal)
-            enemy:addScriptOnce("eternal.lua")
-            enemy:addScriptOnce("escclinker.lua")
+            bossEnemy:addScriptOnce("eternal.lua")
+            bossEnemy:addScriptOnce("escclinker.lua")
 
             titleArgs.script = "Holistic "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for eternal / +0.25 for linker
         end,
         function() --24 Warlord (linker / avenger)
-            enemy:addScriptOnce("avenger.lua")
-            enemy:addScriptOnce("escclinker.lua")
+            bossEnemy:addScriptOnce("avenger.lua")
+            bossEnemy:addScriptOnce("escclinker.lua")
 
             titleArgs.script = "Warlord "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for avenger / +0.25 for linker
@@ -775,17 +833,17 @@ function makeBossEnemy(enemy)
                 healPctWhenLinking = 25
             }
 
-            enemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
-            enemy:addScriptOnce("escclinker.lua", linkerValues)
+            bossEnemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
+            bossEnemy:addScriptOnce("escclinker.lua", linkerValues)
 
-            enemy.damageMultiplier = (enemy.damageMultiplier or 1) * 0.125
+            bossEnemy.damageMultiplier = (enemy.damageMultiplier or 1) * 0.125
 
             titleArgs.script = "Mendicant "
             mission.data.custom.bossBountyFactor = 0.5 --You killed a beggar, you monster.
         end,
         function() --26 Nemean (phasemode / iron curtain)
-            enemy:addScriptOnce("phasemode.lua")
-            enemy:addScriptOnce("ironcurtain.lua")
+            bossEnemy:addScriptOnce("phasemode.lua")
+            bossEnemy:addScriptOnce("ironcurtain.lua")
 
             titleArgs.script = "Nemean "
             mission.data.custom.bossBountyFactor = 2.25 -- +1 for ironcurtain / +0.25 for phasemode
@@ -795,36 +853,36 @@ function makeBossEnemy(enemy)
                 healPctWhenLinking = 25
             }
 
-            enemy:addScriptOnce("afterburn.lua")
-            enemy:addScriptOnce("escclinker.lua", linkerValues)
+            bossEnemy:addScriptOnce("afterburn.lua")
+            bossEnemy:addScriptOnce("escclinker.lua", linkerValues)
 
             titleArgs.script = "Nightingale "
             mission.data.custom.bossBountyFactor = 1.58 -- +0.25 for afterburn / +0.33 for buffed linker
         end,
         function() --28 Doomlord (afterburn + avenger) - named after the Eurasian Bullfinch :D
-            enemy:addScriptOnce("avenger.lua")
-            enemy:addScriptOnce("afterburn.lua")
+            bossEnemy:addScriptOnce("avenger.lua")
+            bossEnemy:addScriptOnce("afterburn.lua")
 
             titleArgs.script = "Doomlord "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for avenger / +0.25 for afterburn
         end,
         function() --29 Bloodwind (afterburn + frenzy)
-            enemy:addScriptOnce("frenzy.lua")
-            enemy:addScriptOnce("afterburn.lua")
+            bossEnemy:addScriptOnce("frenzy.lua")
+            bossEnemy:addScriptOnce("afterburn.lua")
 
             titleArgs.script = "Bloodwind "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for frenzy / +0.25 for afterburn
         end,
         function() --30 Headwind (afterburn + thorns)
-            enemy:addScriptOnce("thorns.lua")
-            enemy:addScriptOnce("afterburn.lua")
+            bossEnemy:addScriptOnce("thorns.lua")
+            bossEnemy:addScriptOnce("afterburn.lua")
 
             titleArgs.script = "Headwind "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for thorns / +0.25 for afterburn
         end,
         function() --31 Erinyes (overdrive + avenger)
-            enemy:addScriptOnce("avenger.lua")
-            enemy:addScriptOnce("overdrive.lua")
+            bossEnemy:addScriptOnce("avenger.lua")
+            bossEnemy:addScriptOnce("overdrive.lua")
 
             titleArgs.script = "Erinyes "
             mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for avenger / +0.25 for overdrive
@@ -836,34 +894,83 @@ function makeBossEnemy(enemy)
                 _UpdateCycle = 5
             }
 
-            enemy:addScriptOnce("frenzy.lua", frenzyValues)
-            enemy:addScriptOnce("overdrive.lua")
+            bossEnemy:addScriptOnce("frenzy.lua", frenzyValues)
+            bossEnemy:addScriptOnce("overdrive.lua")
 
             titleArgs.script = "Bloodthirsty "
             mission.data.custom.bossBountyFactor = 1.58 -- +0.33 for (buffed) frenzy / +0.25 for overdrive
+        end,
+        function() --33 Slipstream (afterburn + phasemode)
+            bossEnemy:addScriptOnce("phasemode.lua")
+            bossEnemy:addScriptOnce("afterburn.lua")
+
+            titleArgs.script = "Slipstream "
+            mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for phasemode / +0.25 for afterburn
+        end,
+        function() --34 Bushwhacker (afterburn + overdrive)
+            bossEnemy:addScriptOnce("overdrive.lua")
+            bossEnemy:addScriptOnce("afterburn.lua")
+
+            titleArgs.script = "Bushwhacker "
+            mission.data.custom.bossBountyFactor = 1.5 -- +0.25 for overdrive / +0.25 for afterburn
         end
     }
 
-    local enemyDurability = Durability(enemy.index)
-    if enemyDurability then
-        enemyDurability.maxDurabilityFactor = (enemyDurability.maxDurabilityFactor or 1) * 5 * getDifficultyBonus()
+    mission.Log(methodName, "Setting durability and damage multipliers")
+    local bossDurabilityBonus = 3 * getDifficultyBonus()
+
+    local bossShield = Shield(bossEnemy.index)
+    if bossShield then
+        bossShield.maxDurabilityFactor = (bossShield.maxDurabilityFactor or 1) * bossDurabilityBonus
+    else
+        bossDurabilityBonus = bossDurabilityBonus * 1.5
     end
 
-    enemy.damageMultiplier = (enemy.damageMultiplier or 1) * 2 * getDifficultyBonus()
+    local enemyDurability = Durability(bossEnemy.index)
+    if enemyDurability then
+        enemyDurability.maxDurabilityFactor = (enemyDurability.maxDurabilityFactor or 1) * bossDurabilityBonus 
+    end
 
-    Boarding(enemy).boardable = false
-    enemy.dockable = false
+    bossEnemy.damageMultiplier = (bossEnemy.damageMultiplier or 1) * 2 * getDifficultyBonus()
 
+    mission.Log(methodName, "Setting unboardable / undockable")
+    Boarding(bossEnemy).boardable = false
+    bossEnemy.dockable = false
+
+    mission.Log(methodName, "Running scripts / setting values")
     local bossFunc = getRandomEntry(bossFuncs)
     bossFunc()
 
-    enemy:setValue("annihilatorium_boss_payout", true)
-    enemy:setValue("_escc_enhanced_title", true)
-    enemy:setTitle(newTitle, titleArgs)
+    bossEnemy:setValue("annihilatorium_boss_payout", true)
+    bossEnemy:setValue("_escc_enhanced_title", true)
+    bossEnemy:setTitle(newTitle, titleArgs)
 
-    invokeClientFunction(Player(), "registerAnnihilatoriumBoss", enemy.index)
+    mission.Log(methodName, "Registering as boss")
+    invokeClientFunction(Player(), "registerAnnihilatoriumBoss", bossEnemy.index)
 
-    mission.data.custom.spawnedBossTitle = enemy.translatedTitle
+    mission.data.custom.spawnedBossTitle = bossEnemy.translatedTitle
+
+    mission.Log(methodName, "Adding danger 10 multipliers if applicable")
+    --With the player having to kill five of these enemies, this makes this the best mission for farming legendary turrets.
+    --But we don't want to make things too easy for the player :)
+    if mission.data.custom.dangerLevel == 10 then
+        bossEnemy:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
+        
+        local bossDurability = Durability(bossEnemy.index)
+        if bossDurability then
+            bossDurability.maxDurabilityFactor = (bossDurability.maxDurabilityFactor or 1) * 1.25
+        end
+
+        bossEnemy.damageMultiplier = (bossEnemy.damageMultiplier or 1) * 1.5
+    end
+
+    mission.Log(methodName, "Adding spawn utility buffs")
+    if mission.data.custom.masterOfTheArena then
+        SpawnUtility.addAnnihilatoriumMOTABossBuff(bossEnemy)
+    else
+        SpawnUtility.addEnemyBuffs(generated)
+    end
+    Placer.resolveIntersections(generated)
 end
 
 function getDifficultyBonus()
@@ -877,10 +984,14 @@ function payBossBounty()
     local bossFactor = mission.data.custom.bossBountyFactor
     local difficultyFactor = 1 + (mission.data.custom.dangerLevel * 0.005) -- +0.5% to +5%
     local randomFactor = random():getFloat(0.99, 1.05) --A little variety
+    local motaFactor = 1
+    if mission.data.custom.masterOfTheArena then
+        motaFactor = 3
+    end
 
     local receiver = _player.craftFaction or _player
 
-    local payout = 10000 * sectorFactor * bossFactor * difficultyFactor * randomFactor
+    local payout = 10000 * sectorFactor * bossFactor * difficultyFactor * randomFactor * motaFactor
 
     receiver:receive("Earned %1% credits for defeating the ${_BOSSTITLE}." % { _BOSSTITLE = mission.data.custom.spawnedBossTitle }, payout, 0, 0, 0, 0, 0, 0, 0)
 end
@@ -888,6 +999,10 @@ end
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
+
+    if mission.data.custom.masterOfTheArena then
+        mission.data.reward.credits = mission.data.reward.credits * 3
+    end
 
     reward()
     accomplish()
@@ -949,7 +1064,11 @@ function playCombatMusic(useBossMusic)
 
     local useTrack = getRandomEntry(mission.data.custom.waveTracks)
     if useBossMusic then
-        useTrack = mission.data.custom.bossTrack
+        if mission.data.custom.masterOfTheArena then
+            useTrack = mission.data.custom.motaBossTrack
+        else
+            useTrack = mission.data.custom.bossTrack
+        end
     end
     mission.Log(methodName, "Playing track " .. tostring(useTrack))
     local mus = Music()
