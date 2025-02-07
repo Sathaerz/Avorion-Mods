@@ -48,6 +48,8 @@ mission.data.timeLimitInDescription = true --Show the player how much time is le
 mission.data.accomplishMessage = "..." --Placeholder, varies by faction.
 mission.data.failMessage = "..." --Placeholder, varies by faction.
 
+mission.data.custom.prototypeScriptPath = "player/missions/defendprototype/defendprotoboss.lua"
+
 local DefendPrototype_init = initialize
 function initialize(_Data_in)
     local _MethodName = "initialize"
@@ -396,7 +398,7 @@ function spawnPrototype(_position)
     _BattleShip.damageMultiplier = _FinalDamageFactor
 
     --Attach "boss" script to the prototype so the player can track HP
-    _BattleShip:addScriptOnce("defendprotoboss.lua")
+    _BattleShip:addScriptOnce(mission.data.custom.prototypeScriptPath)
 end
 
 function getWingSpawnTables(_WingScriptValue)
