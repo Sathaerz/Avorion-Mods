@@ -154,6 +154,8 @@ end
 --region #PHASE CALLS
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -173,7 +175,7 @@ mission.globalPhase.onAccomplish = function()
 end
 
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
     local _MethodName = "Phase 1 On Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
@@ -187,7 +189,6 @@ end
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onTargetLocationEntered = function(x, y)
     --Give the player a 30 second window before any sunmakers, longinus(es?), or ballistyx start shooting again.
     local _Sector = Sector()
