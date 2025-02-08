@@ -11,7 +11,6 @@ if onServer() then
 
     local ExtraAvailableMissions_addOrRemoveMissionBulletin = MissionBulletins.addOrRemoveMissionBulletin --Replaces this. Bye!
     function MissionBulletins.addOrRemoveMissionBulletin()
-        local _Version = GameVersion()
         if _Debug == 1 then
             print("Running new addOrRemoveMissionBulletin function.")
         end
@@ -19,7 +18,6 @@ if onServer() then
         if #scripts == 0 then return end
 
         local ostime = Server().unpausedRuntime
-        --local ostime = os.time()
         local r = MissionBulletins.random()
 
         local _MissionCount = r:getInt(0, 5)
@@ -35,13 +33,11 @@ if onServer() then
                     print("Script path is : " .. scriptPath)
                 end
 
-                if _Version.major > 1 then
-                    if scriptPath == "data/scripts/player/missions/receivecaptainmission.lua" and r:test(0.75) then
-                        if _Debug == 1 then
-                            print("Removing captain mission from candidacy.")
-                        end
-                        ok = -1
+                if scriptPath == "data/scripts/player/missions/receivecaptainmission.lua" and r:test(0.5) then
+                    if _Debug == 1 then
+                        print("Removing captain mission from candidacy.")
                     end
+                    ok = -1
                 end
 
                 if ok == 0 and bulletin then
