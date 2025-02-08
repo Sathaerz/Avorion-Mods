@@ -81,6 +81,7 @@ function initialize(_Data_in, bulletin)
         mission.data.custom.spawnedBossTitle = nil
         mission.data.custom.bossBountyFactor = 1
         mission.data.custom.masterOfTheArena = false --Master of the Arena mode - makes the mission much more difficult but the payout is more.
+        mission.data.custom.motaTimer = 0
 
         --[[=====================================================
             MISSION DESCRIPTION SETUP:
@@ -188,6 +189,11 @@ mission.phases[2].onTargetLocationArrivalConfirmed = function(x, y)
 end
 
 mission.phases[2].updateTargetLocationServer = function(timeStep)
+    if mission.data.custom.masterOfTheArena then
+        mission.data.custom.motaTimer = (mission.data.custom.motaTimer or 0) + timeStep
+        --print("mota timer is " .. tostring(mission.data.custom.motaTimer)) --Spams like crazy. Be careful about uncommenting this.
+    end
+
     local _sector = Sector()
 
     local delScriptPath = "entity/utility/delayeddelete.lua"
@@ -248,6 +254,7 @@ mission.phases[2].timers[1] = {
                 mission.data.custom.checkForWaveVanquish = false
                 mission.data.custom.bossBountyFactor = 1
                 mission.data.custom.survivedWaves = mission.data.custom.survivedWaves + 1
+                mission.data.custom.motaTimer = 0
 
                 mission.data.description[5].arguments._SURVIVEDWAVES = mission.data.custom.survivedWaves
                 mission.data.description[6].visible = true
@@ -266,6 +273,22 @@ mission.phases[2].timers[2] = {
     callback = function()
         if not mission.data.custom.checkForWaveVanquish and mission.data.custom.survivedWaves >= mission.data.custom.overallWaves then
             finishAndReward()
+        end
+    end,
+    repeating = true
+}
+
+mission.phases[2].timers[3] = {
+    time = 5,
+    callback = function()
+        if atTargetLocation() then
+            local timeBetweenWaves = 3.5 * 60 --1 loop of omf title.
+            if mission.data.custom.masterOfTheArena and not mission.data.custom.checkForWaveVanquish and mission.data.custom.survivedWaves < mission.data.custom.overallWaves and mission.data.custom.motaTimer >= timeBetweenWaves then
+                spawnWave()
+
+                mission.data.description[6].visible = false
+                sync()
+            end
         end
     end,
     repeating = true
@@ -1131,7 +1154,7 @@ function formatDescription()
     local descTable = {
         "You there! Step right up! A test of your might! A test of your reflexes! A test of your ship's construction! Come on down to the Annihilatorium and face the most vicious pirate scum on this side of the galaxy! Are you brave enough to lock horns with the nastiest scum in these sectors? We'll be waiting for you at (${_X}:${_Y})!",
         "Come one, come all to the galaxy-famous Annihilatorium! We've got ships the likes of which have only been seen in your nightmares, folks, and they're ripe for the fighting! Think you're captain enough to try them on for size? Come on down to (${_X}:${_Y})! We'll be waiting for you!",
-        "Step right up, ladies and gents! Witness the ultimate showdown in the stars at The Annihilatorium - where we've got all sorts of ships waiting to battle to the death! Thrills, explosions, and cosmic chaos await! Only the strongest will survive - come on down to (${_X}:${_Y}) and see for yourself who's standing when the dust settles!"
+        "Step right up, ladies and gents! Witness the ultimate showdown in the stars at The Annihilatorium - where we've got all sorts of ships waiting to battle to the death! Thrills, explosions, and cosmic chaos await! Only the strongest will survive! Come on down to (${_X}:${_Y}) and see for yourself who's standing when the dust settles!"
     }
 
     return getRandomEntry(descTable)

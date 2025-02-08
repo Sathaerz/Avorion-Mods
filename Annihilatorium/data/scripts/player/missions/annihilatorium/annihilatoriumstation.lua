@@ -84,13 +84,13 @@ function Annihilatorium.initUI()
         --[[=====================================================
             CREATE MASTER OF THE ARENA WINDOW:
         =========================================================]]
-        local motaSize = vec2(600, 280)
+        local motaSize = vec2(600, 310)
 
         local motaWindow = menu:createWindow(Rect(res * 0.5 - motaSize * 0.5, res * 0.5 + motaSize * 0.5))
 
         local motaSplitter = UIArbitraryVerticalSplitter(Rect(motaWindow.size), 10, 15, 325, 575)
 
-        local motaDescriptionSplitter = UIArbitraryHorizontalSplitter(motaSplitter:partition(0), 10, 15, 40, 65, 90, 115, 140, 165, 195)
+        local motaDescriptionSplitter = UIArbitraryHorizontalSplitter(motaSplitter:partition(0), 10, 15, 40, 65, 90, 115, 140, 165, 190, 220)
 
         local labelTable = {
             "Enable Master Of The Arena Mode.",
@@ -98,6 +98,7 @@ function Annihilatorium.initUI()
             " - Normal enemies x4 hp / damage",
             " - All bosses replaced with Executioners",
             " - All bosses guaranteed to be Hardcore+",
+            " - Approximately 3:30 between waves",
             " - Leaving the sector results in defeat",
             " - x3 reward for bosses / finishing all waves",
             "Good luck!"
@@ -112,7 +113,7 @@ function Annihilatorium.initUI()
             local motaDescLabel = motaWindow:createLabel(Rect(motalrUpper, motalrLower), txt, 14)
         end
 
-        local motaButtonSplitter = UIArbitraryHorizontalSplitter(motaSplitter:partition(1), 10, 15, 170)
+        local motaButtonSplitter = UIArbitraryHorizontalSplitter(motaSplitter:partition(1), 10, 15, 200)
 
         local motaButtonRect = motaButtonSplitter:partition(1)
         local motaButton = motaWindow:createButton(motaButtonRect, "Engage", "onEnableMOTAPressed")
