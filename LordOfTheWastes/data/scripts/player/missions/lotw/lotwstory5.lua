@@ -85,10 +85,12 @@ end
 
 --region #PHASE CALLS
 
+--Just for consistency's sake.
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
@@ -183,9 +185,10 @@ function spawnSwenks()
     local x, y = _Sector:getCoordinates()
 
     -- adds legendary turret drop
+    local _random = random()
     Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, 0, Rarity(RarityType.Exotic))))
-    Loot(boss.index):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Exceptional), Seed(1)))
-    Loot(boss.index):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Exotic), Seed(1)))
+    Loot(boss.index):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Exceptional), Seed(_random:getInt(1, 20000))))
+    Loot(boss.index):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Exotic), Seed(_random:getInt(1, 20000))))
 
     for _, pirate in pairs(_pirates) do
         MissionUT.deleteOnPlayersLeft(pirate)
@@ -208,9 +211,9 @@ function spawnSwenks()
     boss:removeScript("icon.lua")
     boss:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
     boss:addScript("player/missions/lotw/mission5/swenks.lua")
-    boss:addScript("swenksspecial.lua")
+    boss:addScript("story/swenksspecial.lua")
     boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
-    boss:addScriptOnce("avenger.lua", {_Multiplier = 1.1})
+    boss:addScriptOnce("avenger.lua")
     boss:setValue("is_pirate", true)
     boss:setValue("is_swenks", true)
 
@@ -222,7 +225,12 @@ function finishAndReward()
     mission.Log(_MethodName, "Running win condition.")
 
     local _Player = Player()
-    _Player:setValue("_lotw_story_5_accomplished", true)
+    local runTime = Server().unpausedRuntime
+
+    _Player:setValue("_lotw_story_stage", 6)
+    _Player:setValue("_lotw_story_complete", true)
+    _Player:setValue("_lotw_last_side1", runTime)
+    _Player:setValue("_lotw_last_side2", runTime)
 
     reward()
     accomplish()

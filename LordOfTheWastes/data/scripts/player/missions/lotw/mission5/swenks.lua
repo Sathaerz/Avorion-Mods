@@ -42,6 +42,7 @@ function startFight()
         ScriptUI():stopInteraction()
         displayChatMessage(string.format("%s is attacking!"%_t, Entity().translatedTitle), "", 2)
         invokeServerFunction("startFight")
+        Music():fadeOut(1.5)
         registerBoss(Entity().index, nil, nil, "data/music/special/bladesedge.ogg")
         startedFight = true
         return

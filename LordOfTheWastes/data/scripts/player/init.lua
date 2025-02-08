@@ -2,5 +2,5 @@ if onServer() then
 
     local player = Player()
     
-    player:addScriptOnce("background/lotwframeworkmission.lua")
+    player:addScriptOnce("background/lotwquestutility.lua")
 end

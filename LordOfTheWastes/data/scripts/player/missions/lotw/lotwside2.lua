@@ -104,16 +104,40 @@ end
 
 --region #PHASE CALLS
 
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
     nextPhase()
 end
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
+mission.phases[2].onBeginServer = function()
+    mission.data.description[3].fulfilled = true
+    mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
+    mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
+    mission.data.description[4].visible = true
+    mission.data.description[5].visible = true
+
+    spawnBackgroundPirates()
+end
+
+mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
+    local _MethodName = "Phase 1 on Entity Destroyed"
+    mission.Log(_MethodName, "Beginning...")
+    if Entity(_ID):getValue("_lotw_mission7_objective") then
+        mission.Log(_MethodName, "Was an objective.")
+        mission.data.custom.destroyed = mission.data.custom.destroyed + 1
+        mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
+
+        mission.Log(_MethodName, "Number of freighters destroyed " .. tostring(mission.data.custom.destroyed))
+        sync()
+    end
+end
 
 --region #PHASE 2 TIMERS
 
@@ -178,32 +202,6 @@ mission.phases[2].timers[4] = {
 end
 
 --endregion
-
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
-mission.phases[2].onBeginServer = function()
-    mission.data.description[3].fulfilled = true
-    mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
-    mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
-    mission.data.description[4].visible = true
-    mission.data.description[5].visible = true
-
-    spawnBackgroundPirates()
-end
-
-mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
-    local _MethodName = "Phase 1 on Entity Destroyed"
-    mission.Log(_MethodName, "Beginning...")
-    if Entity(_ID):getValue("_lotw_mission7_objective") then
-        mission.Log(_MethodName, "Was an objective.")
-        mission.data.custom.destroyed = mission.data.custom.destroyed + 1
-        mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
-
-        mission.Log(_MethodName, "Number of freighters destroyed " .. tostring(mission.data.custom.destroyed))
-        sync()
-    end
-end
 
 --endregion
 
@@ -326,11 +324,12 @@ function onPirateFreighterFinished(_Generated)
             _AddLoot = false
         end
 
-        _Ship:addScriptOnce("player/missions/lotw/mission3/lotwfreighterm3.lua", _AddLoot, false)
+        _Ship:addScriptOnce("player/missions/lotw/mission3/lotwfreighterm3.lua", _AddLoot, false, true, mission.data.custom.dangerLevel)
 
         local _ShipAI = ShipAI(_Ship)
         local _Position = _Ship.position
         _ShipAI:setFlyLinear(_Position.look * 10000, 0)
+        _ShipAI:setPassiveShooting(true)
     end
 end
 
@@ -343,6 +342,11 @@ end
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
+
+    local _player = Player()
+    local runTime = Server().unpausedRuntime
+
+    _player:setValue("_lotw_last_side2", runTime)
 
     reward()
     accomplish()
@@ -393,6 +397,14 @@ mission.makeBulletin = function(_Station)
     end
 
     local _DangerLevel = _Rgen:getInt(1, 10)
+
+    local _Difficulty = "Easy"
+    if _DangerLevel >= 6 then
+        _Difficulty = "Medium"
+    end
+    if _DangerLevel >= 9 then
+        _Difficulty = "Difficult"
+    end
     
     local _Description = formatDescription(_Station)
 
@@ -412,13 +424,25 @@ mission.makeBulletin = function(_Station)
         title = mission.data.title,
         icon = mission.data.icon,
         description = _Description,
-        difficulty = "Medium",
+        difficulty = _Difficulty,
         reward = "¢${reward}",
-        script = "missions/lotw/lotwmission7.lua",
+        script = "missions/lotw/lotwside2.lua",
         formatArguments = {x = target.x, y = target.y, reward = createMonetaryString(reward)},
         msg = "The pirates are operating in sector \\s(%1%:%2%). Please destroy them.",
         giverTitle = _Station.title,
         giverTitleArgs = _Station:getTitleArguments(),
+        checkAccept = [[
+            local self, player = ...
+            if not player:getValue("_lotw_story_complete") then
+                player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept this mission.")
+                return 0
+            end
+            if player:hasScript("lotwside2.lua") then
+                player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept this mission again!")
+                return 0
+            end
+            return 1
+        ]],
         onAccept = [[
             local self, player = ...
             player:sendChatMessage(Entity(self.arguments[1].giver), 0, self.msg, self.formatArguments.x, self.formatArguments.y)

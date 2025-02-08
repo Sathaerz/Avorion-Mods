@@ -2,7 +2,7 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 include ("randomext")
 include ("utility")
-local SectorSpecifics = include ("sectorspecifics")
+
 local PirateGenerator = include ("pirategenerator")
 local SectorTurretGenerator = include ("sectorturretgenerator")
 
@@ -34,8 +34,9 @@ function Swenks.spawn(player, x, y)
     boss:registerCallback("onDestroyed", "onSwenksDestroyed")
 
     -- adds legendary turret drop
+    local seedInt = random():getInt(1, 20000)
     Loot(boss.index):insert(InventoryTurret(SectorTurretGenerator():generate(x, y, 0, Rarity(RarityType.Exotic))))
-    Loot(boss.index):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Exotic), Seed(1)))
+    Loot(boss.index):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Exotic), Seed(seedInt)))
 
     for _, pirate in pairs(_pirates) do
         pirate:addScript("deleteonplayersleft.lua")
@@ -57,9 +58,9 @@ function Swenks.spawn(player, x, y)
     boss:removeScript("icon.lua")
     boss:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
     boss:addScript("player/missions/lotw/mission5/swenks.lua")
-    boss:addScript("swenksspecial.lua")
+    boss:addScript("story/swenksspecial.lua")
     boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
-    boss:addScriptOnce("avenger.lua", {_Multiplier = 1.1})
+    boss:addScriptOnce("avenger.lua")
     boss:setValue("is_pirate", true)
     boss:setValue("is_swenks", true)
 

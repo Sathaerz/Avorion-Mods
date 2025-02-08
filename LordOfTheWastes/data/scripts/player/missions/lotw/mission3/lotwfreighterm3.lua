@@ -12,7 +12,7 @@ local deleteTime = 30
 local runningAway = false
 local invokedEscape = false
 
-function LOTWFreighterMission3.initialize(_AddLoot, _AddMoreLoot)
+function LOTWFreighterMission3.initialize(_AddLoot, _AddMoreLoot, _AddSideLoot, _DangerLevel)
     if onServer() then
         local ship = Entity()
 
@@ -45,6 +45,13 @@ function LOTWFreighterMission3.initialize(_AddLoot, _AddMoreLoot)
                 goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
                 goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/hyperspacebooster.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
                 goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/energybooster.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
+            end
+
+            if _AddSideLoot then
+                local sideLoot = LOTWFreighterMission3.generateSideLoot(x, y, _DangerLevel)
+                for _, item in pairs(sideLoot) do
+                    goonLoot:insert(item)
+                end
             end
         end
     end
@@ -95,7 +102,7 @@ function LOTWFreighterMission3.updateServer(timeStep)
         local _Players = {Sector():getPlayers()}
         for _, _P in pairs(_Players) do
             if not invokedEscape then
-                _P:invokeFunction("player/missions/lotw/lotwmission3.lua", "freighterEscaped")
+                _P:invokeFunction("player/missions/lotw/lotwstory3.lua", "freighterEscaped")
             end
         end
     end
@@ -123,7 +130,6 @@ function LOTWFreighterMission3.generateTurrets(x, y)
 
         local rarity = selectByWeight(random(), rarities)
         local turret = InventoryTurret(SectorTurretGenerator():generate(x, y, 0, Rarity(rarity)))
-
         table.insert(turrets, turret)
     end
 
@@ -136,7 +142,6 @@ function LOTWFreighterMission3.generateTurrets(x, y)
 
         local rarity = selectByWeight(random(), rarities)
         local turret = InventoryTurret(SectorTurretGenerator():generate(x, y, 0, Rarity(rarity)))
-
         table.insert(turrets, turret)
     end
 
@@ -181,6 +186,43 @@ function LOTWFreighterMission3.generateUpgrades(x, y)
     end
 
     return upgrades
+end
+
+function LOTWFreighterMission3.generateSideLoot(x, y, dangerLevel)
+    local items = {}
+
+    local amount = math.max(1, math.floor(dangerLevel / 2))
+
+    local upgradeGenerator = UpgradeGenerator()
+    local turretGenerator = SectorTurretGenerator()
+    local _random = random()
+
+    local turretRarities = turretGenerator:getSectorRarityDistribution(x, y)
+    local upgradeRarities = upgradeGenerator:getSectorRarityDistribution(x, y)
+
+    turretRarities[-1] = 0 -- no petty turrets
+    turretRarities[0] = 0 -- no common turrets
+    turretRarities[1] = 0 -- no uncommon turrets
+
+    upgradeRarities[-1] = 0 --no petty systems
+    upgradeRarities[0] = 0 --no common systems
+    upgradeRarities[1] = 0 --no uncommon systems
+
+    for i = 1, amount do
+        if _random:test(0.5) then
+            --turret
+            local rarity = selectByWeight(_random, turretRarities)
+            local turret = InventoryTurret(turretGenerator:generate(x, y, 0, Rarity(rarity)))
+            table.insert(items, turret)
+        else
+            --upgrade
+            local rarity = selectByWeight(_random, upgradeRarities)
+            local upgrade = upgradeGenerator:generateSectorSystem(x, y, rarity)
+            table.insert(items, upgrade)
+        end
+    end
+
+    return items
 end
 
 function LOTWFreighterMission3.getChatterLines()

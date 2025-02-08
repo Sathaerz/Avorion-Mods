@@ -1,17 +1,16 @@
 --[[
-    Junkyard Dogs (Redux)
+    Junkyard Dogs
     NOTES:
-        - Only the last transport gives loot. Make it a lil bigger than the story one tho.
+        - Keep track of how many transports the player has killed. Only give them loot the first time they kill each transport.
+        - Give them good loot - lots of ore.
     ADDITIONAL REQUIREMENTS TO DO THIS MISSION:
-        - Complete the 5th LOTW mission + get it off bulletin board
+        - Have completed the first LOTW mission.
     ROUGH OUTLINE
         - Go to a sector, kill transports. Easy enough.
     DANGER LEVEL
-        5 - Kill 3 pirate transports before Y escape. Y is 3/5, 2/8 and 1/10
-        5 - Only the last transport has loot to prevent abuse.
-        ? - A continual wing of 3 standard danger level ESCC pirates will spawn in the background.
-        ? - Start spawning a 4th once the 2nd transport has been destroyed.
-        10 - The 4th pirate will always spawn from the start, and the pirates refresh 5 seconds faster.
+        5 - Kill X pirate transports before Y escape. Gets easier if the player fucks it up.
+        5 - A continual wing of 2 bandits and 1 pirate will spawn in the background.
+        5 - Start spawning a marauder once the 2nd transport has been destroyed.
 ]]
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
@@ -28,7 +27,7 @@ local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 
 mission._Debug = 0
-mission._Name = "Junkyard Dogs (Redux)"
+mission._Name = "Junkyard Dogs"
 
 --region #INIT
 
@@ -37,26 +36,28 @@ mission.data.brief = mission._Name
 mission.data.title = mission._Name
 mission.data.icon = "data/textures/icons/silicium.png"
 mission.data.description = {
-    { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" },
-    { text = "..." },
+    { text = "You received the following request from ${factionName}:" },
+    { text = "The previous operation served as an adequate warning shot, but we need to take things a step further. Hitting their supply chain will provoke them to take further action to cover their losses. We've found a convoy running through (${location.x}:${location.y}) and we'd like you to take it out. You're welcome to keep anything you find in the cargo ships. Don't let too many escape. That defeats the entire point of the op." },
     { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
     { text = "Destroy cargo ships - ${_DESTROYED}/3 Destroyed", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Don't let too many cargo ships escape - ${_ESCAPED}/${_MAXESCAPED} Escaped", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Meet the liason in sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false, visible = false }
 }
-mission.data.accomplishMessage = "Good work. We transferred the reward to your account."
+mission.data.accomplishMessage = "Good work. We transferred the reward to your account. Be on the lookout for more opportunities in the future."
 
 local LOTW_Mission_init = initialize
-function initialize(_Data_in)
+function initialize()
     local _MethodName = "initialize"
     mission.Log(_MethodName, "Beginning...")
 
     if onServer()then
-        if not _restoring then
-            local _Sector = Sector()
-            local _Giver = Entity(_Data_in.giver)
+        local _Sector = Sector()
+        local _X, _Y = _Sector:getCoordinates()
 
-            mission.data.location = _Data_in.location
+        if not _restoring then
+            local _Player = Player()
+            local _FailureCt =_Player:getValue("_lotw_mission2_failures") or 0
+
             --[[=====================================================
                 CUSTOM MISSION DATA:
                 .dangerLevel
@@ -64,31 +65,22 @@ function initialize(_Data_in)
                 .escaped
                 .maxEscaped
                 .friendlyFaction
-                .pirateSpawnTimer
+                .piratesSpawned
             =========================================================]]
-            mission.data.custom.dangerLevel = _Data_in.dangerLevel
+            mission.data.custom.dangerLevel = 5 --This is a story mission, so we keep things predictable.
             mission.data.custom.destroyed = 0
             mission.data.custom.escaped = 0
-            local _MaxEscaped = 3
-            if mission.data.custom.dangerLevel >= 8 then
-                _MaxEscaped = 2
-            elseif mission.data.custom.dangerLevel == 10 then
-                _MaxEscaped = 1
-            end
-            mission.data.custom.maxEscaped = _MaxEscaped
-            local _SpawnTimer = 45
-            if mission.data.custom.dangerLevel == 10 then
-                _SpawnTimer = 35
-            end
-            mission.data.custom.friendlyFaction = _Giver.factionIndex
-            mission.data.custom.pirateSpawnTimer = _SpawnTimer
+            mission.data.custom.maxEscaped = 3 + (_FailureCt * 2)
+            mission.data.custom.friendlyFaction = _Player:getValue("_lotw_faction")
+            mission.data.custom.piratesSpawned = 0
 
-            mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.initialDesc
-            mission.data.description[2].arguments = {x = mission.data.location.x, y = mission.data.location.y }
-            mission.data.description[3].arguments = {x = mission.data.location.x, y = mission.data.location.y } --Not sure if this is needed but eh
+            local missionReward = 100000
 
-            LOTW_Mission_init(_Data_in)
+            missionData_in = {location = nil, reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for destroying the pirate freighters."}}
+    
+            LOTW_Mission_init(missionData_in)
+
+            setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
         else
             --Restoring
             LOTW_Mission_init()
@@ -108,16 +100,66 @@ end
 
 --region #PHASE CALLS
 
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
+mission.globalPhase.onFail = function()
+    local _Player = Player()
+    local _FailureCt =_Player:getValue("_lotw_mission2_failures") or 0
+    _FailureCt = _FailureCt + 1
+    _Player:setValue("_lotw_mission2_failures", _FailureCt)
+end
+
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
+mission.phases[1].timers = {}
+mission.phases[1].showUpdateOnEnd = true
+mission.phases[1].onBeginServer = function()
+    local _MethodName = "Phase 1 On Target Location Entered"
+    mission.Log(_MethodName, "Beginning...")
+
+    local _Faction = Faction(mission.data.custom.friendlyFaction) --The phase is already set to 1 by the time we hit this, so it has to be done it this way.
+
+    mission.data.location = getNextLocation()
+    mission.data.description[1].arguments = { factionName = _Faction.name }
+    mission.data.description[2].arguments = { x = mission.data.location.x, y = mission.data.location.y }
+    mission.data.description[3].arguments = { x = mission.data.location.x, y = mission.data.location.y }
+end
+
 mission.phases[1].onTargetLocationEntered = function(x, y)
     nextPhase()
 end
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
+mission.phases[2].showUpdateOnEnd = true
+mission.phases[2].onBeginServer = function()
+    mission.data.description[3].fulfilled = true
+    mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
+    mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
+    mission.data.description[4].visible = true
+    mission.data.description[5].visible = true
+
+    spawnBackgroundPirates()
+end
+
+mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
+    local _MethodName = "Phase 1 on Entity Destroyed"
+    mission.Log(_MethodName, "Beginning...")
+    if Entity(_ID):getValue("_lotw_mission2_objective") then
+        mission.Log(_MethodName, "Was an objective.")
+        local _Player = Player()
+        local _FreightersDestroyed = _Player:getValue("_lotw_mission2_freighterskilled") or 0
+        _FreightersDestroyed = _FreightersDestroyed + 1
+        _Player:setValue("_lotw_mission2_freighterskilled", _FreightersDestroyed)
+
+        mission.data.custom.destroyed = mission.data.custom.destroyed + 1
+        mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
+
+        mission.Log(_MethodName, "Number of freighters destroyed " .. tostring(mission.data.custom.destroyed))
+        sync()
+    end
+end
 
 --region #PHASE 2 TIMERS
 
@@ -125,7 +167,7 @@ if onServer() then
 
 --Timer 1 = spawn background pirates
 mission.phases[2].timers[1] = {
-    time = mission.data.custom.pirateSpawnTimer or 45,
+    time = 45,
     callback = function()
         local _Sector = Sector()
         local _X, _Y = _Sector:getCoordinates()
@@ -183,37 +225,7 @@ end
 
 --endregion
 
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
-mission.phases[2].showUpdateOnEnd = true
-mission.phases[2].onBeginServer = function()
-    mission.data.description[3].fulfilled = true
-    mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
-    mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
-    mission.data.description[4].visible = true
-    mission.data.description[5].visible = true
-
-    spawnBackgroundPirates()
-end
-
-mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
-    local _MethodName = "Phase 1 on Entity Destroyed"
-    mission.Log(_MethodName, "Beginning...")
-    if Entity(_ID):getValue("_lotw_mission6_objective") then
-        mission.Log(_MethodName, "Was an objective.")
-        mission.data.custom.destroyed = mission.data.custom.destroyed + 1
-        mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
-
-        mission.Log(_MethodName, "Number of freighters destroyed " .. tostring(mission.data.custom.destroyed))
-        sync()
-    end
-end
-
 mission.phases[3] = {}
-mission.phases[3].noBossEncountersTargetSector = true
-mission.phases[3].noPlayerEventsTargetSector = true
-mission.phases[3].noLocalPlayerEventsTargetSector = true
 mission.phases[3].onBeginServer = function()
     local _MethodName = "Phase 2 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
@@ -238,6 +250,18 @@ end
 
 --region #SERVER CALLS
 
+function setMissionFactionData(_X, _Y)
+    local _MethodName = "Set Mission Faction Data"
+    mission.Log(_MethodName, "Beginning...")
+    --We're going to have to do some sneaky stuff w/ credits here.
+    local _Faction = Faction(Player():getValue("_lotw_faction"))
+    mission.data.giver = {}
+    mission.data.giver.id = _Faction.index
+    mission.data.giver.factionIndex = _Faction.index
+    mission.data.giver.coordinates = { x = _X, y = _Y }
+    mission.data.giver.baseTitle = _Faction.name
+end
+
 function getNextLocation()
     local _MethodName = "Get Next Location"
     
@@ -245,7 +269,7 @@ function getNextLocation()
     local x, y = Sector():getCoordinates()
     local target = {}
 
-    target.x, target.y = MissionUT.getSector(x, y, 4, 10, false, false, false, false, false)
+    target.x, target.y = MissionUT.getEmptySector(x, y, 4, 10, false)
 
     mission.Log(_MethodName, "X coordinate of next location is : " .. tostring(target.x) .. " Y coordinate of next location is : " .. tostring(target.y))
     if not target or not target.x or not target.y then
@@ -262,38 +286,81 @@ function spawnBackgroundPirates()
     mission.Log(_MethodName, "Beginning...")
 
     local _Destroyed = mission.data.custom.destroyed
-    local _DangerLevel = mission.data.custom.dangerLevel 
-
-    local _PirateMaxCt = 3
-    if _DangerLevel == 10 or _Destroyed == 2 then
-        _PirateMaxCt = 4
+    
+    local _BanditMaxCt = 2
+    local _PirateMaxCt = 1
+    local _MarauderMaxCt = 0
+    if _Destroyed == 2 then
+        _MarauderMaxCt = 1
     end
+
+    local _BanditCt = 0
+    local _PirateCt = 0
+    local _MarauderCt = 0
 
     local _Pirates = {Sector():getEntitiesByScriptValue("is_pirate")}
-    local _PirateCt = #_Pirates
-
-    local _PiratesToSpawn = _PirateMaxCt - _PirateCt
-    
-    if _PiratesToSpawn > 0 then
-        local _SpawnTable = ESCCUtil.getStandardWave(_DangerLevel, _PiratesToSpawn, "Standard")
-
-        local generator = AsyncPirateGenerator(nil, onBackgroundPiratesFinished)
-
-        generator:startBatch()
-    
-        local posCounter = 1
-        local distance = 100
-        local pirate_positions = generator:getStandardPositions(#_SpawnTable, distance)
-        for _, p in pairs(_SpawnTable) do
-            generator:createScaledPirateByName(p, pirate_positions[posCounter])
-            posCounter = posCounter + 1
+    mission.Log(_MethodName, "Counting pirates " .. tostring(#_Pirates) .. " found")
+    for _, _Pirate in pairs (_Pirates) do
+        local _TArgs = _Pirate:getTitleArguments()
+        for _, _TArg in pairs(_TArgs) do
+            local _Title = _TArg
+            if _Title == "Bandit" then
+                mission.Log(_MethodName, "Bandit")
+                _BanditCt = _BanditCt + 1
+            end
+            if _Title == "Pirate" then
+                mission.Log(_MethodName, "Pirate")
+                _PirateCt = _PirateCt + 1
+            end
+            if _Title == "Marauder" then
+                mission.Log(_MethodName, "Marauder")
+                _MarauderCt = _MarauderCt + 1
+            end
         end
-    
-        generator:endBatch()
     end
+
+    local _SpawnTable = {}
+    if _BanditCt < _BanditMaxCt then
+        local _SpawnCt = _BanditMaxCt - _BanditCt
+        for _ = 1, _SpawnCt, 1 do
+            table.insert(_SpawnTable, "Bandit")
+        end
+    end
+    if _PirateCt < _PirateMaxCt then
+        local _SpawnCt = _PirateMaxCt - _PirateCt
+        for _ = 1, _SpawnCt, 1 do
+            table.insert(_SpawnTable, "Pirate")
+        end
+    end
+    if _MarauderCt < _MarauderMaxCt then
+        local _SpawnCt = _MarauderMaxCt - _MarauderCt
+        for _ = 1, _SpawnCt, 1 do
+            table.insert(_SpawnTable, "Marauder")
+        end
+    end
+
+    local generator = AsyncPirateGenerator(nil, onBackgroundPiratesFinished)
+
+    generator:startBatch()
+
+    local posCounter = 1
+    local distance = 100
+    local pirate_positions = generator:getStandardPositions(#_SpawnTable, distance)
+    for _, p in pairs(_SpawnTable) do
+        mission.data.custom.piratesSpawned = mission.data.custom.piratesSpawned + 1
+        generator:createScaledPirateByName(p, pirate_positions[posCounter])
+        posCounter = posCounter + 1
+    end
+
+    generator:endBatch()
 end
 
 function onBackgroundPiratesFinished(_Generated)
+    for _, _Pirate in pairs(_Generated) do
+        if mission.data.custom.piratesSpawned > 10 then
+            _Pirate:setDropsLoot(false)
+        end
+    end
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
@@ -313,7 +380,7 @@ function spawnPirateFreighter()
     local _X, _Y = _Sector:getCoordinates()
     local _ShipGenerator = AsyncShipGenerator(nil, onPirateFreighterFinished)
     local _PirateGenerator = AsyncPirateGenerator(nil, nil)
-    local _Vol1 = Balancing_GetSectorShipVolume(_X, _Y) * 3.5
+    local _Vol1 = Balancing_GetSectorShipVolume(_X, _Y) * 3
     local _Faction = _PirateGenerator:getPirateFaction()
 
     _ShipGenerator:startBatch()
@@ -324,8 +391,11 @@ function spawnPirateFreighter()
 end
 
 function onPirateFreighterFinished(_Generated)
+    local _Player = Player()
+    local _FreightersDestroyed = _Player:getValue("_lotw_mission2_freighterskilled") or 0
+
     for _, _Ship in pairs(_Generated) do
-        _Ship:setValue("_lotw_mission6_objective", true)
+        _Ship:setValue("_lotw_mission2_objective", true)
         _Ship:setValue("is_pirate", true)
         _Ship:setValue("is_civil", nil)
         _Ship:setValue("is_freighter", nil)
@@ -337,17 +407,17 @@ function onPirateFreighterFinished(_Generated)
         _Ship:addScriptOnce("player/missions/lotw/mission2/lotwfreighterm2.lua")
 
         local _Good = goods["Titanium Ore"]
-        if mission.data.custom.destroyed < 2 then
-            _Ship:setValue("_lotw_no_loot_drop", true)
-        else
+        if _FreightersDestroyed <= 2 then
+            _Ship:addAbsoluteBias(StatsBonuses.CargoHold, 10000)
             _Ship:addCargo(_Good:good(), 10000)
+        else
+            _Ship:setValue("_lotw_no_loot_drop", true)
         end
-
-        MissionUT.deleteOnPlayersLeft(_Ship)
 
         local _ShipAI = ShipAI(_Ship)
         local _Position = _Ship.position
         _ShipAI:setFlyLinear(_Position.look * 10000, 0)
+        _ShipAI:setPassiveShooting(true)
     end
 end
 
@@ -394,7 +464,7 @@ function onLiasonShipFinished(_Generated)
         MissionUT.deleteOnPlayersLeft(_Ship)
         _Ship:removeScript("patrol.lua")
         _Ship:removeScript("antismuggle.lua")
-        _Ship:addScriptOnce("player/missions/lotw/mission6/lotwliasonm6.lua")
+        _Ship:addScriptOnce("player/missions/lotw/mission2/lotwliasonm2.lua")
         _ShipAI:setIdle()
 
         _Ship.title = tostring(_Faction.name) .. " Military Liason"
@@ -411,6 +481,9 @@ end
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
+
+    local _Player = Player()
+    _Player:setValue("_lotw_story_stage", 3)
 
     reward()
     accomplish()
@@ -446,94 +519,5 @@ function contactedLiason()
     end
 end
 callable(nil, "contactedLiason")
-
---endregion
-
---region #MAKEBULLETIN CALL
-
-function formatDescription(_Station)
-    local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
-
-    local _DescriptionType = 1 --Neutral
-    if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
-    elseif _Aggressive <= -0.5 then
-        _DescriptionType = 3 --Peaceful.
-    end
-
-    local _FinalDescription = ""
-    if _DescriptionType == 1 then --Neutral.
-        _FinalDescription = "Our intel division has once again detected a squadron of pirate transports moving through our territory. We'll pay you handsomely to take them out, as always. Let us know if you're interested in this opportunity. You'll find them in sector (${x}:${y})."
-    elseif _DescriptionType == 2 then --Aggressive.
-        _FinalDescription = "Some pirate scum thinks they can pull one over on us and move some transports through our territory. We would normally deal with this insolence ourselves, but our military is engaged elsewhere and destroying them would spread us too thin. Get to sector (${x}:${y}) and kill all of them."
-    elseif _DescriptionType == 3 then --Peaceful.
-        _FinalDescription = "We've heard rumors of a caravan of pirate transports moving through our territory. We cannot muster an adequate military response for this, and so we're turning to independent captains for help. Please neutralize the convoy in sector (${x}:${y}). You will be rewarded for doing so."
-    end
-
-    return _FinalDescription
-end
-
-mission.makeBulletin = function(_Station)
-    local _MethodName = "Make Bulletin"
-    mission.Log(_MethodName, "Making Bulletin.")
-    --This mission happens in the same sector you accept it in.
-    local _Rgen = ESCCUtil.getRand()
-    local _Sector = Sector()
-    local target = {}
-    --GET TARGET HERE:
-    local x, y = _Sector:getCoordinates()
-    local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
-    target.x, target.y = MissionUT.getSector(x, y, 6, 12, false, false, false, false, insideBarrier)
-
-    if not target.x or not target.y then
-        mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
-        return 
-    end
-
-    local _DangerLevel = _Rgen:getInt(1, 10)
-    
-    local _Description = formatDescription(_Station)
-
-    local _DangerCash = 25000
-    if _DangerLevel >= 5 then
-        _DangerCash = 27500
-    elseif _DangerLevel == 10 then
-        _DangerCash = 30000
-    end
-
-    reward = 100000 + (_DangerCash * Balancing.GetSectorRewardFactor(_Sector:getCoordinates())) --SET REWARD HERE
-
-    local bulletin =
-    {
-        -- data for the bulletin board
-        brief = mission.data.brief,
-        title = mission.data.title,
-        icon = mission.data.icon,
-        description = _Description,
-        difficulty = "Medium",
-        reward = "¢${reward}",
-        script = "missions/lotw/lotwmission6.lua",
-        formatArguments = {x = target.x, y = target.y, reward = createMonetaryString(reward)},
-        msg = "The pirates are operating in sector \\s(%1%:%2%). Please destroy them.",
-        giverTitle = _Station.title,
-        giverTitleArgs = _Station:getTitleArguments(),
-        onAccept = [[
-            local self, player = ...
-            player:sendChatMessage(Entity(self.arguments[1].giver), 0, self.msg, self.formatArguments.x, self.formatArguments.y)
-        ]],
-
-        -- data that's important for our own mission
-        arguments = {{
-            giver = _Station.index,
-            location = target,
-            reward = {credits = reward, relations = 6000, paymentMessage = "Earned %1% credits for destroying the pirate freighters."},
-            initialDesc = _Description,
-            dangerLevel = _DangerLevel
-        }},
-    }
-
-    return bulletin
-end
 
 --endregion

@@ -69,7 +69,7 @@ function LOTWFreighterMission2.updateServer(_TimeStep)
         local _Players = {Sector():getPlayers()}
         for _, _P in pairs(_Players) do
             if not invokedEscape then
-                _P:invokeFunction("player/missions/lotw/lotwmission2.lua", "freighterEscaped")
+                _P:invokeFunction("player/missions/lotw/lotwstory2.lua", "freighterEscaped")
             end
         end
     end

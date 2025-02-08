@@ -52,5 +52,5 @@ function LOTWLiasonMission1Dialog1.getDialog()
 end
 
 function LOTWLiasonMission1Dialog1.onEnd()
-    Player():invokeFunction("player/missions/lotw/lotwmission1.lua", "contactedLiason")
+    Player():invokeFunction("player/missions/lotw/lotwstory1.lua", "contactedLiason")
 end

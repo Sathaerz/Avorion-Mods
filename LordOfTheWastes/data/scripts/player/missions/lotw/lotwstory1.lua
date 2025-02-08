@@ -36,11 +36,11 @@ mission.data.icon = "data/textures/icons/silicium.png"
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." }, --Placeholder
-    { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
+    { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
     { text = "Destroy the first wave of pirates.", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Destroy the second wave of pirates.", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Destroy the third wave of pirates.", bulletPoint = true, fulfilled = false, visible = false },
-    { text = "Meet the liason in sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false, visible = false }
+    { text = "Meet the liason in sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false, visible = false }
 }
 --Can't set mission.data.reward.paymentMessage here since we are using a custom init.
 mission.data.accomplishMessage = "Good work. We transferred the reward to your account. Be on the lookout for more opportunities in the future."
@@ -54,7 +54,6 @@ function initialize(_Data_in)
         if not _restoring then
             mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
 
-            local _Rgen = ESCCUtil.getRand()
             local _X, _Y = _Data_in.location.x, _Data_in.location.y
 
             local _Sector = Sector()
@@ -75,6 +74,7 @@ function initialize(_Data_in)
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = {x = _X, y = _Y, enemyName = mission.data.custom.enemyName }
+            mission.data.description[3].arguments = { _X = _Y, _Y = _Y }
 
             --Run standard initialization
             LOTW_Mission_init(_Data_in)
@@ -97,8 +97,25 @@ end
 
 --region #PHASE CALLS
 
+mission.globalPhase.noBossEncountersTargetSector = true --Probably going to happen anyways due to the distance from the core, but no sense in taking chances.
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
 mission.phases[1] = {}
 mission.phases[1].timers = {}
+mission.phases[1].onTargetLocationEntered = function(x, y)
+    local _MethodName = "Phase 1 On Target Location Entered"
+    mission.Log(_MethodName, "Beginning...")
+    mission.data.description[3].fulfilled = true
+    mission.data.description[4].visible = true
+
+    showMissionUpdated(mission._Name)
+    spawnPirateWave(false, 1)
+end
+
+mission.phases[1].onSectorArrivalConfirmed = function(x, y)
+    pirateTaunt()
+end
 
 --region #PHASE 1 TIMERS
 
@@ -122,24 +139,17 @@ end
 
 --endregion
 
-mission.phases[1].noBossEncountersTargetSector = true --Probably going to happen anyways due to the distance from the core, but no sense in taking chances.
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
-mission.phases[1].onTargetLocationEntered = function(x, y)
-    local _MethodName = "Phase 1 On Target Location Entered"
-    mission.Log(_MethodName, "Beginning...")
-    mission.data.description[3].fulfilled = true
-    mission.data.description[4].visible = true
-
-    spawnPirateWave(false, 1)
-end
-
-mission.phases[1].onSectorArrivalConfirmed = function(x, y)
-    pirateTaunt()
-end
-
 mission.phases[2] = {}
 mission.phases[2].timers = {}
+mission.phases[2].showUpdateOnStart = true
+mission.phases[2].onBeginServer = function()
+    local _MethodName = "Phase 2 On Begin Server"
+    mission.Log(_MethodName, "Beginning...")
+    mission.data.description[4].fulfilled = true
+    mission.data.description[5].visible = true
+
+    spawnPirateWave(false, 2)
+end
 
 --region #PHASE 2 TIMERS
 
@@ -163,20 +173,17 @@ end
 
 --endregion
 
-mission.phases[2].noBossEncountersTargetSector = true
-mission.phases[2].noPlayerEventsTargetSector = true
-mission.phases[2].noLocalPlayerEventsTargetSector = true
-mission.phases[2].onBeginServer = function()
-    local _MethodName = "Phase 2 On Begin Server"
-    mission.Log(_MethodName, "Beginning...")
-    mission.data.description[4].fulfilled = true
-    mission.data.description[5].visible = true
-
-    spawnPirateWave(false, 2)
-end
-
 mission.phases[3] = {}
 mission.phases[3].timers = {}
+mission.phases[3].showUpdateOnStart = true
+mission.phases[3].onBeginServer = function()
+    local _MethodName = "Phase 3 On Begin Server"
+    mission.Log(_MethodName, "Beginning...")
+    mission.data.description[5].fulfilled = true
+    mission.data.description[6].visible = true
+
+    spawnPirateWave(true, 3)
+end
 
 --region #PHASE 3 TIMERS
 
@@ -200,30 +207,15 @@ end
 
 --endregion
 
-mission.phases[3].noBossEncountersTargetSector = true
-mission.phases[3].noPlayerEventsTargetSector = true
-mission.phases[3].noLocalPlayerEventsTargetSector = true
-mission.phases[3].showUpdateOnEnd = true
-mission.phases[3].onBeginServer = function()
-    local _MethodName = "Phase 3 On Begin Server"
-    mission.Log(_MethodName, "Beginning...")
-    mission.data.description[5].fulfilled = true
-    mission.data.description[6].visible = true
-
-    spawnPirateWave(true, 3)
-end
-
 mission.phases[4] = {}
-mission.phases[4].noBossEncountersTargetSector = true
-mission.phases[4].noPlayerEventsTargetSector = true
-mission.phases[4].noLocalPlayerEventsTargetSector = true
+mission.phases[4].showUpdateOnStart = true
 mission.phases[4].onBeginServer = function()
     local _MethodName = "Phase 4 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
     mission.data.description[6].fulfilled = true
 
     mission.data.location = getNextLocation()
-    mission.data.description[7].arguments = { x = mission.data.location.x, y = mission.data.location.y }
+    mission.data.description[7].arguments = { _X = mission.data.location.x, _Y = mission.data.location.y }
 
     mission.data.description[7].visible = true
 
@@ -325,7 +317,7 @@ function pirateTaunt()
             "Looks like we found a stray one."
         }
 
-        Sector():broadcastChatMessage(_Pirates[1], ChatMessageType.Chatter, randomEntry(_Lines))
+        Sector():broadcastChatMessage(_Pirates[1], ChatMessageType.Chatter, getRandomEntry(_Lines))
         mission.data.custom.firstWaveTaunt = true
     end
 end
@@ -406,7 +398,7 @@ function finishAndReward()
 
     local _Player = Player()
     local _Faction = Faction(mission.data.custom.friendlyFaction)
-    _Player:setValue("_lotw_story_1_accomplished", true)
+    _Player:setValue("_lotw_story_stage", 2)
     _Player:setValue("_lotw_faction", _Faction.index)
 
     reward()
@@ -491,14 +483,14 @@ mission.makeBulletin = function(_Station)
         description = _Description,
         difficulty = "Easy",
         reward = "¢${reward}",
-        script = "missions/lotw/lotwmission1.lua",
+        script = "missions/lotw/lotwstory1.lua",
         formatArguments = {x = target.x, y = target.y, reward = createMonetaryString(reward)},
         msg = "The pirates are gathering in sector \\s(%1%:%2%). Please destroy them.",
         giverTitle = _Station.title,
         giverTitleArgs = _Station:getTitleArguments(),
         checkAccept = [[
             local self, player = ...
-            if player:hasScript("missions/lotw/lotwmission1.lua") or player:getValue("_lotw_story_1_accomplished") then
+            if player:hasScript("missions/lotw/lotwstory1.lua") or (player:getValue("_lotw_story_stage") or 0) > 1 then
                 player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept this mission again.")
                 return 0
             end

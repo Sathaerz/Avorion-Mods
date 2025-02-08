@@ -107,6 +107,8 @@ end
 
 --region #PHASE CALLS
 
+--Normally we like doing .globalPhase.noBossEncounters - but we don't want to do that here.
+
 mission.globalPhase.onFail = function()
     local _Player = Player()
     local _FailureCt =_Player:getValue("_lotw_mission4_failures") or 0
@@ -116,6 +118,23 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].timers = {}
+mission.phases[1].onBeginServer = function()
+    local _MethodName = "Phase 1 On Begin Server"
+    mission.Log(_MethodName, "Beginning...")
+
+    local _Faction = Faction(mission.data.custom.friendlyFaction) --The phase is already set to 1 by the time we hit this, so it has to be done it this way.
+    local _Player = Player()
+
+    mission.data.description[1].arguments = { factionName = _Faction.name }
+    mission.data.description[2].arguments = { _X = mission.data.custom.outpostLocation.x, _Y = mission.data.custom.outpostLocation.y }
+
+    --Start the timer to see if the player has a 2nd ship. If they already have a 2nd one we can just skip this instantly.
+    if _Player.numShips > 1 then
+        nextPhase()
+    else
+        mission.phases[1].showUpdateOnEnd = true --Show an update on the end of the phase if we need to build a ship.
+    end
+end
 
 --region #PHASE 1 TIMERS
 
@@ -132,26 +151,11 @@ mission.phases[1].timers[1] = {
 
 --endregion
 
-mission.phases[1].onBeginServer = function()
-    local _MethodName = "Phase 1 On Begin Server"
-    mission.Log(_MethodName, "Beginning...")
-
-    local _Faction = Faction(mission.data.custom.friendlyFaction) --The phase is already set to 1 by the time we hit this, so it has to be done it this way.
-    local _Player = Player()
-
-    mission.data.description[1].arguments = { factionName = _Faction.name }
-    mission.data.description[2].arguments = { _X = mission.data.custom.outpostLocation.x, _Y = mission.data.custom.outpostLocation.y }
-
-    --Start the timer to see if the player has a 2nd ship. If they already have a 2nd one we can just skip this instantly.
-    if _Player.numShips > 1 then
-        nextPhase()
-    end
-end
-
 mission.phases[2] = {}
 mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].noPlayerEventsTargetSector = true
 mission.phases[2].noLocalPlayerEventsTargetSector = true
+mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].onBeginServer = function()
     local _MethodName = "Phase 2 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
@@ -186,6 +190,34 @@ end
 
 mission.phases[3] = {}
 mission.phases[3].timers = {}
+mission.phases[3].noBossEncountersTargetSector = true
+mission.phases[3].noPlayerEventsTargetSector = true
+mission.phases[3].noLocalPlayerEventsTargetSector = true
+mission.phases[3].onBeginServer = function()
+    --Spawn enemies.
+    spawnBackgroundPirates()
+end
+
+mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
+    local _MethodName = "Phase 2 on Entity Destroyed"
+    mission.Log(_MethodName, "Beginning...")
+
+    local _Entity = Entity(_ID)
+
+    if _Entity:getValue("_lotw_mission4_objective") then
+        mission.Log(_MethodName, "Was an objective.")
+        mission.data.custom.destroyed = mission.data.custom.destroyed + 1
+    end
+
+    if _Entity:getValue("_lotw_mission4_defendobjective") then
+        ESCCUtil.allPiratesDepart()
+        fail()
+    end
+end
+
+mission.phases[3].onTargetLocationLeft = function(x, y)
+    mission.data.custom.destroyed = 0
+end
 
 --region #PHASE 3 TIMERS
 
@@ -236,35 +268,6 @@ mission.phases[3].timers[3] = {
 end
 
 --endregion
-
-mission.phases[3].noBossEncountersTargetSector = true
-mission.phases[3].noPlayerEventsTargetSector = true
-mission.phases[3].noLocalPlayerEventsTargetSector = true
-mission.phases[3].onBeginServer = function()
-    --Spawn enemies.
-    spawnBackgroundPirates()
-end
-
-mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
-    local _MethodName = "Phase 2 on Entity Destroyed"
-    mission.Log(_MethodName, "Beginning...")
-
-    local _Entity = Entity(_ID)
-
-    if _Entity:getValue("_lotw_mission4_objective") then
-        mission.Log(_MethodName, "Was an objective.")
-        mission.data.custom.destroyed = mission.data.custom.destroyed + 1
-    end
-
-    if _Entity:getValue("_lotw_mission4_defendobjective") then
-        ESCCUtil.allPiratesDepart()
-        fail()
-    end
-end
-
-mission.phases[3].onTargetLocationLeft = function(x, y)
-    mission.data.custom.destroyed = 0
-end
 
 --endregion
 
@@ -347,6 +350,8 @@ function buildSector(_X, _Y)
     local _StationBay = CargoBay(_Station)
     _StationBay:clear()
     _Station:setDropsLoot(false)
+
+    mission.data.custom.stationId = _Station.index.string
 
     local _DuraFactor = 1.0
     --Anti-frustration feature.
@@ -507,7 +512,7 @@ function onBetaBackgroundPiratesFinished(_Generated)
     local _SlamAdded = 0
 
     local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = 40
+    _TorpSlammerValues._TimeToActive = 35
     _TorpSlammerValues._ROF = 10
     _TorpSlammerValues._UpAdjust = false
     _TorpSlammerValues._DamageFactor = 0.33 --If you get a bad seed, this might just obliterate the station. That's why it gets more HP for every failure.
@@ -567,7 +572,19 @@ function finishAndReward()
     mission.Log(_MethodName, "Running win condition.")
 
     local _Player = Player()
-    _Player:setValue("_lotw_story_4_accomplished", true)
+    _Player:setValue("_lotw_story_stage", 5)
+
+    --Give the player a 25% bonus if they cmoplete this within 3 attempts and don't let the station HP drop below 80%
+    local failedAttempts = _Player:getValue("_lotw_mission4_failures") or 0
+    if failedAttempts < 3 then
+        local station = Entity(Uuid(mission.data.custom.stationId))
+        local hpRatio = station.durability / station.maxDurability
+
+        if hpRatio >= 0.75 then
+            mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " Plus a bonus for excellent work."
+            mission.data.reward.credits = mission.data.reward.credits * 1.25
+        end
+    end
 
     reward()
     accomplish()

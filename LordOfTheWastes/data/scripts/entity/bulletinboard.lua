@@ -5,10 +5,24 @@ function BulletinBoard.refreshIcon()
     LOTW_RefreshIcon()
     local containsLOTWBulletin = false
     local displayed = BulletinBoard.getDisplayedBulletins()
+
+    local patterns = {
+        "lotwstory1.lua",
+        "lotwside1.lua",
+        "lotwside2.lua"
+    }
+
     for _, bulletin in pairs(displayed) do
         --BulletinBoard.Log(_MethodName, "Script is " .. tostring(bulletin.script))
-        if string.find(bulletin.script, "lotwmission1.lua") then
-            containsLOTWBulletin = true
+        for _, pattern in pairs(patterns) do
+            if string.find(bulletin.script, pattern) then
+                containsLOTWBulletin = true
+                break
+            end
+        end
+
+        if containsLOTWBulletin then
+            break
         end
     end
 
