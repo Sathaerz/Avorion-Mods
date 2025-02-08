@@ -216,7 +216,7 @@ if onServer() then
         shipscalevalue = attackType.strength
 
         reputation = reward * 2000
-        reward = reward * 10000 * Balancing_GetSectorRichnessFactor(sector:getCoordinates())
+        reward = reward * 10000 * Balancing_GetSectorRewardFactor(sector:getCoordinates())
 
         --Don't alert anyone of anything if there is a Jammer in play.
         if hasJammer == false then
