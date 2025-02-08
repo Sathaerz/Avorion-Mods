@@ -461,7 +461,7 @@ mission.phases[1].optionalUpdateServer = function(_TimeStep)
         _TargetWreck:setValue("_destroystronghold_optionalwreck_hascode", true)
 
         registerMarkWreckages()
-        showMissionUpdated("Destroy Pirate Stronghold")
+        showMissionUpdated(mission._Name)
         mission.data.description[4].fulfilled = true
         mission.data.description[5].visible = true
 
@@ -582,7 +582,7 @@ function buildObjectiveSector(_X, _Y)
 
         Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
 
-        showMissionUpdated("Destroy Pirate Stronghold")
+        showMissionUpdated(mission._Name)
 
         mission.data.custom.builtMainSector = true
     end
@@ -685,7 +685,7 @@ function foundCodes()
             mission.Log(_MethodName, "WARNING - Could not detach prerender callback to script.")
         end
 
-        showMissionUpdated("Destroy Entrenched Pirates")
+        showMissionUpdated(mission._Name)
 
         invokeServerFunction("foundCodes")
     else
