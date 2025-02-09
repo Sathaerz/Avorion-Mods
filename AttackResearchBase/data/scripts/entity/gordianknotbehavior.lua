@@ -15,6 +15,7 @@ self._Data._KitePenaltyActive = 300 --5 minutes by default. Let the player think
 self._Data._KiteKillerTimer = 0
 self._Data._KiteKillerROF = 2
 self._Data._KiteKillerDamage = 25000000 --25 million every 2 seconds seems reasonable
+self._Data._ThirtyCycle = 0
 
 function GordianKnotBehavior.initialize()
     local _MethodName = "Initialize"
@@ -33,6 +34,8 @@ function GordianKnotBehavior.getUpdateInterval()
 end
 
 function GordianKnotBehavior.updateServer(_TimeStep)
+    local methodName = "Update Server"
+
     if not Entity():hasScript("gordianknot.lua") then
         Entity():addScriptOnce("gordianknot.lua")
     end
@@ -57,6 +60,7 @@ function GordianKnotBehavior.updateServer(_TimeStep)
         end
     end
     
+    --Kite management function.
     self._Data._KitePenaltyTime = self._Data._KitePenaltyTime + _TimeStep
     if self._Data._KitePenaltyTime >= self._Data._KitePenaltyActive then
         self._Data._KiteKillerTimer = self._Data._KiteKillerTimer + _TimeStep
@@ -66,12 +70,27 @@ function GordianKnotBehavior.updateServer(_TimeStep)
             self._Data._KiteKillerTimer = 0
         end
     end
+
+    --Every 30 updates, force the torpedo slammer to reconsider its target.
+    if not self._Data._ThirtyCycle then
+        self._Data._ThirtyCycle = 0
+    end
+
+    if self._Data._ThirtyCycle < 30 then
+        self._Data._ThirtyCycle = self._Data._ThirtyCycle + 1
+    else
+        self.Log(methodName, "Run 30 update cycles - reconsidering torpslammer target.")
+
+        self._Data._ThirtyCycle = 0
+        Entity():invokeFunction("torpedoslammer.lua", "resetTarget")
+    end
 end
 
 function GordianKnotBehavior.onShotHit(_ObjectIndex, _ShooterIndex, _Location)
     local _MethodName = "On Shot Hit"
     if _ShooterIndex == Entity().index then
-        self.Log(_MethodName, "One of own shots hit - resetting antikite timer.")
+        --Be careful about enabling this, it is quite spammy.
+        --self.Log(_MethodName, "One of own shots hit - resetting antikite timer.")
         self._Data._KitePenaltyTime = 0
         self._Data._KiteKillerTimer = 0
     end

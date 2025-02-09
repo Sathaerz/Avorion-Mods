@@ -45,6 +45,7 @@ local Placer = include ("placer")
 local UpgradeGenerator = include ("upgradegenerator")
 
 mission._Debug = 0
+mission._Test_Chip_Debug = 0
 mission._Name = "Attack Research Base"
 
 --region #INIT
@@ -153,6 +154,8 @@ end
 
 --region #PHASE CALLS
 
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -172,7 +175,7 @@ mission.globalPhase.onAccomplish = function()
 end
 
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(_X, _Y) 
     local _MethodName = "Phase 1 on Target Location Entered"
     buildObjectiveSector(_X, _Y)
@@ -290,8 +293,6 @@ function buildObjectiveSector(_X, _Y)
     local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
     Loot(_ResearchOutpost):insert(_upgradeGenerator:generateSectorSystem(_X, _Y, nil, _upgradeRarities))
 
-    --Uncomment to always add a chip.
-    --mission.data.custom.addChip = true
     table.insert(_Stations, _ResearchOutpost)
 
     if mission.data.custom.spawnMilitary then
@@ -482,7 +483,7 @@ function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
-    if mission.data.custom.addChip then
+    if mission.data.custom.addChip or mission._Test_Chip_Debug == 1 then
         mission.Log(_MethodName, "Adding followup mission chip to player inventory.")
         Player():getInventory():addOrDrop(UsableInventoryItem("superweaponchip.lua", Rarity(RarityType.Legendary), mission.data.giver.factionIndex))
     end

@@ -28,9 +28,6 @@ include("structuredmission")
 ESCCUtil = include("esccutil")
 PariahUtility = include("pariahutility")
 
-local SectorSpecifics = include("sectorspecifics")
-local Balancing = include("galaxy")
-
 mission._Debug = 0
 mission._Name = "Destroy Superweapon"
 
@@ -42,7 +39,7 @@ mission.data.title = "Destroy Superweapon"
 mission.data.icon = "data/textures/icons/hazard-sign.png"
 mission.data.priority = 8
 mission.data.description = {
-    "In the ruins of the research lab, you seem to have found schematics and location data for an extremely powerful superweapon.",
+    "In the ruins of the research lab, you have found schematics and location data for an extremely powerful superweapon.",
     { text = "Judging from the schematics, it will be nearly impossible to defeat. You will undoubtedly be regarded as a hero by ${_FACTION} if you manage to destroy it." },
     { text = "The Superweapon seems to be located in sector (${location.x}:${location.y})." },
     { text = "Destroy the Superweapon", bulletPoint = true, fulfilled = false }
@@ -95,10 +92,11 @@ end
 
 --region #PHASE CALLS
 
+mission.globalPhase.noBossEncountersTargetSector = true
+mission.globalPhase.noPlayerEventsTargetSector = true
+mission.globalPhase.noLocalPlayerEventsTargetSector = true
+
 mission.phases[1] = {}
-mission.phases[1].noBossEncountersTargetSector = true
-mission.phases[1].noPlayerEventsTargetSector = true
-mission.phases[1].noLocalPlayerEventsTargetSector = true
 mission.phases[1].onTargetLocationEntered = function(_X, _Y) 
     local _MethodName = "Phase 1 on Target Location Entered"
     
@@ -112,7 +110,7 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     local _gk = Entity(mission.data.custom.gordianKnotid)
 
     --gk always has torp slammer.
-    _gk:invokeFunction("torpedoslammer.lua", _func, 10)
+    _gk:invokeFunction("torpedoslammer.lua", _func, 15)
 
     if _gk and valid(_gk) and _gk:getValue("_gk_superweaponscript") then
         local _script = _gk:getValue("_gk_superweaponscript")

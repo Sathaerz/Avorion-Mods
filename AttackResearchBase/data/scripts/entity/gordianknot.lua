@@ -13,7 +13,7 @@ function GordianKnot.initialize()
 end
 
 function GordianKnot.getUpdateInterval()
-    return 2
+    return 1
 end
 
 function GordianKnot.updateServer(_TimeStep)

@@ -65,6 +65,8 @@ function GordianLaserBoss.onDestroyed()
 end
 
 function GordianLaserBoss.update(timeStep)
+    local methodName = "Update"
+
     if data._TimeToActive >= 0 then
         data._TimeToActive = data._TimeToActive - timeStep
         return
@@ -86,7 +88,20 @@ function GordianLaserBoss.update(timeStep)
         local boss = Entity()
 
         if onServer() then
-            if not data.targetEntityId or not Entity(data.targetedEntityId) or Entity(data.targetedEntityId).isShip then
+            --Be careful about enabling these, they can get spammy.
+            if not data.targetEntityId or not Entity(data.targetedEntityId) then
+                --self.Log(methodName, "Target does not exist. Picking new target.")
+            else
+                if not Entity(data.targetedEntityId).isShip then
+                    --self.Log(methodName, "Target is not a ship. Picking new target.")
+                end
+
+                if Entity(data.targetEntityId).invincible then
+                    --self.Log(methodName, "Target is invincible. Picking new target.")
+                end
+            end
+
+            if not data.targetEntityId or not Entity(data.targetedEntityId) or not Entity(data.targetedEntityId).isShip or Entity(data.targetEntityId).invincible then
                 -- set new target
                 local players = {Sector():getPlayers()}
                 shuffle(random(), players)

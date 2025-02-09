@@ -295,19 +295,24 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         _TorpDamageFactor = 6
     end
 
-    local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = 10
-    _TorpSlammerValues._ROF = 1
-    _TorpSlammerValues._TorpOffset = -750
-    _TorpSlammerValues._UpAdjust = _AdjustSlammer
-    _TorpSlammerValues._DamageFactor = _TorpDamageFactor
-    _TorpSlammerValues._ForwardAdjustFactor = 1
-    _TorpSlammerValues._DurabilityFactor = 32
-    _TorpSlammerValues._ReachFactor = 10
-    _TorpSlammerValues._AccelFactor = 1.5
-    _TorpSlammerValues._VelocityFactor = 1.5
-    _TorpSlammerValues._TurningSpeedFactor = 1.5
-    _TorpSlammerValues._ShockwaveFactor = 2
+    local useTorpOffset = -750
+    local useForwardAdjFactor = 1
+
+    local _TorpSlammerValues = {
+        _TimeToActive = 10,
+        _ROF = 1,
+        _TorpOffset = useTorpOffset,
+        _UpAdjust = _AdjustSlammer,
+        _DamageFactor = _TorpDamageFactor,
+        _ForwardAdjustFactor = useForwardAdjFactor,
+        _DurabilityFactor = 32,
+        _ReachFactor = 10,
+        _AccelFactor = 1.5,
+        _VelocityFactor = 1.5,
+        _TurningSpeedFactor = 1.5,
+        _ShockwaveFactor = 2,
+        _TargetPriority = 4 --Random enemy
+    }
 
     _Superweapon:addAbsoluteBias(StatsBonuses.ShieldImpenetrable, true)
     _Superweapon:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
