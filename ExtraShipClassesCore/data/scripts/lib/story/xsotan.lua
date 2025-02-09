@@ -234,6 +234,25 @@ function Xsotan.createHierophant(_position, _volumeFactor)
     return _XsotanShip
 end
 
+function Xsotan.createCaduceus(position, volumeFactor)
+    local xsotanShip = Xsotan.createShip(position, volumeFactor)
+
+    local name = "Caduceus"
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_caduceus", true)
+    xsotanShip:setValue("xsotan_caduceus", true)
+
+    local linkerValues = {
+        healPctWhenLinking = 25
+    }
+
+    --Add Scripts
+    xsotanShip:addScriptOnce("enemies/allybooster.lua")
+    xsotanShip:addScriptOnce("linker.lua", linkerValues)
+
+    return xsotanShip
+end
+
 function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     dangerFactor = dangerFactor or 1 
     dangerFactor = math.max(dangerFactor, 1) --Should be at least 1.
@@ -516,13 +535,15 @@ function Xsotan.createRevenant(_Wreckage)
 end
 
 function Xsotan.getSpecialXsotanFunctions()
-    return {
+    local funcTable = {
         Xsotan.createOppressor,
         Xsotan.createSunmaker,
         Xsotan.createLonginus,
         Xsotan.createBallistyx,
         Xsotan.createWarlock
     }
+    
+    return funcTable
 end
 
 function Xsotan.createGenericShip(position, volumeFactor)

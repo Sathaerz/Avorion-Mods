@@ -111,6 +111,8 @@ function initUI()
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Parthenope", "onSpawnXsotanParthenopeButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Hierophant", "onSpawnXsotanHierophantButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Caduceus", "onSpawnXsotanCaduceusButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Dreadnought", "onSpawnXsotanDreadnoughtButtonPressed")
 
     local bossTab = window:createTab("Entity", "data/textures/icons/edge-crack.png", "ESCC Bosses")
@@ -1074,6 +1076,36 @@ function onSpawnXsotanParthenopeButtonPressed()
     Xsotan.createParthenope(MatrixLookUpPosition(-dir, up, pos))
 end
 callable(nil, "onSpawnXsotanParthenopeButtonPressed")
+
+function onSpawnXsotanHierophantButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanHierophantButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createHierophant(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanHierophantButtonPressed")
+
+function onSpawnXsotanCaduceusButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanCaduceusButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createCaduceus(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanCaduceusButtonPressed")
 
 function onSpawnXsotanDreadnoughtButtonPressed()
     if onClient() then

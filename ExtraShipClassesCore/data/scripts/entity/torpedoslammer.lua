@@ -12,6 +12,8 @@ local self = TorpedoSlammer
 self._Debug = 0
 self._Target_Invincible_Debug = 0
 
+self._DebugLevel = 1 --Determines what debug messages show.
+
 self._Data = {}
 --[[
     Some of these values are self-explanatory, but here's a guide to how this thing works:
@@ -68,7 +70,7 @@ self._Data = {}
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v19 script on entity.", 1)
+    self.Log(_MethodName, "Initializing Torpedo Slammer v21 script on entity.", 1)
 
     self._Data = _Values or {}
 
@@ -158,7 +160,9 @@ function TorpedoSlammer.updateServer(_TimeStep)
         self._Data._FireCycle = self._Data._FireCycle + _TimeStep
         if self._Data._CurrentTarget == nil or not valid(self._Data._CurrentTarget) then
             self._Data._CurrentTarget = self.pickNewTarget()
-        else
+        end
+
+        if self._Data._CurrentTarget and valid(self._Data._CurrentTarget) then
             if self._Data._FireCycle >= self._Data._ROF then
                 self.fireAtTarget()
                 self._Data._FireCycle = 0
@@ -170,6 +174,10 @@ function TorpedoSlammer.updateServer(_TimeStep)
             end
         end
     end
+end
+
+function TorpedoSlammer.resetTarget()
+    self._Data._CurrentTarget = nil
 end
 
 function TorpedoSlammer.pickNewTarget()
@@ -260,7 +268,7 @@ function TorpedoSlammer.pickNewTarget()
                 table.insert(_TargetCandidates, _Candidate)
             end
         end,
-        function() --7 - random player or alliance ship or station
+        function() --7 = random player or alliance ship or station
             local _Entities = { _Sector:getEntities() }
             for _, _Candidate in pairs(_Entities) do
                 if (_Candidate.type == EntityType.Ship or _Candidate.type == EntityType.Station) and _Candidate.playerOrAllianceOwned then
@@ -276,7 +284,7 @@ function TorpedoSlammer.pickNewTarget()
         local chosenCandidate = nil
         local attempts = 0
 
-        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
+        self.Log(_MethodName, "Found at least one suitable target out of " .. tostring(#_TargetCandidates) .. ". Picking a random one.", 1)
 
         while not chosenCandidate and attempts < 10 do
             local randomPick = randomEntry(_TargetCandidates)
@@ -290,6 +298,8 @@ function TorpedoSlammer.pickNewTarget()
             self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random", 1)
             chosenCandidate = randomEntry(_TargetCandidates)
         end
+
+        self.Log(_MethodName, "Candidate name is " .. tostring(chosenCandidate.name))
         
         return chosenCandidate
     else
@@ -353,7 +363,7 @@ function TorpedoSlammer.fireAtTarget()
     local _Out = Matrix()
     local _SpawnPos = _Mat.position + (_NDVec * _Bounds.radius * 1.25 * self._Data._ForwardAdjustFactor)
     if self._Data._UpAdjust then
-        self.Log(_MethodName, "Adjusting up position.", 1)
+        self.Log(_MethodName, "Adjusting up position.", 2)
         _SpawnPos = _SpawnPos + (_Mat.up * _Bounds.radius * 0.1 * self._Data._UpAdjustFactor)
     end
 
@@ -377,8 +387,9 @@ function TorpedoSlammer.fireAtTarget()
     _Torpedo.turningSpeed = _Torpedo.turningSpeed * self._Data._TurningSpeedFactor
     _Torpedo.shockwaveSize = _Torpedo.shockwaveSize * self._Data._ShockwaveFactor
 
-    self.Log(_MethodName, "Torpedo has tech of : " .. tostring(_Torpedo.tech) .. " and base shield damage of : " .. tostring(_BaseShieldDamage) .. " and base hull damage of : " .. tostring(_BaseHullDamage), 1)
-    self.Log(_MethodName, "Torpedo has final shield damage of " .. tostring(_Torpedo.shieldDamage) .. " and final hull damage of : " .. tostring(_Torpedo.hullDamage), 1)
+    --Very spammy - debug level is 2.
+    self.Log(_MethodName, "Torpedo has tech of : " .. tostring(_Torpedo.tech) .. " and base shield damage of : " .. tostring(_BaseShieldDamage) .. " and base hull damage of : " .. tostring(_BaseHullDamage), 2)
+    self.Log(_MethodName, "Torpedo has final shield damage of " .. tostring(_Torpedo.shieldDamage) .. " and final hull damage of : " .. tostring(_Torpedo.hullDamage), 2)
 
     _Out.position = _SpawnPos
     _Out.look = _Mat.look
@@ -444,7 +455,7 @@ function TorpedoSlammer.generateTorpedo()
     local _SimSector = math.floor(length(vec2(_TorpX, _TorpY))) + self._Data._TorpOffset
     _SimSector = math.max(_SimSector, 0) --Don't let it go below 0, otherwise we get an unexpected tech value.
 
-    self.Log(_MethodName, "x is : " .. tostring(_TorpX) .. " and y is : " .. tostring(_TorpY) .. " and offset is : " .. tostring(self._Data._TorpOffset) .. " and Warhead type is : " .. tostring(_WarheadType) .. " and body type is : " .. tostring(_BodyType), 1)
+    self.Log(_MethodName, "x is : " .. tostring(_TorpX) .. " and y is : " .. tostring(_TorpY) .. " and offset is : " .. tostring(self._Data._TorpOffset) .. " and Warhead type is : " .. tostring(_WarheadType) .. " and body type is : " .. tostring(_BodyType), 2)
     self.Log(_MethodName, "Simulated sector is " .. tostring(_SimSector) .. " : 0", 2)
 
     return _Generator:generate(_SimSector, 0, 0, Rarity(RarityType.Exotic), _WarheadType, _BodyType)
@@ -459,7 +470,7 @@ end
 function TorpedoSlammer.Log(_MethodName, _Msg, _RequireDebugLevel)
     _RequireDebugLevel = _RequireDebugLevel or 1
 
-    if self._Debug >= _RequireDebugLevel then
+    if self._Debug == 1 and self._DebugLevel >= _RequireDebugLevel then
         print("[TorpedoSlammer] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end
