@@ -1,7 +1,7 @@
 --[[
-    Destroy Pirate Stronghold
+    Rescue Slaves
     NOTES:
-        - Generic version of Side Mission 5 from LLTE
+        - Different take on the Free Slaves mission from Boxelware.
 ]]
 package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
@@ -48,13 +48,14 @@ mission.data.failMessage = "We lost track of our families and friends. Who knows
 --Constants. No need to have it in init
 mission.data.custom.amountSlaves = 10
 mission.data.custom.spawnedDangerTenThreat = false
+mission.data.custom.controlScriptPath = "player/missions/rescueslaves/rescueslavescontrol.lua"
 
 local RescueSlaves_init = initialize
 function initialize(_Data_in)
     local _MethodName = "initialize"
     mission.Log(_MethodName, "Beginning...")
 
-    if onServer()then
+    if onServer() then
         if not _restoring then
             mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
 
@@ -65,20 +66,7 @@ function initialize(_Data_in)
             local _rX, _rY = _Sector:getCoordinates() --return here w/ slaves.
 
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .transportNumber
-                .firstTransport
-                .secondTransport
-                .thirdTransport
-                .fourthTransport
-                .fifthTransport
-                .sixthTransport
-                .seventhTransport
-                .eightTransport
-                .ninthTransport
-                .returnToSector
-                .spawnedDangerTenThreat
+                CUSTOM MISSION DATA SETUP:
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.transportNumber = 1
@@ -91,7 +79,13 @@ function initialize(_Data_in)
             mission.data.custom.seventhTransport = random():getInt(19, 22)
             mission.data.custom.eigthTransport = random():getInt(23, 26)
             mission.data.custom.ninthTransport = random():getInt(27, 30)
-            
+            mission.data.custom.spawnedDangerTenThreat = false
+            mission.data.custom.spawnThreatCycle = 0
+            mission.data.custom.shownPhase1MissionUpdate = false
+
+            --[[=====================================================
+                MISSION DESCRIPTION SETUP:
+            =========================================================]]
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = { x = _X, y = _Y }
@@ -119,7 +113,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
     failAndPunish() --We don't want to clean up the sector since it's a regular on-grid generated sector, but the player doesn't get to abandon this mission for free.
@@ -139,6 +132,18 @@ mission.globalPhase.updateServer = function(_TimeStep)
                 _PlayerShip:addCargo(_Unstolen, _Amount)
             end
         end
+
+        local _craftFaction = _Player.craftFaction
+        if _craftFaction then
+            --If the faction declares war on the player due to the player making bad decisions, just fail the mission.
+            local relation = _craftFaction:getRelation(mission.data.giver.factionIndex)
+            if relation.status == RelationStatus.War then
+                failAndPunish()
+             end
+            if relation.level <= -80000 then 
+                failAndPunish()
+            end
+        end
     end
 end
 
@@ -146,6 +151,11 @@ mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
+    if not mission.data.custom.shownPhase1MissionUpdate then
+        showMissionUpdated(mission._Name)
+        mission.data.custom.shownPhase1MissionUpdate = true
+    end
+
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
 end
@@ -177,7 +187,7 @@ mission.phases[1].updateTargetLocationServer = function(_TimeStep)
     for _, _Ship in pairs(_CivilShips) do
         if _Ship.type == EntityType.Ship and not _Ship.playerOrAllianceOwned then
             _Ship:setValue("rescueslaves_mission_player", Player().index)
-            _Ship:addScriptOnce("entity/rescueslavescontrol.lua")
+            _Ship:addScriptOnce(mission.data.custom.controlScriptPath)
         end
     end
 
@@ -189,29 +199,50 @@ end
 
 if onServer() then
 
---Every 5 minutes, spawn a threat. Threats are randomly chosen between a subspace torpedo strike, bounty hunter wave, and hijacked faction ships.
+--Every 5 minutes, maybe spawn a threat. Threats are randomly chosen between a subspace torpedo strike, bounty hunter wave, and hijacked faction ships.
 mission.phases[1].timers[1] = {
     time = 300, 
     callback = function() 
         local _MethodName = "Phase 1 Timer 1 Callback"
         mission.Log(_MethodName, "Running threat timer.")
-        if getOnLocation(nil) then
-            spawnThreat()
+        if atTargetLocation() then
+            local threatChance = 1.0 - (0.25 - (mission.data.custom.dangerLevel * 0.015)) --25% chance to spawn no threat. Bottoms out @ 10% at danger 10.
+
+            if random():test(threatChance) or mission.data.custom.spawnThreatCycle == 2 then
+                mission.Log(_MethodName, tostring(threatChance) .. " test passed - spawning threat.")
+                spawnThreat()
+                mission.data.custom.spawnThreatCycle = 0
+            else
+                mission.Log(_MethodName, "Threat test not passed. Player is safe. For now...")
+                mission.data.custom.spawnThreatCycle = mission.data.custom.spawnThreatCycle + 1
+            end
         end
     end,
     repeating = true
 }
 
---Spawns a one-time threat in at 4 minutes. Does not repeat the spawn - done to prevent the sector from getting clogged w/ debris.
+--Spawns a one-time threat in at 4 minutes. 10% chance to spawn every 4 minutes afterwards. Only applies @ danger 10.
 mission.phases[1].timers[2] = {
     time = 240,
     callback = function()
         local _MethodName = "Phase 1 Timer 2 Callback"
         mission.Log(_MethodName, "Running danger 10 threat timer.")
-        if mission.data.custom.dangerLevel == 10 and not mission.data.custom.spawnedDangerTenThreat and getOnLocation(nil) then
-            mission.Log(_MethodName, "Danger 10 - spawning threat.")
-            spawnThreat()
-            mission.data.custom.spawnedDangerTenThreat = true
+        if mission.data.custom.dangerLevel == 10 and atTargetLocation() then
+
+            local spawnThreat = false
+            if not mission.data.custom.spawnedDangerTenThreat then
+                spawnThreat = true
+            else
+                if random():test(0.1) then
+                    spawnThreat = true
+                end
+            end
+
+            if spawnThreat then
+                mission.Log(_MethodName, "Danger 10 - spawning threat.")
+                spawnThreat()
+                mission.data.custom.spawnedDangerTenThreat = true
+            end
         end
     end,
     repeating = true
@@ -220,7 +251,7 @@ mission.phases[1].timers[2] = {
 mission.phases[1].timers[3] = {
     time = 360,
     callback = function()
-        if getOnLocation(nil) then
+        if atTargetLocation() then
             spawnLocalTransport()
         end
     end,
@@ -231,7 +262,7 @@ mission.phases[1].timers[4] = {
     time = 540,
     callback = function()
         --Spawn extra transports @ danger level 10 - player needs to be more speedy about checking for slaves.
-        if mission.data.custom.dangerLevel == 10 and getOnLocation(nil) then
+        if mission.data.custom.dangerLevel == 10 and atTargetLocation() then
             spawnLocalTransport()
         end
     end,
@@ -244,7 +275,7 @@ end
 mission.phases[1].timers[5] = {
     time = 10,
     callback = function()
-        if onClient() and getOnLocation(nil) then
+        if onClient() and atTargetLocation() then
             if not Player():getValue("_rescueslaves_tutorial_shown") then
                 local _CivilShips = { Sector():getEntitiesByScriptValue("is_civil") }
 
@@ -278,7 +309,7 @@ mission.phases[2].onBeginServer = function()
     --Get rid of the control script from all present ships - we don't need it anymore.
     local _Ships = {Sector():getEntitiesByScriptValue("rescueslaves_mission_player")}
     for _, _Ship in pairs(_Ships) do
-        _Ship:removeScript("entity/rescueslavescontrol.lua")
+        _Ship:removeScript(mission.data.custom.controlScriptPath)
     end
 end
 
@@ -469,7 +500,7 @@ function onHuntersFinished(_Generated)
         "Time to die, ${player}."
     }
 
-    _Player:sendChatMessage(_Generated[1], ChatMessageType.Chatter, randomEntry(headhunterMessages) % {player = _Player.name})
+    _Player:sendChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(headhunterMessages) % {player = _Player.name})
 end
 
 --Hijacked ships
@@ -699,15 +730,14 @@ end
 --region #MAKEBULLETIN CALL
 
 function formatDescription(_Station)
-    local _Descriptions = {
+    local descriptionTable = {
         "Traffickers kidnapped some of our people. They were just normal males, females and children. We know what sector they're going to get shipped through, but the traffickers are deeply embedded in the local faction. There's no way that we'll be able to find them. If you help, you'll have our endless gratitude.",
         "Some of our people have been kidnapped! We know what sector they're going to be trafficked through, but we don't have the resources to investigate it ourselves. Please help us! If we're not able to find them before they're transferred, they'll vanish and we won't be able to find them again!",
         "Our families have been kidnapped! We don't have any particular sets of skills... or long careers... but perhaps you do. Perhaps you can be a nightmare to people like them. Please, captain. Help us - rescue our families and bring them back. We know where they've been taken, but we lack the means to find them ourselves.",
         "If you're seeing this then please - we need your help. Last night our station was attacked and many of our people - women and children among them - were kidnapped and taken to be sold. We know where they are, but the attack has left us too weak to chase after them. We'll make it worth your while, just please help us!!!"
     }
-    shuffle(random(), _Descriptions)
 
-    return _Descriptions[1]
+    return getRandomEntry(descriptionTable)
 end
 
 mission.makeBulletin = function(_Station)
@@ -732,7 +762,7 @@ mission.makeBulletin = function(_Station)
         --Don't try too many times for this.
         target.x, target.y = MissionUT.getSectorWithStations(x, y, 3, 22, true, nil, nil, nil, insideBarrier, _ExcludedSectors)
         --Careful about turning on too many of these logs. They're somewhat obnoxious.
-        --mission.Log(_MethodName, "Checking " .. tostring(target.x) .. " : " .. tostring(target.y))
+        mission.Log(_MethodName, "Checking " .. tostring(target.x) .. " : " .. tostring(target.y))
 
         local _, _, _, _, _, specsFactionIndex = specs:determineContent(target.x, target.y, seed)
 
@@ -780,8 +810,8 @@ mission.makeBulletin = function(_Station)
     _MissionReward = { credits = reward, relations = reputation }
 
     local distToCenter = math.sqrt(x * x + y * y)
-    local _MatlMin = 7000
-    local _MatlMax = 8000
+    local _MatlMin = 0 --7000
+    local _MatlMax = 0 --8000
     if distToCenter > 400 then
         --Always give about 50% more than free slaves.
         _MatlMin = 10000

@@ -42,8 +42,12 @@ function RescueSlavesControl.interactionPossible(playerIndex)
 
     if player and faction and playerIndex == pindex then
         local relation = player:getRelation(faction.index)
-        if relation.status == RelationStatus.War then return false end
-        if relation.level <= -80000 then return false end
+        if relation.status == RelationStatus.War then 
+            return false 
+        end
+        if relation.level <= -80000 then 
+            return false 
+        end
 
         return true
     end
