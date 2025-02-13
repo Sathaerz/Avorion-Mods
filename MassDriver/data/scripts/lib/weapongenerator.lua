@@ -4,7 +4,7 @@ function WeaponGenerator.generateMassDriver(rand, dps, tech, material, rarity)
 
     local fireDelay = rand:getFloat(4.15, 5.15)
     local reach = rand:getFloat(3000, 3400)
-    local damage = dps * fireDelay * 0.6 --These things are way too good if they're not weakened a bit. Insane burst damage, range, and accuracy. Something has to go.
+    local damage = dps * fireDelay * 0.5 --These things are way too good if they're not weakened a bit. Insane burst damage, range, and accuracy. Something has to go.
     local speed = rand:getFloat(2600, 2800)
     local existingTime = reach / speed
 
@@ -17,7 +17,7 @@ function WeaponGenerator.generateMassDriver(rand, dps, tech, material, rarity)
         weapon.appearance = WeaponAppearance.Cannon
     end
     weapon.name = "Mass Driver"
-    weapon.prefix = "Mass Driver"%_T
+    weapon.prefix = "Mass Driver"
     weapon.icon = "data/textures/icons/massdriver.png" -- previously minigun.png
     weapon.sound = "massdriver"
     weapon.accuracy = 0.99
