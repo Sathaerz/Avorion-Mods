@@ -15,7 +15,6 @@ mission._Name = "Mineral Madness"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
-mission.data.icon = "data/textures/icons/rock.png"
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "" }, --Placeholder
@@ -333,7 +332,6 @@ mission.makeBulletin = function(_Station)
         -- data for the bulletin board
         brief = mission.data.brief,
         title = mission.data.title,
-        icon = mission.data.icon,
         description = _Description,
         difficulty = "Variable", --Depends on how you get the ore.
         reward = "Variable",
