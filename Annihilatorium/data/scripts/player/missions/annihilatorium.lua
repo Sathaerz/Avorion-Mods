@@ -392,7 +392,7 @@ function makeSector(_X, _Y)
 
     Placer.resolveIntersections()
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 
     sync()
 end
