@@ -416,6 +416,8 @@ end
 --region #SERVER CALLS
 
 function spawnMiningSector(x, y)
+    local methodName = "Spawn Mining Sector"
+
     local generator = SectorGenerator(x, y)
     local _random = random()
 
@@ -443,6 +445,8 @@ function spawnMiningSector(x, y)
     end
 
     Placer.resolveIntersections()
+
+    mission.data.custom.cleanUpSector = true
 end
 
 function spawnGiverFactionMiner()
@@ -496,6 +500,7 @@ function onMinerFinished(_Generated)
     crewComponent:setCaptain(CaptainGenerator():generate())
     _Ship:addScript("ai/mine.lua")
     _Ship:addScript("ai/thedigminer.lua")
+    _Ship:setValue("bDisableXAI", true)
     _Ship:setValue("_thedig_defendobjective", true)
     _Ship:setValue("_thedig_player", Player().index)
 end

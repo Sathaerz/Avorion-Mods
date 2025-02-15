@@ -42,12 +42,16 @@ function TheDigMinerAI.updateServer(timeStep)
     if self._Data.timeInSector >= 240 and _HPThreshold < 0.25 and not self._Data.withdrawCommandSent then
         self.Log(_MethodName, "Ship below HP threshold and requisite time has passed. Withdrawing.")
 
-        _Entity:removeScript("ai/mine.lua")
+        local safetyBreakout = 0
+        while _Entity:hasScript("ai/mine.lua") and safetyBreakout < 10 do
+            _Entity:removeScript("ai/mine.lua")
+            safetyBreakout = safetyBreakout + 1
+        end
         local dir = random():getDirection()
         local endpoint = dir * 20000
 
         local shipAI = ShipAI()
-        shipAI:setFlyLinear(endpoint, 0, false) --Avoid obstacles so we don't blow ourselves up.
+        shipAI:setFlyLinear(endpoint, 0, false)
         self._Data.withdrawCommandSent = true
     end
 
