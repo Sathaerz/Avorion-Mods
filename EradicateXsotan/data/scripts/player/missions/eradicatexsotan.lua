@@ -297,8 +297,7 @@ function spawnObjectiveSector(x, y)
     --Spawn the maximum number of Xsotan.
     spawnXsotanWave()
 
-    mission.Log(_MethodName, "Adding sector monitor")
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 end
 
 function spawnXsotanWave()
