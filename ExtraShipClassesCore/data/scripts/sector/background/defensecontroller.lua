@@ -69,6 +69,7 @@ self._Data = {}
         _ForceDebug*                ==  Forces debug mode on for this defense controller. Set to nil by default.
         _AbsoluteFactionLimit*      ==  If set, makes it so that no more than this number of ships will spawn for the current faction. For example, if this is set to 20, this will not spawn more than 20 ships from that faction, even if the ships aren't from this script. Set to nil by default.
         _NoHazard*                  ==  If set, ships spawned by this script will not cause a hazard zone when destroyed. Defaults to false.
+        _PreventLootDrop*           ==  If set, ships spawned by this script will not drop loot. Defaults to false.
 ]]
 
 --//********** EXAMPLE SETUP OF A DEFENSE CONTROLLER FROM LONG LIVE THE EMPRESS **********
@@ -185,6 +186,7 @@ function DefenseController.initialize(_Values)
             self._Data._UseFixedDanger = self._Data._UseFixedDanger or false
             self._Data._DefenderDistance = self._Data._DefenderDistance or 1000
             self._Data._NoHazard = self._Data._NoHazard or false
+            self._Data._PreventLootDrop = self._Data._PreventLootDrop or false
         else
             self.Log(_MethodName, "Values would have been restored in restore()")
         end
@@ -560,6 +562,9 @@ function DefenseController.onNextWaveGenerated(_Generated)
                 _Threshold = self._Data._DefenderHPThreshold
             }
             _Defender:addScript("ai/withdrawatlowhealth.lua", _WithdrawData)
+        end
+        if self._Data._PreventLootDrop then
+            _Defender:setDropsLoot(false)
         end
         if self._Data._DeleteDefendersOnLeave then
             MissionUT.deleteOnPlayersLeft(_Defender)

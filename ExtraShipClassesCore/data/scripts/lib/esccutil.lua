@@ -273,11 +273,13 @@ end
 function ESCCUtil.majorEntityTypes()
     --Basically anything that's not loot / wreckages.
     return {
+        EntityType.None,
         EntityType.Ship,
         EntityType.Station,
         EntityType.Asteroid,
         EntityType.Torpedo,
-        EntityType.Fighter
+        EntityType.Fighter,
+        EntityType.Container
     }
 end
 

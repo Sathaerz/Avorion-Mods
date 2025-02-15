@@ -25,8 +25,12 @@ function LowHealthWithdraw.initialize(_Values)
     self._Data._ScriptAdded = false
 
     if self._Data._Invincibility then
+        --This should only get executed onServer() anyways.
         local _Dura = Durability()
-        _Dura.invincibility = self._Data._Invincibility
+        if _Dura then
+            _Dura.invincibility = self._Data._Invincibility
+            Entity():setValue("SDKExtendedShieldsDisabled", true) --Need to disable SDK extended docking shields.
+        end
     end
 end
 

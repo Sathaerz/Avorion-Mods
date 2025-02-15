@@ -444,6 +444,7 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     ship:addScript("enemies/esccxsotandreadnought.lua", esccDreadnoughtValues)
     ship:setValue("is_xsotan", true)
     ship:setValue("xsotan_dreadnought", true)
+    ship:setValue("SDKExtendedShieldsDisabled", true) --Need to disable SDK extended docking shields.
     if dangerFactor >= 5 then
         ship:addScript("internal/common/entity/background/legendaryloot.lua")
     end

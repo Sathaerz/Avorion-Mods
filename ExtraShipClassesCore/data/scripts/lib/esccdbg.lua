@@ -5,7 +5,7 @@ include("galaxy")
 include("callable")
 include("productions")
 
-local PirateGenerator = include("pirategenerator") --used for lotw
+local PirateGenerator = include("pirategenerator") --needed for lotw - do not remove.
 local AsyncPirateGenerator = include("asyncpirategenerator")
 local SpawnUtility = include("spawnutility")
 local ShipUtility = include("shiputility")
@@ -202,7 +202,7 @@ function initUI()
     local bulletinTable = {}
 
     modTable = getDebugModules(modTable)
-    bulletinTable = getBulletinMissionTable(bulletinTable)
+    bulletinTable = getBulletinMissionModules(bulletinTable)
 
     if #modTable > 0 or #bulletinTable > 0 then
 
@@ -232,8 +232,8 @@ end
 --2 - add a local replacement of getDebugModule - i.e. lotw_getDebugModules = getDebugModules
 --3 - table.insert a function building the tab into modTable, define a new tab, make buttons, etc.
 --4 - define appropriate functions inside esccdbg on that file
---5 - return the defined local replacement (so in the above exampel, return lotw_getDebugModules(modTable))
---6 - this will chain call the process for all mods and add a campaign tab for each
+--5 - return the defined local replacement (so in the above example, return lotw_getDebugModules(modTable))
+--6 - this will chain call the function for all mods and add a campaign tab for each
 --[[Example:
 
 local lotw_getDebugModules = getDebugModules
@@ -258,71 +258,23 @@ function getDebugModules(modTable)
     return modTable
 end
 
-function getBulletinMissionTable(modTable)
-    local xMods = Mods()
-    for _, mod in pairs(xMods) do
-        if mod.name == "AmbushRaiders" then
-            table.insert(modTable, { _Caption = "Ambush Pirate Raiders", _Tooltip = "ambushraiders" })
-        end
-        if mod.name == "Annihilatorium" then
-            table.insert(modTable, { _Caption = "Annihilatorium", _Tooltip = "annihilatorium" })
-        end
-        if mod.name == "AnalyzeXsotanSpecimen" then
-            table.insert(modTable, { _Caption = "Analyze Xsotan Specimen", _Tooltip = "xsotanspecimen" })
-        end
-        if mod.name == "AttackResearchBase" then
-            table.insert(modTable, { _Caption = "Attack Research Base", _Tooltip = "attackresearchbase" })
-        end
-        if mod.name == "CollectPirateBounty" then
-            table.insert(modTable, { _Caption = "Collect Pirate Bounty", _Tooltip = "piratebounty" })
-        end
-        if mod.name == "CollectXsotanBounty" then
-            table.insert(modTable, { _Caption = "Collect Xsotan Bounty", _Tooltip = "xsotanbounty" })
-        end
-        if mod.name == "DefendPrototype" then
-            table.insert(modTable, { _Caption = "Defend Prototype Battleship", _Tooltip = "defendprototype" })
-        end
-        if mod.name == "DestroyPrototype" then
-            table.insert(modTable, { _Caption = "Destroy Prototype Battleship", _Tooltip = "destroyprototype2" })
-        end
-        if mod.name == "DestroyStronghold" then
-            table.insert(modTable, { _Caption = "Destroy Pirate Stronghold", _Tooltip = "destroystronghold" })
-        end
-        if mod.name == "EradicateXsotan" then
-            table.insert(modTable, { _Caption = "Eradicate Xsotan Infestation", _Tooltip = "eradicatexsotan" })
-        end
-        if mod.name == "EscortCivilians" then
-            table.insert(modTable, { _Caption = "Escort Civilian Transports", _Tooltip = "escortcivilians" })
-        end
-        if mod.name == "MineralMadness" then
-            table.insert(modTable, { _Caption = "Mineral Madness", _Tooltip = "mineralmadness" })
-        end
-        if mod.name == "RescueSlaves" then
-            table.insert(modTable, { _Caption = "Rescue Slaves", _Tooltip = "rescueslaves" })
-        end
-        if mod.name == "ScanXsotanGroup" then
-            table.insert(modTable, { _Caption = "Scan Xsotan Group", _Tooltip = "scanxsotangroup" })
-        end
-        if mod.name == "ScrapDelivery" then
-            table.insert(modTable, { _Caption = "Scrap Delivery", _Tooltip = "scrapdelivery" })
-        end
-        if mod.name == "ScrapScramble" then
-            table.insert(modTable, { _Caption = "Scrap Scramble", _Tooltip = "scrapscramble" })
-        end
-        if mod.name == "TheDig" then
-            table.insert(modTable, { _Caption = "The Dig", _Tooltip = "thedig" })
-        end
-        if mod.name == "TransferSatellite" then
-            table.insert(modTable, { _Caption = "Transfer Satellite", _Tooltip = "transfersatellite" })
-        end
-        if mod.name == "WreckingHavoc" then
-            table.insert(modTable, { _Caption = "Wrecking Havoc", _Tooltip = "wreckinghavoc" })
-        end
-        if mod.name == "XsotanDreadnoughtMission" then
-            table.insert(modTable, { _Caption = "Destroy Xsotan Dreadnought", _Tooltip = "destroyxsodread" })
-        end
-    end
+--How to add a bulletin mission module:
+-- - add esccdbg.lua to your mod folder
+-- - add a local replacement of getBulletinMissionModules - i.e. AmbushRaiders_getBulletinMissionModules = getBulletinMissionModules
+-- - table.insert a new table into modTable - structure it like this: { _Caption = "Ambush Pirate Raiders", _Tooltip = "ambushraiders" }
+-- - return the defined local replacement (in the above example, return AmbushRaiders_getBulletinMissionModules(modTable))
+-- - This will chain call the function for all mods and add a bulletin mission button for each
+--[[Example:
 
+local AmbushRaiders_getBulletinMissionModules = getBulletinMissionModules
+function getBulletinMissionModules(modTable)
+    table.insert(modTable, { _Caption = "Ambush Pirate Raiders", _Tooltip = "ambushraiders" })
+
+    return AmbushRaiders_getBulletinMissionModules(modTable)
+end
+
+]]
+function getBulletinMissionModules(modTable)
     return modTable
 end
 

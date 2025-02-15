@@ -2,45 +2,67 @@
 
 --region #SERVER FUNCTIONS
 
---This is obsolete. I will keep it in for a few more versions, but I will be removing it eventually.
-function getOnLocation(inSector)
-    local _Sector = inSector or Sector()
-    local _X, _Y = _Sector:getCoordinates()
-    if _X == mission.data.location.x and _Y == mission.data.location.y then
-        return true
-    else
-        return false
-    end
-end
-
 function runFullSectorCleanup(cleanAll)
+    local methodName = "Cleanup"
+
     local _Sector = Sector()
     if cleanAll == nil then --if it's not set, then set it to true. Can't do cleanAll = cleanAll or true b/c that will remove (correct) false values.
         cleanAll = true
     end
 
-    if atTargetLocation() then
-        --Just in case the mission doesn't include ESCCUtil. Deletes everything that clearMissionAssets would when not deleting everything (true/false)
-        local _ESCCUtil = include("esccutil")
-        local _EntityTypes = _ESCCUtil.majorEntityTypes()
-        if cleanAll then
-           _EntityTypes = _ESCCUtil.allEntityTypes() 
-        end
-        _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
-        _Sector:removeScript("sector/background/campaignsectormonitor.lua")
-    else
-        local cleanupFunc = function(lCleanAll)
+    if mission.data.custom.cleanUpSector then
+        if atTargetLocation() then
+            mission.Log(methodName, "In sector - adding delete entities script.", nil)
+    
+            --Just in case the mission doesn't include ESCCUtil. Deletes everything that clearMissionAssets would when not deleting everything (true/false)
+            local _ESCCUtil = include("esccutil")
+            local _EntityTypes = _ESCCUtil.majorEntityTypes()
+            if cleanAll then
+               _EntityTypes = _ESCCUtil.allEntityTypes() 
+            end
+            _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes) --Do not need to invoke as we will presumably be leaving shortly.
+        else
+            mission.Log(methodName, "Not in sector - cleaning remotely.", nil)
+    
+            local cleanupCode = [[
+                package.path = package.path .. ";data/scripts/lib/?.lua"
+    
+                function cleanSectorRemotely(cleanAll)
+                    local _ESCCUtil = include("esccutil")
+                    local _EntityTypes = _ESCCUtil.majorEntityTypes()
+                    if cleanAll then
+                        _EntityTypes = _ESCCUtil.allEntityTypes() 
+                    end
+    
+                    local _sector = Sector()
+                    _sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
+                    _sector:invokeFunction("deleteentitiesonplayersleft.lua", "updateDeletion") --Need to invoke manually since no players are in sector.
+                end
+            ]]
+    
             local _MX, _MY = mission.data.location.x, mission.data.location.y
             Galaxy():loadSector(_MX, _MY)
-            invokeSectorFunction(_MX, _MY, true, "campaignsectormonitor.lua", "clearMissionAssets", true, lCleanAll)
-        end
-        
-        --There are certain circumstances where we abandon the mission but the sector hasn't gotten the sectormonitor - don't cause an error in that case, but do log.
-        local status, result = pcall(cleanupFunc, cleanAll)
-        if not status then 
-            mission.Log("Cleanup", "Sector does not have campaignsectormonitor attached.", nil)
+            runSectorCode(_MX, _MY, true, cleanupCode, "cleanSectorRemotely", cleanAll)
         end
     end
+end
+
+function checkCampaignStationOK(stationTitle)
+    local validTitles = {
+        "Shipyard",
+        "Repair Dock",
+        "Equipment Dock",
+        "Military Outpost",
+        "Resource Depot"
+    }
+
+    for idx, val in pairs(validTitles) do
+        if val == stationTitle then
+            return true
+        end
+    end
+
+    return false
 end
 
 --endregion

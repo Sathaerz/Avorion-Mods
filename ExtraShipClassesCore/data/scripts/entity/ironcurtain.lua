@@ -25,7 +25,10 @@ function IronCurtain.initialize(_Values)
     self._Data._SentMessage = false
 
     if onServer() then
-        Entity():registerCallback("onDamaged", "onDamaged")
+        local _entity = Entity()
+
+        _entity:registerCallback("onDamaged", "onDamaged")
+        _entity:setValue("SDKExtendedShieldsDisabled", true) --Need to disable SDK extended docking shields.
     end
 end
 

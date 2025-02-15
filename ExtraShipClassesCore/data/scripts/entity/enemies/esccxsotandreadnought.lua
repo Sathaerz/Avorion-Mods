@@ -185,8 +185,8 @@ function ESCCXsotanDreadnought.aggroAllies()
             end
 
             if not ally:getValue("escc_xsotandreadnought_aggroed") then
-                ai:setAggressive()
-                ally:setValue("escc_xsotandreadnought_aggroed", true) --repeatedly setting this does weird stuff to the AI.
+                ai:setAggressive() --repeatedly setting this does weird stuff to the AI.
+                ally:setValue("escc_xsotandreadnought_aggroed", true) --So we use this value so it's only set once.
             end
         end
     end
