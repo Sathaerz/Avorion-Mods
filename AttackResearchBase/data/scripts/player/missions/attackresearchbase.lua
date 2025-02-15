@@ -442,7 +442,7 @@ function buildObjectiveSector(_X, _Y)
 
     Placer.resolveIntersections()
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 end
 
 function getSectorRarityTables(_X, _Y, _upgradeGenerator)
