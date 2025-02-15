@@ -371,8 +371,7 @@ function spawnDefenseSector(_X, _Y)
     --Prototype should be near the shipyard, but not intersect with it.
     Placer.resolveIntersections()
 
-    --Attach campaign monitor to sector in case of abandonment.
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 end
 
 function spawnPrototype(_position)
