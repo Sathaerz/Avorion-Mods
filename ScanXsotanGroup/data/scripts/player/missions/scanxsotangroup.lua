@@ -9,6 +9,7 @@ local Xsotan = include("story/xsotan")
 local SpawnUtility = include ("spawnutility")
 local SectorGenerator = include ("SectorGenerator")
 local Balancing = include ("galaxy")
+local Placer = include ("placer")
 
 mission._Debug = 0
 mission._Name = "Scan Xsotan Group"
@@ -368,9 +369,9 @@ function spawnMissionSector()
         mission.data.custom.scannableXsotanShips[idx] = _Xsotan.id.string
     end
 
-    --add cleanup script
-    mission.Log(methodName, "Adding sector monitor")
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    Placer.resolveIntersections()
+    
+    mission.data.custom.cleanUpSector = true
 
     --sync
     mission.Log(methodName, "Sync")
