@@ -166,6 +166,8 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
 
     spawnPrototype()
     spawnInitialDefenders()
+
+    mission.data.custom.cleanUpSector = true
 end
 
 mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
