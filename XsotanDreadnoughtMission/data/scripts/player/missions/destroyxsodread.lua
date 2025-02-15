@@ -112,8 +112,7 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
             dreadnought:addScriptOnce("esccbossblades.lua")
         end
 
-        mission.Log(methodName, "Adding sector monitor")
-        Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+        mission.data.custom.cleanUpSector = true
     end
 end
 
