@@ -642,7 +642,7 @@ function buildSmugglerSector(_X, _Y)
     _Generator:addOffgridAmbientEvents()
     Placer.resolveIntersections()
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 
     sync()
 end

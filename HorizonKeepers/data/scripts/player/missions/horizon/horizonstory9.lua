@@ -584,7 +584,7 @@ function buildObjectiveSector(x, y)
 
     Placer.resolveIntersections()
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 end
 
 function buildBossSector()

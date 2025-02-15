@@ -525,6 +525,8 @@ function getNextLocation(_onBlockRing)
 end
 
 function buildObjectiveSector(x, y)
+    local methodName = "Build Objective Sector"
+
     local _random = random()
 
     --Get player position first.
@@ -591,7 +593,7 @@ function buildObjectiveSector(x, y)
         end
     end
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 end
 
 function spawnVarlance()

@@ -205,7 +205,7 @@ function addMissionToStation(x, y, missionScript)
         local stationCandidates = {Sector():getEntitiesByType(EntityType.Station)}
         local stations = {}
         for _, _Station in pairs(stationCandidates) do
-            if not _Station.playerOrAllianceOwned then
+            if not _Station.playerOrAllianceOwned and checkCampaignStationOK(_Station.title) then
                 table.insert(stations, _Station)
             end
         end

@@ -589,7 +589,7 @@ function buildSmugglerSector(_X, _Y)
         obj:destroy(mission.data.custom.smugglerOutpostID)
     end
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 
     sync()
 end

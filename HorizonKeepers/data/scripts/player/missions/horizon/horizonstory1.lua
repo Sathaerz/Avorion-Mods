@@ -253,6 +253,8 @@ end)
 --region #SERVER CALLS
 
 function createAsteroidFields(x, y)
+    local methodName = "Create Asteroid Fields"
+
     if not mission.data.custom.spawnedAsteroids then
         local _Generator = SectorGenerator(x, y)
 
@@ -264,9 +266,9 @@ function createAsteroidFields(x, y)
             _Generator:createSmallAsteroidField()
         end
 
-        Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
-
         mission.data.custom.spawnedAsteroids = true
+
+        mission.data.custom.cleanUpSector = true
     end
 end
 

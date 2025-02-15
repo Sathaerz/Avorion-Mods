@@ -292,6 +292,8 @@ function spawnVarlance(_DeleteOnLeft)
 end
 
 function spawnBoss()
+    local methodName = "Spawn Boss"
+    
     local _random = random()
 
     --Get player position first.
@@ -317,7 +319,7 @@ function spawnBoss()
     mission.data.custom.hanselID = hansel.index
     mission.data.custom.gretelID = gretel.index
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 end
 
 function finishAndReward()

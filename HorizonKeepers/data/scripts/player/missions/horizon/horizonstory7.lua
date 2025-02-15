@@ -1017,7 +1017,7 @@ function buildObjectiveSector(x, y)
     local mai = ShipAI(mo)
     mai:registerFriendFaction(frostbiteFaction.index)
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 end
 
 function onStealthBroken(runMissionFailed)
@@ -1279,7 +1279,8 @@ function addDefenseController(_sector)
         _IsPirate = false,
         _Factionid = horizonFaction.index,
         _DefenderHPThreshold = 0.5,
-        _DefenderOmicronThreshold = 0.5
+        _DefenderOmicronThreshold = 0.5,
+        _PreventLootDrop = true
     }
 
     _sector:addScriptOnce("sector/background/defensecontroller.lua", defControlValues)

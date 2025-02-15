@@ -279,7 +279,7 @@ function spawnBoss()
 
     mission.data.custom.xsologizeID = xsologize.index
 
-    Sector():addScriptOnce("sector/background/campaignsectormonitor.lua")
+    mission.data.custom.cleanUpSector = true
 end
 
 function finishAndReward()
