@@ -47,7 +47,10 @@ self._Data._InvulnData = {
 function SwenksSpecial.initialize()
     local methodName = "Initialize"
     if onServer() then
-        Entity():registerCallback("onDamaged", "onDamaged")
+        local _entity = Entity()
+
+        _entity:setValue("SDKExtendedShieldsDisabled", true) --Need to disable these to avoid messing with his invulnerability.
+        _entity:registerCallback("onDamaged", "onDamaged")
 
         if Sector():registerCallback("onDestroyed", "swenksOnDestroyed") == 1 then
             self.Log(methodName, "Could not register onEntityDestroyed callback.")

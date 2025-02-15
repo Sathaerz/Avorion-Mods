@@ -72,7 +72,7 @@ mission.phases[1].onSectorEntered = function(x, y)
     end
 
     --Checks the distance already, so no need to run the other distance check.
-    addMissionToStation(x, y, false, "data/scripts/player/missions/lotw/lotwstory1.lua")
+    addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwstory1.lua")
 end
 
 mission.phases[2] = {}
@@ -158,11 +158,11 @@ mission.phases[6].onSectorEntered = function(x, y)
 
     if currentTime >= nextValidSide1Time and _random:test(0.5) then
         mission.Log(methodName, "Adding side 1 to board.")
-        addMissionToStation(x, y, true, "data/scripts/player/missions/lotw/lotwside1.lua")
+        addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwside1.lua")
     end
     if currentTime >= nextValidSide2Time and _random:test(0.5) then
         mission.Log(methodName, "Adding side 2 to board.")
-        addMissionToStation(x, y, true, "data/scripts/player/missions/lotw/lotwside2.lua")
+        addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwside2.lua")
     end
 end
 
@@ -187,28 +187,19 @@ function checkDistanceOK(x, y)
     return true
 end
 
-function addMissionToStation(x, y, militaryOutpostOnly, missionScript)
+function addMissionToStation(x, y, missionScript)
     local methodName = "Add Mission To Station"
 
     local dist = math.sqrt(x*x + y*y)
     local minDist = 430
 
-    mission.Log(methodName, "Min Distance is " .. tostring(minDist) .. " military outpost only is " .. tostring(militaryOutpostOnly))
+    mission.Log(methodName, "Min Distance is " .. tostring(minDist))
 
     if dist >= minDist then
         local stationCandidates = {Sector():getEntitiesByType(EntityType.Station)}
         local stations = {}
         for _, _Station in pairs(stationCandidates) do
-            local canAdd = true
-            if _Station.playerOrAllianceOwned then
-                canAdd = false
-            end
-
-            if militaryOutpostOnly and _Station.title ~= "Military Outpost" then
-                canAdd = false
-            end
-
-            if canAdd then
+            if not _Station.playerOrAllianceOwned and checkCampaignStationOK(_Station.title) then
                 table.insert(stations, _Station)
             end
         end
