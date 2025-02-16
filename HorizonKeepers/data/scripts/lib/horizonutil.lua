@@ -331,7 +331,7 @@ function HorizonUtil.spawnFrostbiteShip(_Data, _DeleteOnLeft)
     _Ship:setValue("is_frostbite_ship", true)
     _Ship:setValue("_ESCC_bypass_hazard", true)
     _Ship:setValue("bDisableXAI", true) --Disable any Xavorion AI
-    _Ship:setValue("SDKExtendedShieldsDisabled", true) --Also need to disable SDK extended docking shields.
+    _Ship:setValue("SDKEDSDisabled", true) --Also need to disable SDK extended docking shields.
     for _, _value in pairs(_Data._ScriptValues) do
         _Ship:setValue(_value, true)
     end
@@ -768,7 +768,7 @@ function HorizonUtil.spawnHorizonShip(_Data)
     _HorizonShip:setValue("is_horizon_ship", true)
     _HorizonShip:setValue("_ESCC_bypass_hazard", true)
     _HorizonShip:setValue("bDisableXAI", true) --Disable any Xavorion AI
-    _HorizonShip:setValue("SDKExtendedShieldsDisabled", true) --Also need to disable SDK extended docking shields.
+    _HorizonShip:setValue("SDKEDSDisabled", true) --Also need to disable SDK extended docking shields.
     if _Data._ShipClassValue then
         for _, _val in pairs(_Data._ShipClassValue) do
             _HorizonShip:setValue(_val, true)
@@ -913,7 +913,7 @@ function HorizonUtil.spawnHorizonStation(_Data)
     _Station:setValue("is_horizon_station", true)
     _Station:setValue("_ESCC_bypass_hazard", true)
     _Station:setValue("bDisableXAI", true) --Disable any Xavorion AI
-    _Station:setValue("SDKExtendedShieldsDisabled", true) --Also need to disable SDK extended docking shields.
+    _Station:setValue("SDKEDSDisabled", true) --Also need to disable SDK extended docking shields.
     if _Data._StationValues then
         for _, _value in pairs(_Data._StationValues) do
             _Station:setValue(_value, true)
