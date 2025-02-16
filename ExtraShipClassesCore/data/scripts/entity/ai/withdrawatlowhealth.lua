@@ -29,7 +29,7 @@ function LowHealthWithdraw.initialize(_Values)
         local _Dura = Durability()
         if _Dura then
             _Dura.invincibility = self._Data._Invincibility
-            Entity():setValue("SDKExtendedShieldsDisabled", true) --Need to disable SDK extended docking shields.
+            Entity():setValue("SDKEDSDisabled", true) --Need to disable SDK extended docking shields.
         end
     end
 end

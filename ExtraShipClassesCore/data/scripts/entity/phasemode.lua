@@ -15,7 +15,7 @@ self._Debug = 0
 
 function Unreal.initialize()
     if onServer() then
-        Entity():setValue("SDKExtendedShieldsDisabled", true) --Need to disable SDK extended docking shields.
+        Entity():setValue("SDKEDSDisabled", true) --Need to disable SDK extended docking shields.
     end
 end
 

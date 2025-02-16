@@ -28,7 +28,7 @@ function IronCurtain.initialize(_Values)
         local _entity = Entity()
 
         _entity:registerCallback("onDamaged", "onDamaged")
-        _entity:setValue("SDKExtendedShieldsDisabled", true) --Need to disable SDK extended docking shields.
+        _entity:setValue("SDKEDSDisabled", true) --Need to disable SDK extended docking shields.
     end
 end
 
