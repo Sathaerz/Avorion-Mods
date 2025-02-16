@@ -49,7 +49,7 @@ function SwenksSpecial.initialize()
     if onServer() then
         local _entity = Entity()
 
-        _entity:setValue("SDKExtendedShieldsDisabled", true) --Need to disable these to avoid messing with his invulnerability.
+        _entity:setValue("SDKEDSDisabled", true) --Need to disable these to avoid messing with his invulnerability.
         _entity:registerCallback("onDamaged", "onDamaged")
 
         if Sector():registerCallback("onDestroyed", "swenksOnDestroyed") == 1 then
