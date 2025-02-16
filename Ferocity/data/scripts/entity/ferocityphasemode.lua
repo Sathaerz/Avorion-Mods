@@ -11,6 +11,12 @@ local self = Unreal
 self.phaseMode = false
 self.timeInPhase = 0
 
+function Unreal.initialize()
+    if onServer() then
+        Entity():setValue("SDKEDSDisabled", true) --Need to disable SDK extended docking shields.
+    end
+end
+
 function Unreal.getUpdateInterval()
     return 2 --Update every 2 seconds.
 end
