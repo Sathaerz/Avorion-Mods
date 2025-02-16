@@ -27,6 +27,7 @@ function startAttacking()
     if onClient() then
         for _, ship in pairs(ships) do
             if ship:hasComponent(ComponentType.Plan) then
+                Music():fadeOut(1.5)
                 registerBoss(ship.index, nil, nil, "data/music/special/despair.ogg", "The Brotherhood")
                 if ship.title:match("Tankem") then setBossHealthColor(ship.index, ColorRGB(1.0, 0.5, 0.3)) end
                 if ship.title:match("Reconstructo") then setBossHealthColor(ship.index, ColorRGB(0.2, 0.7, 0.2)) end
