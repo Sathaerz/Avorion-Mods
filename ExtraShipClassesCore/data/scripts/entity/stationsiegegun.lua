@@ -407,11 +407,11 @@ function StationSiegeGun.broadcastPrepForShotCall(_Target)
     self.Log(_MethodName, "Target is " .. tostring(_Target))
 
     local _Lines = {
-        "CHRRK....Secure...main...pass...CHRRRK...FIRE!...CHRRK", --Zone of the Enders 2 reference that people aren't going to get.
-        "CHRRK...Main...CHRRRK...gun...CHRRRK",
-        "CHRRK...Targeting...CHRRRK..." .. _Target.name .. "...CHRRRK",
-        "CHRRK...Round...CHRRRK...loaded...CHRRK....main....CHRRRRRK",
-        "CHRRK...Destroy...CHRRRRK...enemy....CHRRK"
+        "CHRRK.... Secure... main... pass... CHRRRK... FIRE!... CHRRK", --Zone of the Enders 2 reference that people aren't going to get.
+        "CHRRK... Main... CHRRRK... gun... CHRRRK",
+        "CHRRK... Targeting... CHRRRK... " .. _Target.name .. "... CHRRRK",
+        "CHRRK... Round... CHRRRK... loaded... CHRRK.... main.... CHRRRRRK",
+        "CHRRK... Destroy... CHRRRRK... enemy.... CHRRK"
     }
 
     Sector():broadcastChatMessage(Entity(), ChatMessageType.Chatter, randomEntry(_Lines))

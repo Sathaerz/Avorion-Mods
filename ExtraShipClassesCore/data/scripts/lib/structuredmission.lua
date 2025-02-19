@@ -5,7 +5,6 @@
 function runFullSectorCleanup(cleanAll)
     local methodName = "Cleanup"
 
-    local _Sector = Sector()
     if cleanAll == nil then --if it's not set, then set it to true. Can't do cleanAll = cleanAll or true b/c that will remove (correct) false values.
         cleanAll = true
     end
@@ -18,9 +17,12 @@ function runFullSectorCleanup(cleanAll)
             local _ESCCUtil = include("esccutil")
             local _EntityTypes = _ESCCUtil.majorEntityTypes()
             if cleanAll then
-               _EntityTypes = _ESCCUtil.allEntityTypes() 
+               _EntityTypes = _ESCCUtil.allEntityTypes()
             end
-            _Sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes) --Do not need to invoke as we will presumably be leaving shortly.
+            
+            local _sector = Sector()
+            _sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes) --Do not need to invoke as we will presumably be leaving shortly.
+            _sector:removeScript("sector/traders.lua")
         else
             mission.Log(methodName, "Not in sector - cleaning remotely.", nil)
     
@@ -37,6 +39,7 @@ function runFullSectorCleanup(cleanAll)
                     local _sector = Sector()
                     _sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
                     _sector:invokeFunction("deleteentitiesonplayersleft.lua", "updateDeletion") --Need to invoke manually since no players are in sector.
+                    _sector:removeScript("sector/traders.lua")
                 end
             ]]
     
@@ -92,6 +95,40 @@ function startBossCameraAnimation(bossId)
     table.insert(keyframes, CameraKeyFrame(startPosition + path, bossId, bossUp, 4))
 
     Player():setCameraKeyFrames(unpack(keyframes))
+end
+
+function setGameMusic()
+    local methodName = "Set Game Music"
+
+    if onServer() then
+        mission.Log(methodName, "Called on Server => Invoking on Client")
+        invokeClientFunction(Player(), "setGameMusic")
+        return
+    end
+
+    mission.Log(methodName, "Called on Client => Resetting music")
+
+    local mus = Music()
+    mus.autoPlay = true
+    mus:fadeOut(1.5)
+end
+
+--NOTE: Don't call this until sector arrival is confirmed or else it does not function properly.
+function setCustomMusic(track)
+    local methodName = "Set Custom Music"
+
+    if onServer() then
+        mission.Log(methodName, "Called on Server => Invoking on Client")
+        invokeClientFunction(Player(), "setCustomMusic", track)
+        return
+    end
+
+    mission.Log(methodName, "Called on Client => Setting music")
+    local mus = Music()
+
+    mus.autoPlay = false
+    mus:fadeOut(1.5)
+    mus:playTrack(track, true, nil)
 end
 
 --endregion

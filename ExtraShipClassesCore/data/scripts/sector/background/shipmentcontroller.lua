@@ -274,11 +274,11 @@ function ShipmentController.broadcastShipmentCall()
     local _ShipmentLeader = Entity(self._Data._ShipmentLeader)
 
     local _Lines = {
-        "CHRRK....Delivery.....CHRRRK",
-        "CHRRK...Send...CHRRRK...supplies...CHRRRK...now...CHRRK",
-        "CHRRK...Freighter...CHRRRK...protect...CHRRRK...destination...CHRRK",
-        "CHRRK...Supply...CHRRRK...incoming...CHRRK",
-        "CHRRK...Scheduled...CHRRRK...jumping...now...CHRRK"
+        "CHRRK.... Delivery..... CHRRRK",
+        "CHRRK... Send... CHRRRK... supplies... CHRRRK... now... CHRRK",
+        "CHRRK... Freighter... CHRRRK... protect... CHRRRK... destination... CHRRK",
+        "CHRRK... Supply... CHRRRK... incoming... CHRRK",
+        "CHRRK... Scheduled... CHRRRK... jumping... now... CHRRK"
     }
 
     Sector():broadcastChatMessage(_ShipmentLeader, ChatMessageType.Chatter, randomEntry(_Lines))

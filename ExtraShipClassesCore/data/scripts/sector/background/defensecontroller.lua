@@ -590,10 +590,10 @@ function DefenseController.broadcastWithdrawCall()
         local _DefenseLeader = Entity(self._Data._DefenseLeader)
     
         local _Lines = {
-            "CHRRK....Damaged.....withdraw....CHRRRK.....incoming.....CHRRRK",
-            "CHRRK...More...CHRRRK...on...CHRRRK...way...CHRRK",
-            "CHRRK...Enemy...CHRRRK...destroy...CHRRRK...reinforcements...CHRRK",
-            "CHRRK...Withdraw...CHRRRK...reinforcements...CHRRK"
+            "CHRRK.... Damaged..... withdraw.... CHRRRK..... incoming..... CHRRRK",
+            "CHRRK... More... CHRRRK... on... CHRRRK... way... CHRRK",
+            "CHRRK... Enemy... CHRRRK... destroy... CHRRRK... reinforcements... CHRRK",
+            "CHRRK... Withdraw... CHRRRK... reinforcements... CHRRK"
         }
     
         Sector():broadcastChatMessage(_DefenseLeader, ChatMessageType.Chatter, randomEntry(_Lines))
@@ -606,12 +606,12 @@ function DefenseController.broadcastForcedWave()
     local _DefenseLeader = Entity(self._Data._DefenseLeader)
 
     local _Lines = {
-        "CHRRK....Save.....Save....Hurt.....Them.....CHRRRK",
-        "CHRRRK....HELP.....CHRRRRRK",
-        "CHRRK...Overrun...CHRRRK...send...CHRRRK...help...CHRRK",
-        "CHRRK...Alert...CHRRRK...Alert...CHRRRK...Alert...CHRRK",
-        "CHRRK...Distress...CHRRRK...help...CHRRK",
-        "CHRRK...HELP...CHRRRK...help...CHRRK"
+        "CHRRK.... Save..... Save.... Hurt..... Them..... CHRRRK",
+        "CHRRRK.... HELP..... CHRRRRRK",
+        "CHRRK... Overrun... CHRRRK... send... CHRRRK... help... CHRRK",
+        "CHRRK... Alert... CHRRRK... Alert... CHRRRK... Alert... CHRRK",
+        "CHRRK... Distress... CHRRRK... help... CHRRK",
+        "CHRRK... HELP... CHRRRK... help... CHRRK"
     }
 
     Sector():broadcastChatMessage(_DefenseLeader, ChatMessageType.Chatter, randomEntry(_Lines))
