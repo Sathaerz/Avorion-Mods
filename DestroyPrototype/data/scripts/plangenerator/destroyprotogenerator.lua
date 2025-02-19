@@ -76,23 +76,27 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	
 	local turretFactor = 3
 	local damageFactor = 3
+	local turretRange = 1000
 	if dangerValue > 5 then
 		turretFactor = turretFactor + 1
+		turretRange = turretRange + 375
 	end
 	if dangerValue >= 8 then
 		turretFactor = turretFactor + 1
+		turretRange = turretRange + 375
 	end
 	if dangerValue == 10 then
 		turretFactor = turretFactor + 1
 		damageFactor = damageFactor + 1
+		turretRange = turretRange + 750
 	end
 	
 	--Add two different types of military weapons + disruptor weapons -- also add artillery so the player can't just stand off and hammer it to death.
 	--Well, they still _can_, but at least it's a little more difficult this way.
-	ShipUtility.addMilitaryEquipment(ship, turretFactor, 0)
-	ShipUtility.addMilitaryEquipment(ship, turretFactor, 0)
-	ShipUtility.addDisruptorEquipment(ship)
-	ShipUtility.addScalableArtilleryEquipment(ship, turretFactor)
+	--Update 2/18/2025 - I've learned a little bit more about how the AI works. This should make things spicier :)
+	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
+	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
+	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 1, turretRange)
 	
 	--Finally, increase the ship's damage multiplier by a random amount depending on the danger level of the mission.
 	local forceMultiplier = 1 + (random():getInt(0, dangerValue) / 50)
