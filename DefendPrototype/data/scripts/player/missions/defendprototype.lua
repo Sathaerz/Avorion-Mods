@@ -49,6 +49,14 @@ mission.data.accomplishMessage = "..." --Placeholder, varies by faction.
 mission.data.failMessage = "..." --Placeholder, varies by faction.
 
 mission.data.custom.prototypeScriptPath = "player/missions/defendprototype/defendprotoboss.lua"
+mission.data.custom.prototypeScriptValue = "is_prototype"
+mission.data.custom.defendPrototypeTracks = {
+    "data/music/background/blockdodgerlaststand.ogg",
+    "data/music/background/cncthedefense.ogg",
+    "data/music/background/hr2shortcircuit.ogg",
+    "data/music/background/d3dpissedofficebox.ogg",
+    "data/music/background/mw2mercsdragonsteeth.ogg"
+}
 
 local DefendPrototype_init = initialize
 function initialize(_Data_in)
@@ -79,6 +87,9 @@ function initialize(_Data_in)
             mission.data.custom.piratesSpawned = 0
             mission.data.custom.piratesKilled = 0
             mission.data.custom.piratesToKill = 30 + math.floor((mission.data.custom.dangerLevel * 1.5)) --From 30 to 45 at level 10.
+            mission.data.custom.phaseTwoTimer = 0
+            mission.data.custom.rewardBonus = true
+            mission.data.custom.defendPrototypeTrack = getRandomEntry(mission.data.custom.defendPrototypeTracks)
             mission.data.custom.inBarrier = _Data_in.inbarrier
 
             if not mission.data.custom.friendlyFaction then
@@ -121,8 +132,6 @@ end
 --Try to keep the timer calls outside of onBeginServer / onSectorEntered / onSectorArrivalConfirmed unless they are non-repeating and 30 seconds or less.
 
 mission.globalPhase.noBossEncountersTargetSector = true
-mission.globalPhase.noPlayerEventsTargetSector = true
-mission.globalPhase.noLocalPlayerEventsTargetSector = true
 
 mission.globalPhase.getRewardedItems = function()
     local _random = random()
@@ -141,6 +150,7 @@ mission.globalPhase.onAbandon = function()
 end
 
 mission.globalPhase.onFail = function()
+    setGameMusic()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
@@ -150,6 +160,7 @@ mission.globalPhase.onFail = function()
 end
 
 mission.globalPhase.onAccomplish = function()
+    setGameMusic()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
@@ -172,43 +183,93 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
 end
 
 mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
+    local _sector = Sector()
+
+    local prototypeTable = { _sector:getEntitiesByScriptValue(mission.data.custom.prototypeScriptValue) }
+    local prototype = prototypeTable[1]
+
+    _sector:broadcastChatMessage(prototype, ChatMessageType.Chatter, "Thank you for the assistance! The pirates are on their way. Use this time to set up your defensive line!")
+
     nextPhase()
 end
 
 --PHASE 2
 
 mission.phases[2] = {}
-mission.phases[2].sectorCallbacks = {}
-mission.phases[2].timers = {}
-mission.phases[2].onTargetLocationEntered = function(_X, _Y)
-    mission.data.timeLimit = nil 
-    mission.data.timeLimitInDescription = false
-end
+mission.phases[2].updateTargetLocationServer = function(timeStep)
+    mission.data.custom.phaseTwoTimer = mission.data.custom.phaseTwoTimer + timeStep
 
-mission.phases[2].onTargetLocationLeft = function(_X, _Y)
-    mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to head back to the sector.
-    mission.data.timeLimitInDescription = true --Show the player how much time is left.
-end
+    --It's unlikely that we'd be out of the sector since the timer only ticks while we're in the sector, but it's still good to check.
+    if atTargetLocation() and mission.data.custom.phaseTwoTimer >= 180 then
+        local _sector = Sector()
 
-mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
-    local _DestroyedEntity = Entity(_ID)
-    if atTargetLocation() then
-        if _DestroyedEntity:getValue("is_prototype") then
-            failAndPunish()
-        end
+        local prototypeTable = { _sector:getEntitiesByScriptValue(mission.data.custom.prototypeScriptValue) }
+        local prototype = prototypeTable[1]
 
-        if _DestroyedEntity:getValue("is_pirate") then
-            mission.data.custom.piratesKilled = mission.data.custom.piratesKilled + 1
-        end
+        _sector:broadcastChatMessage(prototype, ChatMessageType.Chatter, "They'll be here soon! Get ready!")
+        nextPhase()
     end
 end
 
---region #PHASE 2 TIMERS
+mission.phases[2].onTargetLocationEntered = function(_X, _Y)
+    onDefendPrototypeLocationEntered(_X, _Y)
+end
+
+mission.phases[2].onTargetLocationLeft = function(_X, _Y)
+    onDefendPrototypeLocationLeft(_X, _Y)
+end
+
+mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
+    --It's unlikely that we hit this, unless the player has a massive xsotan attack event on them and they manage to overwhelm the defenders.
+    onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
+end
+
+
+--PHASE 3
+
+mission.phases[3] = {}
+mission.phases[3].timers = {}
+mission.phases[3].onBeginServer = function()
+    setCustomMusic(mission.data.custom.defendPrototypeTrack)
+end
+
+mission.phases[3].onTargetLocationEntered = function(_X, _Y)
+    onDefendPrototypeLocationEntered(_X, _Y)
+end
+
+mission.phases[3].onTargetLocationArrivalConfirmed = function(x, y)
+    setCustomMusic(mission.data.custom.defendPrototypeTrack)
+end
+
+mission.phases[3].onTargetLocationLeft = function(_X, _Y)
+    onDefendPrototypeLocationLeft(_X, _Y)
+
+    if onServer() then
+        setGameMusic()
+    end
+end
+
+mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
+    onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
+end
+
+--region #PHASE 3 TIMERS
 
 if onServer() then
 
---Timer 1 = spawn background pirates
-mission.phases[2].timers[1] = {
+--Timer 1 = spawn first wave
+mission.phases[3].timers[1] = {
+    time = 5,
+    callback = function()
+        if atTargetLocation() then
+            spawnBackgroundPirates()
+        end
+    end,
+    repeating = false
+}
+
+--Timer 2 = spawn background pirates
+mission.phases[3].timers[2] = {
     time = 60,
     callback = function()
         if atTargetLocation() then
@@ -218,17 +279,17 @@ mission.phases[2].timers[1] = {
     repeating = true
 }
 
---Timer 2 - finish conditions - both win and lose.
-mission.phases[2].timers[2] = {
+--Timer 3 - finish conditions - both win and lose.
+mission.phases[3].timers[3] = {
     time = 10,
     callback = function()
-        local _MethodName = "Phase 2 Timer 2 Callback"
+        local _MethodName = "Phase 3 Timer 3 Callback"
         mission.Log(_MethodName, "Beginning...")
         mission.Log(_MethodName, "Number of pirates destroyed " .. tostring(mission.data.custom.piratesKilled))
 
         local _Sector = Sector()
         local _OnLocation = atTargetLocation()
-        local _Prototypes = {_Sector:getEntitiesByScriptValue("is_prototype")}
+        local _Prototypes = {_Sector:getEntitiesByScriptValue(mission.data.custom.prototypeScriptValue)}
 
         if _OnLocation and mission.data.custom.piratesKilled >= mission.data.custom.piratesToKill then
             finishAndReward()
@@ -243,11 +304,11 @@ mission.phases[2].timers[2] = {
     repeating = true
 }
 
---Timer 3 - station buffs.
-mission.phases[2].timers[3] = {
+--Timer 4 - station buffs.
+mission.phases[3].timers[4] = {
     time = 30,
     callback = function()
-        local _MethodName = "Phase 2 Timer 3 Callback"
+        local _MethodName = "Phase 3 Timer 4 Callback"
         --If the shipyard is up, it will repair the prototype. Repairs 5% by default, and +1% for each other station in the area.
 
         local _Sector = Sector()
@@ -257,34 +318,40 @@ mission.phases[2].timers[3] = {
         local _Shipyard = _Shipyards[1]
 
         --Get the prototype
-        local _Prototypes = {_Sector:getEntitiesByScriptValue("is_prototype")}
+        local _Prototypes = {_Sector:getEntitiesByScriptValue(mission.data.custom.prototypeScriptValue)}
         local _Prototype = _Prototypes[1]
 
         if atTargetLocation() and _Shipyard and valid(_Shipyard) and _Prototype and valid(_Prototype) then
-                mission.Log(_MethodName, "On location and a shipyard is present. Repairing the prototype.")
-                --Get the # of other stations
-                local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
-                local _StationCt = #_Stations
+            mission.Log(_MethodName, "On location and a shipyard is present. Repairing the prototype.")
+            --Get the # of other stations
+            local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
+            local _StationCt = #_Stations
 
-                --Repair the prototype
-                local _RepairPct = _StationCt * 0.01 --1% per station.
-                if mission.data.custom.dangerLevel == 10 then
-                    _RepairPct = 0.03 --Give a 3% automatically on difficulty 10. 
-                end
-                local _ProtoHull = _Prototype.durability
-                local _ProtoMaxHull = _Prototype.maxDurability
-    
-                local _RepairAmt = _ProtoMaxHull * _RepairPct
-    
-                if _ProtoHull < _ProtoMaxHull then
-                    mission.Log(_MethodName, "Prototype hull BEFORE: " .. tostring(_Prototype.durability))
-                    _Prototype.durability = math.min(_Prototype.durability + _RepairAmt, _ProtoMaxHull)
-                    mission.Log(_MethodName, "Prototype hull AFTER: " .. tostring(_Prototype.durability))
-
-                    invokeClientFunction(Player(), "playHealAnimations", _Shipyard, _Prototype)
-                end
+            --Repair the prototype
+            local _RepairPct = _StationCt * 0.01 --1% per station.
+            if mission.data.custom.dangerLevel == 10 then
+                _RepairPct = 0.03 --Give a 3% automatically on difficulty 10. 
             end
-        end,
+            local _ProtoHull = _Prototype.durability
+            local _ProtoMaxHull = _Prototype.maxDurability
+    
+            local _RepairAmt = _ProtoMaxHull * _RepairPct
+            local prototypeHPRatio = _ProtoHull / _ProtoMaxHull
+
+            --If the player lets the prototype HP dip below 75%, they don't get the bonus.
+            if prototypeHPRatio < 0.75 then
+                mission.data.custom.rewardBonus = false
+            end
+    
+            if _ProtoHull < _ProtoMaxHull then
+                mission.Log(_MethodName, "Prototype hull BEFORE: " .. tostring(_Prototype.durability))
+                _Prototype.durability = math.min(_Prototype.durability + _RepairAmt, _ProtoMaxHull)
+                mission.Log(_MethodName, "Prototype hull AFTER: " .. tostring(_Prototype.durability))
+                
+                invokeClientFunction(Player(), "playHealAnimations", _Shipyard, _Prototype)
+            end
+        end
+    end,
     repeating = true
 }
 
@@ -400,32 +467,42 @@ function spawnPrototype(_position)
     _BattleShip:addScriptOnce(mission.data.custom.prototypeScriptPath)
 end
 
+function onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
+    local _DestroyedEntity = Entity(_ID)
+    if atTargetLocation() then
+        if _DestroyedEntity:getValue(mission.data.custom.prototypeScriptValue) then
+            failAndPunish()
+        end
+
+        if _DestroyedEntity:getValue("is_pirate") then
+            mission.data.custom.piratesKilled = mission.data.custom.piratesKilled + 1
+        end
+    end
+end
+
+function onDefendPrototypeLocationLeft(x, y)
+    mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to head back to the sector.
+    mission.data.timeLimitInDescription = true --Show the player how much time is left.
+end
+
+function onDefendPrototypeLocationEntered(x, y)
+    mission.data.timeLimit = nil 
+    mission.data.timeLimitInDescription = false
+end
+
 function getWingSpawnTables(_WingScriptValue)
     local _MethodName = "Get Wing Spawn Table"
-    mission.Log(_MethodName, "Beginning...")
+    mission.Log(_MethodName, "Getting table for " .. tostring(_WingScriptValue))
 
     local _Danger = mission.data.custom.dangerLevel
 
     local _MaxCt = 4
-    if _WingScriptValue == "_defendprototype_alpha_wing" or _WingScriptValue == "_defendprototype_beta_wing" then
-        if mission.data.custom.dangerLevel == 10 and random():test(0.5) then
-            _MaxCt = _MaxCt + 1
-        end
-    else --gamma
-        if mission.data.custom.dangerLevel >= 6 then
-            local _mod = 6
-            if mission.data.custom.dangerLevel >= 8 then
-                _mod = 4
-            end
+    if _WingScriptValue == "_defendprototype_gamma_wing" then
+        _MaxCt = 3
+    end
 
-            if mission.data.custom.waveCounter % _mod == 0 then
-                if random():test(0.5) then
-                    _MaxCt = 3
-                end
-            end
-        else
-            _MaxCt = 0 --no spawns from gamma
-        end
+    if mission.data.custom.dangerLevel == 10 and random():test(0.5) then
+        _MaxCt = _MaxCt + 1
     end
 
     local _Pirates = {Sector():getEntitiesByScriptValue(_WingScriptValue)}
@@ -476,10 +553,24 @@ function spawnBackgroundPirates()
     --spawn beta
     _spawnFunc("_defendprototype_beta_wing", onBetaBackgroundPiratesFinished)
 
-    --spawn gamma if needed
-    local _GammaSpawnTable = getWingSpawnTables("_defendprototype_gamma_wing")
-    if #_GammaSpawnTable > 0 then --Don't spawn gamma pirates unless there aren't any.
-        _spawnFunc("_defendprototype_gamma_wing", onGammaBackgroundPiratesFinished)
+    --spawn gamma if conditions are met
+    if mission.data.custom.dangerLevel >= 6 then
+        local _mod = 6
+        if mission.data.custom.dangerLevel >= 8 then
+            _mod = 4
+        end
+
+        local modWaveCounter = mission.data.custom.waveCounter % _mod
+        if modWaveCounter == 0 then
+            if random():test(0.5) then
+                mission.Log(_MethodName, "Mod is " .. tostring(_mod) .. " wave counter is " .. tostring(mission.data.custom.waveCounter) .. " and 50% test passed.")
+                _spawnFunc("_defendprototype_gamma_wing", onGammaBackgroundPiratesFinished)
+            else
+                mission.Log(_MethodName, "50% test failed")
+            end
+        else
+            mission.Log(_MethodName, "Mod Wave Counter is " .. tostring(modWaveCounter))
+        end
     end
 
     mission.data.custom.waveCounter = mission.data.custom.waveCounter + 1 --Regardless of how many pirates we actually spawn, increment the wave counter.
@@ -506,11 +597,14 @@ end
 function onBetaBackgroundPiratesFinished(_Generated)
     local _MethodName = "On Beta Background Pirates Finished"
     local _Sector = Sector()
+    local _random = random()
     local _X, _Y = _Sector:getCoordinates()
 
     local _SlamCtMax = 1
-    if mission.data.custom.dangerLevel >= 5 then
-       _SlamCtMax = _SlamCtMax + 1 
+    local slamChance = 0.2 * mission.data.custom.dangerLevel
+    slamChance = math.min(slamChance, 1) --Caps out at 100% @ danger level 5
+    if _random:test(slamChance) then
+        _SlamCtMax = _SlamCtMax + 1
     end
 
     --Deadshots have a scaling chance to spawn on even waves capping out at 50% @ danger level 10.
@@ -520,7 +614,7 @@ function onBetaBackgroundPiratesFinished(_Generated)
         _DeadshotIncrement = 0.05
     end
     local _DeadshotChance = _DeadshotIncrement * mission.data.custom.dangerLevel
-    if mission.data.custom.waveCounter % 2 == 0 and random():test(_DeadshotChance) then
+    if mission.data.custom.waveCounter % 2 == 0 and _random:test(_DeadshotChance) then
         _DeadshotCtMax = _DeadshotCtMax + 1
     end
     mission.Log(_MethodName, "_DeadshotCtMax = " .. tostring(_DeadshotCtMax))
@@ -536,12 +630,12 @@ function onBetaBackgroundPiratesFinished(_Generated)
     --Torpedo ships need to be more dangerous @ lower levels due to the much less dangerous pirate ships that spawn. Otherwise the player could just enter the sector and let the mission run itself.
     --At higher levels, the scorchers and devastators will more than make up for the weaker torpedo multipliers. The devastators can even go toe to toe with the battleship.
     local _DmgFactor = 4
-    local _tta = 25
+    local _tta = 20
     local _PrefType = TorpedoUtility.WarheadType.Tandem
     if mission.data.custom.dangerLevel >= 6 then
         _PrefType = TorpedoUtility.WarheadType.Nuclear
         _DmgFactor = 2
-        _tta = 30
+        _tta = 25
     elseif mission.data.custom.dangerLevel == 10 then
         _PrefType = TorpedoUtility.WarheadType.Nuclear
         _DmgFactor = 1
@@ -557,12 +651,12 @@ function onBetaBackgroundPiratesFinished(_Generated)
         _ForwardAdjustFactor = 2,
         _PreferWarheadType = _PrefType,
         _TargetPriority = 2, --Target tag.
-        _TargetTag = "is_prototype"
+        _TargetTag = mission.data.custom.prototypeScriptValue
     }
 
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_defendprototype_beta_wing", true)
-        _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = "is_prototype" })
+        _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = mission.data.custom.prototypeScriptValue })
 
         --This is for performance reasons, so there aren't dozens and dozens of items scattered around the sector.
         local _PiratesSpawned = mission.data.custom.piratesSpawned + 1
@@ -597,7 +691,7 @@ function onBetaBackgroundPiratesFinished(_Generated)
                     _TargetCycle = 15,
                     _TargetingTime = 2.25, --Take longer than normal to target.
                     _TargetPriority = 3, --Target tag.
-                    _TargetTag = "is_prototype"
+                    _TargetTag = mission.data.custom.prototypeScriptValue
                 }
 
                 ESCCUtil.setDeadshot(_Pirate)
@@ -660,6 +754,11 @@ end
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
+
+    if mission.data.custom.rewardBonus then
+        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " Plus a bonus for excellent work."
+        mission.data.reward.credits = mission.data.reward.credits * 1.1
+    end
 
     reward()
     accomplish()
