@@ -254,12 +254,12 @@ function onHuntersFinished(_Generated)
         local _AI = ShipAI(_Ship)
         _AI:setAggressive()
         _AI:registerEnemyFaction(_Player.index)
-        _AI:registerFriendFaction(mission.data.custom.targetFaction) --Very unlikely that this comes into play.
+        _AI:registerFriendFaction(mission.data.custom.pirateFaction) --Very unlikely that this comes into play.
         if _Player.allianceIndex then
             _AI:registerEnemyFaction(_Player.allianceIndex)
         end
 
-        _Ship:setValue("secret_contractor", mission.data.custom.targetFaction)
+        _Ship:setValue("secret_contractor", mission.data.custom.pirateFaction)
         MissionUT.deleteOnPlayersLeft(_Ship)
         _Ship:setValue("is_persecutor", true)
 
@@ -269,6 +269,9 @@ function onHuntersFinished(_Generated)
             _Ship.title = "Bounty Hunter"%_T
         end
     end
+
+    local note = makeHeadHunterNote(Player(), Faction(mission.data.custom.pirateFaction))
+    Loot(_Generated[1]):insert(note)
 
     Placer.resolveIntersections(_Generated)
 
@@ -284,6 +287,99 @@ function onHuntersFinished(_Generated)
     }
 
     _Player:sendChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(headhunterMessages) % {player = _Player.name})
+end
+
+function makeHeadHunterNote(player, huntingFaction)
+    local x, y = Sector():getCoordinates()
+    local money = round(math.max(50000, 500000 * Balancing_GetSectorRichnessFactor(x, y)) / 10000) * 10000
+    local reward = "¢${money}" % {money = createMonetaryString(money)}
+    local shipName = "Unknown"%_t
+
+    local craft = player.craft
+    if valid(craft) then
+        if craft.name and craft.name ~= "" then
+            shipName = craft.name
+        end
+    end
+
+    local note = VanillaInventoryItem()
+    note.name = "Bounty Chip"%_t
+    note.price = 1000
+
+    local rarity = Rarity(RarityType.Common)
+    note.rarity = rarity
+    note:setValue("subtype", "BountyChip")
+    note.icon = "data/textures/icons/bounty-chip.png"
+    note.iconColor = rarity.color
+    note.stackable = true
+
+    local tooltip = Tooltip()
+    tooltip.icon = note.icon
+    tooltip.rarity = rarity
+
+    local title = note.name
+
+    local headLineSize = 25
+    local headLineFontSize = 15
+    local line = TooltipLine(headLineSize, headLineFontSize)
+    line.ctext = title
+    line.ccolor = note.rarity.tooltipFontColor
+    tooltip:addLine(line)
+
+    -- empty line
+    tooltip:addLine(TooltipLine(14, 14))
+
+    local line = TooltipLine(18, 14)
+    line.ltext = "Reward"%_t
+    line.icon = "data/textures/icons/cash.png"
+    line.iconColor = ColorRGB(1, 1, 1)
+    line.rtext = reward
+    tooltip:addLine(line)
+
+    -- empty line
+    tooltip:addLine(TooltipLine(14, 14))
+
+    local line = TooltipLine(18, 14)
+    line.ltext = "Target"%_t
+    line.rtext = "${faction:"..player.index.."}"
+    line.icon = "data/textures/icons/player.png"
+    line.iconColor = ColorRGB(1, 1, 1)
+    tooltip:addLine(line)
+
+    local line = TooltipLine(18, 14)
+    line.ltext = "Ship"%_t
+    line.rtext = shipName
+    line.icon = "data/textures/icons/ship.png"
+    line.iconColor = ColorRGB(1, 1, 1)
+    tooltip:addLine(line)
+
+    -- empty line
+    tooltip:addLine(TooltipLine(14, 14))
+
+    local line = TooltipLine(20, 14)
+    line.ltext = "Target is wanted dead."%_t
+    tooltip:addLine(line)
+
+    local line = TooltipLine(20, 14)
+    line.ltext = "Reward requires proof of ship destruction."%_t
+    tooltip:addLine(line)
+
+    local line = TooltipLine(20, 14)
+    line.ltext = " - ${faction:"..huntingFaction.index.."}"
+    tooltip:addLine(line)
+
+
+    -- empty line
+    tooltip:addLine(TooltipLine(14, 14))
+
+    local line = TooltipLine(20, 14)
+    line.ltext = "Looks like someone made some enemies."%_t
+    line.lcolor = ColorRGB(0.4, 0.4, 0.4)
+    tooltip:addLine(line)
+
+    note:setTooltip(tooltip)
+
+    return note
 end
 
 function finishAndReward()
