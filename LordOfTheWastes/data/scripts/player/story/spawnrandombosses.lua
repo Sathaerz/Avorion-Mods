@@ -17,7 +17,7 @@ function SpawnRandomBosses.trySpawningSwenks(_Player, _X,  _Y)
     local _Sector = Sector()
     local _PlayerObj = Player(_Player)
 
-    if _PlayerObj:getValue("_lotw_story_5_accomplished") and _Dist > 430 then
+    if _PlayerObj:getValue("_lotw_story_complete") and _Dist > 430 then
         local _Specs = SectorSpecifics()
         local regular, offgrid, blocked, home = _Specs:determineContent(_X, _Y, Server().seed)
 
