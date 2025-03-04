@@ -73,6 +73,8 @@ function initialize(_Data_in)
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.waveDangerLevel = math.ceil(_Data_in.dangerLevel / 2)
             mission.data.custom.timerAdvance = false
+            mission.data.custom.showedFirstUpdate = false
+            mission.data.custom.timeInPhaseOne = 0
 
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
@@ -105,6 +107,44 @@ mission.globalPhase.noBossEncountersTargetSector = true
 
 mission.phases[1] = {}
 mission.phases[1].timers = {}
+mission.phases[1].triggers = {}
+mission.phases[1].updateTargetLocationServer = function(timeStep)
+    mission.data.custom.timeInPhaseOne = (mission.data.custom.timeInPhaseOne or 0) + timeStep
+end
+
+mission.phases[1].onTargetLocationEntered = function(x, y)
+    mission.data.description[3].fulfilled = true
+    mission.data.description[4].visible = true
+end
+
+mission.phases[1].onTargetLocationArrivalConfirmed = function(x, y)
+    if not mission.data.custom.showedFirstUpdate then
+        showMissionUpdated()
+        mission.data.custom.showedFirstUpdate = true
+    end
+end
+
+--region #PHASE 1 TRIGGERS
+
+if onServer() then
+
+mission.phases[1].triggers[1] = {
+    condition = function()
+        if atTargetLocation() and mission.data.custom.timeInPhaseOne >= 15 then
+            return true
+        else
+            return false
+        end
+    end,
+    callback = function()
+        spawnPirateWave(false)
+    end,
+    repeating = false
+}
+
+end
+
+--endregion
 
 --region #PHASE 1 TIMERS
 
@@ -126,24 +166,8 @@ mission.phases[1].timers[1] = {
 }
 
 end
-
---endregion
-
-
-mission.phases[1].onTargetLocationEntered = function(x, y)
-    mission.data.description[3].fulfilled = true
-    mission.data.description[4].visible = true
-    showMissionUpdated()
     
-    if onServer() then
-        mission.phases[1].timers[2] = {
-            time = 15,
-            callback = function()
-                spawnPirateWave(false)
-            end
-        }
-    end
-end
+    --endregion
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}

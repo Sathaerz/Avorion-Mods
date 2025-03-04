@@ -5,6 +5,7 @@ function MissionBulletins.getPossibleMissions()
 
 	local scripts = AmbushRaiders_getPossibleMissions()
 
+    --0x616D6275736820706972617465207261696465722062756C6C6574696E205354415254
     --Everything but factories and military outposts, basically.
     local _Tokens = {
         "Habitat",
@@ -33,6 +34,7 @@ function MissionBulletins.getPossibleMissions()
     if _Add then
         table.insert(scripts, {path = "data/scripts/player/missions/ambushraiders.lua", prob = 3})
     end
+    --0x616D6275736820706972617465207261696465722062756C6C6574696E20454E44
 
 	return scripts
 end
