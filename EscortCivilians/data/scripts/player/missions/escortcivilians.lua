@@ -556,6 +556,12 @@ function onBetaBackgroundPiratesFinished(_Generated)
         _TurningSpeedFactor = _TorpTurningSpeedFactor
     }
 
+    --Increase damage @ low difficulties because the weenie ships barely pose a threat to the transports.
+    local pirateDamageFactor = 1
+    if mission.data.custom.dangerLevel <= 5 then
+        pirateDamageFactor = 2
+    end
+
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_escortcivilians_beta_wing", true)
         _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = "_escortcivilians_defendobjective" })
@@ -569,6 +575,9 @@ function onBetaBackgroundPiratesFinished(_Generated)
         if _PiratesSpawned % _Factor ~= 0 then
             _Pirate:setDropsLoot(false)
         end
+
+        _Pirate.damageMultiplier = (_Pirate.damageMultiplier or 1) * pirateDamageFactor
+
         mission.data.custom.piratesSpawned = _PiratesSpawned
 
         --Add torpedo slammer scripts if necessary.
@@ -580,6 +589,7 @@ function onBetaBackgroundPiratesFinished(_Generated)
             _SlamAdded = _SlamAdded + 1
         end
     end
+    
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
