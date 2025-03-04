@@ -55,7 +55,8 @@ mission.data.custom.defendPrototypeTracks = {
     "data/music/background/cncthedefense.ogg",
     "data/music/background/hr2shortcircuit.ogg",
     "data/music/background/d3dpissedofficebox.ogg",
-    "data/music/background/mw2mercsdragonsteeth.ogg"
+    "data/music/background/mw2mercsdragonsteeth.ogg",
+    "data/music/background/ys2pcepalaceofdestruction.ogg"
 }
 
 local DefendPrototype_init = initialize
