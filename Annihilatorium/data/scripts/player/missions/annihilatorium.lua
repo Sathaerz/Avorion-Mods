@@ -108,21 +108,21 @@ mission.globalPhase.noPlayerEventsTargetSector = true
 mission.globalPhase.noLocalPlayerEventsTargetSector = true
 
 mission.globalPhase.onAbandon = function()
-    invokeStopArenaMusic()
+    setGameMusic()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
-    invokeStopArenaMusic()
+    setGameMusic()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onAccomplish = function()
-    invokeStopArenaMusic()
+    setGameMusic()
     if mission.data.location then
         runFullSectorCleanup(false)
     end
@@ -148,7 +148,7 @@ mission.globalPhase.onTargetLocationLeft = function(x, y)
     end
 
     if onClient() then
-        stopArenaMusic()
+        setGameMusic()
     end
 end
 
@@ -179,13 +179,13 @@ mission.phases[2].sectorCallbacks = {}
 mission.phases[2].onBegin = function()
     --Start the music whenever phase 2 starts.
     if onClient() then
-        playArenaMusic()
+        setCustomMusic(mission.data.custom.mainSoundtrack)
     end
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(x, y)
     --Restart the music whenever we come back.
-    invokePlayArenaMusic()
+    setCustomMusic(mission.data.custom.mainSoundtrack)
 end
 
 mission.phases[2].updateTargetLocationServer = function(timeStep)
@@ -261,7 +261,7 @@ mission.phases[2].timers[1] = {
 
                 sync()
                 invokeClientFunction(Player(), "showWaveDefeatedText")
-                invokeClientFunction(Player(), "playArenaMusic")
+                setCustomMusic(mission.data.custom.mainSoundtrack)
             end
         end
     end,
@@ -398,57 +398,68 @@ function makeSector(_X, _Y)
 end
 
 function getWaveTable(waveNumber)
+    local bonus_1_5 = 1.5
+    local bonus_6_10 = 1.45
+    local bonus_11_15 = 1.4
+    local bonus_16_20 = 1.35
+    local bonus_21_25 = 1.3
+    local bonus_26_30 = 1.25
+    local bonus_31_35 = 1.2
+    local bonus_36_40 = 1.175
+    local bonus_41_45 = 1.15
+    local bonus_46_50 = 1.125
+
     local waveTables = {
-        { waveDanger = 1, waveShips = {4}, bonus = 1.25 },
-        { waveDanger = 1, waveShips = {4}, bonus = 1.25 },
-        { waveDanger = 1, waveShips = {4}, bonus = 1.25 },
-        { waveDanger = 1, waveShips = {4}, bonus = 1.25 },
-        { waveDanger = 1, waveShips = {4}, bonus = 1.25, bossOnDangerLevel = 1 },
-        { waveDanger = 2, waveShips = {4}, bonus = 1.225 },
-        { waveDanger = 2, waveShips = {4}, bonus = 1.225 },
-        { waveDanger = 2, waveShips = {4}, bonus = 1.225 },
-        { waveDanger = 2, waveShips = {4}, bonus = 1.225 },
-        { waveDanger = 2, waveShips = {4}, bonus = 1.225, boss = true },
-        { waveDanger = 3, waveShips = {4, 1}, bonus = 1.2 },
-        { waveDanger = 3, waveShips = {4, 1}, bonus = 1.2 },
-        { waveDanger = 3, waveShips = {4, 1}, bonus = 1.2 },
-        { waveDanger = 3, waveShips = {4, 1}, bonus = 1.2 },
-        { waveDanger = 3, waveShips = {4, 1}, bonus = 1.2, bossOnDangerLevel = 3 },
-        { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175 },
-        { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175 },
-        { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175 },
-        { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175 },
-        { waveDanger = 4, waveShips = {4, 1}, bonus = 1.175, boss = true },
-        { waveDanger = 5, waveShips = {4, 2}, bonus = 1.15 },
-        { waveDanger = 5, waveShips = {4, 2}, bonus = 1.15 },
-        { waveDanger = 5, waveShips = {4, 2}, bonus = 1.15 },
-        { waveDanger = 5, waveShips = {4, 2}, bonus = 1.15 },
-        { waveDanger = 5, waveShips = {4, 2}, bonus = 1.15, bossOnDangerLevel = 5 },
-        { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125 },
-        { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125 },
-        { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125 },
-        { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125 },
-        { waveDanger = 6, waveShips = {4, 2}, bonus = 1.125, boss = true },
-        { waveDanger = 7, waveShips = {4, 3}, bonus = 1.1 },
-        { waveDanger = 7, waveShips = {4, 3}, bonus = 1.1 },
-        { waveDanger = 7, waveShips = {4, 3}, bonus = 1.1 },
-        { waveDanger = 7, waveShips = {4, 3}, bonus = 1.1 },
-        { waveDanger = 7, waveShips = {4, 3}, bonus = 1.1, bossOnDangerLevel = 7 },
-        { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075 },
-        { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075 },
-        { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075 },
-        { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075 },
-        { waveDanger = 8, waveShips = {4, 3}, bonus = 1.075, boss = true },
-        { waveDanger = 9, waveShips = {4, 4}, bonus = 1.05 },
-        { waveDanger = 9, waveShips = {4, 4}, bonus = 1.05 },
-        { waveDanger = 9, waveShips = {4, 4}, bonus = 1.05 },
-        { waveDanger = 9, waveShips = {4, 4}, bonus = 1.05 },
-        { waveDanger = 9, waveShips = {4, 4}, bonus = 1.05, bossOnDangerLevel = 9 },
-        { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025 },
-        { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025 },
-        { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025 },
-        { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025 },
-        { waveDanger = 10, waveShips = {4, 4}, bonus = 1.025, boss = true }
+        { waveDanger = 1, waveShips = {4}, bonus = bonus_1_5 },
+        { waveDanger = 1, waveShips = {4}, bonus = bonus_1_5 },
+        { waveDanger = 1, waveShips = {4}, bonus = bonus_1_5 },
+        { waveDanger = 1, waveShips = {4}, bonus = bonus_1_5 },
+        { waveDanger = 1, waveShips = {4, 1}, bonus = bonus_1_5, bossOnDangerLevel = 1 },
+        { waveDanger = 2, waveShips = {4}, bonus = bonus_6_10 },
+        { waveDanger = 2, waveShips = {4}, bonus = bonus_6_10 },
+        { waveDanger = 2, waveShips = {4}, bonus = bonus_6_10 },
+        { waveDanger = 2, waveShips = {4, 1}, bonus = bonus_6_10 },
+        { waveDanger = 2, waveShips = {4, 1}, bonus = bonus_6_10, boss = true },
+        { waveDanger = 3, waveShips = {4, 1}, bonus = bonus_11_15 },
+        { waveDanger = 3, waveShips = {4, 1}, bonus = bonus_11_15 },
+        { waveDanger = 3, waveShips = {4, 1}, bonus = bonus_11_15 },
+        { waveDanger = 3, waveShips = {4, 1}, bonus = bonus_11_15 },
+        { waveDanger = 3, waveShips = {4, 2}, bonus = bonus_11_15, bossOnDangerLevel = 3 },
+        { waveDanger = 4, waveShips = {4, 1}, bonus = bonus_16_20 },
+        { waveDanger = 4, waveShips = {4, 1}, bonus = bonus_16_20 },
+        { waveDanger = 4, waveShips = {4, 1}, bonus = bonus_16_20 },
+        { waveDanger = 4, waveShips = {4, 1}, bonus = bonus_16_20 },
+        { waveDanger = 4, waveShips = {4, 2}, bonus = bonus_16_20, boss = true },
+        { waveDanger = 5, waveShips = {4, 2}, bonus = bonus_21_25 },
+        { waveDanger = 5, waveShips = {4, 2}, bonus = bonus_21_25 },
+        { waveDanger = 5, waveShips = {4, 2}, bonus = bonus_21_25 },
+        { waveDanger = 5, waveShips = {4, 2}, bonus = bonus_21_25 },
+        { waveDanger = 5, waveShips = {4, 3}, bonus = bonus_21_25, bossOnDangerLevel = 5 },
+        { waveDanger = 6, waveShips = {4, 2}, bonus = bonus_26_30 },
+        { waveDanger = 6, waveShips = {4, 2}, bonus = bonus_26_30 },
+        { waveDanger = 6, waveShips = {4, 2}, bonus = bonus_26_30 },
+        { waveDanger = 6, waveShips = {4, 2}, bonus = bonus_26_30 },
+        { waveDanger = 6, waveShips = {4, 3}, bonus = bonus_26_30, boss = true },
+        { waveDanger = 7, waveShips = {4, 3}, bonus = bonus_31_35 },
+        { waveDanger = 7, waveShips = {4, 3}, bonus = bonus_31_35 },
+        { waveDanger = 7, waveShips = {4, 3}, bonus = bonus_31_35 },
+        { waveDanger = 7, waveShips = {4, 3}, bonus = bonus_31_35 },
+        { waveDanger = 7, waveShips = {4, 4}, bonus = bonus_31_35, bossOnDangerLevel = 7 },
+        { waveDanger = 8, waveShips = {4, 3}, bonus = bonus_36_40 },
+        { waveDanger = 8, waveShips = {4, 3}, bonus = bonus_36_40 },
+        { waveDanger = 8, waveShips = {4, 3}, bonus = bonus_36_40 },
+        { waveDanger = 8, waveShips = {4, 3}, bonus = bonus_36_40 },
+        { waveDanger = 8, waveShips = {4, 4}, bonus = bonus_36_40, boss = true },
+        { waveDanger = 9, waveShips = {4, 4}, bonus = bonus_41_45 },
+        { waveDanger = 9, waveShips = {4, 4}, bonus = bonus_41_45 },
+        { waveDanger = 9, waveShips = {4, 4}, bonus = bonus_41_45 },
+        { waveDanger = 9, waveShips = {4, 4}, bonus = bonus_41_45 },
+        { waveDanger = 9, waveShips = {4, 4, 1}, bonus = bonus_41_45, bossOnDangerLevel = 9 },
+        { waveDanger = 10, waveShips = {4, 4}, bonus = bonus_46_50 },
+        { waveDanger = 10, waveShips = {4, 4}, bonus = bonus_46_50 },
+        { waveDanger = 10, waveShips = {4, 4}, bonus = bonus_46_50 },
+        { waveDanger = 10, waveShips = {4, 4}, bonus = bonus_46_50 },
+        { waveDanger = 10, waveShips = {4, 4, 1}, bonus = bonus_46_50, boss = true }
     }
 
     return waveTables[waveNumber]
@@ -506,7 +517,7 @@ function spawnWave()
     end
 
     --invoke music
-    invokeClientFunction(Player(), "playCombatMusic", useBossMusic)
+    playCombatMusic(useBossMusic)
 end
 
 function onWaveSpawned(generated)
@@ -1019,67 +1030,6 @@ function payBossBounty()
     receiver:receive("Earned %1% credits for defeating the ${_BOSSTITLE}." % { _BOSSTITLE = mission.data.custom.spawnedBossTitle }, payout, 0, 0, 0, 0, 0, 0, 0)
 end
 
-function finishAndReward()
-    local _MethodName = "Finish and Reward"
-    mission.Log(_MethodName, "Running win condition.")
-
-    if mission.data.custom.masterOfTheArena then
-        mission.data.reward.credits = mission.data.reward.credits * 3
-    end
-
-    reward()
-    accomplish()
-end
-
---endregion
-
---region #CLIENT / SERVER UTILITY CALLS
-
-function invokeStopArenaMusic()
-    local methodName = "Invoke Stop Arena Music"
-
-    if onClient() then
-        mission.Log(methodName, "Invoked on Client => Stopping Music")
-
-        stopArenaMusic()
-    else
-        mission.Log(methodName, "Called on Server => Invoking on Client")
-
-        invokeClientFunction(Player(), "invokeStopArenaMusic")
-    end
-end
-
-function invokePlayArenaMusic()
-    local methodName = "Invoke Start Arena Music"
-
-    if onClient() then
-        mission.Log(methodName, "Invoked on Client => Playing Music")
-
-        playArenaMusic()
-    else
-        mission.Log(methodName, "Called on Server => Invoking on Client")
-
-        invokeClientFunction(Player(), "invokePlayArenaMusic")
-    end
-end
-
---endregion
-
---region #CLIENT CALLS
-
-function playArenaMusic()
-    local methodName = "Play Arena Music"
-
-    mission.Log(methodName, "Playing music")
-    local mus = Music()
-
-    mission.Log(methodName, "Music autoplay is : " .. tostring(mus.autoPlay))
-
-    mus.autoPlay = false
-    mus:fadeOut(1.5)
-    mus:playTrack(mission.data.custom.mainSoundtrack, true, nil)
-end
-
 function playCombatMusic(useBossMusic)
     local methodName = "Play Combat Music"
 
@@ -1094,21 +1044,25 @@ function playCombatMusic(useBossMusic)
         end
     end
     mission.Log(methodName, "Playing track " .. tostring(useTrack))
-    local mus = Music()
 
-    mus.autoPlay = false
-    mus:fadeOut(1.5)
-    mus:playTrack(useTrack, true, nil)
+    setCustomMusic(useTrack)
 end
 
-function stopArenaMusic()
-    local methodName = "Stop Arena Music"
+function finishAndReward()
+    local _MethodName = "Finish and Reward"
+    mission.Log(_MethodName, "Running win condition.")
 
-    mission.Log(methodName, "Resetting music")
-    local mus = Music()
-    mus.autoPlay = true
-    mus:fadeOut(1.5)
+    if mission.data.custom.masterOfTheArena then
+        mission.data.reward.credits = mission.data.reward.credits * 3
+    end
+
+    reward()
+    accomplish()
 end
+
+--endregion
+
+--region #CLIENT CALLS
 
 function showWaveDefeatedText()
     --All of this data should be available on the client.
