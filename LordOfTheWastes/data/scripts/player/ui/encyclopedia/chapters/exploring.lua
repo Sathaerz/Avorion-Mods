@@ -1,3 +1,4 @@
+--0x656E6379636C6F7065646961206368205354415254
 local _SwenksArticle = {
     title = "Swenks",
     picture = "data/textures/ui/encyclopedia/exploring/characters/swenks.jpg",
@@ -6,8 +7,8 @@ local _SwenksArticle = {
     isUnlocked = function()
         if Player():getValue("encyclopedia_swenks_met") then return true end
 
-        local swoks = Sector():getEntitiesByScript("swenks.lua")
-        if swoks then
+        local swenks = Sector():getEntitiesByScript("swenks.lua")
+        if swenks then
             -- RemoteInvocations_Ignore
             invokeServerFunction("setValue", "swenks_met")
             return true
@@ -16,5 +17,7 @@ local _SwenksArticle = {
         return false
     end
 }
+--0x656E6379636C6F706564696120636820454E44
 
+--0x656E6379636C6F70656469612063682074626C20696E73
 table.insert(category.chapters[10].articles, _SwenksArticle)

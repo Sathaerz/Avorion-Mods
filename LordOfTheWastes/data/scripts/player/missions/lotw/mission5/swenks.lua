@@ -5,9 +5,7 @@ include ("stringutility")
 include ("callable")
 
 local interacted
-local flyAway
 local startedFight
-local paymentSuccessful
 
 function getUpdateInterval()
     return 0.5
@@ -37,15 +35,64 @@ function onSetToAggressive()
     end
 end
 
+function startFightProvoked()
+    if onClient() and not startedFight then
+        startFightClient()
+        invokeServerFunction("startFightProvoked")
+        return
+    end
+
+    startFightServer(true)
+end
+callable(nil, "startFightProvoked")
+
 function startFight()
     if onClient() and not startedFight then
-        ScriptUI():stopInteraction()
-        displayChatMessage(string.format("%s is attacking!"%_t, Entity().translatedTitle), "", 2)
+        startFightClient()
         invokeServerFunction("startFight")
-        Music():fadeOut(1.5)
-        registerBoss(Entity().index, nil, nil, "data/music/special/bladesedge.ogg")
-        startedFight = true
         return
+    end
+
+    startFightServer(false)    
+end
+callable(nil, "startFight")
+
+--region #START FIGHT UTIL FUNCTIONS
+
+function startFightClient()
+    ScriptUI():stopInteraction()
+    displayChatMessage(string.format("%s is attacking!"%_t, Entity().translatedTitle), "", 2)
+    Music():fadeOut(1.5)
+    registerBoss(Entity().index, nil, nil, "data/music/special/bladesedge.ogg")
+    startedFight = true
+end
+
+function startFightServer(provoked)
+    if provoked then
+        local swenks = Entity()
+        local safetyBreakout = 0
+
+        while swenks:hasScript("avenger.lua") and safetyBreakout < 10 do
+            swenks:removeScript("avenger.lua")
+            safetyBreakout = safetyBreakout + 1
+        end
+
+        swenks:addScript("avenger.lua", { _Multiplier = 2 })
+        swenks:addScript("frenzy.lua", { _DamageThreshold = 1.01, _IncreasePerUpdate = 0.25, _UpdateCycle = 10 })
+
+        local _random = Random()
+        for _ = 1, 2 do
+            local tcsRarity = RarityType.Rare
+            if _random:test(0.05) then
+                tcsRarity = RarityType.Exotic
+            else
+                if _random:test(0.25) then
+                    tcsRarity = RarityType.Exceptional
+                end
+            end
+
+            Loot(swenks.index):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(tcsRarity), Seed(_random:getInt(1, 20000))))
+        end
     end
 
     local player = Player(callingPlayer)
@@ -58,11 +105,10 @@ function startFight()
         end
     end
 end
-callable(nil, "startFight")
+
+--endregion
 
 function normalDialog()
-    local entity = Entity()
-
     local d0 = {} 
     local d1 = {} 
     local d2 = {} 
@@ -112,7 +158,7 @@ function normalDialog()
 
     d5.text = "I'm nothing like Swoks!! How dare you?!"
     d5.talker = _Talker
-    d5.onEnd = "startFight"
+    d5.onEnd = "startFightProvoked"
 
     d6.text = "Not so fast."
     d6.talker = _Talker
