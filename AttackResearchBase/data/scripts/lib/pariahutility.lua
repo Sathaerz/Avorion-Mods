@@ -45,7 +45,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         _Type = "X" .. _Type
     end
 
-    local _PlanFileName = "data/plans/Type" .. tostring(_Type) .. ".xml"
+    local _PlanFileName = "data/plans/researchbase/Type" .. tostring(_Type) .. ".xml"
     self.Log(_MethodName, "Loading plan : " .. tostring(_PlanFileName))
 
     local _Plan = LoadPlanFromFile(_PlanFileName)
