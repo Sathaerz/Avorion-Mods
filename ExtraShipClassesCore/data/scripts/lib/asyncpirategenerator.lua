@@ -14,6 +14,8 @@ for _, _Xmod in pairs(_ActiveMods) do
 	end
 end
 
+--region #POSITION FUNCTIONS
+
 --Get a number of positions for spawning pirates, so we don't need to do it in our missions / events.
 function AsyncPirateGenerator:getStandardPositions(positionCT, distance)
     local _MethodName = "[ESCC] Get Standard Positions"
@@ -28,6 +30,8 @@ function AsyncPirateGenerator:getGenericPosition()
 
     return PirateGenerator.getGenericPosition()
 end
+
+--endregion
 
 --See pirategenerator.lua for a better description of exactly what these ships do.
 --region #CREATE SCALED
@@ -94,6 +98,14 @@ function AsyncPirateGenerator:createScaledDevastator(position)
     
     local scaling = self:getScaling()
     return self:create(position, 28.0 * _Amp * scaling, "Devastator"%_T)
+end
+
+function AsyncPirateGenerator:createScaledFlagship(position)
+    local methodName = "[ESCC] Create Flagship"
+    PirateGenerator.Log(methodName, "Beginning...")
+
+    local scaling = self:getScaling()
+    return self:create(position, 25 * _Amp * scaling, "Pirate Flagship"%_T)
 end
 
 function AsyncPirateGenerator:createScaledDemolisher(position)
@@ -182,6 +194,13 @@ function AsyncPirateGenerator:createDevastator(position)
 	PirateGenerator.Log(_MethodName, "Beginning...")
 
     return self:create(position, 28.0 * _Amp, "Devastator"%_T)
+end
+
+function AsyncPirateGenerator:createFlagship(position)
+    local methodName = "[ESCC] Create Flagship"
+    PirateGenerator.Log(methodName, "Beginning...")
+
+    return self:create(position, 25 * _Amp, "Pirate Flagship"%_T)
 end
 
 function AsyncPirateGenerator:createDemolisher(position)

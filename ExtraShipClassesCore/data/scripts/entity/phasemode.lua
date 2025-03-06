@@ -39,14 +39,14 @@ function Unreal.updateServer(timeStep)
             shield.invincible = true
         end
 
+        --blink to give a visual indication of the ship being phased out.
+        showAnimation = true
+
         if self.timeInPhase >= 10 then
             --10 seconds have passed. Flip us to being OUT of the phaseMode.
             self.Log(_MethodName, "Exiting PhaseMode")
             self.phaseMode = false
             self.timeInPhase = 0
-        else
-            --blink to give a visual indication of the ship being phased out.
-            showAnimation = true
         end
     else
         if not activeIronCurtain then
@@ -60,8 +60,6 @@ function Unreal.updateServer(timeStep)
             self.Log(_MethodName, "Entering PhaseMode")
             self.phaseMode = true
             self.timeInPhase = 0
-            
-            showAnimation = true
         end
     end
     self.Log(_MethodName, "Enity invincibility is : " .. tostring(entity.invincible))

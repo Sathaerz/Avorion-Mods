@@ -15,7 +15,8 @@
     12      - Prowler*		- (Disruptor / Artillery) + Military x1.5
     18      - Pillager*		- (Disruptor / Persecutor / Torpedo) + Military x2
     28      - Devastator*	- (Artillery / Persecutor) + Military x3 + Military x3
-    30      - Mothership	- (Carrier / Flagship) + Boss Anti-Torpedo
+    25      - Mothership	- (Carrier / Flagship) + Boss Anti-Torpedo
+	25		- Flagship		- Flagship + Boss Anti-Torpedo
 	20-50  - Executioner*	- ExeStandard x3 + Artillery A/2 + Artillery A/2 + [2A] + [APD] + [ExeStandard x3 + 2A] + [4A] + [4A]**
 
 	* - Custom ships added by ESCC
@@ -49,6 +50,8 @@ for _, _Xmod in pairs(_ActiveMods) do
 end
 
 --endregion
+
+--region #POSITION FUNCTIONS
 
 function PirateGenerator.getStandardPositions(positionCT, distance, _DirMultiplier)
 	local _MethodName = "[ESCC] Get Standard Positions"
@@ -92,6 +95,8 @@ function PirateGenerator.getGenericPosition()
 	local _Pos = _Rgen:getVector(-1000, 1000)
     return MatrixLookUpPosition(-_Pos, vec3(0, 1, 0), _Pos)
 end
+
+--endregion
 
 --Get a number of positions for spawning pirates in the standard positions they spawn in for attacks, so we don't need to do it in our missions / events.
 --region #CREATE SCALED
@@ -158,6 +163,14 @@ function PirateGenerator.createScaledDevastator(position)
 
     local scaling = PirateGenerator.getScaling()
     return PirateGenerator.create(position, 28.0 * _Amp * scaling, "Devastator"%_T)
+end
+
+function PirateGenerator.createScaledFlagship(position)
+	local methodName = "[ESCC] Create Scaled Flagship"
+	PirateGenerator.Log(methodName, "Beginning...")
+
+	local scaling = PirateGenerator.getScaling()
+    return PirateGenerator.create(position, 25.0 * _Amp * scaling, "Pirate Flagship"%_T)
 end
 
 function PirateGenerator.createScaledDemolisher(position)
@@ -249,6 +262,13 @@ function PirateGenerator.createDevastator(position)
     return PirateGenerator.create(position, 28.0 * _Amp, "Devastator"%_T)
 end
 
+function PirateGenerator.createFlagship(position)
+	local methodName = "[ESCC] Create Flagship"
+	PirateGenerator.Log(_MethodName, "Beginning...")
+
+	return PirateGenerator.create(position, 25 * _Amp, "Pirate Flagship"%_T)
+end
+
 function PirateGenerator.createDemolisher(position)
 	local _MethodName = "[ESCC] Create Demolisher (Devastator)"
 	PirateGenerator.Log(_MethodName, "DEMOLISHER COMPATIBILITY CALL - Beginning...")
@@ -306,7 +326,8 @@ function PirateGenerator.addPirateEquipment(craft, title)
 		"Sinner",
 		"Jammer",
 		"Stinger",
-		"Executioner"
+		"Executioner",
+		"Pirate Flagship"
 	}
 	for _, p in pairs(ExtraShipClassTitles) do
 		if title == p then
@@ -450,6 +471,19 @@ function PirateGenerator.addPirateEquipment(craft, title)
 			upgradeRarities[1] = upgradeRarities[1] * 0.75 --uncommon slightly less likely
 
 			craft:setValue("is_devastator", true)
+		elseif title == "Pirate Flagship" then
+			--Identical to vanilla's Pirate Mothership, but without the possibility of carrier equipment.
+			ShipUtility.addFlagShipEquipment(craft)
+        	ShipUtility.addBossAntiTorpedoEquipment(craft)
+
+        	_Drops = 2
+        	turretRarities[-1] = 0 -- no petty turrets
+        	turretRarities[0] = 0 -- no common turrets
+        	turretRarities[1] = 0 -- no uncommon turrets
+
+        	upgradeRarities[-1] = 0 -- no petty upgrades
+        	upgradeRarities[0] = 0 -- no common upgrades
+        	upgradeRarities[1] = 0 -- no uncommon upgrades
 		elseif title == "Executioner" then
 			local specialScale = PirateGenerator["_ESCC_executioner_specialscale"] or 100
 			PirateGenerator["_ESCC_executioner_specialscale"] = nil

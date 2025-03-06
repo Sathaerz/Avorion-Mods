@@ -24,8 +24,8 @@ function Frenzy.initialize(_Values)
     self._Data._Active = false
     self._Data._Timer = 0
 
-    self._Data._DamageThreshold = self._Data._DamageThreshold or 0.45
-    self._Data._IncreasePerUpdate = self._Data._IncreasePerUpdate or 0.05
+    self._Data._DamageThreshold = self._Data._DamageThreshold or 0.5
+    self._Data._IncreasePerUpdate = self._Data._IncreasePerUpdate or 0.075
     self._Data._UpdateCycle = self._Data._UpdateCycle or 10
     self._Data._EnableUpperLimit = self._Data._EnableUpperLimit or false
     self._Data._UpperLimit = self._Data._UpperLimit or math.huge

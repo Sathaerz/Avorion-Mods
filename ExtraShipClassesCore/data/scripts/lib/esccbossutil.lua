@@ -36,19 +36,21 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
     --5 = Shield
     --6 = Phoenix
     local _BossTypes = {
-        { _PlanFile = "data/plans/Katana.xml", _Title = "Baleful Katana", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
+        { _PlanFile = "data/plans/escc/Katana.xml", _Title = "Baleful Katana", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
             _Boss:addScriptOnce("adaptivedefense.lua")
             _Boss:addScriptOnce("overdrive.lua")
             _Boss:addScriptOnce("frenzy.lua")
 
-            local _SecondaryWeaponValues = {}
-            _SecondaryWeaponValues._OnlyBolters = true
-            _SecondaryWeaponValues._Threshold = 0.30
-            _SecondaryWeaponValues._TurretMultiplier = 10
-            _SecondaryWeaponValues._CustomizeWeapons = true
-            _SecondaryWeaponValues._WeaponDamageMultiplier = 2
-            _SecondaryWeaponValues._WeaponRange = 1850
-            _SecondaryWeaponValues._MinimumWeaponDamage = 1200         
+            local _SecondaryWeaponValues = {
+                _OnlyBolters = true,
+                _Threshold = 0.30,
+                _TurretMultiplier = 10,
+                _CustomizeWeapons = true,
+                _WeaponDamageMultiplier = 2,
+                _WeaponRange = 1850,
+                _MinimumWeaponDamage = 1200,
+                _Charges = 5
+            }
 
             _Boss:addScriptOnce("secondaryweapons.lua", _SecondaryWeaponValues)
 
@@ -58,7 +60,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _ShipUtil.addBossAntiTorpedoEquipment(_Boss, nil, nil, 1850)
             _Boss:setValue("_escc_is_baleful_katana", true)
         end },
-        { _PlanFile = "data/plans/Goliath.xml", _Title = "Dervish Goliath", _EngineFactor = 2.5, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
+        { _PlanFile = "data/plans/escc/Goliath.xml", _Title = "Dervish Goliath", _EngineFactor = 2.5, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
             local _TorpedoFactor = 2
             local _TorpDuraFactor = 2
             local _ActiveMods = Mods()
@@ -85,7 +87,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _ShipUtil.addBossAntiTorpedoEquipment(_Boss, nil, nil, 2000)
             _Boss:setValue("_escc_is_dervish_goliath", true)
         end },
-        { _PlanFile = "data/plans/Hellcat.xml", _Title = "Relentless Hellcat", _EngineFactor = 6, _ThrustFactor = 2, _CustomFunction = function(_Boss, _ShipUtil)
+        { _PlanFile = "data/plans/escc/Hellcat.xml", _Title = "Relentless Hellcat", _EngineFactor = 6, _ThrustFactor = 2, _CustomFunction = function(_Boss, _ShipUtil)
             _Boss:addScriptOnce("phasemode.lua")
             _Boss:addScriptOnce("eternal.lua", 0.005, 10)
             _Boss:addScriptOnce("dialogs/encounters/relentlesshellcat.lua")
@@ -93,7 +95,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _ShipUtil.addBossAntiTorpedoEquipment(_Boss, nil, nil, 550)
             _Boss:setValue("_escc_is_relentless_hellcat", true)
         end },
-        { _PlanFile = "data/plans/Hunter.xml", _Title = "Steadfast Hunter", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
+        { _PlanFile = "data/plans/escc/Hunter.xml", _Title = "Steadfast Hunter", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
             local _APDValues = {}
             _APDValues._ROF = 0.45
             _APDValues._TargetTorps = true
@@ -115,7 +117,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _ShipUtil.addHunterLightningGuns(_Boss)
             _Boss:setValue("_escc_is_steadfast_hunter", true)
         end },
-        { _PlanFile = "data/plans/Shield.xml", _Title = "Vigilant Shield", _EngineFactor = 0, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
+        { _PlanFile = "data/plans/escc/Shield.xml", _Title = "Vigilant Shield", _EngineFactor = 0, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
             local _APDValues = {}
             _APDValues._ROF = 0.45
             _APDValues._TargetTorps = true
@@ -132,7 +134,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _ShipUtil.addVigShieldCannons(_Boss)
             _Boss:setValue("_escc_is_vigilant_shield", true)
         end },
-        { _PlanFile = "data/plans/Phoenix.xml", _Title = "Scouring Phoenix", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
+        { _PlanFile = "data/plans/escc/Phoenix.xml", _Title = "Scouring Phoenix", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
             local TorpedoUtility = include ("torpedoutility")
 
             local _TorpedoFactor = 55

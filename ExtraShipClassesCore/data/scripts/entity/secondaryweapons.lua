@@ -35,6 +35,7 @@ function SecondaryWeapons.initialize(_Values)
     self._Data._Threshold = self._Data._Threshold or 0.25
     self._Data._TurretMultiplier = self._Data._TurretMultiplier or 10
     self._Data._CustomizeWeapons = self._Data._CustomizeWeapons or false
+    self._Data._Charges = self._Data._Charges or 1
 end
 
 function SecondaryWeapons.getUpdateInterval()
@@ -51,13 +52,18 @@ function SecondaryWeapons.updateServer(_TimeStep)
         self._Data._InitialFirepower = _Firepower
     end
 
-    --Compare current firepower to initial firepower - if it is less than or equal to initial * threshold then spawn secondary weapons and terminate script.
+    --Compare current firepower to initial firepower - if it is less than or equal to initial * threshold then spawn secondary weapons and maybe terminate script.
     local _ThresholdFirepower = self._Data._InitialFirepower * self._Data._Threshold
     if _Firepower <= _ThresholdFirepower then
-        self.Log(_MethodName, "Threshold reached - deploying secondary weapons and terminating.")
+        self.Log(_MethodName, "Threshold reached - deploying secondary weapons.")
         self.spawnSecondaryWeapons()
-        terminate()
-        return
+        
+        self._Data._Charges = self._Data._Charges - 1
+        if self._Data._Charges <= 0 then
+            self.Log(_MethodName, "No charges left - terminating and returning.")
+            terminate()
+            return
+        end
     end
 end
 

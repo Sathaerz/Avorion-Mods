@@ -271,17 +271,24 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     local useTorps = true
     --[USED] useTorpsCore = true
     local useTorpsCore = true
-    --[USED] shieldMultiplier = 3 => Use 0.6 per dangerFactor
-    local shieldMultiplier = 0.6
+    --[USED] shieldMultiplier = 3 => Use 0.6 per dangerFactor up to 5, then 0.3 * dangerFactor afterwards
+    local shieldMultiplier = math.min(dangerFactor * 0.6, 3)
+    if dangerFactor > 5 then
+        shieldMultiplier = shieldMultiplier + ((dangerFactor - 5) * 0.3)
+    end
+    shieldMultiplier = math.max(shieldMultiplier,  1) --Don't let it go to less than 1 though.
     --[USED] bossVolumeFactor = 50 => Use 10 per dangerFactor UP TO 5 - then add 10% HP per factor after that. Don't make it too big or it will spawn w/o engines.
     local bossVolumeFactor = math.min(10 * dangerFactor, 50)
     local bossDurabilityMultiplier = 1
     if dangerFactor > 5 then
         bossDurabilityMultiplier = bossDurabilityMultiplier + ((dangerFactor - 1) * 0.1)
     end
-    --[USED] shipVolumeFactor = 2 => Use 1 + 0.2 per dangerFactor
-    local allyShipVolume = 1 + (dangerFactor * 0.2)
-    --[USED]shipAmount = 6 --Add a 50% chance for +1 per dangerFactor after 5
+    --[USED] shipVolumeFactor = 2 => Use 1 + 0.2 per dangerFactor up to 5, then 0.1 aftewards.
+    local allyShipVolume = 1 + math.min(dangerFactor * 0.2, 1)
+    if dangerFactor > 5 then
+        allyShipVolume = allyShipVolume + ((dangerFactor - 5) * 0.1)
+    end
+    --[USED]shipAmount = 6 --Add a 25% chance for +1 per dangerFactor after 5
     local numShipSpawns = 6
     --[USED] upScale = true
     local useUpscale = true
@@ -383,10 +390,10 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
         bonusAmount = 1
     end
     local lootTable = {
-        {rarity = Rarity(RarityType.Common), amount = 6 + (bonusAmount * 3), odds = 1 },
-        {rarity = Rarity(RarityType.Uncommon), amount = 4 + (bonusAmount * 3), odds = 1 },
-        {rarity = Rarity(RarityType.Rare), amount = 3 + (bonusAmount * 2), odds = 1 },
-        {rarity = Rarity(RarityType.Exceptional), amount = 3 + bonusAmount, odds = 1 }
+        {rarity = Rarity(RarityType.Common),        amount = 6 + (bonusAmount * 3), odds = 1 },
+        {rarity = Rarity(RarityType.Uncommon),      amount = 4 + (bonusAmount * 3), odds = 1 },
+        {rarity = Rarity(RarityType.Rare),          amount = 3 + (bonusAmount * 2), odds = 1 },
+        {rarity = Rarity(RarityType.Exceptional),   amount = 3 + (bonusAmount * 2), odds = 1 }
     }
     --A bit less generous than the original incarnation but I don't want to give the player an easy source of legendaries too far out. (or too often)
     --The original was balanced around occurring at a fixed schedule, but the player can take this mission as often as they want - especially if they have the extra mission mod.

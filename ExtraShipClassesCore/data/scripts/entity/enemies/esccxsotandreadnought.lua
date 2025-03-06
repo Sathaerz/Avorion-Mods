@@ -35,7 +35,7 @@ function ESCCXsotanDreadnought.initialize(values)
     self.data = values or {}
 
     self.data.dangerFactor = self.data.dangerFactor or 1
-    self.data.shieldBonusMultiplier = self.data.shieldBonusMultiplier or 0.6
+    self.data.shieldBonusMultiplier = self.data.shieldBonusMultiplier or 3
     self.data.shieldRecharges = self.data.shieldRecharges or 0
     self.data.numShipSpawns = self.data.numShipSpawns or 6
     self.data.allyShipVolume = self.data.allyShipVolume or 2
@@ -50,7 +50,7 @@ function ESCCXsotanDreadnought.initialize(values)
     self.data.initialDmgMulti = self.data.initialDmgMulti or dreadnought.damageMultiplier
 
     --Increase shields
-    local shieldMultiplier = math.max(1, self.data.dangerFactor * self.data.shieldBonusMultiplier) --Don't let this go less than 1.
+    local shieldMultiplier = self.data.shieldBonusMultiplier
     if self.data.sickoMode then
         shieldMultiplier = shieldMultiplier * 1.25 --Give a 25% bonus
     end
@@ -217,14 +217,18 @@ function ESCCXsotanDreadnought.setCharging()
 	
 	dreadnought.shieldDurability = dreadnought.shieldMaxDurability * 0.2
 	self.data.shieldDurability = dreadnought.shieldDurability
-	
-    --TODO: make this a bit more spectacular.
+
+    local pctChance = 0.25
+    if self.data.sickoMode then
+        pctChance = 0.5
+    end
+
 	local numShips = self.data.numShipSpawns
     local xrand = random()
     if self.data.dangerFactor > 5 then
-        local numExtraShips = 10 - self.data.dangerFactor
+        local numExtraShips = self.data.dangerFactor - 5
         for _ = 1, numExtraShips do
-            if xrand:test(0.5) then
+            if xrand:test(pctChance) then
                 numShips = numShips + 1
             end
         end

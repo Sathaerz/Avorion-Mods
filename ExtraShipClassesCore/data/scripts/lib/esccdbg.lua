@@ -81,6 +81,7 @@ function initUI()
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Prowler", "onSpawnProwlerButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Pillager", "onSpawnPillagerButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Devastator", "onSpawnDevastatorButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Pirate Flagship", "onSpawnPirateFlagshipButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Slammer", "onSpawnTorpedoSlammerButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Deadshot", "onSpawnDeadshotButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "SeigeGun", "onSpawnSeigeGunButtonPressed")
@@ -618,6 +619,21 @@ function onSpawnDevastatorButtonPressed()
     generator:endBatch()
 end
 callable(nil, "onSpawnDevastatorButtonPressed")
+
+function onSpawnPirateFlagshipButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnPirateFlagshipButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onPiratesGenerated)
+    generator:startBatch()
+
+    generator:createScaledFlagship(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnPirateFlagshipButtonPressed")
 
 --The following functions spawn Devastators with some special test scripts.
 function onSpawnTorpedoSlammerButtonPressed()
