@@ -60,6 +60,7 @@ mission._Name = "Destroy Prototype Battleship"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." }, --Placeholder
@@ -394,11 +395,15 @@ function spawnPrototype()
             --Torpedo
             local _TorpValues = {
                 _ROF = 4,
-                _DurabilityFactor = 2,
+                _DurabilityFactor = 10,
                 _TimeToActive = 30,
-                _DamageFactor = 2,
+                _DamageFactor = 4,
                 _UseEntityDamageMult = true,
-                _UseStaticDamageMult = _StaticMult
+                _UseStaticDamageMult = _StaticMult,
+                _AccelFactor = 2,
+                _VelocityFactor = 2,
+                _TurningSpeedFactor = 2,
+                _ShockwaveFactor = 2
             }
             _BattleShip:addScriptOnce("torpedoslammer.lua", _TorpValues)
             _BattleShip:setValue("_prototype_superweapon_script", "torpedoslammer.lua")
