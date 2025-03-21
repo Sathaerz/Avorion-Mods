@@ -26,6 +26,7 @@ mission._Tag = "wreckinghavoc_invalidredemption"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.description = {
     "", --Placeholder
     "", --Placeholder
