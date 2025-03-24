@@ -30,12 +30,13 @@ function BulletinBoard.refreshIcon()
         end
     end
 
+    local entityIcon = EntityIcon()
+
     --0x6D697373696F6E2062756C6C6574696E20636F6C6F72205354415254
     if containsLOTWBulletin then
         BulletinBoard.Log(_MethodName, "Station has LOTW mission - setting icon / color")
-        EntityIcon().secondaryIcon = "data/textures/icons/pixel/mission-white.png"
-        local _ESCCUtil = include("esccutil")
-        EntityIcon().secondaryIconColor = _ESCCUtil.getSaneColor(247, 247, 73)
+        entityIcon.secondaryIcon = "data/textures/icons/pixel/mission-white.png"
+        entityIcon.secondaryIconColor = ColorRGB(0.9686, 0.9686, 0.2862)
     end
     --0x6D697373696F6E2062756C6C6574696E20636F6C6F7220454E44
 end

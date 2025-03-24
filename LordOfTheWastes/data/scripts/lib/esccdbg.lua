@@ -129,7 +129,7 @@ function onSpawnSwenksButtonPressed()
     end
 
     -- spawn
-    local boss = PirateGenerator.createBoss(piratePosition())
+    local boss = PirateGenerator.createFlagship(piratePosition())
     boss:setTitle("Boss Swenks"%_T, {})
     boss.dockable = false
 
@@ -199,7 +199,6 @@ function onLOTWClearValuesPressed()
     _Player:setValue("_lotw_mission3_freighterskilled", nil)
     _Player:setValue("_lotw_mission4_failures", nil)
     _Player:setValue("swenks_beaten", nil)
-    _Player:setValue("_lotw_faction_verified", nil)
 
     local _msg = "All Lord of the Wastes data cleared."
     print(_msg)

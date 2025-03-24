@@ -35,6 +35,7 @@ mission._Name = "Junkyard Dogs (Redux)"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/silicium.png"
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" },
@@ -47,61 +48,48 @@ mission.data.description = {
 mission.data.accomplishMessage = "Good work. We transferred the reward to your account."
 
 local LOTW_Mission_init = initialize
-function initialize(_Data_in)
+function initialize(_Data_in, bulletin)
     local _MethodName = "initialize"
     mission.Log(_MethodName, "Beginning...")
 
-    if onServer()then
-        if not _restoring then
-            local _Sector = Sector()
-            local _Giver = Entity(_Data_in.giver)
+    if onServer() and not _restoring then
+        local _Sector = Sector()
+        local _Giver = Entity(_Data_in.giver)
 
-            mission.data.location = _Data_in.location
-            --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .destroyed
-                .escaped
-                .maxEscaped
-                .friendlyFaction
-                .pirateSpawnTimer
-            =========================================================]]
-            mission.data.custom.dangerLevel = _Data_in.dangerLevel
-            mission.data.custom.destroyed = 0
-            mission.data.custom.escaped = 0
-            local _MaxEscaped = 3
-            if mission.data.custom.dangerLevel >= 8 then
-                _MaxEscaped = 2
-            elseif mission.data.custom.dangerLevel == 10 then
-                _MaxEscaped = 1
-            end
-            mission.data.custom.maxEscaped = _MaxEscaped
-            local _SpawnTimer = 45
-            if mission.data.custom.dangerLevel == 10 then
-                _SpawnTimer = 35
-            end
-            mission.data.custom.friendlyFaction = _Giver.factionIndex
-            mission.data.custom.pirateSpawnTimer = _SpawnTimer
+        mission.data.location = _Data_in.location
 
-            mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.initialDesc
-            mission.data.description[2].arguments = { x = mission.data.location.x, y = mission.data.location.y }
-            mission.data.description[3].arguments = { x = mission.data.location.x, y = mission.data.location.y } --Not sure if this is needed but eh
-
-            LOTW_Mission_init(_Data_in)
-        else
-            --Restoring
-            LOTW_Mission_init()
+        --[[=====================================================
+            CUSTOM MISSION DATA SETUP:
+        =========================================================]]
+        mission.data.custom.dangerLevel = _Data_in.dangerLevel
+        mission.data.custom.destroyed = 0
+        mission.data.custom.escaped = 0
+        local _MaxEscaped = 3
+        if mission.data.custom.dangerLevel >= 8 then
+            _MaxEscaped = 2
+        elseif mission.data.custom.dangerLevel == 10 then
+            _MaxEscaped = 1
         end
-    end
-    
-    if onClient() then
-        if not _restoring then
-            initialSync()
-        else
-            sync()
+        mission.data.custom.maxEscaped = _MaxEscaped
+        local _SpawnTimer = 45
+        if mission.data.custom.dangerLevel == 10 then
+            _SpawnTimer = 35
         end
+        mission.data.custom.friendlyFaction = _Giver.factionIndex
+        mission.data.custom.pirateSpawnTimer = _SpawnTimer
+        mission.data.custom.prx = mission.data.location.x --prx = prerender x
+        mission.data.custom.pry = mission.data.location.y --pry = prerender y
+
+        --[[=====================================================
+            MISSION DESCRIPTION SETUP:
+        =========================================================]]
+        mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
+        mission.data.description[2].text = _Data_in.initialDesc
+        mission.data.description[2].arguments = { x = mission.data.location.x, y = mission.data.location.y }
+        mission.data.description[3].arguments = { x = mission.data.location.x, y = mission.data.location.y } --Not sure if this is needed but eh
     end
+
+    LOTW_Mission_init(_Data_in, bulletin)
 end
 
 --endregion
@@ -114,7 +102,7 @@ mission.globalPhase.noLocalPlayerEventsTargetSector = true
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].onTargetLocationEntered = function(x, y)
+mission.phases[1].onTargetLocationArrivalConfirmed = function(x, y)
     nextPhase()
 end
 
@@ -130,6 +118,13 @@ mission.phases[2].onBeginServer = function()
     mission.data.description[5].visible = true
 
     spawnBackgroundPirates()
+end
+
+mission.phases[2].onPreRenderHud = function()
+    local x, y = Sector():getCoordinates()
+    if x == mission.data.custom.prx and y == mission.data.custom.pry then
+        onMarkDroppedOres()
+    end
 end
 
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
@@ -226,7 +221,15 @@ mission.phases[3].onBeginServer = function()
     Player():sendChatMessage(_Faction.name, 0, "We have a liason waiting for you in sector \\s(%1%:%2%). Please contact them there.", mission.data.location.x, mission.data.location.y)
 end
 
-mission.phases[3].onTargetLocationEntered = function(x, y)
+mission.phases[3].onPreRenderHud = function()
+    local x, y = Sector():getCoordinates()
+    if x == mission.data.custom.prx and y == mission.data.custom.pry then
+        --Again, we don't want the markers going away just because the player beat the phase.
+        onMarkDroppedOres()
+    end
+end
+
+mission.phases[3].onTargetLocationArrivalConfirmed = function(x, y)
     spawnLiason()
 end
 
@@ -420,6 +423,42 @@ function finishAndReward()
     reward()
     accomplish()
 end
+
+--endregion
+
+--region #CLIENT CALLS
+
+--region #CLIENT CALLS
+
+function onMarkDroppedOres()
+    local methodName = "On Mark Dropped Ores"
+
+    local _player = Player()
+    if not _player then
+        return
+    end
+    if _player.state == PlayerStateType.BuildCraft or _player.state == PlayerStateType.BuildTurret or _player.state == PlayerStateType.PhotoMode then
+        return
+    end
+
+    local _sector = Sector()
+    local renderer = UIRenderer()
+    local color = Material(MaterialType.Titanium).color
+
+    for _, entity in pairs({_sector:getEntitiesByComponent(ComponentType.CargoLoot)}) do
+        local loot = CargoLoot(entity)
+        if valid(entity) and loot:matches("Titanium Ore") then
+            local indicator = TargetIndicator(entity)
+            indicator.visuals = TargetIndicatorVisuals.Tilted
+            indicator.color = color
+            renderer:renderTargetIndicator(indicator);
+        end
+    end
+
+    renderer:display()
+end
+
+--endregion
 
 --endregion
 

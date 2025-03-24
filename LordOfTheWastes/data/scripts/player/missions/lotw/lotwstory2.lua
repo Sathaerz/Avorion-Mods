@@ -26,7 +26,7 @@ local AsyncShipGenerator = include("asyncshipgenerator")
 local Balancing = include ("galaxy")
 local SpawnUtility = include ("spawnutility")
 
-mission._Debug = 0
+mission._Debug = 1
 mission._Name = "Junkyard Dogs"
 
 --region #INIT
@@ -34,11 +34,13 @@ mission._Name = "Junkyard Dogs"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/silicium.png"
 mission.data.description = {
     { text = "You received the following request from ${factionName}:" },
     { text = "The previous operation served as an adequate warning shot, but we need to take things a step further. Hitting their supply chain will provoke them to take further action to cover their losses. We've found a convoy running through (${location.x}:${location.y}) and we'd like you to take it out. You're welcome to keep anything you find in the cargo ships. Don't let too many escape. That defeats the entire point of the op." },
     { text = "Head to sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false },
+    { text = "(Recommended) Make sure your ship has at least 750 cargo space", bulletPoint = true, fulfilled = false },
     { text = "Destroy cargo ships - ${_DESTROYED}/3 Destroyed", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Don't let too many cargo ships escape - ${_ESCAPED}/${_MAXESCAPED} Escaped", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Meet the liason in sector (${location.x}:${location.y})", bulletPoint = true, fulfilled = false, visible = false }
@@ -50,49 +52,33 @@ function initialize()
     local _MethodName = "initialize"
     mission.Log(_MethodName, "Beginning...")
 
-    if onServer()then
-        local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
+    local _Sector = Sector()
+    local _X, _Y = _Sector:getCoordinates()
 
-        if not _restoring then
-            local _Player = Player()
-            local _FailureCt =_Player:getValue("_lotw_mission2_failures") or 0
+    if onServer() and not _restoring then
+        local _Player = Player()
+        local _FailureCt =_Player:getValue("_lotw_mission2_failures") or 0
 
-            --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .destroyed
-                .escaped
-                .maxEscaped
-                .friendlyFaction
-                .piratesSpawned
-            =========================================================]]
-            mission.data.custom.dangerLevel = 5 --This is a story mission, so we keep things predictable.
-            mission.data.custom.destroyed = 0
-            mission.data.custom.escaped = 0
-            mission.data.custom.maxEscaped = 3 + (_FailureCt * 2)
-            mission.data.custom.friendlyFaction = _Player:getValue("_lotw_faction")
-            mission.data.custom.piratesSpawned = 0
+        --[[=====================================================
+            CUSTOM MISSION DATA SETUP:
+        =========================================================]]
+        mission.data.custom.dangerLevel = 5 --This is a story mission, so we keep things predictable.
+        mission.data.custom.destroyed = 0
+        mission.data.custom.escaped = 0
+        mission.data.custom.maxEscaped = 3 + (_FailureCt * 2)
+        mission.data.custom.friendlyFaction = _Player:getValue("_lotw_faction")
+        mission.data.custom.piratesSpawned = 0
+        mission.data.custom.fulfilledCargoObjective = false --just so we avoid syncing every second.
 
-            local missionReward = 100000
+        local missionReward = 100000
 
-            missionData_in = {location = nil, reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for destroying the pirate freighters."}}
-    
-            LOTW_Mission_init(missionData_in)
-
-            setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
-        else
-            --Restoring
-            LOTW_Mission_init()
-        end
+        missionData_in = {location = nil, reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for destroying the pirate freighters."}}
     end
-    
-    if onClient() then
-        if not _restoring then
-            initialSync()
-        else
-            sync()
-        end
+
+    LOTW_Mission_init(missionData_in)
+
+    if onServer() and not _restoring then
+        setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
     end
 end
 
@@ -111,6 +97,28 @@ mission.globalPhase.onFail = function()
     _Player:setValue("_lotw_mission2_failures", _FailureCt)
 end
 
+mission.globalPhase.updateServer = function()
+    local methodName = "Global Phase Update Server"
+
+    if not mission.data.custom.fulfilledCargoObjective then --no need to check if we have fulfilled it
+        mission.Log(methodName, "Checking cargo objective")
+
+        --You can do this on any phase. You probably should do it on phase 1, buuuuut...
+        local _player = Player()
+        local craft = _player.craft
+        if not craft then
+            return
+        end
+
+        if craft.freeCargoSpace and craft.freeCargoSpace >= 750 then
+            mission.data.description[4].fulfilled = true
+            mission.data.custom.fulfilledCargoObjective = true
+
+            sync()
+        end
+    end
+end
+
 mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].showUpdateOnEnd = true
@@ -121,12 +129,16 @@ mission.phases[1].onBeginServer = function()
     local _Faction = Faction(mission.data.custom.friendlyFaction) --The phase is already set to 1 by the time we hit this, so it has to be done it this way.
 
     mission.data.location = getNextLocation()
+
+    mission.data.custom.prx = mission.data.location.x --prx = prerender x
+    mission.data.custom.pry = mission.data.location.y --pry = prerender y
+
     mission.data.description[1].arguments = { factionName = _Faction.name }
     mission.data.description[2].arguments = { x = mission.data.location.x, y = mission.data.location.y }
     mission.data.description[3].arguments = { x = mission.data.location.x, y = mission.data.location.y }
 end
 
-mission.phases[1].onTargetLocationEntered = function(x, y)
+mission.phases[1].onTargetLocationArrivalConfirmed = function(x, y)
     nextPhase()
 end
 
@@ -135,12 +147,19 @@ mission.phases[2].timers = {}
 mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].onBeginServer = function()
     mission.data.description[3].fulfilled = true
-    mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
-    mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
-    mission.data.description[4].visible = true
+    mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed }
+    mission.data.description[6].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
     mission.data.description[5].visible = true
+    mission.data.description[6].visible = true
 
     spawnBackgroundPirates()
+end
+
+mission.phases[2].onPreRenderHud = function()
+    local x, y = Sector():getCoordinates()
+    if x == mission.data.custom.prx and y == mission.data.custom.pry then
+        onMarkDroppedOres()
+    end
 end
 
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
@@ -154,7 +173,7 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
         _Player:setValue("_lotw_mission2_freighterskilled", _FreightersDestroyed)
 
         mission.data.custom.destroyed = mission.data.custom.destroyed + 1
-        mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
+        mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed }
 
         mission.Log(_MethodName, "Number of freighters destroyed " .. tostring(mission.data.custom.destroyed))
         sync()
@@ -197,7 +216,7 @@ mission.phases[2].timers[3] = {
         local _X, _Y = _Sector:getCoordinates()
         if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
             mission.data.custom.escaped = mission.data.custom.escaped + 1
-            mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
+            mission.data.description[6].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
             sync()
         end
     end,
@@ -230,19 +249,28 @@ mission.phases[3].onBeginServer = function()
     local _MethodName = "Phase 2 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
 
-    mission.data.description[4].fulfilled = true
+    mission.data.description[4].fulfilled = true --Doesn't matter anymore - either the player did it or they didn't.
     mission.data.description[5].fulfilled = true
+    mission.data.description[6].fulfilled = true
 
     mission.data.location = getNextLocation()
-    mission.data.description[6].arguments = { x = mission.data.location.x, y = mission.data.location.y }
+    mission.data.description[7].arguments = { x = mission.data.location.x, y = mission.data.location.y }
 
-    mission.data.description[6].visible = true
+    mission.data.description[7].visible = true
 
     local _Faction = Faction(mission.data.custom.friendlyFaction)
     Player():sendChatMessage(_Faction.name, 0, "We have a liason waiting for you in sector \\s(%1%:%2%). Please contact them there.", mission.data.location.x, mission.data.location.y)
 end
 
-mission.phases[3].onTargetLocationEntered = function(x, y)
+mission.phases[3].onPreRenderHud = function()
+    local x, y = Sector():getCoordinates()
+    if x == mission.data.custom.prx and y == mission.data.custom.pry then
+        --We don't want the markers going away just because the player beat the phase.
+        onMarkDroppedOres()
+    end
+end
+
+mission.phases[3].onTargetLocationArrivalConfirmed = function(x, y)
     spawnLiason()
 end
 
@@ -423,7 +451,7 @@ end
 
 function freighterEscaped()
     mission.data.custom.escaped = mission.data.custom.escaped + 1
-    mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
+    mission.data.description[6].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
     sync()
 end
 
@@ -487,6 +515,38 @@ function finishAndReward()
 
     reward()
     accomplish()
+end
+
+--endregion
+
+--region #CLIENT CALLS
+
+function onMarkDroppedOres()
+    local methodName = "On Mark Dropped Ores"
+
+    local _player = Player()
+    if not _player then
+        return
+    end
+    if _player.state == PlayerStateType.BuildCraft or _player.state == PlayerStateType.BuildTurret or _player.state == PlayerStateType.PhotoMode then
+        return
+    end
+
+    local _sector = Sector()
+    local renderer = UIRenderer()
+    local color = Material(MaterialType.Titanium).color
+
+    for _, entity in pairs({_sector:getEntitiesByComponent(ComponentType.CargoLoot)}) do
+        local loot = CargoLoot(entity)
+        if valid(entity) and loot:matches("Titanium Ore") then
+            local indicator = TargetIndicator(entity)
+            indicator.visuals = TargetIndicatorVisuals.Tilted
+            indicator.color = color
+            renderer:renderTargetIndicator(indicator);
+        end
+    end
+
+    renderer:display()
 end
 
 --endregion

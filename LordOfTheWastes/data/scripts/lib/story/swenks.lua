@@ -17,7 +17,7 @@ function Swenks.spawn(player, x, y)
     end
 
     -- spawn
-    local boss = PirateGenerator.createBoss(piratePosition())
+    local boss = PirateGenerator.createFlagship(piratePosition())
     boss:setTitle("Boss Swenks"%_T, {})
     boss.dockable = false
 

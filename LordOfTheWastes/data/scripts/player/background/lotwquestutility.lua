@@ -20,14 +20,17 @@ mission.globalPhase.updateServer = function()
 
     --Check faction OK
     --If the player somehow accepted the mission from their own station (or an ally's station... or another player's station, etc. just set it to the start ally)
-    if not _player:getValue("_lotw_faction_verified") then
-        if _player:getValue("_lotw_faction") then
-            local _LOTWFaction = Faction(_player:getValue("_lotw_faction"))
-            if _LOTWFaction.isPlayer or _LOTWFaction.isAlliance then
-                local _StartFaction = _player:getValue("start_ally")
-                _player:setValue("_lotw_faction", _StartFaction)
-            end
-            _player:setValue("_lotw_faction_verified", true)
+    local _StartFaction = _player:getValue("start_ally")
+    if _player:getValue("_lotw_faction") then
+        local _LOTWFaction = Faction(_player:getValue("_lotw_faction"))
+
+        if _LOTWFaction.isPlayer or _LOTWFaction.isAlliance then
+            _player:setValue("_lotw_faction", _StartFaction)
+        end
+    else
+        local storyStage = _player:getValue(mission._StoryStageValue)
+        if storyStage > 1 then
+            _player:setValue("_lotw_faction", _StartFaction)
         end
     end
 
@@ -146,7 +149,7 @@ mission.phases[6].onSectorEntered = function(x, y)
 
     local _player = Player()
 
-    --first, check to see if we even do this. First, we need to make sure that it has been at least 20 minutes since we last added the side mission.
+    --Check to see if we even do this. We need to make sure that it has been at least 20 minutes since we last added the side mission.
     local nextValidSide1Time = (_player:getValue("_lotw_last_side1") or 0) + (20 * 60)
     local nextValidSide2Time = (_player:getValue("_lotw_last_side2") or 0) + (20 * 60)
 

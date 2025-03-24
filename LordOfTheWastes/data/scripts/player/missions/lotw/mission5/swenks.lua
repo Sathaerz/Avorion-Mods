@@ -14,6 +14,7 @@ end
 function initialize()
     local sector = Sector()
     sector:registerCallback("onStartFiring", "onSetToAggressive")
+    sector:registerCallback("onPlayerEntered", "onPlayerEntered")
     Entity():registerCallback("onCollision", "onSetToAggressive")
 end
 
@@ -31,6 +32,20 @@ function onSetToAggressive()
                     ai:registerEnemyFaction(allianceIndex)
                 end
             end
+        end
+    end
+end
+
+function onPlayerEntered(playerIndex)
+    local player = Player(playerIndex)
+    local allianceIndex = player.allianceIndex
+    local allianceMemberHere = Sector():getEntitiesByFaction(allianceIndex)
+
+    for _, pirate in pairs(getPirates()) do
+        local ai = ShipAI(pirate.index)
+        ai:registerFriendFaction(playerIndex)
+        if allianceIndex and not allianceMemberHere then
+            ai:registerFriendFaction(allianceIndex)
         end
     end
 end

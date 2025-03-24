@@ -32,6 +32,7 @@ mission._Name = "Loot and Scoot"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/silicium.png"
 mission.data.description = {
     { text = "You received the following request from ${factionName}:" },

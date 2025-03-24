@@ -12,7 +12,7 @@ local deleteTime = 30
 local runningAway = false
 local invokedEscape = false
 
-function LOTWFreighterMission3.initialize(_AddLoot, _AddMoreLoot, _AddSideLoot, _DangerLevel)
+function LOTWFreighterMission3.initialize(_AddLoot, _AddMainMissionLoot, _AddSideMissionLoot, _DangerLevel)
     if onServer() then
         local ship = Entity()
 
@@ -28,26 +28,26 @@ function LOTWFreighterMission3.initialize(_AddLoot, _AddMoreLoot, _AddSideLoot, 
 
         if _AddLoot then
             -- add turrets to loot
-            local turrets = LOTWFreighterMission3.generateTurrets(x, y)
+            local turrets = LOTWFreighterMission3.generateTurrets(x, y, _AddSideMissionLoot)
             for _, turret in pairs(turrets) do
                 goonLoot:insert(turret)
             end
 
             -- add subsystems to loot
-            local upgrades = LOTWFreighterMission3.generateUpgrades(x, y)
+            local upgrades = LOTWFreighterMission3.generateUpgrades(x, y, _AddSideMissionLoot)
             for _, upgrade in pairs(upgrades) do
                 goonLoot:insert(upgrade)
             end
 
             --Add commonly used upgrades to get the player started off.
-            if _AddMoreLoot then
+            if _AddMainMissionLoot then
                 local _SeedInt = random():getInt(1, 20000)
                 goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
                 goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/hyperspacebooster.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
                 goonLoot:insert(SystemUpgradeTemplate("data/scripts/systems/energybooster.lua", Rarity(RarityType.Uncommon), Seed(_SeedInt)))
             end
 
-            if _AddSideLoot then
+            if _AddSideMissionLoot then
                 local sideLoot = LOTWFreighterMission3.generateSideLoot(x, y, _DangerLevel)
                 for _, item in pairs(sideLoot) do
                     goonLoot:insert(item)
@@ -108,7 +108,7 @@ function LOTWFreighterMission3.updateServer(timeStep)
     end
 end
 
-function LOTWFreighterMission3.generateTurrets(x, y)
+function LOTWFreighterMission3.generateTurrets(x, y, addSideMissionLoot)
     local turrets = {}
     -- amount is not the total amount but only for high rarities
     local amount = random():getInt(5, 6)
@@ -119,9 +119,15 @@ function LOTWFreighterMission3.generateTurrets(x, y)
         local rarities = {}
         -- one turret has higher rarity
         if i == amount then
+            local exoticRarity = 0.5
+            local legendaryRarity = 0.25
+            if addSideMissionLoot then
+                exoticRarity = 0.25
+                legendaryRarity = 0.125
+            end
             rarities[RarityType.Exceptional] = 1.5
-            rarities[RarityType.Exotic] = 0.5
-            rarities[RarityType.Legendary] = 0.25
+            rarities[RarityType.Exotic] = exoticRarity
+            rarities[RarityType.Legendary] = legendaryRarity
         else
             rarities[RarityType.Uncommon] = 2
             rarities[RarityType.Rare] = 2
@@ -148,7 +154,7 @@ function LOTWFreighterMission3.generateTurrets(x, y)
     return turrets
 end
 
-function LOTWFreighterMission3.generateUpgrades(x, y)
+function LOTWFreighterMission3.generateUpgrades(x, y, addSideMissionLoot)
     local upgrades = {}
     -- amount is not the total amount but only for high rarities
     local amount = random():getInt(3, 4)
@@ -159,9 +165,15 @@ function LOTWFreighterMission3.generateUpgrades(x, y)
         local rarities = {}
         -- one subsystem has higher rarity
         if i == amount then
+            local exoticRarity = 0.5
+            local legendaryRarity = 0.25
+            if addSideMissionLoot then
+                exoticRarity = 0.25
+                legendaryRarity = 0.125
+            end
             rarities[RarityType.Exceptional] = 1.5
-            rarities[RarityType.Exotic] = 0.5
-            rarities[RarityType.Legendary] = 0.25
+            rarities[RarityType.Exotic] = exoticRarity
+            rarities[RarityType.Legendary] = legendaryRarity
         else
             rarities[RarityType.Uncommon] = 2
             rarities[RarityType.Rare] = 1
