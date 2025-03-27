@@ -599,7 +599,7 @@ function finishAndReward()
     mission.Log(_MethodName, "Running win condition.")
 
     if mission.data.custom.destroyed == 0 then --give players a bonus if they don't lose any transports.
-        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " Plus a bonus for no losses."
+        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus for no losses."
         mission.data.reward.credits = mission.data.reward.credits * 1.25
     end
 
