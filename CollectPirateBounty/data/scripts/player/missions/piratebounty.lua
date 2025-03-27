@@ -59,6 +59,9 @@ function initialize(_Data_in)
     mission.Log(_MethodName, "Beginning...")
 
     if onServer() then
+        --We don't care about this on the client. We can't use the one built into structuredmission because it lacks SectorChangeType.
+        Player():registerCallback("onSectorEntered", "pirateBountyOnSectorEntered")
+
         if not _restoring then
             mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel) .. " - enemy : " .. tostring(_Data_in.targetFaction))
 
@@ -78,6 +81,7 @@ function initialize(_Data_in)
             mission.data.custom.targets = _Data_in.targets
             mission.data.custom.killedTargets = 0
             mission.data.custom.timePassed = 0
+            mission.data.custom.playerSwitchedViaJump = false
 
             local _TargetFaction = Faction(mission.data.custom.pirateFaction)
 
@@ -154,7 +158,7 @@ end
 
 mission.phases[1].onSectorArrivalConfirmed = function(_X, _Y)
     local _MethodName = "Phase 1 On Sector Arrival Confirmed"
-    if mission.data.custom.dangerLevel >= 8 then
+    if mission.data.custom.playerSwitchedViaJump and mission.data.custom.dangerLevel >= 8 then
         
         local _PirateCount = ESCCUtil.countEntitiesByValue("is_pirate")
 
@@ -211,6 +215,18 @@ end
 --endregion
 
 --region #SERVER CALLS
+
+function pirateBountyOnSectorEntered(player, x, y, changeType)
+    local methodName = "Pirate Bounty On Sector Entered"
+    mission.Log(methodName, "Checking arrival type")
+
+    if changeType == SectorChangeType.Jump or changeType == SectorChangeType.Gate or changeType == SectorChangeType.Wormhole then
+        mission.Log(methodName, "Player arrived via jump. Hunters can spawn if applicable.")
+        mission.data.custom.playerSwitchedViaJump = true
+    else
+        mission.data.custom.playerSwitchedViaJump = false
+    end
+end
 
 function getHeadHunterFaction()
     local _X, _Y = Sector():getCoordinates()
@@ -387,6 +403,12 @@ function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
+    --Give the player a bonus if they have to deal with the hunters.
+    if mission.data.custom.dangerLevel >= 8 then
+        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus."
+        mission.data.reward.credits = mission.data.reward.credits * 1.2
+    end
+
     reward()
     accomplish()
 end
@@ -409,7 +431,7 @@ function formatDescription(_Station)
     local descriptionTable = {
         "To any captains out there with a some combat experience - we'd like you to take on ${targetFaction} for us. We've had a lot of problems with them attacking freighters and other civilian targets, and we'd like you to put a stop to it. Destroying ${targets} of their ships or stations should be enough. You'll be compensated for your work.",
         "Listen up Captain! ${targetFaction} Need to be cut down a notch. We could easily destroy them ourselves, but our military is committed elsewhere and we cannot afford to split our forces. To that end, we're willing to pay you to hunt down ${targets} ships or stations belonging to ${targetFaction}. We don't care how or where you find them, as long as you get rid of them.",
-        "Peace be with you, captain. Our diplomatic efforts have failed, and ${targetFaction} are running rampant in our sectors. We regret that it has come to this, but we need you to destroy ${targets} of their ships or stations. There's a reward in it for you as well. Please. If we don't put a stop to ${targetFaction} soon, there's no telling how much damage they'll cause."
+        "Peace be with you, Captain. Our diplomatic efforts have failed, and ${targetFaction} are running rampant in our sectors. We regret that it has come to this, but we need you to destroy ${targets} of their ships or stations. There's a reward in it for you as well. Please. If we don't put a stop to ${targetFaction} soon, there's no telling how much damage they'll cause."
     }
 
     return descriptionTable[descriptionType]
@@ -436,7 +458,6 @@ mission.makeBulletin = function(_Station)
 
     local _BaseReward = 5500
     if _DangerLevel == 10 then
-        _BaseReward = _BaseReward + 1000
         _Targets = math.min(_Targets + 5, _MaxTargets) --Add a bias towards a higher target count, but don't push it over the maximum.
     end
     if insideBarrier then
