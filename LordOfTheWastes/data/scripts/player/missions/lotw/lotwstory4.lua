@@ -582,7 +582,7 @@ function finishAndReward()
         local hpRatio = station.durability / station.maxDurability
 
         if hpRatio >= 0.75 then
-            mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " Plus a bonus for excellent work."
+            mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus for excellent work."
             mission.data.reward.credits = mission.data.reward.credits * 1.25
         end
     end

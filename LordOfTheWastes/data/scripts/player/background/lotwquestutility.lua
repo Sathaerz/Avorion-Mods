@@ -149,9 +149,9 @@ mission.phases[6].onSectorEntered = function(x, y)
 
     local _player = Player()
 
-    --Check to see if we even do this. We need to make sure that it has been at least 20 minutes since we last added the side mission.
-    local nextValidSide1Time = (_player:getValue("_lotw_last_side1") or 0) + (20 * 60)
-    local nextValidSide2Time = (_player:getValue("_lotw_last_side2") or 0) + (20 * 60)
+    --Check to see if we even do this. We need to make sure that it has been at least 30 minutes since we last added the side mission.
+    local nextValidSide1Time = (_player:getValue("_lotw_last_side1") or 0) + (30 * 60)
+    local nextValidSide2Time = (_player:getValue("_lotw_last_side2") or 0) + (30 * 60)
 
     local currentTime = Server().unpausedRuntime
     local _random = random()

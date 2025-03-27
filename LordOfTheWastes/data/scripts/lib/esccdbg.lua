@@ -97,10 +97,21 @@ function onLOTWSide1ButtonPressed()
         return
     end
 
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwside1.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
+    local _Script = "data/scripts/player/missions/lotw/lotwside1.lua"
+
+    local _station = Entity()
+    if _station.type ~= EntityType.Station then
+        print("Can't add missions to non-station entities.")
+    else
+        if _station.playerOrAllianceOwned then
+            print("Can't add missions to player or alliance stations.")
+        else
+            print("Adding LOTW Side 1 bulletin.")
+            local _MissionPath = _Script
+            local ok, bulletin = run(_MissionPath, "getBulletin", _station)
+            _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
+        end
+    end
 end
 callable(nil, "onLOTWSide1ButtonPressed")
 
@@ -110,10 +121,21 @@ function onLOTWSide2ButtonPressed()
         return
     end
 
-    local _Player = Player(callingPlayer)
-    local _Script = "missions/lotw/lotwside2.lua"
-    _Player:removeScript(_Script)
-    _Player:addScript(_Script)
+    local _Script = "data/scripts/player/missions/lotw/lotwside2.lua"
+
+    local _station = Entity()
+    if _station.type ~= EntityType.Station then
+        print("Can't add missions to non-station entities.")
+    else
+        if _station.playerOrAllianceOwned then
+            print("Can't add missions to player or alliance stations.")
+        else
+            print("Adding LOTW Side 2 bulletin.")
+            local _MissionPath = _Script
+            local ok, bulletin = run(_MissionPath, "getBulletin", _station)
+            _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
+        end
+    end
 end
 callable(nil, "onLOTWSide2ButtonPressed")
 

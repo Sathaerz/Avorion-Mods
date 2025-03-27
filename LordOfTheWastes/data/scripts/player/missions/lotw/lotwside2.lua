@@ -109,6 +109,10 @@ mission.globalPhase.noBossEncountersTargetSector = true
 mission.globalPhase.noPlayerEventsTargetSector = true
 mission.globalPhase.noLocalPlayerEventsTargetSector = true
 
+mission.globalPhase.onAbandon = function()
+    setLastMissionTime()
+end
+
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(x, y)
@@ -130,7 +134,7 @@ end
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local _MethodName = "Phase 1 on Entity Destroyed"
     mission.Log(_MethodName, "Beginning...")
-    if Entity(_ID):getValue("_lotw_mission7_objective") then
+    if Entity(_ID):getValue("_lotw_side2_objective") then
         mission.Log(_MethodName, "Was an objective.")
         mission.data.custom.destroyed = mission.data.custom.destroyed + 1
         mission.data.description[4].arguments = { _DESTROYED = mission.data.custom.destroyed }
@@ -194,6 +198,8 @@ mission.phases[2].timers[4] = {
             finishAndReward()
         end
         if mission.data.custom.escaped >= mission.data.custom.maxEscaped then
+            ESCCUtil.allPiratesDepart()
+            setLastMissionTime()
             fail()
         end
     end,
@@ -281,12 +287,12 @@ end
 
 function spawnPirateFreighter()
     --Check to see if there's an existing freighter.
-    local _Freighters = {Sector():getEntitiesByScriptValue("_lotw_mission3_objective")}
+    local _Freighters = {Sector():getEntitiesByScriptValue("_lotw_side2_objective")}
     --If there is, delete it and increment the escaped counter.
     --Freighters will handle their own escape once shot.
     if #_Freighters > 0 then
         for _, _F in pairs(_Freighters) do
-            _F:addScriptOnce("deletejumped.lua")
+            _F:addScriptOnce("deletejumped.lua", 2)
             freighterEscaped()
         end
     end
@@ -309,7 +315,7 @@ function onPirateFreighterFinished(_Generated)
     for _, _Ship in pairs(_Generated) do
         _Ship:setTitle("${toughness}${title}", {toughness = "", title = "Pirate Loot Transporter"})
 
-        _Ship:setValue("_lotw_mission7_objective", true)
+        _Ship:setValue("_lotw_side2_objective", true)
         _Ship:setValue("is_pirate", true)
         _Ship:setValue("is_civil", nil)
         _Ship:setValue("is_freighter", nil)
@@ -329,7 +335,7 @@ function onPirateFreighterFinished(_Generated)
 
         local _ShipAI = ShipAI(_Ship)
         local _Position = _Ship.position
-        _ShipAI:setFlyLinear(_Position.look * 10000, 0)
+        _ShipAI:setFlyLinear(_Position.look * 20000, 0)
         _ShipAI:setPassiveShooting(true)
     end
 end
@@ -340,14 +346,16 @@ function freighterEscaped()
     sync()
 end
 
+function setLastMissionTime()
+    local runTime = Server().unpausedRuntime
+    Player():setValue("_lotw_last_side2", runTime) 
+end
+
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
-    local _player = Player()
-    local runTime = Server().unpausedRuntime
-
-    _player:setValue("_lotw_last_side2", runTime)
+    setLastMissionTime()
 
     reward()
     accomplish()

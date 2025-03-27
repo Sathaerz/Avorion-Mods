@@ -234,6 +234,7 @@ mission.phases[2].timers[4] = {
             nextPhase()
         end
         if mission.data.custom.escaped >= mission.data.custom.maxEscaped then
+            ESCCUtil.allPiratesDepart()
             fail()
         end
     end,
@@ -399,7 +400,7 @@ function spawnPirateFreighter()
     --Freighters will handle their own escape once shot.
     if #_Freighters > 0 then
         for _, _F in pairs(_Freighters) do
-            _F:addScriptOnce("deletejumped.lua")
+            _F:addScriptOnce("deletejumped.lua", 2)
             freighterEscaped()
         end
     end

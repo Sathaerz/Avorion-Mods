@@ -93,16 +93,26 @@ function LOTWFreighterMission3.updateServer(timeStep)
         deleteTime = deleteTime - timeStep
     end
 
+    local scripts = {
+        "player/missions/lotw/lotwstory3.lua",
+        "player/missions/lotw/lotwside2.lua"
+    }
+
     if deleteTime <= 10 and deleteTime + timeStep > 10 then
         Sector():broadcastChatMessage(Entity(), ChatMessageType.Chatter, "Go, go, go! We're almost there! We're almost out of here!"%_t)
-    elseif deleteTime <= 5 then
-        Entity():addScriptOnce("deletejumped.lua")
+    elseif deleteTime <= 4 then
+        Entity():addScriptOnce("deletejumped.lua", 5)
     end
     if deleteTime <= 1 then
         local _Players = {Sector():getPlayers()}
         for _, _P in pairs(_Players) do
             if not invokedEscape then
-                _P:invokeFunction("player/missions/lotw/lotwstory3.lua", "freighterEscaped")
+                for _, script in pairs(scripts) do
+                    if _P:hasScript(script) then
+                        _P:invokeFunction(script, "freighterEscaped")
+                        invokedEscape = true
+                    end
+                end
             end
         end
     end
