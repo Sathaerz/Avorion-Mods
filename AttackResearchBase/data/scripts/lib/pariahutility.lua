@@ -62,10 +62,12 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     local _ActiveMods = Mods()
     local _ic1 = false
     local _ic2 = false
+    local _ic0 = false
 
     self.Log(_MethodName, "Checking Amp")
 
     local _AmpTable = {
+        ["3452526124"] = 9999,    --Can auto-kill the boss. Better move fast before it blows all your stuff up.
         ["2017677089"] = 0.0,     --Weapon Engineering is _Amp + 3 - Just want to note that it is on the list here. We have a special set of detection triggers for this later in the file.
         ["2849203442"] = 4,       --Overpowerinator. I mean, it's deliberately designed to be overpowered.
         ["3229979623"] = 4,       --Same comment as above.
@@ -146,6 +148,11 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         if _Xmod.id == "2052687922" or _Xmod.id == "1991691736" or _Xmod.id == "2289497873" then
             _ic1 = true
         end
+        if _Xmod.id == "3452526124" then
+            _ic0 = true
+            _ic1 = true
+            _ic2 = true
+        end
         local _xAmp = _AmpTable[_Xmod.id]
         if _xAmp then
             _Amp = _Amp + _xAmp
@@ -180,6 +187,9 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     local _Superweapon = Sector():createShip(_Faction, "", _Plan, PirateGenerator.getGenericPosition())
     local _AdjustSlammer = false
     local _TurnFactor = 1.0
+    if _ic0 then
+        _Superweapon:setValue("autokill", true)
+    end
 
     local _ShipNameTitle = "SW-T" .. tostring(_Type) .. "-MW"
     if _MainWeapon == 1 then
@@ -287,6 +297,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     end
 
     local _TorpDamageFactor = 2
+    local _TorpDurabilityFactor = 32
     local _TechLevel = Balancing_GetTechLevel(_X, _Y)
     if _TechLevel <= 45 then
         _TorpDamageFactor = 4
@@ -294,23 +305,35 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     if _TechLevel <= 40 then
         _TorpDamageFactor = 6
     end
+    if _ic0 then
+        _TorpDamageFactor = _TorpDamageFactor * 16
+        _TorpDurabilityFactor = _TorpDurabilityFactor * 16
+    end
 
     local useTorpOffset = -750
     local useForwardAdjFactor = 1
+    local _tta = 10
+    local _avtFactor = 1.5
+    local _shockFactor = 2
+    if _ic0 then
+        _tta = 0
+        _avtFactor = 4
+        _shockFactor = 10
+    end
 
     local _TorpSlammerValues = {
-        _TimeToActive = 10,
+        _TimeToActive = _tta,
         _ROF = 1,
         _TorpOffset = useTorpOffset,
         _UpAdjust = _AdjustSlammer,
         _DamageFactor = _TorpDamageFactor,
         _ForwardAdjustFactor = useForwardAdjFactor,
-        _DurabilityFactor = 32,
+        _DurabilityFactor = _TorpDurabilityFactor,
         _ReachFactor = 10,
-        _AccelFactor = 1.5,
-        _VelocityFactor = 1.5,
-        _TurningSpeedFactor = 1.5,
-        _ShockwaveFactor = 2,
+        _AccelFactor = _avtFactor,
+        _VelocityFactor = _avtFactor,
+        _TurningSpeedFactor = _avtFactor,
+        _ShockwaveFactor = _shockFactor,
         _TargetPriority = 4 --Random enemy
     }
 

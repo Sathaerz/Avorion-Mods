@@ -25,7 +25,6 @@ data._TimeToActive = 30
 
 local laser = nil
 local targetLaser = nil
-local chargeLaser = nil
 
 data.targetLaserData = {}
 data.targetLaserData.from = nil
@@ -56,6 +55,9 @@ function GordianLaserBoss.initialize(_AmpData)
     
     _Boss.addBaseMultiplier(_Boss, StatsBonuses.GeneratedEnergy, 20.0)
     _Boss.addBaseMultiplier(_Boss, StatsBonuses.BatteryRecharge, 20.0)
+    if _Boss:getValue("autokill") then
+        data._TimeToActive = 0
+    end
 
     _Boss:registerCallback("onDestroyed", "onDestroyed")
 end
