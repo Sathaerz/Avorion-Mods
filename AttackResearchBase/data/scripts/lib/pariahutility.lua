@@ -286,14 +286,17 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     local _TurretGenerator = SectorTurretGenerator()
     local _UpgradeGenerator = SectorUpgradeGenerator()
 
-    local _Loot = Loot(_Superweapon)
-    local _TurretCount = _Rgen:getInt(20, 26)
-    local _SystemCount = _Rgen:getInt(20, 24)
-    for _ = 1, _TurretCount do
-        _Loot:insert(InventoryTurret(_TurretGenerator:generate(_X, _Y, -156, Rarity(self.getRandomRarity()))))
-    end
-    for _ = 1, _SystemCount do
-        _Loot:insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, Rarity(self.getRandomRarity())))
+    if not _ic0 then
+        local _Loot = Loot(_Superweapon)
+        local _TurretCount = _Rgen:getInt(20, 26)
+        local _SystemCount = _Rgen:getInt(20, 24)
+
+        for _ = 1, _TurretCount do
+            _Loot:insert(InventoryTurret(_TurretGenerator:generate(_X, _Y, -156, Rarity(self.getRandomRarity()))))
+        end
+        for _ = 1, _SystemCount do
+            _Loot:insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, Rarity(self.getRandomRarity())))
+        end
     end
 
     local _TorpDamageFactor = 2
