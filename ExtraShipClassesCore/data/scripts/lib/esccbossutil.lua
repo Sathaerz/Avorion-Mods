@@ -17,6 +17,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
     local _ActiveMods = Mods()
     local _HETActive = false
     local _HarderEnemysActive = false
+    local _NukesActive = false
     for _, _Xmod in pairs(_ActiveMods) do
         if _Xmod.id == "1821043731" then --HET
             ESCCBossUtil.Log(_MethodName, "HET is active - increasing _Amp / _HighAmp")
@@ -25,6 +26,9 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
         if _Xmod.id == "2191291553" then --HarderEnemys
             ESCCBossUtil.Log(_MethodName, "HarderEnemys is active - increasing _Amp / _HighAmp")
             _HarderEnemysActive = true
+        end
+        if _Xmod.id == "3452526124" then
+            _NukesActive = true
         end
     end
 
@@ -62,23 +66,24 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
         end },
         { _PlanFile = "data/plans/escc/Goliath.xml", _Title = "Dervish Goliath", _EngineFactor = 2.5, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
             local _TorpedoFactor = 2
-            local _TorpDuraFactor = 2
+            local _TorpDuraFactor = 4
             local _ActiveMods = Mods()
 
             for _, _Xmod in pairs(_ActiveMods) do
             	if _Xmod.id == "2422999823" then --Ferocity
             		_TorpedoFactor = _TorpedoFactor * 16
-                    _TorpDuraFactor = _TorpDuraFactor * 2
+                    _TorpDuraFactor = _TorpDuraFactor * 4
             	end
             end
 
-            local _TorpSlammerValues = {}
-            _TorpSlammerValues._TimeToActive = 12
-            _TorpSlammerValues._ROF = 2
-            _TorpSlammerValues._UpAdjust = false
-            _TorpSlammerValues._DamageFactor = _TorpedoFactor
-            _TorpSlammerValues._DurabilityFactor = _TorpDuraFactor
-            _TorpSlammerValues._ForwardAdjustFactor = 1
+            local _TorpSlammerValues = {
+                _TimeToActive = 12,
+                _ROF = 2,
+                _UpAdjust = false,
+                _DamageFactor = _TorpedoFactor,
+                _DurabilityFactor = _TorpDuraFactor,
+                _ForwardAdjustFactor = 1
+            }
 
             _Boss:addScriptOnce("phasemode.lua")
             _Boss:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
@@ -96,19 +101,21 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _Boss:setValue("_escc_is_relentless_hellcat", true)
         end },
         { _PlanFile = "data/plans/escc/Hunter.xml", _Title = "Steadfast Hunter", _EngineFactor = 2, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
-            local _APDValues = {}
-            _APDValues._ROF = 0.45
-            _APDValues._TargetTorps = true
-            _APDValues._TargetFighters = true
-            _APDValues._TorpDamage = 12
-            _APDValues._FighterDamage = 12
-            _APDValues._RangeFactor = 20
-            _APDValues._MaximumTargets = 4
+            local _APDValues = {
+                _ROF = 0.45,
+                _TargetTorps = true,
+                _TargetFighters = true,
+                _TorpDamage = 12,
+                _FighterDamage = 12,
+                _RangeFactor = 20,
+                _MaximumTargets = 4
+            }
 
-            local _LaserSniperValues = {}
-            _LaserSniperValues._IncreaseDamageOT = true
-            _LaserSniperValues._IncreaseDOTCycle = 30
-            _LaserSniperValues._IncreaseDOTAmount = 15000
+            local _LaserSniperValues = {
+                _IncreaseDamageOT = true,
+                _IncreaseDOTCycle = 30,
+                _IncreaseDOTAmount = 5000
+            }
 
             _Boss:addScriptOnce("dialogs/encounters/steadfasthunter.lua")
             _Boss:addScriptOnce("lasersniper.lua", _LaserSniperValues)
@@ -118,14 +125,15 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _Boss:setValue("_escc_is_steadfast_hunter", true)
         end },
         { _PlanFile = "data/plans/escc/Shield.xml", _Title = "Vigilant Shield", _EngineFactor = 0, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
-            local _APDValues = {}
-            _APDValues._ROF = 0.45
-            _APDValues._TargetTorps = true
-            _APDValues._TargetFighters = true
-            _APDValues._TorpDamage = 12
-            _APDValues._FighterDamage = 12
-            _APDValues._RangeFactor = 20
-            _APDValues._MaximumTargets = 4
+            local _APDValues = {
+                _ROF = 0.45,
+                _TargetTorps = true,
+                _TargetFighters = true,
+                _TorpDamage = 12,
+                _FighterDamage = 12,
+                _RangeFactor = 20,
+                _MaximumTargets = 4
+            }
 
             _Boss:addScriptOnce("adaptivedefense.lua")
             _Boss:addScriptOnce("allybooster.lua", { _HealWhenBoosting = true, _HealPctWhenBoosting = 100, _MaxBoostCharges = 5})
@@ -138,26 +146,31 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             local TorpedoUtility = include ("torpedoutility")
 
             local _TorpedoFactor = 55
-            local _TorpDuraFactor = 4
+            local _TorpDuraFactor = 6
             local _ActiveMods = Mods()
 
             for _, _Xmod in pairs(_ActiveMods) do
             	if _Xmod.id == "2422999823" then --Ferocity
             		_TorpedoFactor = _TorpedoFactor * 16
-                    _TorpDuraFactor = _TorpDuraFactor * 2
+                    _TorpDuraFactor = _TorpDuraFactor * 4
             	end
             end
 
-            local _TorpSlammerValues = {}
-            _TorpSlammerValues._TimeToActive = 12
-            _TorpSlammerValues._ROF = 9
-            _TorpSlammerValues._UpAdjust = false
-            _TorpSlammerValues._DamageFactor = _TorpedoFactor
-            _TorpSlammerValues._DurabilityFactor = _TorpDuraFactor
-            _TorpSlammerValues._TorpOffset = -750
-            _TorpSlammerValues._ForwardAdjustFactor = 1
-            _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
-            _TorpSlammerValues._PreferBodyType = TorpedoUtility.BodyType.Hawk
+            local _TorpSlammerValues = {
+                _TimeToActive = 12,
+                _ROF = 9,
+                _UpAdjust = false,
+                _DamageFactor = _TorpedoFactor,
+                _DurabilityFactor = _TorpDuraFactor,
+                _TorpOffset = -750,
+                _ForwardAdjustFactor = 1,
+                _PreferWarheadType = TorpedoUtility.WarheadType.Nuclear,
+                _PreferBodyType = TorpedoUtility.BodyType.Hawk,
+                _AccelFactor = 1.5,
+                _VelocityFactor = 1.5,
+                _TurningSpeedFactor = 1.5,
+                _ShockwaveFactor = 3
+            }
 
             _Boss:addScriptOnce("overdrive.lua", 3)
             _Boss:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
@@ -230,35 +243,60 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
 
     local _Loot = Loot(_IncreasingThreatBoss)
 
+    local legendaryLootAmt = 2
+    local exoticLootAmt = 5
+    local exceptionalLootAmt = 7
+    local rareLootAmt = 7
+    local uncommonLootAmt = 8
+    local commonLootAmt = 14
+    if _NukesActive then
+        legendaryLootAmt = 0
+
+        if random():test(0.1) then
+            legendaryLootAmt = 1
+        end
+
+        exoticLootAmt = 1
+        exceptionalLootAmt = 2
+        rareLootAmt = 3
+        uncommonLootAmt = 4
+        commonLootAmt = 33
+    end
+
     local _Upgrades =
     {
-        {rarity = Rarity(RarityType.Legendary), amount = 2},
-        {rarity = Rarity(RarityType.Exotic), amount = 5},
-        {rarity = Rarity(RarityType.Exceptional), amount = 7},
-        {rarity = Rarity(RarityType.Rare), amount = 7},
-        {rarity = Rarity(RarityType.Uncommon), amount = 8},
-        {rarity = Rarity(RarityType.Common), amount = 14},
+        {rarity = Rarity(RarityType.Legendary), amount = legendaryLootAmt},
+        {rarity = Rarity(RarityType.Exotic), amount = exoticLootAmt},
+        {rarity = Rarity(RarityType.Exceptional), amount = exceptionalLootAmt},
+        {rarity = Rarity(RarityType.Rare), amount = rareLootAmt},
+        {rarity = Rarity(RarityType.Uncommon), amount = uncommonLootAmt},
+        {rarity = Rarity(RarityType.Common), amount = commonLootAmt},
     }
 
     local _Turrets =
     {
-        {rarity = Rarity(RarityType.Legendary), amount = 2},
-        {rarity = Rarity(RarityType.Exotic), amount = 5},
-        {rarity = Rarity(RarityType.Exceptional), amount = 7},
-        {rarity = Rarity(RarityType.Rare), amount = 7},
-        {rarity = Rarity(RarityType.Uncommon), amount = 8},
-        {rarity = Rarity(RarityType.Common), amount = 14},
+        {rarity = Rarity(RarityType.Legendary), amount = legendaryLootAmt},
+        {rarity = Rarity(RarityType.Exotic), amount = exoticLootAmt},
+        {rarity = Rarity(RarityType.Exceptional), amount = exceptionalLootAmt},
+        {rarity = Rarity(RarityType.Rare), amount = rareLootAmt},
+        {rarity = Rarity(RarityType.Uncommon), amount = uncommonLootAmt},
+        {rarity = Rarity(RarityType.Common), amount = commonLootAmt},
     }
 
     for _, _Up in pairs(_Upgrades) do
-        for _ = 1, _Up.amount do
-            _Loot:insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, _Up.rarity))
+        if _Up.amount > 0 then
+            for _ = 1, _Up.amount do
+                _Loot:insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, _Up.rarity))
+            end
         end
+        
     end
 
     for _, _Tt in pairs(_Turrets) do
-        for _ = 1, _Tt.amount do
-            _Loot:insert(InventoryTurret(_TurretGenerator:generate(_X, _Y, -156, _Tt.rarity)))
+        if _Tt.amount > 0 then
+            for _ = 1, _Tt.amount do
+                _Loot:insert(InventoryTurret(_TurretGenerator:generate(_X, _Y, -156, _Tt.rarity)))
+            end
         end
     end
 

@@ -24,34 +24,41 @@ function Oppressor.initialize(values)
 
     self.data = values or {}
 
-    --[ADJUSTABLE VALUES]
-    --Damage multiplier
-    self.data.multiplier = self.data.multiplier or 1.25
-    self.data.adder = self.data.adder or 0.5 --This seems like a lot, but we're already at 30 ticks of an exponential 1.25 buff.
-    self.data.maxTicks = self.data.maxTicks or 60
-    self.data.tickCycle = self.data.tickCycle or 30
+    if onServer() then
+        if not _restoring then
+            --[ADJUSTABLE VALUES]
+            --Damage multiplier
+            self.data.multiplier = self.data.multiplier or 1.25
+            self.data.adder = self.data.adder or 0.5 --This seems like a lot, but we're already at 60 ticks of an exponential 1.25 buff.
+            self.data.maxTicks = self.data.maxTicks or 60
+            self.data.tickCycle = self.data.tickCycle or 30
+        
+            --Hook variables
+            self.data.hookPower = self.data.hookPower or 15
+            self.data.hookPullDuration = self.data.hookPullDuration or 10
+            self.data.hookCycle = self.data.hookCycle or 20
+            self.data.hookOffset = self.data.hookOffset or 0
+            --No target priority here - we'll always be picking a random enemy.
+        
+            --Wreckage variables
+            self.data.eatWrecksCycle = self.data.eatWrecksCycle or 10
+        
+            --[UNADJUSTABLE VALUES]
+            --Can't be adjusted via the script.
+            self.data.eatWrecksTimer = 0
+            self.data.tickTimer = 0
+            self.data.ticks = 0
+        
+            --Hook variables
+            self.data.currentHookTarget = nil
+            self.data.hookFireCycle = 0
+            self.data.hookOffsetCycle = 0
+            self.data.hookPullTime = 0
+        end
 
-    --Hook variables
-    self.data.hookPower = self.data.hookPower or 15
-    self.data.hookPullDuration = self.data.hookPullDuration or 10
-    self.data.hookCycle = self.data.hookCycle or 20
-    self.data.hookOffset = self.data.hookOffset or 0
-    --No target priority here - we'll always be picking a random enemy.
-
-    --[UNADJUSTABLE VALUES]
-    --Can't be adjusted via the script.
-    self.data.eatWrecksTimer = 0
-    self.data.tickTimer = 0
-    self.data.ticks = 0
-
-    --Hook variables
-    self.data.currentHookTarget = nil
-    self.data.hookFireCycle = 0
-    self.data.hookOffsetCycle = 0
-    self.data.hookPullTime = 0
-
-    --register callbacks
-    Entity():registerCallback("onDestroyed", "onDestroyed")
+        --register callbacks
+        Entity():registerCallback("onDestroyed", "onDestroyed")
+    end
 end
 
 function Oppressor.getUpdateInterval()
@@ -75,8 +82,8 @@ function Oppressor.update(timeStep)
 
         --Eat nearby wreckages next.
         self.data.eatWrecksTimer = (self.data.eatWrecksTimer or 0) + timeStep
-        if self.data.eatWrecksTimer >= 5 then
-            self.eatWreckages()
+        if self.data.eatWrecksTimer >= self.data.eatWrecksCycle then
+            self.eatWreckages(false)
             self.data.eatWrecksTimer = 0
         end
 
@@ -152,7 +159,7 @@ function Oppressor.oppressorBuff()
     broadcastInvokeClientFunction("animation", direction, direction2, direction3)
 end
 
-function Oppressor.eatWreckages()
+function Oppressor.eatWreckages(fullPower)
     local methodName = "Eat Wreckages"
     self.Log(methodName, "Consuming")
 
@@ -161,7 +168,14 @@ function Oppressor.eatWreckages()
 
     local sphere = _entity:getBoundingSphere()
 
-    local consumeSphere = Sphere(sphere.center, sphere.radius * 8) 
+    local radMultiplier = 4
+    local blockDenominator = 30
+    if fullPower then
+        radMultiplier = 8
+        blockDenominator = 25
+    end
+
+    local consumeSphere = Sphere(sphere.center, sphere.radius * radMultiplier) 
     local consumeCandidates = {Sector():getEntitiesByLocation(consumeSphere)}
 
     local consumedBuffIncrement = 0
@@ -177,7 +191,8 @@ function Oppressor.eatWreckages()
 
             --Get the plan.
             local consumedPlan = consume:getMovePlan()
-            consumedBuffIncrement = consumedBuffIncrement + math.floor(consumedPlan.numBlocks / 25) 
+            --Increase by 1% per 25 blocks (1% per 30 blocks at reduced power)
+            consumedBuffIncrement = consumedBuffIncrement + math.floor(consumedPlan.numBlocks / blockDenominator) 
 
             --finally, delete the entity
             _sector:deleteEntity(consume)
@@ -354,11 +369,15 @@ function Oppressor.repositionTarget()
     end
 
     if distanceToTarget < minConsumeDistance then --Eat it :)
+        if (self.data.eatWrecksTimer or 0) <= 2 then --Bump this up a bit so we don't accidentally eat the wreck at reduced power.
+            self.data.eatWrecksTimer = 2
+        end
+
         self.Log(methodName, "Killing repositioning target. Turning off hook and eating.")
         self.data.currentHookTarget:destroy(_entity.index, 1, DamageType.Energy)
         self.data.hookActive = false
         self.deleteCurrentLasers()
-        self.eatWreckages()
+        self.eatWreckages(true)
     end
 end
 

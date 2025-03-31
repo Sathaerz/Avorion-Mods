@@ -11,6 +11,7 @@ Adds the following extra pirate ship classes:
     - Pillager - A large combat ship armed with Disruptor, Persecutor, or Torpedo Boat equipment. Comes with an extra set of standard military equipment.
     - Devastator - An ultra heavy combat ship armed with Artillery or Flagship equipment. Comes with two extra sets of standard military equipment.
     - Executioner - A scaling heavy combat ship. No upper limit on durability and firepower. Comes with a surprise.
+    - Flagship - The same as a pirate mothership, except this has no probability of using point defense weapons.
 
 Adds the following extra faction ship classes:
 
@@ -26,11 +27,14 @@ Adds the following extra Xsotan:
     - Sunmaker - A Xsotan with a siege cannon
     - Longinus - A Xsotan with a laser
     - Ballistyx - A Xsotan that continually fires torpedoes
-    - Oppressor - A Xsotan that continually gains damage over time, with no upper limit on its DPS.
+    - Oppressor - A Xsotan that continually gains damage over time, with no upper limit on its DPS. It will occasionally grab and eat another Xsotan.
     - Warlock - A Xsotan that will reanimate ship corpses to attack the player.
     - Pulverizer - A Xsotan with low damage cannons that impart an extremely high degree of force.
     - Revenant - A ship reanimated by the Xsotan Warlock - has long range weapons to compensate for being partially destroyed.
     - Hierophant - A summoner and a warlock in one.
+    - Parthenope - A deadly cross between a carrier and a summoner that grows in strength with each of its allies killed.
+    - Dreadnought - An incredibly powerful Xsotan warship based on Hammelpilaw's Xsotan Dreadnought event.
+    - Caduceus - A Xsotan that is focused on healing and buffing other Xsotan.
 
 Adds the following entity scripts:
 
@@ -47,7 +51,7 @@ Adds the following entity scripts:
     - meathook - WIP - pulls its target towards the enemy.
     - meathook2 - WIP - see above.
     - megablocker - Blocks hyperspace in a large range. A VERY large range. Large enough that you might think the entire sector is jammed ;)
-    - oppressor - This enemy will continually gain damage. There is no upper limit on how much damage it can gain.
+    - oppressor - This enemy will continually gain damage. There is no upper limit on how much damage it can gain. This script will also eat other Xsotan for a damage buff occasionally.
     - overdrive - This enemy will flip between a normal state and a state where they deal increased damage.
     - phasemode - This enemy will flip between a normal state and an invulnerable state.
     - reanimator - This enemy will reanimate wreckages in the sector as Xsotan Revenants.
@@ -56,6 +60,7 @@ Adds the following entity scripts:
     - tankemspecial - Effectively combines the iron curtain and siege gun script.
     - terminalblocker - Unlike megablocker, this script does actually jam hyperspace in the entire sector.
     - torpedoslammer - This enemy will spew a constant stream of powerful torpedoes.
+    - linker - This script will cause the enemy to share HP with its allies.
 
 Most of the above scripts can be customized in some way. Make sure to look at the individual script for what values can be messed with.
 

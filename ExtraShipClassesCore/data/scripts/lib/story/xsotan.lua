@@ -243,12 +243,13 @@ function Xsotan.createCaduceus(position, volumeFactor)
     xsotanShip:setValue("xsotan_caduceus", true)
 
     local linkerValues = {
-        healPctWhenLinking = 25
+        healPctWhenLinking = 12.5
     }
 
     --Add Scripts
-    xsotanShip:addScriptOnce("enemies/allybooster.lua")
-    xsotanShip:addScriptOnce("linker.lua", linkerValues)
+    xsotanShip:addScriptOnce("allybooster.lua")
+    xsotanShip:addScriptOnce("escclinker.lua", linkerValues)
+    xsotanShip:addScriptOnce("eternal.lua")
 
     return xsotanShip
 end
@@ -544,11 +545,11 @@ end
 
 function Xsotan.getSpecialXsotanFunctions()
     local funcTable = {
-        Xsotan.createOppressor,
         Xsotan.createSunmaker,
         Xsotan.createLonginus,
         Xsotan.createBallistyx,
-        Xsotan.createWarlock
+        Xsotan.createWarlock,
+        Xsotan.createOppressor
     }
     
     return funcTable

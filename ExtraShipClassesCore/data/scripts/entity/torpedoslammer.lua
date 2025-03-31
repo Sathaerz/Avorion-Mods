@@ -70,57 +70,66 @@ self._Data = {}
 
 function TorpedoSlammer.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Torpedo Slammer v21 script on entity.", 1)
+    self.Log(_MethodName, "Initializing Torpedo Slammer v23 script on entity.", 1)
 
     self._Data = _Values or {}
 
-    local self_is_xsotan = Entity():getValue("is_xsotan")
-    local defaultTargetPriority = 1
-    if self_is_xsotan then
-        defaultTargetPriority = 3
+    if onServer() then
+        local _entity = Entity()
+
+        local self_is_xsotan = _entity:getValue("is_xsotan")
+        local defaultTargetPriority = 1
+        if self_is_xsotan then
+            defaultTargetPriority = 3
+        end
+
+        Boarding(_entity).boardable = false
+
+        if not _restoring then
+            --Stuff the player can't mess with.
+            self._Data._FireCycle = 0
+            self._Data._CurrentTarget = nil
+            self._Data._StaticDamageMultSet = false
+            self._Data._StaticDamageMultValue = 1
+        
+            --Preferred warhead / body type aren't set - if they are nil, that is fine.
+            self._Data._TimeToActive = self._Data._TimeToActive or 10
+            self._Data._ROF = self._Data._ROF or 1
+            self._Data._UpAdjust = self._Data._UpAdjust or false
+            self._Data._UpAdjustFactor = self._Data._UpAdjustFactor or 1
+            self._Data._DamageFactor = self._Data._DamageFactor or 1
+            self._Data._ForwardAdjustFactor = self._Data._ForwardAdjustFactor or 1
+            self._Data._DurabilityFactor = self._Data._DurabilityFactor or 1
+            self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
+            self._Data._UseStaticDamageMult = self._Data._UseStaticDamageMult or false
+            self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
+            self._Data._TorpOffset = self._Data._TorpOffset or 0
+            self._Data._ReachFactor = self._Data._ReachFactor or 1
+            self._Data._AccelFactor = self._Data._AccelFactor or 1
+            self._Data._VelocityFactor = self._Data._VelocityFactor or 1
+            self._Data._ShockwaveFactor = self._Data._ShockwaveFactor or 1
+            self._Data._TurningSpeedFactor = self._Data._TurningSpeedFactor or 1
+            self._Data._LimitAmmo = self._Data._LimitAmmo or false
+            self._Data._Ammo = self._Data._Ammo or -1
+            --_pindex, _PreferWarheadType, _PreferBodyType, and _TargetTag can all be nil.
+    
+            --Fix the target priority - if the ship isn't Xsotan make it use 4 instead of 3.
+            if self._Data._TargetPriority == 3 and not self_is_xsotan then
+                self.Log(_MethodName, "Enttiy is not xsotan - adjusting target priority", 1)
+                self._Data._TargetPriority = 4 --Just use 4. It's functionally the same as 3 but you won't target yourself due to the list of non-xsotan including you.
+            end
+            if self._Data._TargetPriority == 5 and self._Data._pindex == nil then
+                self.Log(_MethodName, "Player index not set - adjusting target priority", 1)
+                self._Data._TargetPriority = 4
+            end
+    
+            self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust), 1)
+            self.Log(_MethodName, "Preferred warhead type is : " .. tostring(self._Data._PreferWarheadType), 1)
+            self.Log(_MethodName, "Preferred bodty type is : " .. tostring(self._Data._PreferBodyType), 1)
+        else
+            self.Log(_MethodName, "Restoring data from self.Restore()")
+        end
     end
-
-    --Stuff the player can't mess with.
-    self._Data._FireCycle = 0
-    self._Data._CurrentTarget = nil
-    self._Data._StaticDamageMultSet = false
-    self._Data._StaticDamageMultValue = 1
-
-    --Preferred warhead / body type aren't set - if they are nil, that is fine.
-
-    self._Data._TimeToActive = self._Data._TimeToActive or 10
-    self._Data._ROF = self._Data._ROF or 1
-    self._Data._UpAdjust = self._Data._UpAdjust or false
-    self._Data._UpAdjustFactor = self._Data._UpAdjustFactor or 1
-    self._Data._DamageFactor = self._Data._DamageFactor or 1
-    self._Data._ForwardAdjustFactor = self._Data._ForwardAdjustFactor or 1
-    self._Data._DurabilityFactor = self._Data._DurabilityFactor or 1
-    self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
-    self._Data._UseStaticDamageMult = self._Data._UseStaticDamageMult or false
-    self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
-    self._Data._TorpOffset = self._Data._TorpOffset or 0
-    self._Data._ReachFactor = self._Data._ReachFactor or 1
-    self._Data._AccelFactor = self._Data._AccelFactor or 1
-    self._Data._VelocityFactor = self._Data._VelocityFactor or 1
-    self._Data._ShockwaveFactor = self._Data._ShockwaveFactor or 1
-    self._Data._TurningSpeedFactor = self._Data._TurningSpeedFactor or 1
-    self._Data._LimitAmmo = self._Data._LimitAmmo or false
-    self._Data._Ammo = self._Data._Ammo or -1
-    --_pindex, _PreferWarheadType, _PreferBodyType, and _TargetTag can all be nil.
-
-    --Fix the target priority - if the ship isn't Xsotan make it use 4 instead of 3.
-    if self._Data._TargetPriority == 3 and not self_is_xsotan then
-        self.Log(_MethodName, "Enttiy is not xsotan - adjusting target priority", 1)
-        self._Data._TargetPriority = 4 --Just use 4. It's functionally the same as 3 but you won't target yourself due to the list of non-xsotan including you.
-    end
-    if self._Data._TargetPriority == 5 and self._Data._pindex == nil then
-        self.Log(_MethodName, "Player index not set - adjusting target priority", 1)
-        self._Data._TargetPriority = 4
-    end
-
-    self.Log(_MethodName, "Setting UpAdjust to : " .. tostring(self._Data._UpAdjust), 1)
-    self.Log(_MethodName, "Preferred warhead type is : " .. tostring(self._Data._PreferWarheadType), 1)
-    self.Log(_MethodName, "Preferred bodty type is : " .. tostring(self._Data._PreferBodyType), 1)
 end
 
 function TorpedoSlammer.getUpdateInterval()

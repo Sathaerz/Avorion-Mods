@@ -10,6 +10,7 @@ local self = LaserSniper
 --All of the various messages come with a _RequireDebugLevel parameter baked in. If you wish to see some specific messages, you can find those and set
 --_RequireDebugLevel to 0 for those messages. You can also set self._Debug to match it. Most messages are going to require level 1 but some require more.
 self._Debug = 0
+self._DebugLevel = 1
 self._Target_Invincible_Debug = 0
 
 self._Data = {}
@@ -26,59 +27,73 @@ self._LaserData._TargetPoint = nil
 
 function LaserSniper.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Laser Sniper v67 script on entity.", 1)
+    self.Log(_MethodName, "Initializing Laser Sniper v70 script on entity.", 1)
 
     self._Data = _Values or {}
 
-    local self_is_xsotan = Entity():getValue("is_xsotan")
-    local defaultTargetPriority = 1
-    if self_is_xsotan then
-        defaultTargetPriority = 2
+    if not _restoring then
+        --Needed on both server and client.
+        self._Data._TimeToActive = self._Data._TimeToActive or 0
     end
 
-    --Values the player isn't meant to adjust.
-    self._Data._TargetLaserActive = false
-    self._Data._TargetBeamActiveTime = 0
-    self._Data._MaxBeamActiveTime = 2 --How long the beam is active for.
-    self._Data._BeamActiveTime = 0
-    self._Data._ShotLaserActive = false
-    self._Data._BeamMisses = 0
-    self._Data._CurrentTarget = nil
-    self._Data._FireCycle = nil
-    self._Data._DOTCycle = 0
-    self._Data._TargetPoint = nil
-    self._Data._StaticDamageMultSet = false
-    self._Data._StaticDamageMultValue = 1
-
-    --Values the player can adjust.
-    self._Data._MaxRange = self._Data._MaxRange or 20000
-    self._Data._DamagePerFrame = self._Data._DamagePerFrame or 155000
-    self._Data._ShieldPen = self._Data._ShieldPen or false
-    self._Data._TargetCycle = self._Data._TargetCycle or 10 --Starts targeting when the firing cycle is greater than this value - set to adjust amount of time between shots.
-    self._Data._TargetingTime = self._Data._TargetingTime or 1.75 --Amount of time it takes to target the laser.
-    self._Data._CreepingBeam = self._Data._CreepingBeam or true
-    self._Data._CreepingBeamSpeed = self._Data._CreepingBeamSpeed  or 0.75
-    self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
-    self._Data._UseStaticDamageMult = self._Data._UseStaticDamageMult or false
-    self._Data._IncreaseDamageOT = self._Data._IncreaseDamageOT or false
-    self._Data._IncreaseDOTCycle = self._Data._IncreaseDOTCycle or 0
-    self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
-    self._Data._TimeToActive = self._Data._TimeToActive or 0
-    --TARGET PRIORITIES:
-    -- 1 - Random enemy - must be ship or station.
-    -- 2 - Any non-Xsotan ship or station.
-    -- 3 - Any entity with a specified scriptvalue - chosen by self._Data._TargetTag - for example, is_pirate would target any enemies with is_pirate set.
-    -- 4 - The target player's current ship. Set with _pindex. Works similarly to TorpedoSlammer's priority 5.
-    -- 5 - a random player or alliance owned ship / station.
-    self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
-    --Target priority 3 goes off of self._Data._TargetTag which can be nil - it is deliberately not set here, I did not miss it.
-
-    --Fix the target priority - if the ship isn't Xsotan make it use 1 instead of 2.
-    if self._Data._TargetPriority == 2 and not self_is_xsotan then
-        self._Data._TargetPriority = 1 --Just use 1.
-    end
-    if self._Data._TargetPriority == 4 and self._Data._pindex == nil then
-        self._Data._TargetPriority = 1
+    if onServer() then
+        local _entity = Entity()
+        local self_is_xsotan = _entity:getValue("is_xsotan")
+        local defaultTargetPriority = 1
+        if self_is_xsotan then
+            defaultTargetPriority = 2
+        end
+    
+        Boarding(_entity).boardable = false
+    
+        if not _restoring then
+            --Values the player isn't meant to adjust.
+            self._Data._TargetLaserActive = false
+            self._Data._TargetBeamActiveTime = 0
+            self._Data._MaxBeamActiveTime = 2 --How long the beam is active for.
+            self._Data._BeamActiveTime = 0
+            self._Data._ShotLaserActive = false
+            self._Data._BeamMisses = 0
+            self._Data._CurrentTarget = nil
+            self._Data._FireCycle = nil
+            self._Data._DOTCycle = 0
+            self._Data._TargetPoint = nil
+            self._Data._StaticDamageMultSet = false
+            self._Data._StaticDamageMultValue = 1
+        
+            --Values the player can adjust.
+            self._Data._MaxRange = self._Data._MaxRange or 20000
+            self._Data._DamagePerFrame = self._Data._DamagePerFrame or 100000 --100k
+            self._Data._ShieldPen = self._Data._ShieldPen or false
+            self._Data._TargetCycle = self._Data._TargetCycle or 10 --Starts targeting when the firing cycle is greater than this value - set to adjust amount of time between shots.
+            self._Data._TargetingTime = self._Data._TargetingTime or 1.75 --Amount of time it takes to target the laser.
+            self._Data._CreepingBeam = self._Data._CreepingBeam or true
+            self._Data._CreepingBeamSpeed = self._Data._CreepingBeamSpeed  or 0.75
+            self._Data._UseEntityDamageMult = self._Data._UseEntityDamageMult or false
+            self._Data._UseStaticDamageMult = self._Data._UseStaticDamageMult or false
+            self._Data._IncreaseDamageOT = self._Data._IncreaseDamageOT or false
+            self._Data._IncreaseDOTCycle = self._Data._IncreaseDOTCycle or 0
+            self._Data._IncreaseDOTAmount = self._Data._IncreaseDOTAmount or 0
+            self._Data._DamageFactor = self._Data._DamageFactor or 1
+            --TARGET PRIORITIES:
+            -- 1 - Random enemy - must be ship or station.
+            -- 2 - Any non-Xsotan ship or station.
+            -- 3 - Any entity with a specified scriptvalue - chosen by self._Data._TargetTag - for example, is_pirate would target any enemies with is_pirate set.
+            -- 4 - The target player's current ship. Set with _pindex. Works similarly to TorpedoSlammer's priority 5.
+            -- 5 - a random player or alliance owned ship / station.
+            self._Data._TargetPriority = self._Data._TargetPriority or defaultTargetPriority
+            --Target priority 3 goes off of self._Data._TargetTag which can be nil - it is deliberately not set here, I did not miss it.
+        
+            --Fix the target priority - if the ship isn't Xsotan make it use 1 instead of 2.
+            if self._Data._TargetPriority == 2 and not self_is_xsotan then
+                self._Data._TargetPriority = 1 --Just use 1.
+            end
+            if self._Data._TargetPriority == 4 and self._Data._pindex == nil then
+                self._Data._TargetPriority = 1
+            end
+        else
+            self.Log(_MethodName, "Restoring data from self.Restore()")
+        end
     end
 
     Entity():registerCallback("onDestroyed", "onDestroyed")
@@ -92,14 +107,6 @@ function LaserSniper.update(_TimeStep)
     local _MethodName = "Update"
 
     local _entity = Entity()
-
-    --If we're using a static damage multiplier, set it here. We only do this once.
-    if self._Data._UseStaticDamageMult and not self._Data._StaticDamageMultSet then
-        local _Mult = (_entity.damageMultiplier or 1)
-        self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult), 1)
-        self._Data._StaticDamageMultValue = _Mult
-        self._Data._StaticDamageMultSet = true
-    end
 
     if self._Data._TimeToActive >= 0 then
         self._Data._TimeToActive = self._Data._TimeToActive - _TimeStep
@@ -120,12 +127,22 @@ function LaserSniper.update(_TimeStep)
     LaserSniper.updateLaser()
 
     if onServer() then
+        --If we're using a static damage multiplier, set it here. We only do this once.
+        if self._Data._UseStaticDamageMult and not self._Data._StaticDamageMultSet then
+            local _Mult = (_entity.damageMultiplier or 1)
+            self.Log(_MethodName, "Setting static multiplier to: " .. tostring(_Mult), 1)
+            self._Data._StaticDamageMultValue = _Mult
+            self._Data._StaticDamageMultSet = true
+        end
+
+        --Retarget if missing too frequently
         if self._Data._BeamMisses >= 5 then
             self.Log(_MethodName, "Beam has missed too frequently. Picking a new target.", 1)
             self._Data._CurrentTarget = nil
             self._Data._BeamMisses = 0
         end
 
+        --Manage increasing damage over time
         if self._Data._IncreaseDamageOT then
             self._Data._DOTCycle = (self._Data._DOTCycle or 0) + _TimeStep
             if self._Data._DOTCycle >= self._Data._IncreaseDOTCycle then
@@ -211,7 +228,7 @@ function LaserSniper.updateIntersection(_TimeStep)
                 end
             end
 
-            local _DamageToShield = self._Data._DamagePerFrame * _EntityDamageMultiplier
+            local _DamageToShield = self._Data._DamagePerFrame * _EntityDamageMultiplier * self._Data._DamageFactor
             local _DamageToHull = 0
 
             self.Log(_MethodName, "Inflicting " .. tostring(_DamageToShield) .. " damage", 3)
@@ -620,7 +637,7 @@ callable(LaserSniper, "syncLaserData")
 function LaserSniper.Log(_MethodName, _Msg, _RequireDebugLevel)
     _RequireDebugLevel = _RequireDebugLevel or 1
 
-    if self._Debug >= _RequireDebugLevel then
+    if self._Debug == 1 and self._DebugLevel >= _RequireDebugLevel then
         print("[LaserSniper] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
     end
 end

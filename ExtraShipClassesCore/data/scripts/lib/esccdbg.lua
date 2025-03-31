@@ -4,6 +4,7 @@ package.path = package.path .. ";data/scripts/?.lua"
 include("galaxy")
 include("callable")
 include("productions")
+include("weapontype")
 
 local PirateGenerator = include("pirategenerator") --needed for lotw - do not remove.
 local AsyncPirateGenerator = include("asyncpirategenerator")
@@ -152,6 +153,7 @@ function initUI()
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Reward Data Dump", "onSectorRewardDumpButtonPressed")
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Material Cost Factor Dump", "onMaterialCostFactorDumpButtonPressed")
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Invincibility Data Dump", "onInvincibilityDataDumpButtonPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Weapon Type Data Dump", "onWeaponTypeDataDumpPressed")
 
     local otherTab = window:createTab("Entity", "data/textures/icons/papers.png", "Other")
     numButtons = 0
@@ -1500,6 +1502,31 @@ function onInvincibilityDataDumpButtonPressed()
     print("Entity invincible: " .. tostring(_entity.invincible) .. " Entity invincibility: " .. tostring(_durability.invincibility))
 end
 callable(nil, "onInvincibilityDataDumpButtonPressed")
+
+function onWeaponTypeDataDumpPressed()
+    if onClient() then
+        invokeServerFunction("onWeaponTypeDataDumpPressed")
+        return
+    end
+
+    print("k/v for WeaponType")
+    for k, v in pairs(WeaponType) do
+        print("k : " .. tostring(k) .. " v : " .. tostring(v))
+    end
+    print("k/v for all armed types")
+    for k, v in pairs(WeaponTypes.armedTypes) do
+        print("k : " .. tostring(k) .. " v : " .. tostring(v))
+    end
+    print("k/v for all unarmed types")
+    for k, v in pairs(WeaponTypes.unarmedTypes) do
+        print("k : " .. tostring(k) .. " v : " .. tostring(v))
+    end
+    print("k/v for all defensive types")
+    for k, v in pairs(WeaponTypes.defensiveTypes) do
+        print("k : " .. tostring(k) .. " v : " .. tostring(v))
+    end
+end
+callable(nil, "onWeaponTypeDataDumpPressed")
 
 --endregion
 

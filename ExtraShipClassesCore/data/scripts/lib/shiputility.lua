@@ -187,7 +187,7 @@ function ShipUtility.addExecutionerStandardEquipment(_Craft, _TurretFactor, _Tor
     local _WeaponTypes = ExecutionerWeapons
     local _TorpedoTypes = NormalTorpedoes
 
-    ShipUtility.addSpecializedEquipment(_Craft, _WeaponTypes, _TorpedoTypes, _TurretFactor, _TorpedoFactor)
+    ShipUtility.addSpecializedEquipment(_Craft, _WeaponTypes, _TorpedoTypes, _TurretFactor, _TorpedoFactor, 1500)
     _Craft:setTitle(ShipUtility.getMilitaryNameByVolume(_Craft.volume), {})
     _Craft:setValue("is_armed", true)
 
@@ -215,7 +215,7 @@ function ShipUtility.addHellcatLasers(_Craft)
     local _LaserWeapons = {_LaserTurret:getWeapons()}
     _LaserTurret:clearWeapons()
 
-    --8/3/2021 - lol I found the laser bug and I didn't even relaize.
+    --8/3/2021 - lol I found the laser bug and I didn't even realize.
     --Yeah I have no fucking clue what's going on here. Laser damage seems to be VERY dependent on # of slots for some reason????
     --So we multiply the base damage amount by the # of slots in the turret and then divide that by the # of weapons. This should keep the
     --RNG fairly consistent and not cause WILD variances (like 700k to 7 million)
@@ -350,9 +350,9 @@ function ShipUtility.addGoliathLaunchers(_Craft)
 
     for _, _W in pairs(_RocketWeapons) do
         _W.damage = math.max(_W.damage, 8000)
-        _W.reach = 6000
+        _W.reach = 4500
         _W.fireDelay = _BaseFireRate / _NumWeapons
-        _W.pvelocity = 8
+        _W.pvelocity = 6
         _W.pmaximumTime = _W.reach / _W.pvelocity
         _W.explosionRadius = math.sqrt(_W.damage * 3)
         _W.seeker = true

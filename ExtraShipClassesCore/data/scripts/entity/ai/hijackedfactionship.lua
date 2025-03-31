@@ -34,6 +34,8 @@ function AIHijackedShip.initialize(_Values)
 end
 
 function AIHijackedShip.interactionPossible(playerIndex)
+    local methodName = "Interaction Possible"
+
     local player = Player(playerIndex)
     local _Entity = Entity()
 
@@ -41,8 +43,32 @@ function AIHijackedShip.interactionPossible(playerIndex)
     if craft == nil then return false end
 
     local dist = craft:getNearestDistance(_Entity)
+    local targetDist = 200
+    --if the player has more than one scanner system, idk what happens. why would you have more than one scanner booster
+    if craft:hasScript("scannerbooster.lua") or craft:hasScript("superscoutsystem.lua") then
+        local scannerRarity = 0
+        local scannerBonus = 1
+        if craft:hasScript("scannerbooster.lua") then
+            local ok, ret = craft:invokeFunction("scannerbooster.lua", "getRarity")
+            if ok == 0 then
+                scannerRarity = ret.value --Get the rarity tier value rather than the name.
+            end
+            scannerBonus = scannerBonus + ((5 + scannerRarity) * 0.1) --should give a 40% bonus @ petty, up to a 100% bonus @ legendary
+        else
+            local ok, ret = craft:invokeFunction("superscoutsystem.lua", "getRarity")
+            if ok == 0 then
+                scannerRarity = ret.value --Get the rarity tier value rather than the name.
+            end
+            scannerBonus = scannerBonus + (((5 + scannerRarity) * 0.1) * 0.8) --ITR upgrades are generally worth ~80% a normal upgrade.
+        end
 
-    if dist < 200 then
+        self.Log(methodName, "Craft has scanner booster - rarity is: " .. tostring(scannerRarity) .. " final bonus is: " .. tostring(scannerBonus))
+
+        targetDist = math.floor(targetDist * scannerBonus)
+    end
+    
+
+    if dist < targetDist then
         return true
     else
         return false, "You're not close enough to scan this ship."

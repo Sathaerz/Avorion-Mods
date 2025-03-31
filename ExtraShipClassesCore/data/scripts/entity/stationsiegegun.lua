@@ -21,6 +21,7 @@ self._Data = {}
     THESE VALUES ARE REQUIRED - YOU SHOULD BE SETTING ALL OF THEM IN THE FIRST INITIALIZE CALL, OTHERWISE THE SCRIPT MAY NOT WORK CORRECTLY
         _CodesCracked           ==  Whether hints are broadcast from the entity that is using this script.
         _BaseDamagePerShot      ==  Exactly what it looks like. Base damage per shot.
+        _DamageFactor           ==  Multiplies the base damage by this amount.
         _Velocity               ==  The shot velocity.
         _ShotCycle              ==  At least this many seconds must pass between each shot, regardless if we are using supply mechanics or not.
         _UseSupply*             ==  Tells the script to use the supply mechanic. See the shipmentcontroller.lua to see how a station gets supplied. 
@@ -100,12 +101,16 @@ self._SentTauntForShot = nil
 function StationSiegeGun.initialize(_Values)
     local _MethodName = "inizialize"
     if onServer() then
+        local _entity = Entity()
+
+        Boarding(_entity).boardable = false
+
         if not _restoring then
             self.Log(_MethodName, "Beginning on Sever")
             --Set values
             self._Data = _Values or {}
 
-            local self_is_xsotan = Entity():getValue("is_xsotan")
+            local self_is_xsotan = _entity:getValue("is_xsotan")
             local defaultTargetPriority = 1
             if self_is_xsotan then
                 defaultTargetPriority = 8
@@ -126,9 +131,11 @@ function StationSiegeGun.initialize(_Values)
                 --We have to specifically do a nil check here - it could be false.
                 self._Data._UseSupply = self._Data._SupplyPerLevel > 0
             end
+            self._Data._DamageFactor = self._Data._DamageFactor or 1
         else
-            self.Log(_MethodName, "Values would have been restored in restore()")
+            self.Log(_MethodName, "Restoring data from self.Restore()")
         end
+
         self.getTags()
     else
         self.Log(_MethodName, "Beginning on Client")
@@ -456,7 +463,7 @@ function StationSiegeGun.fireMainGun()
         end
     end
 
-    _ShotDamage = _ShotDamage * (1 + (_ShotLevel * _ShotMultiplier)) * _EntityDamageMultiplier
+    _ShotDamage = _ShotDamage * (1 + (_ShotLevel * _ShotMultiplier)) * _EntityDamageMultiplier * self._Data._DamageFactor
     
     self.Log(_MethodName, "Fire level " .. tostring(_ShotLevel) .. " shot")
     self.Log(_MethodName, tostring(_SupplyValue) .. " supply available. " .. tostring(self._Data._ShotSupplyConsumed) .. " supply consumed. Incrementing consumed and firing.")
