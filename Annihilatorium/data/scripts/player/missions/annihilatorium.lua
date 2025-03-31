@@ -32,6 +32,7 @@ mission._Name = "The Annihilatorium"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/crossed-rifles.png"
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
@@ -551,9 +552,11 @@ function onWaveSpawned(generated)
         end
 
         if mission.data.custom.masterOfTheArena then
-            pirate.damageMultiplier= (pirate.damageMultiplier or 1) * 4
+            local motaBonus = 3
 
-            local motaDurabilityBonus = 4
+            pirate.damageMultiplier= (pirate.damageMultiplier or 1) * motaBonus
+
+            local motaDurabilityBonus = motaBonus
 
             if pirateShield then
                 pirateShield.maxDurabilityFactor = (pirateShield.maxDurabilityFactor) * motaDurabilityBonus
@@ -624,13 +627,30 @@ function onBossSpawned(generated)
 
     local x, y = Sector():getCoordinates()
 
+    mission.Log(methodName, "Calculating lasersniper damage")
+
+    local distToCenter = math.sqrt(x*x + y*y)
+    local laserSniperFactor = 32
+    if distToCenter > 360 then
+        laserSniperFactor = 16 --Cut it in half to compensate for lack of shields.
+    end
+
+    --LaserSniper with a high damage multiplier does an insane amount of damage - we need to curb things a little here. Esp. with the tough / savage / hardcore modifiers.
+    local otherDamageFactor = 0.75
+    if mission.data.custom.masterOfTheArena then
+        --All bets are off with master of the arena, though. Good luck!
+        otherDamageFactor = 1.0
+    end
+
     mission.Log(methodName, "Setting script value tables")
-    local laserSniperDamage = Balancing_GetSectorWeaponDPS(x, y) * 32 --Roughly 1/4 the damage of a longinus, but enemies will use their damge multiplier.
-    local laserSniperValues = {
+    
+    local laserSniperDamage = Balancing_GetSectorWeaponDPS(x, y) * laserSniperFactor --Roughly 1/4 the damage of a longinus, but enemies will use their damge multiplier.
+    local laserSniperValues = { --#LONGINUS_SNIPER // not quite a longinus but we should adjust here anyways.
         _DamagePerFrame = laserSniperDamage,
         _TimeToActive = 15,
         _TargetPriority = 5,
         _UseEntityDamageMult = true,
+        _DamageFactor = otherDamageFactor,
         _TargetCycle = 15,
         _TargetingTime = 2.25
     }
@@ -839,7 +859,8 @@ function onBossSpawned(generated)
         function() --22 Synapse ((dmg booster) linker / adaptive)
             local linkerArgs = {   
                 linkCycle = 6,
-                boostDamageWhenLinking = true
+                boostDamageWhenLinking = true,
+                healWhenLinking = false
             }
 
             bossEnemy:addScriptOnce("adaptivedefense.lua")
@@ -864,7 +885,7 @@ function onBossSpawned(generated)
         end,
         function() --25 Mendicant ((healing) allybooster / (buffed) linker) + severe damage nerf
             local linkerValues = {
-                healPctWhenLinking = 25
+                healPctWhenLinking = 7.5
             }
 
             bossEnemy:addScriptOnce("allybooster.lua", allyBoosterValuesHealer)
@@ -884,7 +905,7 @@ function onBossSpawned(generated)
         end,
         function() --27 Nightingale ((buffed) linker / afterturn)
             local linkerValues = {
-                healPctWhenLinking = 25
+                healPctWhenLinking = 7.5
             }
 
             bossEnemy:addScriptOnce("afterburn.lua")
@@ -998,6 +1019,9 @@ function onBossSpawned(generated)
         bossEnemy.damageMultiplier = (bossEnemy.damageMultiplier or 1) * 1.5
     end
 
+    mission.Log(methodName, "Setting delete on player left")
+    MissionUT.deleteOnPlayersLeft(bossEnemy)
+
     mission.Log(methodName, "Adding spawn utility buffs")
     if mission.data.custom.masterOfTheArena then
         SpawnUtility.addAnnihilatoriumMOTABossBuff(bossEnemy)
@@ -1008,7 +1032,14 @@ function onBossSpawned(generated)
 end
 
 function getDifficultyBonus()
-    return 1 + (mission.data.custom.dangerLevel * 0.01) -- +1% to +10%.
+    local nextWaveNumber = mission.data.custom.survivedWaves + 1
+    local perWaveBonus = ((mission.data.custom.dangerLevel / 2) * 0.01) -- +1% to +10%.
+    if mission.data.custom.dangerLevel == 10 then
+        perWaveBonus = perWaveBonus + random():getFloat(0.001, 0.01)
+    end
+    perWaveBonus = math.max(perWaveBonus, 0.01)
+
+    return 1 + (nextWaveNumber * perWaveBonus)
 end
 
 function payBossBounty()
