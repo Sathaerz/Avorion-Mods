@@ -140,7 +140,7 @@ function formatDescription(_Station)
     local descriptionTable = {
         "We're looking for an enterprising captain to eliminate some Xsotan. All attempts at communicating with the strange ships have failed, and we cannot allow them to continue to wreak havoc on our trade routes and outlying sectors. ${targets} will be enough for the time being. We'll compensate you for each ship that you manage to take out.",
         "The Xsotan have always been a real pain in our ass, and we're going to do something about it. Our military is otherwise engaged, so we're turning to independent captains to cull this menace. If you see a Xsotan, kill it. We'll pay you for each one that you destroy. You'll get paid once you slaughter ${targets} of them.",
-        "Peace be with you captain. Unfortunately, we cannot say the same for the Xsotan. We're usually willing to tolerate their presence - but their tendency to attack our traders and miners cannot be ignored. When this happens there is a great loss of life, and we cannot allow this to continue. Please remove ${targets} of their ships - we will pay you for each one eliminated."
+        "Peace be with you Captain. Unfortunately, we cannot say the same for the Xsotan. We're usually willing to tolerate their presence - but their tendency to attack our traders and miners cannot be ignored. When this happens there is a great loss of life, and we cannot allow this to continue. Please remove ${targets} of their ships - we will pay you for each one eliminated."
     }
 
     return descriptionTable[descriptionType]
@@ -156,7 +156,6 @@ mission.makeBulletin = function(_Station)
     local _Description = formatDescription(_Station)
 
     local _DangerLevel = _Rgen:getInt(1, 10)
-    --local _DangerLevel = 10
     local _MaxTargets = 22
     local _Difficulty = "Easy"
     local _Targets = _Rgen:getInt(5, _MaxTargets)
