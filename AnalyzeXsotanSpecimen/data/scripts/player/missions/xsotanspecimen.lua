@@ -64,10 +64,6 @@ function initialize(_Data_in)
         mission.data.description[3].arguments = { _TARGETS = tostring(mission.data.custom.targets), _ANALYZED = tostring(mission.data.custom.analyzed), _XSOTANTYPE = xsotanType.longName }
     end
 
-    if onClient() then
-        registerMarkAnalyzableXsotan()
-    end
-
     XsotanSpecimen_init(_Data_in)
 end
 
@@ -92,12 +88,10 @@ mission.globalPhase.getRewardedItems = function()
 end
 
 mission.globalPhase.onAbandon = function()
-    unregisterMarkAnalyzableXsotan()
     runSectorScriptAndValueCleanup()
 end
 
 mission.globalPhase.onAccomplish = function()
-    unregisterMarkAnalyzableXsotan()
     runSectorScriptAndValueCleanup()
 end
 
@@ -106,8 +100,47 @@ mission.phases[1].timers = {}
 mission.phases[1].triggers = {}
 mission.phases[1].updateInterval = getUpdateInterval()
 
-mission.phases[1].onBeginClient = function()
-    registerMarkAnalyzableXsotan()
+mission.phases[1].onBegin = function()
+    local methodName = "Phase 1 On Begin"
+    mission.Log(methodName, "Setting stationId.")
+    
+    --Can't set this up until the init call, and we need this because otherwise you can't quit the game mid-mission and expect the dialog to work properly after coming back.
+    mission.data.custom.stationId = mission.data.giver.id.string
+end
+
+mission.phases[1].onStartDialog = function(entityId)
+    local methodName = "Phase 1 On Start Dialog"
+    mission.Log(methodName, "Beginning...")
+
+    if entityId == Uuid(mission.data.custom.stationId) then
+
+        local td0 = { text = "We'll update your targeting computer to let you know when a Xsotan of the kind we need is in the sector." }
+
+        local td1 = { text = "The Xsotan will be highlighted in orange - simply fly close to it and interact with it to start the analysis process." }
+
+        local td2 = { text = "You'll need to stay close to the Xsotan for a couple of minutes while analyzing it. You can increase the scan range by using a scanner booster. Make sure it isn't blown up before you can finish the scan!" }
+
+        local td3 = { text = "That depends on the Xsotan we're looking for. Some - like Quantum Xsotan - are relatively easy to find." }
+
+        local td4 = { text = "Some of the others - like the Ballystix or Longinus - might more difficult. Try doing some other missions - you might be able to find them anywhere that you face down a Xsotan attack." }
+
+        local td5 = { text = "Happy hunting!" }
+
+        td0.followUp = td1
+        td1.followUp = td2
+        td2.answers = {
+            { answer = "Understood." },
+            { answer = "How do I find it?", followUp = td3 }
+        }
+        td3.followUp = td4
+        td4.followUp = td5
+
+        addDialogInteraction("How do I analyze the Xsotan?", td0)
+    end
+end
+
+mission.phases[1].onPreRenderHud = function()
+    onMarkAnalyzableXsotan()
 end
 
 mission.phases[1].updateServer = function(timeStep)
@@ -522,42 +555,6 @@ function onMarkAnalyzableXsotan()
     end
 
     renderer:display()
-end
-
---endregion
-
---region #CLIENT / SERVER UTILITY CALLS
-
-function registerMarkAnalyzableXsotan()
-    local methodName = "Register Mark Analyzable Xsotan"
-
-    if onClient() then
-        mission.Log(methodName, "Invoked on Client => Registering onPreRenderHud callback.")
-
-        if Player():registerCallback("onPreRenderHud", "onMarkAnalyzableXsotan") == 1 then
-            mission.Log(methodName, "WARNING - Could not attach prerender callback to player.")
-        end
-    else
-        mission.Log(methodName, "Called on Server => Invoking on Client")
-
-        invokeClientFunction(Player(), "registerMarkAnalyzableXsotan")
-    end
-end
-
-function unregisterMarkAnalyzableXsotan()
-    local methodName = "Unregister Mark Analyzable Xsotan"
-
-    if onClient() then
-        mission.Log(methodName, "Invoked on Client => Unregistering onPreRenderHud callback.")
-
-        if Player():unregisterCallback("onPreRenderHud", "onMarkAnalyzableXsotan") == 1 then
-            mission.Log(methodName, "WARNING - Could not detach prerender callback to player.")
-        end
-    else
-        mission.Log(methodName, "Called on Server => Invoking on Client")
-
-        invokeClientFunction(Player(), "unregisterOnMarkAnalyzableXsotan")
-    end
 end
 
 --endregion
