@@ -40,7 +40,7 @@ function Annihilatorium.initialize(dangerLevel)
         
         local ownPosition = _Station.translationf
         local dir = random():getDirection()
-        dir = normalize(dir) * 500 --should be 5 km
+        dir = normalize(dir) * 350 --should be 3.5 km
         local lootZoneCenter = ownPosition + dir
 
         self.data.lootZoneCenter = { x = lootZoneCenter.x, y = lootZoneCenter.y, z = lootZoneCenter.z}
