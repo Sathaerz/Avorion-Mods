@@ -32,6 +32,7 @@ mission.data.autoTrackMission = true
 
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." }, --Placeholder
@@ -51,62 +52,51 @@ mission.data.custom.spawnedDangerTenThreat = false
 mission.data.custom.controlScriptPath = "player/missions/rescueslaves/rescueslavescontrol.lua"
 
 local RescueSlaves_init = initialize
-function initialize(_Data_in)
-    local _MethodName = "initialize"
-    mission.Log(_MethodName, "Beginning...")
+function initialize(_Data_in, bulletin)
+    local methodName = "initialize"
+    mission.Log(methodName, "Beginning...")
 
-    if onServer() then
-        if not _restoring then
-            mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
+    if onServer() and not _restoring then
+        local _X, _Y = _Data_in.location.x, _Data_in.location.y --get slaves from here.
 
-            local _Sector = Sector()
-            local _Giver = Entity(_Data_in.giver)
+        local _sector = Sector()
+        local _Giver = Entity(_Data_in.giver)
 
-            local _X, _Y = _Data_in.location.x, _Data_in.location.y --get slaves from here.
-            local _rX, _rY = _Sector:getCoordinates() --return here w/ slaves.
+        mission.Log(methodName, "Sector name is " .. tostring(_sector.name) .. " Giver title is " .. tostring(_Giver.translatedTitle))
 
-            --[[=====================================================
-                CUSTOM MISSION DATA SETUP:
-            =========================================================]]
-            mission.data.custom.dangerLevel = _Data_in.dangerLevel
-            mission.data.custom.transportNumber = 1
-            mission.data.custom.firstTransport = random():getInt(2, 3)
-            mission.data.custom.secondTransport = random():getInt(4, 5)
-            mission.data.custom.thirdTransport = random():getInt(6, 8)
-            mission.data.custom.fourthTransport = random():getInt(9, 11)
-            mission.data.custom.fifthTransport = random():getInt(12, 14)
-            mission.data.custom.sixthTransport = random():getInt(15, 18)
-            mission.data.custom.seventhTransport = random():getInt(19, 22)
-            mission.data.custom.eigthTransport = random():getInt(23, 26)
-            mission.data.custom.ninthTransport = random():getInt(27, 30)
-            mission.data.custom.spawnedDangerTenThreat = false
-            mission.data.custom.spawnThreatCycle = 0
-            mission.data.custom.shownPhase1MissionUpdate = false
+        local _rX, _rY = _sector:getCoordinates() --return here w/ slaves.
 
-            --[[=====================================================
-                MISSION DESCRIPTION SETUP:
-            =========================================================]]
-            mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
-            mission.data.description[2].text = _Data_in.initialDesc
-            mission.data.description[2].arguments = { x = _X, y = _Y }
-            mission.data.description[3].arguments = { x = _X, y = _Y }
-            mission.data.description[5].arguments = { giverTitle = _Giver.translatedTitle, name = _Giver.name, x = _rX, y = _rY }
+        --[[=====================================================
+            CUSTOM MISSION DATA SETUP:
+        =========================================================]]
+        mission.data.custom.dangerLevel = _Data_in.dangerLevel
+        mission.data.custom.missionFaction = _Giver.factionIndex
+        mission.data.custom.transportNumber = 1
+        mission.data.custom.firstTransport = random():getInt(2, 3)
+        mission.data.custom.secondTransport = random():getInt(4, 5)
+        mission.data.custom.thirdTransport = random():getInt(6, 8)
+        mission.data.custom.fourthTransport = random():getInt(9, 11)
+        mission.data.custom.fifthTransport = random():getInt(12, 14)
+        mission.data.custom.sixthTransport = random():getInt(15, 18)
+        mission.data.custom.seventhTransport = random():getInt(19, 22)
+        mission.data.custom.eigthTransport = random():getInt(23, 26)
+        mission.data.custom.ninthTransport = random():getInt(27, 30)
+        mission.data.custom.spawnedDangerTenThreat = false
+        mission.data.custom.spawnThreatCycle = 0
+        mission.data.custom.shownPhase1MissionUpdate = false
 
-            --Run standard initialization
-            RescueSlaves_init(_Data_in)
-        else
-            --Restoring
-            RescueSlaves_init()
-        end
+        --[[=====================================================
+            MISSION DESCRIPTION SETUP:
+        =========================================================]]
+        mission.data.description[1].arguments = { sectorName = _sector.name, giverTitle = _Giver.translatedTitle }
+        mission.data.description[2].text = _Data_in.initialDesc
+        mission.data.description[2].arguments = { x = _X, y = _Y }
+        mission.data.description[3].arguments = { x = _X, y = _Y }
+        mission.data.description[5].arguments = { giverTitle = _Giver.translatedTitle, name = _Giver.name, x = _rX, y = _rY }
     end
-    
-    if onClient() then
-        if not _restoring then
-            initialSync()
-        else
-            sync()
-        end
-    end
+
+    --Run vanilla init. Managers _restoring on its own.
+    RescueSlaves_init(_Data_in, bulletin)
 end
 
 --endregion
@@ -136,7 +126,7 @@ mission.globalPhase.updateServer = function(_TimeStep)
         local _craftFaction = _Player.craftFaction
         if _craftFaction then
             --If the faction declares war on the player due to the player making bad decisions, just fail the mission.
-            local relation = _craftFaction:getRelation(mission.data.giver.factionIndex)
+            local relation = _craftFaction:getRelation(mission.data.custom.missionFaction)
             if relation.status == RelationStatus.War then
                 failAndPunish()
              end
@@ -150,6 +140,20 @@ end
 mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].showUpdateOnEnd = true
+mission.phases[1].onBegin = function()
+    local methodName = "Phase 1 On Begin"
+    mission.Log(methodName, "Setting stationId.")
+    
+    --Can't set this up until the init call, and we need this because otherwise you can't quit the game mid-mission and expect the dialog to work properly after coming back.
+    mission.data.custom.stationId = mission.data.giver.id.string
+end
+
+local onPhase1DialogEnd = makeDialogServerCallback("onPhase1DialogEnd", 1, function()
+    --Null this out so the player can see it again.
+    --I don't care if this gets obnoxious. Players require an obnoxious amount of handholding.
+    Player():setValue("_rescueslaves_tutorial_shown", nil) 
+end)
+
 mission.phases[1].onTargetLocationEntered = function(x, y)
     if not mission.data.custom.shownPhase1MissionUpdate then
         showMissionUpdated(mission._Name)
@@ -161,10 +165,10 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
 end
 
 mission.phases[1].updateTargetLocationServer = function(_TimeStep)
-    local _MethodName = "Phase 1 Update Target Location Server"
+    local methodName = "Phase 1 Update Target Location Server"
 
     local _Player = Player()
-    local _Sector = Sector()
+    local _sector = Sector()
 
     if _Player.craft then
         local _PlayerShip = Entity(_Player.craft.id)
@@ -172,7 +176,7 @@ mission.phases[1].updateTargetLocationServer = function(_TimeStep)
     
         --Check to see if we can go to the next phase.
         local _RescuedSlaveAmount = _PlayerShip:getCargoAmount(RescuedSlavesGood())
-        --mission.Log(_MethodName, "Player has " .. tostring(_RescuedSlaveAmount) .. " freed slaves.")
+        --mission.Log(methodName, "Player has " .. tostring(_RescuedSlaveAmount) .. " freed slaves.")
         if _RescuedSlaveAmount >= mission.data.custom.amountSlaves then
             _MoveToNextPhase = true
         end
@@ -183,7 +187,7 @@ mission.phases[1].updateTargetLocationServer = function(_TimeStep)
     end
 
     --Get all ship type entities in the sector. If "is_civil" is true, add the control script.
-    local _CivilShips = { _Sector:getEntitiesByScriptValue("is_civil")}
+    local _CivilShips = { _sector:getEntitiesByScriptValue("is_civil")}
     for _, _Ship in pairs(_CivilShips) do
         if _Ship.type == EntityType.Ship and not _Ship.playerOrAllianceOwned then
             _Ship:setValue("rescueslaves_mission_player", Player().index)
@@ -195,6 +199,42 @@ mission.phases[1].updateTargetLocationServer = function(_TimeStep)
     invokeClientFunction(Player(), "highlightRescuedSlaves")
 end
 
+mission.phases[1].onStartDialog = function(entityId)
+    local methodName = "Phase 1 On Start Dialog"
+    mission.Log(methodName, "Beginning...")
+
+    --How do a bunch of civilians know this? I don't fucking know. I remain eternally frustrated at how much handholding this community requires.
+    --I'm well aware that the game doesn't explain the whole cargo bay scanning thing, but people really should be able to figure this out on their own. It's not that difficult.
+    if entityId == Uuid(mission.data.custom.stationId) then
+
+        local td0 = { text = "Fly close to a ship to scan the contents of their cargo bays. The normal scan range is half a kilometer, but you can equip a scanner booster to extend that." }
+
+        local td1 = { text = "Hail ships carrying illegal slaves and scan them. There's no telling how the pirate captains will react - you'll have to handle things from there yourself." }
+
+        local td2 = { text = "Well, we've heard rumors..." }
+
+        local td3 = { text = "If the pirates are as powerful as we've heard, they might be able to hijack some of the defender ships. If you get close and scan them, it should reveal their true alliegance." }
+
+        local td4 = { text = "We've also heard that they're using some new tactics to deal with captains in faction space. Of course, they could always resort to their usual methods and hire bounty hunters. Be on your guard." }
+
+        local td5 = { text = "Thank you again, and good luck."}
+
+        td0.followUp = td1
+        td1.answers = {
+            { answer = "Understood.", followUp = td5 },
+            { answer = "Is that all?", followUp = td2 }
+        }
+        td2.answers = {
+            { answer = "What rumors?", followUp = td3 }
+        }
+        td3.followUp = td4
+        td4.followUp = td5
+        td5.onEnd = onPhase1DialogEnd
+
+        addDialogInteraction("How can I find your people?", td0)
+    end
+end
+
 --region #PHASE 1 TIMERS
 
 if onServer() then
@@ -203,17 +243,17 @@ if onServer() then
 mission.phases[1].timers[1] = {
     time = 300, 
     callback = function() 
-        local _MethodName = "Phase 1 Timer 1 Callback"
-        mission.Log(_MethodName, "Running threat timer.")
+        local methodName = "Phase 1 Timer 1 Callback"
+        mission.Log(methodName, "Running threat timer.")
         if atTargetLocation() then
             local threatChance = 1.0 - (0.25 - (mission.data.custom.dangerLevel * 0.015)) --25% chance to spawn no threat. Bottoms out @ 10% at danger 10.
 
             if random():test(threatChance) or mission.data.custom.spawnThreatCycle == 2 then
-                mission.Log(_MethodName, tostring(threatChance) .. " test passed - spawning threat.")
+                mission.Log(methodName, tostring(threatChance) .. " test passed - spawning threat.")
                 spawnThreat()
                 mission.data.custom.spawnThreatCycle = 0
             else
-                mission.Log(_MethodName, "Threat test not passed. Player is safe. For now...")
+                mission.Log(methodName, "Threat test not passed. Player is safe. For now...")
                 mission.data.custom.spawnThreatCycle = mission.data.custom.spawnThreatCycle + 1
             end
         end
@@ -225,8 +265,8 @@ mission.phases[1].timers[1] = {
 mission.phases[1].timers[2] = {
     time = 240,
     callback = function()
-        local _MethodName = "Phase 1 Timer 2 Callback"
-        mission.Log(_MethodName, "Running danger 10 threat timer.")
+        local methodName = "Phase 1 Timer 2 Callback"
+        mission.Log(methodName, "Running danger 10 threat timer.")
         if mission.data.custom.dangerLevel == 10 and atTargetLocation() then
 
             local spawnThreat = false
@@ -239,7 +279,7 @@ mission.phases[1].timers[2] = {
             end
 
             if spawnThreat then
-                mission.Log(_MethodName, "Danger 10 - spawning threat.")
+                mission.Log(methodName, "Danger 10 - spawning threat.")
                 spawnThreat()
                 mission.data.custom.spawnedDangerTenThreat = true
             end
@@ -371,7 +411,7 @@ end
 
 --Torp strike
 function spawnTorpedoStrike()
-    local _MethodName = "Spawning Torpedo Strike"
+    local methodName = "Spawning Torpedo Strike"
 
     local waveTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 3, "High", false) --They're only in for 8-9 seconds. Make them the larger ships.
 
@@ -380,7 +420,7 @@ function spawnTorpedoStrike()
     generator:startBatch()
 
     for _, p in pairs(waveTable) do
-        mission.Log(_MethodName, "Spawning torp strike pirate " .. tostring(_) .. " of 3")
+        mission.Log(methodName, "Spawning torp strike pirate " .. tostring(_) .. " of 3")
         generator:createScaledPirateByName(p, generator.getGenericPosition())
     end
 
@@ -426,9 +466,9 @@ end
 
 --Bounty hunters
 function spawnBountyHunterAttack()
-    local _MethodName = "Spawn Bounty Hunter Attack"
+    local methodName = "Spawn Bounty Hunter Attack"
 
-    mission.Log(_MethodName, "Spawning bounty hunters")
+    mission.Log(methodName, "Spawning bounty hunters")
 
     local _Rgen = ESCCUtil.getRand()
     --Headhunters.
@@ -459,8 +499,8 @@ function getHeadHunterFaction()
 end
 
 function onHuntersFinished(_Generated)
-    local _MethodName = "On Hunters Finished"
-    mission.Log(_MethodName, "Running.")
+    local methodName = "On Hunters Finished"
+    mission.Log(methodName, "Running.")
     local _Player = Player()
 
     for _, _Ship in pairs(_Generated) do
@@ -480,7 +520,7 @@ function onHuntersFinished(_Generated)
         MissionUT.deleteOnPlayersLeft(_Ship)
         _Ship:setValue("is_persecutor", true)
 
-        mission.Log(_MethodName, "Ship title is " .. _Ship.title)
+        mission.Log(methodName, "Ship title is " .. _Ship.title)
 
         if string.match(_Ship.title, "Persecutor") then
             _Ship.title = "Bounty Hunter"%_T
@@ -505,9 +545,9 @@ end
 
 --Hijacked ships
 function spawnHijackedFactionShip()
-    local _MethodName = "Spawn Hijacked Faction Ship"
+    local methodName = "Spawn Hijacked Faction Ship"
 
-    mission.Log(_MethodName, "Spawning hijacked ships")
+    mission.Log(methodName, "Spawning hijacked ships")
 
     local _Faction = Faction(mission.data.giver.factionIndex)
 
@@ -539,9 +579,9 @@ end
 
 --Transports
 function spawnLocalTransport()
-    local _MethodName = "Spawn Local Transport"
+    local methodName = "Spawn Local Transport"
 
-    mission.Log(_MethodName, "Running.")
+    mission.Log(methodName, "Running.")
 
     -- this is the position where the trader spawns
     local dir = random():getDirection()
@@ -553,46 +593,46 @@ function spawnLocalTransport()
 
     --use this for onfinished.
     local onTransportFinished = function(ships)
-        local _MethodName = "On Transport Finished"
+        local methodName = "On Transport Finished"
         local _Transport = ships[1]
         local _AddSlaves = false
         local _tportNo = mission.data.custom.transportNumber
 
-        mission.Log(_MethodName, "Transport " .. tostring(_tportNo) .. " spawned. Adding cargo and setting destination.")
+        mission.Log(methodName, "Transport " .. tostring(_tportNo) .. " spawned. Adding cargo and setting destination.")
         if _tportNo == mission.data.custom.firstTransport then
-            mission.Log(_MethodName, "First slave transport spawned")
+            mission.Log(methodName, "First slave transport spawned")
             _AddSlaves = true
         end
         if _tportNo == mission.data.custom.secondTransport then
-            mission.Log(_MethodName, "Second slave transport spawned")
+            mission.Log(methodName, "Second slave transport spawned")
             _AddSlaves = true
         end
         if _tportNo == mission.data.custom.thirdTransport then
-            mission.Log(_MethodName, "Third slave transport spawned")
+            mission.Log(methodName, "Third slave transport spawned")
             _AddSlaves = true
         end
         if _tportNo == mission.data.custom.fourthTransport then
-            mission.Log(_MethodName, "Fourth slave transport spawned")
+            mission.Log(methodName, "Fourth slave transport spawned")
             _AddSlaves = true
         end
         if _tportNo == mission.data.custom.fifthTransport then
-            mission.Log(_MethodName, "Fifth slave transport spawned")
+            mission.Log(methodName, "Fifth slave transport spawned")
             _AddSlaves = true
         end
         if _tportNo == mission.data.custom.sixthTransport then
-            mission.Log(_MethodName, "Sixth slave transport spawned")
+            mission.Log(methodName, "Sixth slave transport spawned")
             _AddSlaves = true
         end
         if _tportNo == mission.data.custom.seventhTransport then
-            mission.Log(_MethodName, "Seventh slave transport spawned")
+            mission.Log(methodName, "Seventh slave transport spawned")
             _AddSlaves = true
         end
         if _tportNo == mission.data.custom.eigthTransport then
-            mission.Log(_MethodName, "Eigth slave transport spawned")
+            mission.Log(methodName, "Eigth slave transport spawned")
             _AddSlaves = true
         end
         if _tportNo == mission.data.custom.ninthTransport then
-            mission.Log(_MethodName, "Ninth (and final) slave transport spawned")
+            mission.Log(methodName, "Ninth (and final) slave transport spawned")
             _AddSlaves = true
         end
 
@@ -641,16 +681,16 @@ end
 callable(nil, "playerDoneTutorial")
 
 function finishAndReward()
-    local _MethodName = "Finish and Reward"
-    mission.Log(_MethodName, "Running win condition.")
+    local methodName = "Finish and Reward"
+    mission.Log(methodName, "Running win condition.")
 
     reward()
     accomplish()
 end
 
 function failAndPunish()
-    local _MethodName = "Fail and Punish"
-    mission.Log(_MethodName, "Running lose condition.")
+    local methodName = "Fail and Punish"
+    mission.Log(methodName, "Running lose condition.")
 
     punish()
     fail()
@@ -714,7 +754,7 @@ function broughtHomeDialog(amount)
 end
 
 function highlightRescuedSlaves()
-    local _MethodName = "Highlight Rescued Slaves"
+    local methodName = "Highlight Rescued Slaves"
 
     for _, entity in pairs({Sector():getEntitiesByComponent(ComponentType.CargoLoot)}) do
         local loot = CargoLoot(entity)
@@ -741,40 +781,40 @@ function formatDescription(_Station)
 end
 
 mission.makeBulletin = function(_Station)
-    local _MethodName = "Make Bulletin"
-    mission.Log(_MethodName, "Running.")
+    local methodName = "Make Bulletin"
+    mission.Log(methodName, "Running.")
     --We need:
     --1 - a regular or offgrid content sector
     --2 - a sector that is owned by the current faction.
     --3 - a sector with at least 4-5 stations.
     --This is a bit spicy - we need to initialize a lot of stuff in order to do this. Really wish there was an easier way to do this. Any takers, Boxelware?
-    local _Sector = Sector()
+    local _sector = Sector()
     local seed = Server().seed
     local specs = SectorSpecifics()
 
     local _Rgen = ESCCUtil.getRand()
     local target = {}
-    local x, y = _Sector:getCoordinates()
+    local x, y = _sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
     --Then we try to find a sector matching points 1, 2, and 3 above.
     local _ExcludedSectors = {}
-    for _ = 1, 15 do
+    for _ = 1, 30 do
         --Don't try too many times for this.
         target.x, target.y = MissionUT.getSectorWithStations(x, y, 3, 22, true, nil, nil, nil, insideBarrier, _ExcludedSectors)
         --Careful about turning on too many of these logs. They're somewhat obnoxious.
-        mission.Log(_MethodName, "Checking " .. tostring(target.x) .. " : " .. tostring(target.y))
+        mission.Log(methodName, "Checking " .. tostring(target.x) .. " : " .. tostring(target.y))
 
         local _, _, _, _, _, specsFactionIndex = specs:determineContent(target.x, target.y, seed)
 
         if specsFactionIndex and specsFactionIndex == _Station.factionIndex then
-            --mission.Log(_MethodName, "specs faction index " .. tostring(specsFactionIndex) .. " matches station faction index " .. tostring(_Station.factionIndex))
+            --mission.Log(methodName, "specs faction index " .. tostring(specsFactionIndex) .. " matches station faction index " .. tostring(_Station.factionIndex))
             
             specs:initialize(target.x, target.y, seed)
             if specs.generationTemplate then
-                --mission.Log(_MethodName, "Checking generation template")
+                --mission.Log(methodName, "Checking generation template")
                 local contents = specs.generationTemplate.contents(target.x, target.y)
                 if contents and contents["stations"] and contents["stations"] > 3 then
-                    --mission.Log(_MethodName, "Found target w/ at least 3 stations. Breaking and continuing.")
+                    --mission.Log(methodName, "Found target w/ at least 3 stations. Breaking and continuing.")
                     break
                 end
             end
@@ -787,7 +827,7 @@ mission.makeBulletin = function(_Station)
     end
 
     if not target.x or not target.y then
-        mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
+        mission.Log(methodName, "Target.x or Target.y not set - returning nil.")
         return 
     end
 
@@ -801,8 +841,7 @@ mission.makeBulletin = function(_Station)
     local _Description = formatDescription(_Station)
 
     reward = 0 --SET REWARD HERE
-    baseRep = 16000 --We actually get more than this due to potentially killing some pirates and stuff.
-    reputation = baseRep
+    reputation = 16000 --We actually get more than this due to potentially killing some pirates and stuff.
     if _DangerLevel == 10 then
        reputation = reputation + 2000 --Add 2k more at danger 10.
     end
@@ -824,7 +863,7 @@ mission.makeBulletin = function(_Station)
         _MatlMax = 48000
     end
     
-    mission.Log(_MethodName, "matlmin is ${MIN} and matlmax is ${MAX}" % { MIN = _MatlMin, MAX = _MatlMax }) 
+    mission.Log(methodName, "matlmin is ${MIN} and matlmax is ${MAX}" % { MIN = _MatlMin, MAX = _MatlMax }) 
 
     local materialAmount = round(random():getInt(_MatlMin, _MatlMax) / 100) * 100
     MissionUT.addSectorRewardMaterial(x, y, _MissionReward, materialAmount)
