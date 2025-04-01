@@ -19,6 +19,7 @@ mission._Name = "Scan Xsotan Group"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." },
@@ -79,10 +80,6 @@ function initialize(_Data_in, bulletin)
         mission.data.description[4].arguments = { _SCANNED = mission.data.custom.scannedXsotan , _SCANNEDMAX = mission.data.custom.scannedXsotanTgt }
     end
 
-    if onClient() then
-        registerMarkScannableXsotan()
-    end
-
     --Run vanilla init. Managers _restoring on its own.
     ScanXsotanGroup_init(_Data_in, bulletin)
 end
@@ -110,21 +107,18 @@ mission.globalPhase.getRewardedItems = function()
 end
 
 mission.globalPhase.onAbandon = function()
-    unregisterMarkScannableXsotan()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
-    unregisterMarkScannableXsotan()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onAccomplish = function()
-    unregisterMarkScannableXsotan()
     if mission.data.location then
         runFullSectorCleanup(false)
     end
@@ -132,6 +126,45 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
+mission.phases[1].onBegin = function()
+    local methodName = "Phase 1 On Begin"
+    mission.Log(methodName, "Setting stationId.")
+    
+    --Can't set this up until the init call, and we need this because otherwise you can't quit the game mid-mission and expect the dialog to work properly after coming back.
+    mission.data.custom.stationId = mission.data.giver.id.string
+end
+
+mission.phases[1].onStartDialog = function(entityId)
+    local methodName = "Phase 1 On Start Dialog"
+    mission.Log(methodName, "Beginning...")
+
+    if entityId == Uuid(mission.data.custom.stationId) then
+
+        local td0 = { text = "Have you ever done 'Explore Sector' before? This mission works exactly like that one, except you will be scanning Xsotan instead." }
+
+        local td1 = { text = "The Xsotan you need to scan will be marked in green. Fly close to them and you'll be able to interact with the ship and run a scan." }
+
+        local td2 = { text = "Scan all the Xsotan, and we'll handle the rest! Thanks for your help!" }
+
+        local td3 = { text = "We've heard that the Xsotan will leave the sector if they're left alone. You might need to provoke them to get them to stick around." }
+
+        local td4 = { text = "Feel free to destroy some of them if you need! Just make sure you do the scan first! Again, the ones you need to scan are marked in green." }
+
+        local td5 = { text = "Happy hunting!" }
+
+        td0.followUp = td1
+        td1.followUp = td2
+        td2.answers = {
+            { answer = "Understood." },
+            { answer = "Is that all?", followUp = td3 }
+        }
+        td3.followUp = td4
+        td4.followUp = td5
+
+        addDialogInteraction("How do I scan the Xsotan?", td0)
+    end
+end
+
 mission.phases[1].onTargetLocationEntered = function(_X, _Y) 
     local _MethodName = "Phase 1 on Target Location Entered"
     
@@ -152,10 +185,8 @@ end
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
-mission.phases[2].onBegin = function()
-    if onClient() then
-        registerMarkScannableXsotan()
-    end
+mission.phases[2].onPreRenderHud = function()
+    onMarkScannableXsotan()
 end
 
 --region #PHASE 2 PLAYER CALLBACKS
@@ -444,44 +475,7 @@ function onMarkScannableXsotan()
         end
     end
 
-
     renderer:display()
-end
-
---endregion
-
---region #CLIENT / SERVER UTILITY CALLS
-
-function registerMarkScannableXsotan()
-    local _MethodName = "Register Mark Scannable Xsotan"
-
-    if onClient() then
-        mission.Log(_MethodName, "Invoked on Client - Reigstering onPreRenderHud callback.")
-
-        if Player():registerCallback("onPreRenderHud", "onMarkScannableXsotan") == 1 then
-            mission.Log(_MethodName, "WARNING - Could not attach prerender callback to script.")
-        end
-    else
-        mission.Log(_MethodName, "Calling on Server => Invoking on Client")
-        
-        invokeClientFunction(Player(), "registerMarkScannableXsotan")
-    end
-end
-
-function unregisterMarkScannableXsotan()
-    local _MethodName = "Unregister Mark Scannable Xsotan"
-    
-    if onClient() then
-        mission.Log(_MethodName, "Invoking on Client - Unregistering callback.")
-
-        if Player():unregisterCallback("onPreRenderHud", "onMarkScannableXsotan") == 1 then
-            mission.Log(_MethodName, "WARNING - Could not detach prerender callback to script.")
-        end
-    else
-        mission.Log(_MethodName, "Calling on Server => Invoking on Client")
-        
-        invokeClientFunction(Player(), "unregisterMarkScannableXsotan")
-    end
 end
 
 --endregion
