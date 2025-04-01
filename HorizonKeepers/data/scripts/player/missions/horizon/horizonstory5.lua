@@ -24,6 +24,7 @@ mission._Name = "Scipio's Triumph"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/snowflake-2.png"
 mission.data.priority = 9
 mission.data.description = {
@@ -245,6 +246,11 @@ mission.phases[3].timers[2] = {
         --We don't care if we're on location or not here - if the player jumps out of the sector at this point in the mission, fail it.
         local awacsCT = ESCCUtil.countEntitiesByValue("is_frostbite_awacs")
         if awacsCT == 0 then
+            --It can be pretty hard to protect the awacs. If the player fails the mission due to the awacs not being present, keep track of this value.
+            local _player = Player()
+            local failCt = (_player:getValue("_horizonkeepers_story5_awacsfail") or 0) + 1
+            _player:setValue("_horizonkeepers_story5_awacsfail", failCt)
+
             fail()
         end
     end,
@@ -423,6 +429,15 @@ function buildObjectiveSector(x, y)
     awacsAI:setIdle()
     awacsAI:setPassiveShooting(true)
     awacsAI:setFlyLinear(_Station.translationf, 1000, false)
+
+    --If the player has failed the mission due to lowing the awacs, give it a HP buff.
+    local awacsFailCt = (_Player:getValue("_horizonkeepers_story5_awacsfail") or 0)
+    local awacsDurabilityMultiplier = 1 + (awacsFailCt * 0.1)
+
+    local awacsDurability = Durability(_awacs)
+    if awacsDurability then
+        awacsDurability.maxDurabilityFactor = (awacsDurability.maxDurabilityFactor or 1) * awacsDurabilityMultiplier
+    end
 
     --Spawn defenders
     local _HorizonFaction = HorizonUtil.getEnemyFaction()

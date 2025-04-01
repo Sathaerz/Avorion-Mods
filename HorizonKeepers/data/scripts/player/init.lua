@@ -1,8 +1,9 @@
 if onServer() then
 
-local player = Player()
+    local player = Player()
 
-player:addScriptOnce("background/horizonquestutility.lua")
+    --0x696E69742061646420736372697074
+    player:addScriptOnce("background/horizonquestutility.lua")
 
 end
 

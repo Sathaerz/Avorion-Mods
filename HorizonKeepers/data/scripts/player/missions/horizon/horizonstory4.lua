@@ -24,6 +24,7 @@ mission._Name = "Gone in 60 Seconds"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/snowflake-2.png"
 mission.data.priority = 9
 mission.data.description = {
@@ -42,6 +43,7 @@ mission.data.description = {
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
 mission.data.custom.phase2Timer = 0
 mission.data.custom.checkEscortCount = false
+mission.data.custom.towSpawned = false
 mission.data.custom.varlanceP2WarningSent = false
 mission.data.custom.phase3Timer = 0
 mission.data.custom.varlanceP3Chatter1Sent = false
@@ -192,19 +194,21 @@ mission.phases[2].updateTargetLocationServer = function(_timeStep)
 
     mission.data.custom.phase2Timer = mission.data.custom.phase2Timer + _timeStep
 
-    if _towCt > 0 then
-        if mission.data.custom.phase2Timer >= 30 and not mission.data.custom.varlanceP2WarningSent then
-            HorizonUtil.varlanceChatter("Power surge detected! The tow ship is trying to escape!")
-            mission.data.custom.varlanceP2WarningSent = true
+    if mission.data.custom.towSpawned then
+        if _towCt > 0 then
+            if mission.data.custom.phase2Timer >= 30 and not mission.data.custom.varlanceP2WarningSent then
+                HorizonUtil.varlanceChatter("Power surge detected! The tow ship is trying to escape!")
+                mission.data.custom.varlanceP2WarningSent = true
+            end
+    
+            if mission.data.custom.phase2Timer >= 60 then
+                fail()
+            end
+        else
+            --mission.Log(_MethodName, "Tow is destroyed.")
+            mission.data.description[4].fulfilled = true
+            _towDestroyed = true
         end
-
-        if mission.data.custom.phase2Timer >= 60 then
-            fail()
-        end
-    else
-        --mission.Log(_MethodName, "Tow is destroyed.")
-        mission.data.description[4].fulfilled = true
-        _towDestroyed = true
     end
 
     local _pirateCt = ESCCUtil.countEntitiesByValue("_horizon4_escort")
@@ -547,6 +551,8 @@ function onTowingShipFinished(_Generated)
 	if durability then 
         durability.maxDurabilityFactor = (durability.maxDurabilityFactor or 0) * 2
     end
+    
+    mission.data.custom.towSpawned = true
 end
 
 function onPirateEscortsFinished(_Generated)

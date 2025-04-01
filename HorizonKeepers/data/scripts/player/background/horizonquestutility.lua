@@ -55,9 +55,10 @@ mission.phases[2].updateServer = function()
     local _player = Player()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory2.lua"
     local stageReq = 2
+    local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq then
+    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -69,9 +70,10 @@ mission.phases[3].updateServer = function()
     local _player = Player()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory3.lua"
     local stageReq = 3
+    local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq then
+    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -83,9 +85,10 @@ mission.phases[4].updateServer = function()
     local _player = Player()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory4.lua"
     local stageReq = 4
+    local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq then
+    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -97,9 +100,10 @@ mission.phases[5].updateServer = function()
     local _player = Player()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory5.lua"
     local stageReq = 5
+    local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq then
+    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -111,9 +115,10 @@ mission.phases[6].updateServer = function()
     local _player = Player()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory6.lua"
     local stageReq = 6
+    local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq then
+    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -125,9 +130,10 @@ mission.phases[7].updateServer = function()
     local _player = Player()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory7.lua"
     local stageReq = 7
+    local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq then
+    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -139,9 +145,10 @@ mission.phases[8].updateServer = function()
     local _player = Player()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory8.lua"
     local stageReq = 8
+    local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq then
+    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -153,9 +160,10 @@ mission.phases[9].updateServer = function()
     local _player = Player()
     local scriptPath = "data/scripts/player/missions/horizon/horizonstory9.lua"
     local stageReq = 9
+    local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq then
+    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -180,6 +188,7 @@ mission.phases[10].onSectorEntered = function(x, y)
     local currentTime = Server().unpausedRuntime
     local _random = random()
 
+    --These already check if the distance is OK, so no need to check distance in here.
     if currentTime >= nextValidSide1Time and _random:test(0.10) then
         mission.Log(methodName, "Adding side 1 to board.")
         addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonside1.lua")
@@ -192,8 +201,8 @@ end
 
 --region #SERVER CALLS
 
-function addMissionToStation(x, y, missionScript)
-    local methodName = "Add Mission To Station"
+function checkDistanceOK(x, y)
+    local methodName = "Check Distance OK"
 
     local dist = math.sqrt(x*x + y*y)
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
@@ -202,6 +211,18 @@ function addMissionToStation(x, y, missionScript)
     mission.Log(methodName, "Max Distance is " .. tostring(maxDist))
 
     if dist <= maxDist and not insideBarrier then
+        mission.Log(methodName, "Distance is " .. tostring(dist) .. " and sector inside barrier is " .. tostring(insideBarrier) .. " - this qualifies")
+        return true
+    else
+        mission.Log(methodName, "Distance is " .. tostring(dist) .. " and sector inside barrier is " .. tostring(insideBarrier) .. " which does not qualify")
+        return false
+    end
+end
+
+function addMissionToStation(x, y, missionScript)
+    local methodName = "Add Mission To Station"
+
+    if checkDistanceOK(x, y) then
         local stationCandidates = {Sector():getEntitiesByType(EntityType.Station)}
         local stations = {}
         for _, _Station in pairs(stationCandidates) do
@@ -221,8 +242,6 @@ function addMissionToStation(x, y, missionScript)
         else
             mission.Log(methodName, "No viable stations from the list of candidates.")
         end
-    else
-        mission.Log(methodName, "Distance is " .. tostring(dist) .. " and sector inside barrier is " .. tostring(insideBarrier) .. " which does not qualify")
     end
 end
 

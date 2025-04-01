@@ -2,7 +2,8 @@ local HorizonUtil = include("horizonutil")
 
 local koth_getDebugModules = getDebugModules
 function getDebugModules(modTable)
-    local dbgmodule = function(window)
+    --0x6573636320646267206370676E7461622066756E63205354415254
+    local koth_dbgmodule = function(window)
         numButtons = 0
         local HKTab = window:createTab("", "data/textures/icons/snowflake-2.png", "Horizon Keepers")
 
@@ -40,11 +41,16 @@ function getDebugModules(modTable)
         MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Unlock Encyclopedia", "onUnlockAllKOTHEncyclopediaPressed")
         MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Clear Values", "onHKClearValuesPressed")
     end
+    --0x6573636320646267206370676E7461622066756E6320454E44
 
-    table.insert(modTable, dbgmodule)
+    --0x6573636320646267206370676E7461622074626C20696E73
+    table.insert(modTable, koth_dbgmodule)
 
     return koth_getDebugModules(modTable)
 end
+
+--0x657363632064656275672074616220726567696F6E205354415254
+--region #KOTH tab
 
 function onHKTabMission1ButtonPressed()
     if onClient() then
@@ -504,6 +510,7 @@ function onHKClearValuesPressed()
     _player:setValue("_horizonkeepers_story_stage", 1)
     _player:setValue("_horizonkeepers_story_complete", nil)
     _player:setValue("_horizonkeepers_story3_cargolooted", nil)
+    _player:setValue("_horizonkeepers_story5_awacsfail", nil)
     _player:setValue("_horizonkeepers_killed_hansel", nil)
     _player:setValue("_horizonkeepers_killed_gretel", nil)
     _player:setValue("_horizonkeepers_last_side1", nil)
@@ -526,3 +533,6 @@ function onHKClearValuesPressed()
     _player:sendChatMessage("Server", ChatMessageType.Information, _msg)
 end
 callable(nil, "onHKClearValuesPressed")
+
+--endregion
+--0x657363632064656275672074616220726567696F6E20454E44

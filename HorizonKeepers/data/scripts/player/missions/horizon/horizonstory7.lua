@@ -25,6 +25,7 @@ mission._Name = "Kermit Tyler's Folly"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/snowflake-2.png"
 mission.data.priority = 9
 mission.data.description = {
@@ -77,14 +78,12 @@ mission.globalPhase.noPlayerEventsTargetSector = true
 mission.globalPhase.noLocalPlayerEventsTargetSector = true
 
 mission.globalPhase.onAbandon = function()
-    unregisterMarkCloseShips()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
-    unregisterMarkCloseShips()
     sendFailureMail()
 
     if mission.data.location then
@@ -93,7 +92,6 @@ mission.globalPhase.onFail = function()
 end
 
 mission.globalPhase.onAccomplish = function()
-    unregisterMarkCloseShips()
     if mission.data.location then
         runFullSectorCleanup(false)
     end
@@ -289,8 +287,12 @@ mission.phases[5].onBeginServer = function()
 
     local ai = ShipAI(freighter)
     ai:setFlyLinear(shipyard.translationf, radius * 3, false)
+end
 
-    registerMarkCloseShips()
+mission.phases[5].onPreRenderHud = function()
+    if atTargetLocation() then
+        onMarkCloseShips()
+    end
 end
 
 mission.phases[5].updateTargetLocationServer = function(timeStep)
@@ -491,7 +493,7 @@ mission.phases[5].sectorCallbacks[1] = {
 --region #PHASE 5 TIMER CALLS
 
 --TIMER SLOTS
---1 = is player within 20km of the military outpost? alternately, check to see if the outpost's shields are damaged.
+--1 = is player within 30km of the military outpost? alternately, check to see if the outpost's shields are damaged.
 --2 = every 30 seconds, clear all stopped timers from idx 3 to 30
 --3 = is the player within 20km of the freighter? if not, start a timer to fail.
 --4 = 20 seconds until military outpost breaks stealth - set in timer 1.
@@ -695,8 +697,6 @@ mission.phases[6].onBeginServer = function()
     HorizonUtil.varlanceChatter("We need to buy time for the boarding team! Make sure Horizon doesn't wipe out the shipyard.")
 
     invokeClientFunction(Player(), "changeOutpostTrack", mission.data.custom.militaryOutpostID)
-
-    unregisterMarkCloseShips()
 end
 
 mission.phases[6].updateTargetLocationServer = function()
@@ -1367,42 +1367,6 @@ function onMarkCloseShips()
     end
 
     renderer:display()
-end
-
---endregion
-
---region #CLIENT / SERVER UTILITY CALLS
-
-function registerMarkCloseShips()
-    local _MethodName = "Register Mark Close Ships"
-
-    if onClient() then
-        mission.Log(_MethodName, "Invoked on Client - Reigstering onPreRenderHud callback.")
-
-        if Player():registerCallback("onPreRenderHud", "onMarkCloseShips") == 1 then
-            mission.Log(_MethodName, "WARNING - Could not attach prerender callback to script.")
-        end
-    else
-        mission.Log(_MethodName, "Calling on Server => Invoking on Client")
-        
-        invokeClientFunction(Player(), "registerMarkCloseShips")
-    end
-end
-
-function unregisterMarkCloseShips()
-    local _MethodName = "Unregister Mark Close Ships"
-    
-    if onClient() then
-        mission.Log(_MethodName, "Invoking on Client - Unregistering callback.")
-
-        if Player():unregisterCallback("onPreRenderHud", "onMarkCloseShips") == 1 then
-            mission.Log(_MethodName, "WARNING - Could not detach prerender callback to script.")
-        end
-    else
-        mission.Log(_MethodName, "Calling on Server => Invoking on Client")
-        
-        invokeClientFunction(Player(), "unregisterMarkCloseShips")
-    end
 end
 
 --endregion

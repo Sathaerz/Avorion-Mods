@@ -25,6 +25,7 @@ mission._Name = "Chasing Shadows"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/snowflake-2.png"
 mission.data.priority = 9
 mission.data.description = {

@@ -21,6 +21,7 @@ mission._Name = "Operation Xsology"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.icon = "data/textures/icons/snowflake-2.png"
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" },
@@ -43,18 +44,21 @@ mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
 mission.globalPhase.noBossEncountersTargetSector = true
 
 mission.globalPhase.onAbandon = function()
+    setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
+    setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onAccomplish = function()
+    setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(false)
     end
@@ -282,15 +286,18 @@ function spawnBoss()
     mission.data.custom.cleanUpSector = true
 end
 
+function setLastMissionTime()
+    local _player = Player()
+    local runTime = Server().unpausedRuntime
+
+    _player:setValue("_horizonkeepers_last_side2", runTime)
+end
+
 function finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
-    local _player = Player()
-    local runTime = Server().unpausedRuntime
-
-    _player:setValue("_horizonkeepers_side2_complete", true)
-    _player:setValue("_horizonkeepers_last_side2", runTime)
+    Player():setValue("_horizonkeepers_side2_complete", true)
 
     reward()
     accomplish()

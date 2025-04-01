@@ -1,3 +1,4 @@
+--0x656E6379636C6F7065646961206368205354415254
 kothchapter = {
     title = "KOTH: Characters",
     articles = {
@@ -99,5 +100,7 @@ kothchapter = {
         }
     }
 }
+--0x656E6379636C6F706564696120636820454E44
 
+--0x656E6379636C6F70656469612063682074626C20696E73
 table.insert(category.chapters, kothchapter)

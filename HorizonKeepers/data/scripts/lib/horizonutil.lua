@@ -31,6 +31,7 @@ function HorizonUtil.getFriendlyFaction()
         faction.initialRelations = 0
         faction.initialRelationsToPlayer = 0
         faction.staticRelationsToAll = true
+        faction.staticRelationsToPlayers = true
         faction.homeSectorUnknown = true
     end
 
@@ -128,9 +129,9 @@ function HorizonUtil.spawnFrostbiteTorpedoLoader(_DeleteOnLeft, sabotOnly)
     self.Log(_MethodName, "Running.")
 
     local possiblePlans = {
-        "data/plans/frostbitetloader1.xml",
-        "data/plans/frostbitetloader2.xml",
-        "data/plans/frostbitetloader3.xml",
+        "data/plans/horizon/frostbitetloader1.xml",
+        "data/plans/horizon/frostbitetloader2.xml",
+        "data/plans/horizon/frostbitetloader3.xml",
     }
 
     shuffle(random(), possiblePlans)
@@ -162,7 +163,7 @@ function HorizonUtil.spawnFrostbiteAWACS(_DeleteOnLeft)
     self.Log(_MethodName, "Running.")
 
     local _VarlanceData = {
-        _PlanFile = "data/plans/frostbiteawacs.xml", 
+        _PlanFile = "data/plans/horizon/frostbiteawacs.xml", 
         _ShipTitle = "AWACS",
         _ShipIcon = "data/textures/icons/pixel/block.png",
         _ScriptValues = { "is_awacs", "is_frostbite_awacs" },
@@ -179,9 +180,9 @@ function HorizonUtil.spawnFrostbiteWarship(_DeleteOnLeft)
     self.Log(_MethodName, "Running.")
 
     local possiblePlans = {
-        "data/plans/frostbitewarship1.xml",
-        "data/plans/frostbitewarship2.xml",
-        "data/plans/frostbitewarship3.xml",
+        "data/plans/horizon/frostbitewarship1.xml",
+        "data/plans/horizon/frostbitewarship2.xml",
+        "data/plans/horizon/frostbitewarship3.xml",
     }
 
     shuffle(random(), possiblePlans)
@@ -202,7 +203,7 @@ function HorizonUtil.spawnFrostbiteReliefShip(_DeleteOnLeft)
     self.Log(_MethodName, "Running.")
 
     local _ReliefShipData = {
-        _PlanFile = "data/plans/frostbiterelief.xml",
+        _PlanFile = "data/plans/horizon/frostbiterelief.xml",
         _ShipTitle = "Relief Ship",
         _ShipIcon = "data/textures/icons/pixel/civil-ship.png",
         _ScriptValues = { "is_relief", "is_frostbite_relief" },
@@ -227,7 +228,7 @@ function HorizonUtil.spawnVarlanceNormal(_DeleteOnLeft)
     self.Log(_MethodName, "Running.")
 
     local _VarlanceData = {
-        _PlanFile = "data/plans/varlance.xml", 
+        _PlanFile = "data/plans/horizon/varlance.xml", 
         _ShipTitle = "Varlance's Ship",
         _ShipIcon = "data/textures/icons/pixel/flagship.png",
         _ScriptValues = { "is_varlance" },
@@ -260,7 +261,7 @@ function HorizonUtil.spawnVarlanceBattleship(_DeleteOnLeft)
     self.Log(_MethodName, "Running.")
 
     local _VarlanceData = {
-        _PlanFile = "data/plans/varlancebattleship.xml", 
+        _PlanFile = "data/plans/horizon/varlancebattleship.xml", 
         _ShipName = "Ice Nova", 
         _ShipTitle = "Varlance's Ship",
         _ShipIcon = "data/textures/icons/pixel/flagship.png",
@@ -308,12 +309,14 @@ function HorizonUtil.spawnFrostbiteShip(_Data, _DeleteOnLeft)
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
     local _Ship = Sector():createShip(_Faction, "", _Plan, PirateGenerator.getGenericPosition())
-    _Ship.name = _Data._ShipName or _Ship.name
 
     if _Data._ArmamentFunction then
         _Data._ArmamentFunction(_Ship)
     end
     --Need to have this after the armament func or else the title could get overwritten.
+    if _Data._ShipName then
+        _Ship.name = _Data._ShipName
+    end
     if _Data._ShipTitle then
         _Ship.title = _Data._ShipTitle
     end
@@ -360,7 +363,7 @@ function HorizonUtil.spawnHorizonArtyCruiser(_DeleteOnLeft, _Position, _Faction)
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnAsFaction = _Faction,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonartycruiser.xml",
+        _PlanFile = "data/plans/horizon/horizonartycruiser.xml",
         _ShipTitle = "Cruiser",
         _ShipIcon = "data/textures/icons/pixel/artillery.png",
         _ShipClassValue = { "is_artycruiser", "is_horizon_artycruiser" },
@@ -380,7 +383,7 @@ function HorizonUtil.spawnHorizonCombatCruiser(_DeleteOnLeft, _Position, _Factio
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnAsFaction = _Faction,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizoncombatcruiser.xml",
+        _PlanFile = "data/plans/horizon/horizoncombatcruiser.xml",
         _ShipTitle = "Cruiser",
         _ShipIcon = "data/textures/icons/pixel/military-ship.png",
         _ShipClassValue = { "is_combatcruiser", "is_horizon_combatcruiser" },
@@ -400,7 +403,7 @@ function HorizonUtil.spawnHorizonFreighter(_DeleteOnLeft, _Position, _Faction)
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnAsFaction = _Faction,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonfreighter.xml",
+        _PlanFile = "data/plans/horizon/horizonfreighter.xml",
         _ShipTitle = "Freighter",
         _ShipIcon = "data/textures/icons/pixel/civil-ship.png",
         _ShipClassValue = {"is_freighter", "is_horizon_freighter"},
@@ -421,7 +424,7 @@ function HorizonUtil.spawnHorizonBattleship(_DeleteOnLeft, _Position, _Faction)
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnAsFaction = _Faction,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonbattleship.xml",
+        _PlanFile = "data/plans/horizon/horizonbattleship.xml",
         _ShipTitle = "Battleship",
         _ShipIcon = "data/textures/icons/pixel/defender.png",
         _ShipClassValue = { "is_battleship", "is_horizon_battleship" },
@@ -443,7 +446,7 @@ function HorizonUtil.spawnHorizonAWACS(_DeleteOnLeft, _Position, _Faction)
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnAsFaction = _Faction,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonawacs.xml",
+        _PlanFile = "data/plans/horizon/horizonawacs.xml",
         _ShipTitle = "AWACS",
         _ShipIcon = "data/textures/icons/pixel/block.png",
         _ShipClassValue = {"is_awacs", "is_horizon_awacs" },
@@ -464,7 +467,7 @@ function HorizonUtil.spawnAlphaHansel(_DeleteOnLeft, _Position, addGoodLoot, _Sp
     local _ShipData = {
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonpwhansel.xml",
+        _PlanFile = "data/plans/horizon/horizonpwhansel.xml",
         _ShipTitle = "Horizon PW α \"Hansel\"",
         _ShipIcon = "data/textures/icons/pixel/skull_big.png",
         _ShipDamageMultiplier = 2,
@@ -512,7 +515,7 @@ function HorizonUtil.spawnBetaGretel(_DeleteOnLeft, _Position, addGoodLoot, _Spa
     local _ShipData = {
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonpwgretel.xml",
+        _PlanFile = "data/plans/horizon/horizonpwgretel.xml",
         _ShipTitle = "Horizon PW β \"Gretel\"",
         _ShipIcon = "data/textures/icons/pixel/skull_big.png",
         _ShipClassValue = { "is_beta_gretel", "is_horizon_prototype" },
@@ -579,7 +582,7 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
     local _ShipData = {
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/projectxsologize.xml",
+        _PlanFile = "data/plans/horizon/projectxsologize.xml",
         _ShipTitle = "Project XSOLOGIZE Mk II",
         _ShipName = "XSOLOGIZE Mk II",
         _ShipIcon = "data/textures/icons/pixel/skull_big.png",
@@ -673,7 +676,7 @@ function HorizonUtil.spawnProjectXsologize(_DeleteOnLeft, _Position)
     local _ShipData = {
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/projectxsologize.xml",
+        _PlanFile = "data/plans/horizon/projectxsologize.xml",
         _ShipTitle = "Project XSOLOGIZE",
         _ShipName = "XSOLOGIZE Mk I",
         _ShipIcon = "data/textures/icons/pixel/skull_big.png",
@@ -755,11 +758,13 @@ function HorizonUtil.spawnHorizonShip(_Data)
         _Data._ArmamentFunction(_HorizonShip)
     end
     --Title is set in armament function so it needs to be reset afterwards.
-    _HorizonShip.title = _Data._ShipTitle
     if _Data._ShipName then
         _HorizonShip.name = _Data._ShipName
     end
-
+    if _Data._ShipTitle then
+        _HorizonShip.title = _Data._ShipTitle
+    end
+    
     _HorizonShip.crew = _HorizonShip.idealCrew
     _HorizonShip:removeScript("icon.lua") --Get rid of all the icons on this before.
     _HorizonShip:addScript("icon.lua", _Data._ShipIcon)
@@ -808,7 +813,7 @@ function HorizonUtil.spawnHorizonShipyard1(_DeleteOnLeft, _Position)
     local _StationData = {
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonshipyard01.xml",
+        _PlanFile = "data/plans/horizon/horizonshipyard01.xml",
         _StationMainScript = "data/scripts/entity/merchants/shipyard.lua",
         _StationValues = { "is_horizon_shipyard" },
         _ConsumerFunction = function(_station)
@@ -827,7 +832,7 @@ function HorizonUtil.spawnHorizonShipyard2(_DeleteOnLeft, _Position)
     local _StationData = {
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonshipyard02.xml",
+        _PlanFile = "data/plans/horizon/horizonshipyard02.xml",
         _StationMainScript = "data/scripts/entity/merchants/shipyard.lua",
         _StationValues = { "is_horizon_shipyard" },
         _ConsumerFunction = function(_station)
@@ -849,7 +854,7 @@ function HorizonUtil.spawnHorizonResearchStation(_DeleteOnLeft, _Position)
     local _StationData = {
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonresearch01.xml",
+        _PlanFile = "data/plans/horizon/horizonresearch01.xml",
         _StationMainScript = "data/scripts/entity/merchants/researchstation.lua",
         _ConsumerFunction = function(_station)
             _station:addScript("data/scripts/entity/merchants/consumer.lua", "Research Station"%_t, unpack(ConsumerGoods.ResearchStation()))
@@ -866,7 +871,7 @@ function HorizonUtil.spawnMilitaryOutpost(_DeleteOnLeft, _Position)
     local _StationData = {
         _DeleteOnPlayerLeft = _DeleteOnLeft,
         _SpawnPosition = _Position,
-        _PlanFile = "data/plans/horizonmilitary01.xml",
+        _PlanFile = "data/plans/horizon/horizonmilitary01.xml",
         _StationMainScript = "data/scripts/entity/merchants/militaryoutpost.lua",
         _ConsumerFunction = function(_station)
             _station:addScript("data/scripts/entity/merchants/consumer.lua", "Military Outpost"%_t, unpack(ConsumerGoods.MilitaryOutpost()))
