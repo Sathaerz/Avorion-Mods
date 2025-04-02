@@ -59,24 +59,15 @@ mission.data.custom.hyperspaceCounter = 0
 mission.globalPhase.noBossEncountersTargetSector = true
 
 mission.globalPhase.onAbandon = function()
-    if atTargetLocation() then
-        ESCCUtil.allPiratesDepart()
-        runFullSectorCleanup(true)
-    end
+    handleSectorCleanup(true)
 end
 
 mission.globalPhase.onFail = function()
-    if atTargetLocation() then
-        ESCCUtil.allPiratesDepart()
-        runFullSectorCleanup(true)
-    end
+    handleSectorCleanup(true)
 end
 
 mission.globalPhase.onAccomplish = function()
-    if atTargetLocation() then
-        ESCCUtil.allPiratesDepart()
-        runFullSectorCleanup(false)
-    end
+    handleSectorCleanup(false)
 end
 
 mission.globalPhase.onTargetLocationEntered = function(_X, _Y)
@@ -338,6 +329,7 @@ mission.phases[5].onTargetLocationEntered = function(_x, _y)
 
     mission.data.custom.phase5MiniBossesSpawned = false
     mission.data.custom.phase5MiniBossTimer = 0
+    mission.data.custom.phase5PirateKOd = false
 
     if onServer() then
         spawnPirateGroup()
@@ -378,7 +370,7 @@ mission.phases[5].timers[1] = {
             local _pirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
             mission.Log(_MethodName, "Player is on location and minibosses not yet spawned - there are " .. tostring(_pirateCt) .. " pirates.")
 
-            if _pirateCt <= 7 then
+            if _pirateCt <= 6 then
                 spawnPirateBosses()
 
                 HorizonUtil.varlanceChatter("Another Deadshot... The energy readings from that Bombardier are concerning, though. Stay frosty.")
@@ -657,6 +649,10 @@ function onPirateGroupFinished(_Generated)
     local _MethodName = "On Pirate Ambush Group Finished"
     _Generated[1]:addScriptOnce("entity/utility/kobehavior.lua")
 
+    for _, pirate in pairs(_Generated) do
+        MissionUT.deleteOnPlayersLeft(pirate)
+    end
+
     SpawnUtility.addEnemyBuffs(_Generated)
 
     Placer.resolveIntersections()
@@ -737,9 +733,23 @@ function onPirateBossesSpawned(_Generated)
     _Bombard:addScriptOnce("torpedoslammer.lua", _TorpSlamValues)
     _Bombard:addScriptOnce("player/missions/horizon/story3/horizonstory3miniboss.lua")
 
+    for _, pirate in pairs(_Generated) do
+        MissionUT.deleteOnPlayersLeft(pirate)
+    end
+
     SpawnUtility.addEnemyBuffs(_Generated)
 
     mission.data.custom.phase5MiniBossesSpawned = true
+end
+
+function handleSectorCleanup(cleanAll)
+    if atTargetLocation() then
+        ESCCUtil.allPiratesDepart()
+        runFullSectorCleanup(cleanAll)
+    end
+    if mission.internals.phaseIndex >= 5 and mission.data.location then
+        runFullSectorCleanup(cleanAll)
+    end
 end
 
 function finishAndReward()

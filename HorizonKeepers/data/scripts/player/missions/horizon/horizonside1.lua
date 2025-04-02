@@ -173,6 +173,18 @@ mission.phases[2].timers[2] = {
                     gretel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 30, _IncreasePerUpdate = 0.1, _DamageThreshold = 1.01 })
                 end
             end
+
+            if gretelCt == 0 then
+                --I don't anticipate players seeing this under most cirumstances, buuuuut...
+                if hanselCt > 0 and not mission.data.custom.hanselOverdriveActive then
+                    mission.data.custom.hanselOverdriveActive = true
+
+                    local _sector = Sector()
+                    local hansel = { _sector:getEntitiesByScriptValue("is_alpha_hansel") }
+                    _sector:broadcastChatMessage(hansel[1], ChatMessageType.Chatter, "How... how is this possible?! Kill them! KILL THEM NOW!!!")
+                    hansel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 30, _IncreasePerUpdate = 0.25, _DamageThreshold = 1.01 })
+                end
+            end
     
             if hanselCt == 0 and gretelCt == 0 then
                 mission.data.custom.allowPayment = true
@@ -458,7 +470,7 @@ mission.makeBulletin = function(_Station)
                 return 0
             end
             if player:hasScript("horizonside1.lua") then
-                player:sendChatMessage((Entity(self.arguments[1].giver), 1, "You cannot accept this mission again!")
+                player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept this mission again!")
                 return 0
             end
             return 1

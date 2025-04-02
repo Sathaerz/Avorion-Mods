@@ -47,7 +47,6 @@ mission.data.custom.phase4Timer = 0
 mission.data.custom.phase4DialogStarted = false
 mission.data.custom.phase4CallSupports = false
 mission.data.custom.varlanceP4ChatterSent = false
-mission.data.custom.gretelOverdriveActive = false
 
 --endregion
 
@@ -420,13 +419,23 @@ mission.phases[4].timers[2] = {
                     local _sector = Sector()
                     local gretel = { _sector:getEntitiesByScriptValue("is_beta_gretel") }
                     _sector:broadcastChatMessage(gretel[1], ChatMessageType.Chatter, "NO!!! Overload the reactor NOW! We'll drag them to the depths of hell with us!")
-                    gretel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 60, _IncreasePerUpdate = 0.1, _DamageThreshold = 1.01 })
+                    gretel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 60, _IncreasePerUpdate = 0.15, _DamageThreshold = 1.01 })
                 end
             end
 
             if gretelCt == 0 then
                 mission.data.description[9].fulfilled = true
                 player:setValue("_horizonkeepers_killed_gretel", true)
+
+                --I don't anticipate players seeing this under most cirumstances, buuuuut...
+                if hanselCt > 0 and not mission.data.custom.hanselOverdriveActive then
+                    mission.data.custom.hanselOverdriveActive = true
+
+                    local _sector = Sector()
+                    local hansel = { _sector:getEntitiesByScriptValue("is_alpha_hansel") }
+                    _sector:broadcastChatMessage(hansel[1], ChatMessageType.Chatter, "How... how is this possible?! Kill them! KILL THEM NOW!!!")
+                    hansel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 60, _IncreasePerUpdate = 0.25, _DamageThreshold = 1.01 })
+                end
             end
             
             if hanselCt == 0 or gretelCt == 0 then

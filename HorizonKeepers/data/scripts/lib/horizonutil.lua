@@ -487,6 +487,8 @@ function HorizonUtil.spawnAlphaHansel(_DeleteOnLeft, _Position, addGoodLoot, _Sp
             }
             
             _ship:addScriptOnce("absolutepointdefense.lua", _APDValues)
+
+            _ship:addScriptOnce("avenger.lua", { _Multiplier = 2 })
         end,
         _LootFunction = HorizonUtil.getPWXLootFunc(addGoodLoot)
     }
@@ -856,6 +858,7 @@ function HorizonUtil.spawnHorizonResearchStation(_DeleteOnLeft, _Position)
         _SpawnPosition = _Position,
         _PlanFile = "data/plans/horizon/horizonresearch01.xml",
         _StationMainScript = "data/scripts/entity/merchants/researchstation.lua",
+        _StationValues = { "is_horizon_researchstation" },
         _ConsumerFunction = function(_station)
             _station:addScript("data/scripts/entity/merchants/consumer.lua", "Research Station"%_t, unpack(ConsumerGoods.ResearchStation()))
         end

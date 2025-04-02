@@ -40,6 +40,9 @@ mission.data.description = {
 
 --Custom data that we'll want.
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
+mission.data.custom.phase3Timer1 = 0
+mission.data.custom.phase3AWACSOrderSent = false
+mission.data.custom.awacsRewardBonus = true
 mission.data.custom.phase3DialogAllowed = false
 mission.data.custom.varlanceP4ChatterSent = false
 mission.data.custom.waveNumber = 1
@@ -173,7 +176,6 @@ mission.phases[2].onTargetLocationArrivalConfirmed = function(_x, _y)
 end
 
 mission.phases[3] = {}
-mission.phases[3].timers = {}
 mission.phases[3].showUpdateOnEnd = true
 mission.phases[3].onBegin = function()
     local _MethodName = "Phase 3 On Begin"
@@ -189,6 +191,69 @@ mission.phases[3].onBeginServer = function()
     mission.data.custom.phase3DialogAllowed = true
 end
 
+mission.phases[3].updateTargetLocationServer = function(timeStep)
+    local methodName = "Phase 3 Update Target Location Server"
+
+    mission.data.custom.phase3Timer1 = mission.data.custom.phase3Timer1 + timeStep
+
+    --We don't care if we're on location or not here - if the player jumps out of the sector at this point in the mission, fail it.
+    local _sector = Sector()
+    local awacsEntities = { _sector:getEntitiesByScriptValue("is_frostbite_awacs") }
+    local station = Entity(mission.data.custom.horizonStationID)
+
+    if #awacsEntities == 0 then
+        fail()
+    else
+        local _awacs = awacsEntities[1]
+
+        --The AWACS gives you some time before it starts flying in.
+        if not mission.data.custom.phase3AWACSOrderSent then
+            if mission.data.custom.phase3Timer1 >= 10 and #awacsEntities > 0 and station and valid(station) then
+                mission.Log(methodName, "Sending AWACS move order.")
+    
+                local awacsAI = ShipAI(_awacs)
+                awacsAI:setIdle()
+                awacsAI:setPassiveShooting(true)
+                awacsAI:setFlyLinear(station.translationf, 1000, false)
+
+                mission.data.custom.phase3AWACSOrderSent = true
+            end
+        end
+
+        --If the player can keep the AWACs above 50% HP, they get a bonus.
+        local awacsHPThreshold = _awacs.durability / _awacs.maxDurability
+        if awacsHPThreshold < 0.5 then
+            mission.data.custom.awacsRewardBonus = false
+        end
+    end
+
+    --phase 3 ends and we go into phase 4 after the installation sends the distress call.
+    local defenderCt = ESCCUtil.countEntitiesByValue("is_horizon_defender")
+    local defenderObjectiveDone = false
+    local stationObjectiveDone = false
+
+    if defenderCt == 0 then
+        defenderObjectiveDone = true
+        mission.data.description[5].fulfilled = true
+        setVarlancePhase3Orders()
+    end
+
+    local stationHPThreshold = station.durability / station.maxDurability
+    if stationHPThreshold < 0.96 then
+        stationObjectiveDone = true
+        mission.data.description[6].fulfilled = true
+    end
+
+    if defenderObjectiveDone and stationObjectiveDone and mission.data.custom.phase3DialogAllowed then
+        mission.Log(methodName, "Defender and station objectives are both done - starting dialog and moving to next phase.")
+
+        mission.data.custom.phase3DialogAllowed = false 
+        invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.horizonStationID)
+    end
+
+    sync()
+end
+
 local onPhase3DialogFireTorp = makeDialogServerCallback("onPhase3DialogFireTorp", 3, function()
     local _MethodName = "Oh Phase 3 Dialog Fire Torp"
     mission.Log(_MethodName, "Starting.")
@@ -201,65 +266,6 @@ local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, funct
     awacsDeparts()
     nextPhase()
 end)
-
---region #PHASE 3 TIMERS
-
-if onServer() then
-
-mission.phases[3].timers[1] = {
-    time = 5,
-    callback = function()
-        if atTargetLocation() then
-            --phase 3 ends and we go into phase 4 after the installation sends the distress call.
-            local defenderCt = ESCCUtil.countEntitiesByValue("is_horizon_defender")
-            local defenderObjectiveDone = false
-            local stationObjectiveDone = false
-
-            if defenderCt == 0 then
-                defenderObjectiveDone = true
-                mission.data.description[5].fulfilled = true
-                setVarlancePhase3Orders()
-            end
-
-            local station = Entity(mission.data.custom.horizonStationID)
-            local stationHPThreshold = station.durability / station.maxDurability
-            if stationHPThreshold < 0.96 then
-                stationObjectiveDone = true
-                mission.data.description[6].fulfilled = true
-            end
-
-            if defenderObjectiveDone and stationObjectiveDone and mission.data.custom.phase3DialogAllowed then
-                mission.data.custom.phase3DialogAllowed = false 
-
-                invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.horizonStationID)
-            end
-
-            sync()
-        end
-    end,
-    repeating = true
-}
-
-mission.phases[3].timers[2] = {
-    time = 5,
-    callback = function()
-        --We don't care if we're on location or not here - if the player jumps out of the sector at this point in the mission, fail it.
-        local awacsCT = ESCCUtil.countEntitiesByValue("is_frostbite_awacs")
-        if awacsCT == 0 then
-            --It can be pretty hard to protect the awacs. If the player fails the mission due to the awacs not being present, keep track of this value.
-            local _player = Player()
-            local failCt = (_player:getValue("_horizonkeepers_story5_awacsfail") or 0) + 1
-            _player:setValue("_horizonkeepers_story5_awacsfail", failCt)
-
-            fail()
-        end
-    end,
-    repeating = true
-}
-
-end
-
---endregion
 
 mission.phases[4] = {}
 mission.phases[4].timers = {}
@@ -413,7 +419,7 @@ function buildObjectiveSector(x, y)
         pos = _Ship.translationf
     end
 
-    local _basepos = ESCCUtil.getVectorAtDistance(pos, 4000, true)
+    local _basepos = ESCCUtil.getVectorAtDistance(pos, 4500, true)
     local matrix = MatrixLookUpPosition(look, up, _basepos)
     
     --Spawn horizon station.
@@ -424,20 +430,7 @@ function buildObjectiveSector(x, y)
     spawnVarlance()
 
     --Spawn AWACS
-    local _awacs = HorizonUtil.spawnFrostbiteAWACS(false)
-    local awacsAI = ShipAI(_awacs)
-    awacsAI:setIdle()
-    awacsAI:setPassiveShooting(true)
-    awacsAI:setFlyLinear(_Station.translationf, 1000, false)
-
-    --If the player has failed the mission due to lowing the awacs, give it a HP buff.
-    local awacsFailCt = (_Player:getValue("_horizonkeepers_story5_awacsfail") or 0)
-    local awacsDurabilityMultiplier = 1 + (awacsFailCt * 0.1)
-
-    local awacsDurability = Durability(_awacs)
-    if awacsDurability then
-        awacsDurability.maxDurabilityFactor = (awacsDurability.maxDurabilityFactor or 1) * awacsDurabilityMultiplier
-    end
+    HorizonUtil.spawnFrostbiteAWACS(false)
 
     --Spawn defenders
     local _HorizonFaction = HorizonUtil.getEnemyFaction()
@@ -692,12 +685,18 @@ function finishAndReward()
     local _player = Player()
 
     local _AccomplishMessage = "Frostbite Company thanks you. Here's your compensation."
-    local _BaseReward = 27440000
+    local _Reward = 27440000
+    local _PaymentMessage = "Earned %1% credits for destroying the Horizon Keeper fleet."
+
+    if mission.data.custom.awacsRewardBonus then
+        _Reward = _Reward * 1.1
+        _PaymentMessage = "Earned %1% credits for destroying the Horizon Keeper fleet. This includes a bonus for excellent work."
+    end
 
     _player:setValue("_horizonkeepers_story_stage", 6)
 
     _player:sendChatMessage("Frostbite Company", 0, _AccomplishMessage)
-    mission.data.reward = {credits = _BaseReward, paymentMessage = "Earned %1% credits for destroying the Horizon Keeper fleet." }
+    mission.data.reward = {credits = _Reward, paymentMessage = _PaymentMessage }
 
     HorizonUtil.addFriendlyFactionRep(_player, 12500)
 

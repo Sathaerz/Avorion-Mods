@@ -418,7 +418,7 @@ mission.makeBulletin = function(_Station)
                 return 0
             end
             if player:hasScript("horizonside2.lua") then
-                player:sendChatMessage((Entity(self.arguments[1].giver), 1, "You cannot accept this mission again!")
+                player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept this mission again!")
                 return 0
             end
             return 1

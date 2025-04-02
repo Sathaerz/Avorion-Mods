@@ -39,6 +39,7 @@ function getDebugModules(modTable)
         MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Give Story 8 Items", "onGiveStory8ItemsButtonPressed")
         MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Reset Cooldowns", "onResetFBCooldownsPressed")
         MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Unlock Encyclopedia", "onUnlockAllKOTHEncyclopediaPressed")
+        MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Dump Values", "onHKDumpValuesPressed")
         MakeButton(HKTab, ButtonRect(nil, nil, nil, HKTab.height), "Clear Values", "onHKClearValuesPressed")
     end
     --0x6573636320646267206370676E7461622066756E6320454E44
@@ -51,6 +52,27 @@ end
 
 --0x657363632064656275672074616220726567696F6E205354415254
 --region #KOTH tab
+
+--Pick an alias that's unlikely to be taken
+_horizonkeepers_campaign_script_values = {
+    "_horizonkeepers_story_stage",
+    "_horizonkeepers_story_complete",
+    "_horizonkeepers_story3_cargolooted",
+    "_horizonkeepers_killed_hansel",
+    "_horizonkeepers_killed_gretel",
+    "_horizonkeepers_last_side1",
+    "_horizonkeepers_last_side2",
+    "_horizonkeepers_side1_complete",
+    "_horizonkeepers_side2_complete",
+    "encyclopedia_koth_frostbite",
+    "encyclopedia_koth_varlance",
+    "encyclopedia_koth_horizonkeepers",
+    "encyclopedia_koth_sophie",
+    "encyclopedia_koth_hanselgretel",
+    "encyclopedia_koth_torploader",
+    "encyclopedia_koth_xsologize",
+    "encyclopedia_koth_01macedon"
+}
 
 function onHKTabMission1ButtonPressed()
     if onClient() then
@@ -193,7 +215,7 @@ function onHKTabSideMission1ButtonPressed()
         else
             print("Adding Horizon Side 1 bulletin.")
             local _MissionPath = "data/scripts/player/missions/horizon/horizonside1.lua"
-            local ok, bulletin=run(_MissionPath, "getBulletin", _station)
+            local ok, bulletin= run(_MissionPath, "getBulletin", _station)
             _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
         end
     end    
@@ -213,9 +235,9 @@ function onHKTabSideMission2ButtonPressed()
         if _station.playerOrAllianceOwned then
             print("Can't add missions to player or alliance stations.")
         else
-            print("Adding Horizon Side 1 bulletin.")
+            print("Adding Horizon Side 2 bulletin.")
             local _MissionPath = "data/scripts/player/missions/horizon/horizonside2.lua"
-            local ok, bulletin=run(_MissionPath, "getBulletin", _station)
+            local ok, bulletin= run(_MissionPath, "getBulletin", _station)
             _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
         end
     end    
@@ -481,6 +503,19 @@ function onUnlockAllKOTHEncyclopediaPressed()
 end
 callable(nil, "onUnlockAllKOTHEncyclopediaPressed")
 
+function onHKDumpValuesPressed()
+    if onClient() then
+        invokeServerFunction("onHKDumpValuesPressed")
+        return
+    end
+
+    local _player = Player(callingPlayer)
+    for k, v in pairs(_horizonkeepers_campaign_script_values) do
+        print("Name : " .. tostring(v) .. " // Value : " .. tostring(_player:getValue(v)))
+    end
+end
+callable(nil, "onHKDumpValuesPressed")
+
 function onHKClearValuesPressed()
     if onClient() then
         invokeServerFunction("onHKClearValuesPressed")
@@ -507,24 +542,10 @@ function onHKClearValuesPressed()
         _player:removeScript(_v)
     end
 
-    _player:setValue("_horizonkeepers_story_stage", 1)
-    _player:setValue("_horizonkeepers_story_complete", nil)
-    _player:setValue("_horizonkeepers_story3_cargolooted", nil)
-    _player:setValue("_horizonkeepers_story5_awacsfail", nil)
-    _player:setValue("_horizonkeepers_killed_hansel", nil)
-    _player:setValue("_horizonkeepers_killed_gretel", nil)
-    _player:setValue("_horizonkeepers_last_side1", nil)
-    _player:setValue("_horizonkeepers_last_side2", nil)
-    _player:setValue("_horizonkeepers_side1_complete", nil)
-    _player:setValue("_horizonkeepers_side2_complete", nil)
-    _player:setValue("encyclopedia_koth_frostbite", nil)
-    _player:setValue("encyclopedia_koth_varlance", nil)
-    _player:setValue("encyclopedia_koth_horizonkeepers", nil)
-    _player:setValue("encyclopedia_koth_sophie", nil)
-    _player:setValue("encyclopedia_koth_hanselgretel", nil)
-    _player:setValue("encyclopedia_koth_torploader", nil)
-    _player:setValue("encyclopedia_koth_xsologize", nil)
-    _player:setValue("encyclopedia_koth_01macedon", nil)
+    for k, v in pairs(_horizonkeepers_campaign_script_values) do
+        _player:setValue(v, nil)
+    end
+    _player:setValue("_horizonkeepers_story_stage", 1) --Have to reset this one indiviudally b/c the loop nils them all out.
    
     HorizonUtil.setFriendlyFactionRep(_player, 0)
 
