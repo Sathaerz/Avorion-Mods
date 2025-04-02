@@ -27,14 +27,9 @@ self._LaserData._TargetPoint = nil
 
 function LaserSniper.initialize(_Values)
     local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing Laser Sniper v70 script on entity.", 1)
+    self.Log(_MethodName, "Initializing Laser Sniper v72 script on entity.", 1)
 
     self._Data = _Values or {}
-
-    if not _restoring then
-        --Needed on both server and client.
-        self._Data._TimeToActive = self._Data._TimeToActive or 0
-    end
 
     if onServer() then
         local _entity = Entity()
@@ -47,7 +42,10 @@ function LaserSniper.initialize(_Values)
         Boarding(_entity).boardable = false
     
         if not _restoring then
+            self.Log(_MethodName, "_restore is not set - setting initial data.")
+
             --Values the player isn't meant to adjust.
+            self._Data._TimeToActive = self._Data._TimeToActive or 0
             self._Data._TargetLaserActive = false
             self._Data._TargetBeamActiveTime = 0
             self._Data._MaxBeamActiveTime = 2 --How long the beam is active for.
@@ -94,6 +92,9 @@ function LaserSniper.initialize(_Values)
         else
             self.Log(_MethodName, "Restoring data from self.Restore()")
         end
+    else
+        --onClient()
+        self._Data._TimeToActive = self._Data._TimeToActive or 0 --Need this or it spams the hell out of client logs.
     end
 
     Entity():registerCallback("onDestroyed", "onDestroyed")
