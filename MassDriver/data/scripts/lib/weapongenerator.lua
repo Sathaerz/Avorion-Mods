@@ -14,6 +14,8 @@ function WeaponGenerator.generateMassDriver(rand, dps, tech, material, rarity)
     if tech <= 32 then
         weapon.appearance = WeaponAppearance.Bolter
     else
+        --tech 33+
+        damage = dps * fireDelay * 0.6 --These need to scale a bit better towards mid-game, otherwise they're just not worth using over cannons / seekers.
         weapon.appearance = WeaponAppearance.Cannon
     end
     weapon.name = "Mass Driver"
