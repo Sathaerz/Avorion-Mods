@@ -78,16 +78,18 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	local damageFactor = 3
 	local turretRange = 1000
 	if dangerValue > 5 then
-		turretFactor = turretFactor + 1
+		turretFactor = turretFactor + 0.5
+		damageFactor = damageFactor + 1
 		turretRange = turretRange + 375
 	end
 	if dangerValue >= 8 then
-		turretFactor = turretFactor + 1
+		turretFactor = turretFactor + 0.5
+		damageFactor = damageFactor + 1
 		turretRange = turretRange + 375
 	end
 	if dangerValue == 10 then
 		turretFactor = turretFactor + 1
-		damageFactor = damageFactor + 1
+		damageFactor = damageFactor + 2
 		turretRange = turretRange + 750
 	end
 	
@@ -106,29 +108,33 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	--Make it unboardable because I don't want to account for what happens if the player boards it.
 	Boarding(ship).boardable = false
 
-	turretDrops = 4
-	systemDrops = 2
+	turretDrops = 2
+	systemDrops = 1
+	if dangerValue > 5 then
+		turretDrops = turretDrops + 2
+		systemDrops = systemDrops + 1
+	end
 	if dangerValue == 10 then
-		turretDrops = 7
-		systemDrops = 4
+		turretDrops = turretDrops + 3
+		systemDrops = systemDrops + 2
 	end
     rarities[-1] = 0 -- no petty turrets
     rarities[0] = 0 -- no common turrets
     rarities[1] = 0 -- no uncommon turrets
 	rarities[2] = 0 -- no rare turrets - exceptional + only!
-    rarities[3] = rarities[3] * 0.25 -- reduce rates for rare turrets to have higher chance for the others
+    rarities[3] = rarities[3] * 0.5 -- reduce rates for rare turrets to have higher chance for the others
 
 	sysrarities[-1] = 0
 	sysrarities[0] = 0
 	sysrarities[1] = 0
 	sysrarities[2] = 0
-	sysrarities[3] = sysrarities[3] * 0.25
+	sysrarities[3] = sysrarities[3] * 0.5
 
     turretGenerator.rarities = rarities
-    for i = 1, turretDrops do
+    for _ = 1, turretDrops do
         Loot(ship):insert(InventoryTurret(turretGenerator:generate(x, y)))
     end
-	for i = 1, systemDrops do
+	for _ = 1, systemDrops do
 		Loot(ship):insert(upgradeGenerator:generateSectorSystem(x, y, getValueFromDistribution(sysrarities)))
 	end
 
@@ -137,13 +143,14 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	ship:removeScript("icon.lua")
 	ship:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
 	if dangerValue > 5 then
+		ship:addScript("internal/common/entity/background/legendaryloot.lua")
 		ship:addScriptOnce("utility/buildingknowledgeloot.lua")
 	end
-	ship:addScript("internal/common/entity/background/legendaryloot.lua")
     ship.shieldDurability = ship.shieldMaxDurability
 
     ship:setValue("is_pirate", true)
 	ship:setValue("is_prototype", true)
+	ship:setValue("IW_nuclear_m", 0.2) --Same as the Xsotan Dreadnought
 end
 
 function DestroyProtoGenerator.getPlayerScaleFactor()
