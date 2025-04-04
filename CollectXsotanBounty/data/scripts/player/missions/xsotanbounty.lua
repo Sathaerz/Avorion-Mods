@@ -149,16 +149,18 @@ end
 mission.makeBulletin = function(_Station)
     local _MethodName = "Make Bulletin"
 
-    local _Rgen = random()
-    local _X, _Y = Sector():getCoordinates()
+    local _random = random()
+    local _sector = Sector()
+
+    local _X, _Y = _sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(_X, _Y)
 
     local _Description = formatDescription(_Station)
 
-    local _DangerLevel = _Rgen:getInt(1, 10)
+    local _DangerLevel = _random:getInt(1, 10)
     local _MaxTargets = 22
     local _Difficulty = "Easy"
-    local _Targets = _Rgen:getInt(5, _MaxTargets)
+    local _Targets = _random:getInt(5, _MaxTargets)
 
     local _BaseReward = 5500
     if _DangerLevel == 10 then
@@ -168,7 +170,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * _Targets * Balancing.GetSectorRewardFactor(Sector():getCoordinates())
+    reward = _BaseReward * _Targets * Balancing.GetSectorRewardFactor(_sector:getCoordinates())
 
     local bulletin =
     {
