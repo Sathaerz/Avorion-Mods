@@ -363,7 +363,8 @@ function modTableOK(idx)
         "3373069547", --The Dig
         "3411023648", --Xsotan Dreadnought
         "3406545523", --Scan Xsotan Group
-        "2901149152" --Eradicate Xsotan Infestation
+        "2901149152", --Eradicate Xsotan Infestation
+        "3385251675" --Collect Xsotan Bounty
     }
 
     mission.Log(methodName, "Checking function table.")
@@ -383,7 +384,7 @@ function modTableOK(idx)
                     end
                 end
             end
-            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation
+            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
         end,
         function() --Sunmaker
             for idx, mod in pairs(xMods) do
@@ -393,7 +394,7 @@ function modTableOK(idx)
                     end
                 end
             end
-            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation
+            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
         end,
         function() --Ballistyx
             for idx, mod in pairs(xMods) do
@@ -403,7 +404,7 @@ function modTableOK(idx)
                     end
                 end
             end
-            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation
+            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
         end,
         function() --Warlock
             for idx, mod in pairs(xMods) do
@@ -413,7 +414,7 @@ function modTableOK(idx)
                     end
                 end
             end
-            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation
+            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
         end,
         function() --Oppressor
             for idx, mod in pairs(xMods) do
@@ -423,7 +424,7 @@ function modTableOK(idx)
                     end
                 end
             end
-            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation
+            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
         end
     }
 
