@@ -17,7 +17,6 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
     local _ActiveMods = Mods()
     local _HETActive = false
     local _HarderEnemysActive = false
-    local _NukesActive = false
     for _, _Xmod in pairs(_ActiveMods) do
         if _Xmod.id == "1821043731" then --HET
             ESCCBossUtil.Log(_MethodName, "HET is active - increasing _Amp / _HighAmp")
@@ -26,9 +25,6 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
         if _Xmod.id == "2191291553" then --HarderEnemys
             ESCCBossUtil.Log(_MethodName, "HarderEnemys is active - increasing _Amp / _HighAmp")
             _HarderEnemysActive = true
-        end
-        if _Xmod.id == "3452526124" then
-            _NukesActive = true
         end
     end
 
@@ -249,19 +245,6 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
     local rareLootAmt = 7
     local uncommonLootAmt = 8
     local commonLootAmt = 14
-    if _NukesActive then
-        legendaryLootAmt = 0
-
-        if random():test(0.1) then
-            legendaryLootAmt = 1
-        end
-
-        exoticLootAmt = 1
-        exceptionalLootAmt = 2
-        rareLootAmt = 3
-        uncommonLootAmt = 4
-        commonLootAmt = 33
-    end
 
     local _Upgrades =
     {
@@ -312,6 +295,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
     _IncreasingThreatBoss:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
     _IncreasingThreatBoss:setValue("_DefenseController_Manage_Own_Invincibility", true)
     _IncreasingThreatBoss:setValue("is_pirate", true) --These guys should always spawn for pirate factions.
+    _IncreasingThreatBoss:setValuesetValue("IW_nuclear_m", 0.125)
 
     _IncreasingThreatBoss:setDropsAttachedTurrets(false)
 

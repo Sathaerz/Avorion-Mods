@@ -554,6 +554,7 @@ function PirateGenerator.addPirateEquipment(craft, title)
 
 			ESCCUtil.replaceIcon(craft, "data/textures/icons/pixel/executioner.png")
 			craft:setValue("is_executioner", true)
+			craft:setValue("IW_nuclear_m", 0.5)
 		end
 
 		if craft.numTurrets == 0 then

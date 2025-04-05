@@ -8,6 +8,7 @@ Thorns = {}
 local self = Thorns
 
 self._Debug = 0
+self._DebugLevel = 1
 
 self._Data = {}
 --self._Data._MaxTimeInPhase        Sets the maximum amount of time the script can spend in the phase where it is calculating / reflecting damage. Defaults to 20 seconds.
@@ -21,9 +22,9 @@ self._Data = {}
 self._ThornsDamage = {}
 
 function Thorns.initialize(_Values)
-    local _MethodName = "Initialize"
+    local methodName = "Initialize"
     local _Entity = Entity()
-    self.Log(_MethodName, "Adding v10 of thorns.lua to entity.")
+    self.Log(methodName, "Adding v10 of thorns.lua to entity.")
 
     self._Data = _Values or {}
 
@@ -41,16 +42,16 @@ function Thorns.initialize(_Values)
     --Need to register a callback for taking damage.
     if onServer() then
         if _Entity:registerCallback("onShieldDamaged", "onShieldDamaged") == 1 then
-            self.Log(_MethodName, "Could not attach onShieldDamaged callback.")
+            self.Log(methodName, "Could not attach onShieldDamaged callback.")
         end
         if _Entity:registerCallback("onDamaged", "onDamaged") == 1 then
-            self.Log(_MethodName, "Could not attach onDamaged callback.")
+            self.Log(methodName, "Could not attach onDamaged callback.")
         end
     end
 
-    if self._Debug >= 2 then
+    if self._Debug == 1 then
         for _idx, _val in pairs(self._Data) do
-            print("_idx : " .. tostring(_idx) .. " _val : " .. tostring(_val))
+            self.Log(methodName, "_idx : " .. tostring(_idx) .. " _val : " .. tostring(_val), 2)
         end
     end
 end
@@ -60,7 +61,7 @@ function Thorns.getUpdateInterval()
 end
 
 function Thorns.updateServer(_TimeStep)
-    local _MethodName = "Update Server"
+    local methodName = "Update Server"
     self._Data._TimeInPhase = self._Data._TimeInPhase + _TimeStep
     self._Data._DamageTimeTracker = self._Data._DamageTimeTracker + _TimeStep
     local _ShowAnimation = false
@@ -76,7 +77,7 @@ function Thorns.updateServer(_TimeStep)
             self._Data._ThornsMode = false
             self._Data._TimeInPhase = 0
             self._Data._DamageTimeTracker = 0
-            self.Log(_MethodName, "Swapping modes. Thorns mode is now off.")
+            self.Log(methodName, "Swapping modes. Thorns mode is now off.")
         else
             --blink to give a visual indication of the ship being in MAXIMUM Thorns
             _ShowAnimation = true
@@ -88,7 +89,7 @@ function Thorns.updateServer(_TimeStep)
             self._Data._TimeInPhase = 0
             self._Data._DamageTimeTracker = 0
             _ShowAnimation = true
-            self.Log(_MethodName, "Swapping modes. Thorns mode is now on.")
+            self.Log(methodName, "Swapping modes. Thorns mode is now on.")
         end
     end
 
@@ -105,9 +106,9 @@ end
 --region #SERVER FUNCTIONS
 
 function Thorns.onShieldDamaged(_ObjectIndex, _Amount, _DamageType, _InflictorID)
-    local _MethodName = "On Shield Damaged"
+    local methodName = "On Shield Damaged"
     --Don't turn this on unless you're okay with a fckton of messages.
-    --self.Log(_MethodName, "Running On Shield Damage callback - damage amount is " .. tostring(_Amount) .. " and damage type is " .. tostring(_DamageType))
+    --self.Log(methodName, "Running On Shield Damage callback - damage amount is " .. tostring(_Amount) .. " and damage type is " .. tostring(_DamageType))
     if not _Amount or not self._Data._ThornsMode then
         return
     else
@@ -130,9 +131,9 @@ function Thorns.onShieldDamaged(_ObjectIndex, _Amount, _DamageType, _InflictorID
 end
 
 function Thorns.onDamaged(_ObjectIndex, _Amount, _Inflictor, _DamageSource, _DamageType)
-    local _MethodName = "On Damaged"
+    local methodName = "On Damaged"
     --Don't turn this on unless you're okay with a fckton of messages.
-    --self.Log(_MethodName, "Running on Damaged callback - damage amount is " .. tostring(_Amount) .. " and damage type is " .. tostring(_DamageType))
+    --self.Log(methodName, "Running on Damaged callback - damage amount is " .. tostring(_Amount) .. " and damage type is " .. tostring(_DamageType))
 
     local _InflictorID = _Inflictor
     
@@ -158,8 +159,8 @@ function Thorns.onDamaged(_ObjectIndex, _Amount, _Inflictor, _DamageSource, _Dam
 end
 
 function Thorns.bounceDamage()
-    local _MethodName = "Bounce Damage"
-    self.Log(_MethodName, "Damaging " .. tostring(#self._ThornsDamage) .. " enemies.")
+    local methodName = "Bounce Damage"
+    self.Log(methodName, "Damaging " .. tostring(#self._ThornsDamage) .. " enemies.")
 
     local _Me = Entity()
     local _MyPosition = _Me.translationf
@@ -177,23 +178,23 @@ function Thorns.bounceDamage()
 
             if _Shield then
                 --Do as much damage as possible to the shield, then hit the hull for the remaining damage.
-                self.Log(_MethodName, "Found target. Inflicting " .. tostring(_dmg) .. " damage to " .. tostring(_Entity.name))
+                self.Log(methodName, "Found target. Inflicting " .. tostring(_dmg) .. " damage to " .. tostring(_Entity.name))
                 local _ShieldDamage = _dmg
                 local _HullDamage = 0
                 if _Shield.durability < _dmg then
                     _ShieldDamage = _Shield.durability
                     _HullDamage = _dmg - _ShieldDamage
                 end
-                self.Log(_MethodName, tostring(_ShieldDamage) .. " damage to " .. tostring(_Entity.name) .. " shield")
+                self.Log(methodName, tostring(_ShieldDamage) .. " damage to " .. tostring(_Entity.name) .. " shield")
                 _Shield:inflictDamage(_ShieldDamage, 1, DamageType.Energy, _MyPosition, _MyID)
                 if _HullDamage > 0 then
-                    self.Log(_MethodName, tostring(_HullDamage) .. " damage to " .. tostring(_Entity.name) .. " hull")
+                    self.Log(methodName, tostring(_HullDamage) .. " damage to " .. tostring(_Entity.name) .. " hull")
                     _Dura:inflictDamage(_HullDamage, 1, DamageType.Energy, _MyID)
                 end
             else
                 if _Dura then
                     --Do everything to the hull.
-                    self.Log(_MethodName, "Found target. Inflicting " .. tostring(_dmg) .. " damage to " .. tostring(_Entity.name))
+                    self.Log(methodName, "Found target. Inflicting " .. tostring(_dmg) .. " damage to " .. tostring(_Entity.name))
                     _Dura:inflictDamage(_dmg, 1, DamageType.Energy, _MyID)
                 end
             end
@@ -225,25 +226,27 @@ function Thorns.createLaser(_From, _To)
     _Laser.collision = false
 end
 
-function Thorns.Log(_MethodName, _Msg)
-    if self._Debug >= 1 then
-        print("[Thorns] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
+--endregion
+
+--region #LOG / SECURE / RESTORE
+
+function Thorns.Log(methodName, _Msg, _RequireDebugLevel)
+    _RequireDebugLevel = _RequireDebugLevel or 1
+
+    if self._Debug == 1 and self._DebugLevel >= _RequireDebugLevel then
+        print("[Thorns] - [" .. tostring(methodName) .. "] - " .. tostring(_Msg))
     end
 end
 
---endregion
-
---region #SECURE / RESTORE
-
 function Thorns.secure()
-    local _MethodName = "Secure"
-    self.Log(_MethodName, "Securing self._Data")
+    local methodName = "Secure"
+    self.Log(methodName, "Securing self._Data")
     return self._Data
 end
 
 function Thorns.restore(_Values)
-    local _MethodName = "Restore"
-    self.Log(_MethodName, "Restoring self._Data")
+    local methodName = "Restore"
+    self.Log(methodName, "Restoring self._Data")
     self._Data = _Values
 end
 

@@ -398,8 +398,11 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     }
     --A bit less generous than the original incarnation but I don't want to give the player an easy source of legendaries too far out. (or too often)
     --The original was balanced around occurring at a fixed schedule, but the player can take this mission as often as they want - especially if they have the extra mission mod.
-    if dist < 350 and dangerFactor >= 5 then
+    if dangerFactor >= 5 then
         local useOdds = 0.5
+        if dist > 350 then
+            useOdds = 0.25
+        end
         if dist < coreDist and killedGuardian then
             useOdds = 1.0
         end
@@ -453,7 +456,8 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     ship:setValue("is_xsotan", true)
     ship:setValue("xsotan_dreadnought", true)
     ship:setValue("SDKEDSDisabled", true) --Need to disable SDK extended docking shields.
-    if dangerFactor >= 5 then
+    ship:setValue("IW_nuclear_m", 0.2)
+    if dangerFactor > 5 then
         ship:addScript("internal/common/entity/background/legendaryloot.lua")
     end
 
