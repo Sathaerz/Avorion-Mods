@@ -60,6 +60,7 @@ _horizonkeepers_campaign_script_values = {
     "_horizonkeepers_story3_cargolooted",
     "_horizonkeepers_killed_hansel",
     "_horizonkeepers_killed_gretel",
+    "_horizonkeepers_story7_heardplan",
     "_horizonkeepers_last_side1",
     "_horizonkeepers_last_side2",
     "_horizonkeepers_side1_complete",

@@ -78,6 +78,8 @@ mission.globalPhase.noPlayerEventsTargetSector = true
 mission.globalPhase.noLocalPlayerEventsTargetSector = true
 
 mission.globalPhase.onAbandon = function()
+    clearShipyardCargo()
+    
     if mission.data.location then
         runFullSectorCleanup(true)
     end
@@ -85,6 +87,7 @@ end
 
 mission.globalPhase.onFail = function()
     sendFailureMail()
+    clearShipyardCargo()
 
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -184,6 +187,8 @@ local onPhase2DialogEnd = makeDialogServerCallback("onPhase2DialogEnd", 2, funct
 
     local varlance = Entity(mission.data.custom.varlanceID)
     varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
+
+    Player():setValue("_horizonkeepers_story7_heardplan", true)
 
     nextPhase()
 end)
@@ -619,7 +624,7 @@ mission.phases[5].timers[3] = {
             local _TIMERSLOT = 5
 
             if not escortOK and not mission.phases[5].timers[_TIMERSLOT] then
-                Player():sendChatMessage("", 3, "You are too far from the freighter. Horizon is expecting you to maintain escort formation.")
+                Player():sendChatMessage("", 3, "You are too far from the freighter. Stay within 20km of it or Horizon will get suspicious.")
 
                 mission.phases[5].timers[_TIMERSLOT] = {
                     time = 20,
@@ -1287,13 +1292,27 @@ function addDefenseController(_sector)
 end
 
 function sendFailureMail()
-    local _player = Player()
-    local _Mail = Mail()
-	_Mail.text = Format("Hey buddy,\n\nThe op didn't go off as planned, but we can still hit a few more of their mercs. With enough losses, they'll have to change the guard dogs. When that happens, the new guys won't know anything about us. Between that and another opening I found in their shipping schedule, we can try to relaunch the op again later.\n\nI'll be in touch.\n\nVarlance")
-	_Mail.header = "Mission Failed"
-	_Mail.sender = "Varlance @FrostbiteCompany"
-	_Mail.id = "_horizon_story7_mail3"
-	_player:addMail(_Mail)
+    if not mission.data.custom.sentFailMail then
+        local _player = Player()
+        local _Mail = Mail()
+        _Mail.text = Format("Hey buddy,\n\nThe op didn't go off as planned, but we can still hit a few more of their mercs. With enough losses, they'll have to change the guard dogs. When that happens, the new guys won't know anything about us. Between that and another opening I found in their shipping schedule, we can try to relaunch the op again later.\n\nI'll be in touch.\n\nVarlance")
+        _Mail.header = "Mission Failed"
+        _Mail.sender = "Varlance @FrostbiteCompany"
+        _Mail.id = "_horizon_story7_mail3"
+        _player:addMail(_Mail)
+
+        mission.data.custom.sentFailMail = true
+    end
+end
+
+function clearShipyardCargo()
+    if atTargetLocation() then
+        local horizonShipyard = Entity(mission.data.custom.shipyardID)
+        if horizonShipyard and valid(horizonShipyard) then
+            local syBay = CargoBay(horizonShipyard)
+            syBay:clear()
+        end
+    end
 end
 
 function finishAndReward()
@@ -1386,12 +1405,25 @@ function onPhase2Dialog(varlanceID)
     local d5 = {}
     local d6 = {}
     local d7 = {}
+    local d8 = {}
+
+    local playerHeardPlan = Player():getValue("_horizonkeepers_story7_heardplan")
 
     d0.text = "Glad you could make it, buddy."
     d0.followUp = d1
 
     d1.text = "Here's the plan. We'll have your ship and the Ice Nova escort our captured freighter into the sector. Unfortunately, they have plenty of footage of us trashing their ships. I expect them to recognize our ship profiles instantly."
-    d1.followUp = d2
+    if playerHeardPlan then
+        d8.text = "Understood. I'm sending you the coordinates of the shipyard now. Sophie will meet you there with the captured freighter."
+        d8.onEnd = onPhase2DialogEnd
+
+        d1.answers = {
+            { answer = "Go on.", followUp = d2 },
+            { answer = "We've gone over this before.", followUp = d8 }
+        }
+    else
+        d1.followUp = d2
+    end
 
     d2.text = "So I'm getting \"executed\" for this mission. My second in command - Sophie Netreba - is going to pretend to be a pirate captain that recently took over this ship."
     d2.followUp = d3

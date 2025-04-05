@@ -88,16 +88,6 @@ mission.globalPhase.onAccomplish = function()
     end
 end
 
-mission.globalPhase.onTargetLocationEntered = function(_X, _Y)
-    mission.data.timeLimit = nil 
-    mission.data.timeLimitInDescription = false
-end
-
-mission.globalPhase.onTargetLocationLeft = function(_X, _Y)
-    mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to head back to the sector.
-    mission.data.timeLimitInDescription = true --Show the player how much time is left.
-end
-
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].noBossEncountersTargetSector = true

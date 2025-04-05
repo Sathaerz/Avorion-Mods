@@ -606,7 +606,7 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
 
             _ship:addScriptOnce("entity/xsologizeboss.lua")
             _ship:addScriptOnce("lasersniper.lua", _LaserSniperValues)
-            _ship:addScriptOnce("shieldrecharger.lua", { _MaxRecharges = 1 })
+            _ship:addScriptOnce("shieldrecharger.lua", { _MaxRecharges = 1, _AddChargeIfActivatedUnder = 120, _FastDamageCharges = 3 })
         end,
         _LootFunction = function(_ship)
             local _Loot = Loot(_ship)
@@ -689,7 +689,7 @@ function HorizonUtil.spawnProjectXsologize(_DeleteOnLeft, _Position)
             ShipUtility.addHorizonPrototypePlasmaGuns(_ship, 4)
             ShipUtility.addBossAntiTorpedoEquipment(_ship)
 
-            _ship:addScriptOnce("shieldrecharger.lua", { _MaxRecharges = 1 })
+            _ship:addScriptOnce("shieldrecharger.lua", { _MaxRecharges = 1, _AddChargeIfActivatedUnder = 120, _FastDamageCharges = 2 })
         end,
         _LootFunction = function(_ship)
             local _Loot = Loot(_ship)

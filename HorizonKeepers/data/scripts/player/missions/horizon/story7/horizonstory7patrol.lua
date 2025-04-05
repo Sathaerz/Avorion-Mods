@@ -145,7 +145,7 @@ function HorizonStory7Patrol.updateFlying(timeStep)
     local r = ship:getBoundingSphere().radius
     local d = (r * 2)
     if current == stationPoint then
-        d = (r * 3)
+        d = (r * 8) --4x distance so they don't cluster up around the station.
     end
     local d2 = d * d
 
