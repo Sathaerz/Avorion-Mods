@@ -67,7 +67,7 @@ function WeaponGenerator.generateArsPulseLaser(rand, dps, tech, material, rarity
 
     -- 10 % chance for plasma
     if rand:test(0.1) then
-        WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 2, 0.15, 0.2)
+        WeaponGenerator.addPlasmaDamage(rand, weapon, rarity, 1.75, 0.125, 0.175)
     end
 
     WeaponGenerator.adaptWeapon(rand, weapon, tech, material, rarity)
