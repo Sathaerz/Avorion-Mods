@@ -63,21 +63,23 @@ function DefendProtoGenerator.create(position, giverFaction, dangerValue, scaleO
 end
 
 function DefendProtoGenerator.addBattleshipEquipment(ship, dangerValue)
-	local turretFactor = 6
-	local damageFactor = 4
-	local turretRange = 2000
+	local turretFactor = 4
+	local damageFactor = 6
+	local turretRange = 1000
 	if dangerValue > 5 then
-		turretFactor = turretFactor - 0.75
-		turretRange = turretRange - 325
+		turretFactor = turretFactor - 0.5
+		damageFactor = damageFactor - 1
+		turretRange = turretRange - 125
 	end
 	if dangerValue >= 8 then
-		turretFactor = turretFactor - 0.75
-		turretRange = turretRange - 325
+		turretFactor = turretFactor - 0.5
+		damageFactor = damageFactor - 1
+		turretRange = turretRange - 125
 	end
 	if dangerValue == 10 then
-		turretFactor = turretFactor - 0.75
+		turretFactor = turretFactor - 1
 		damageFactor = damageFactor - 1
-		turretRange = turretRange - 750
+		turretRange = turretRange - 250
 	end
 
 	turretFactor = math.floor(turretFactor)

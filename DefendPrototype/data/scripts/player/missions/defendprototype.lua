@@ -41,6 +41,7 @@ mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." }, --Placeholder
     { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
+    { text = "Prepare your defense", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Defend the Prototype", bulletPoint = true, fulfilled = false, visible = false }
 }
 mission.data.timeLimit = 10 * 60 --Player has 10 minutes to head to the sector. Take the time limit off when the player arrives.
@@ -198,6 +199,7 @@ end
 --PHASE 2
 
 mission.phases[2] = {}
+mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].updateTargetLocationServer = function(timeStep)
     mission.data.custom.phaseTwoTimer = mission.data.custom.phaseTwoTimer + timeStep
 
@@ -231,6 +233,11 @@ end
 
 mission.phases[3] = {}
 mission.phases[3].timers = {}
+mission.phases[3].onBegin = function()
+    mission.data.description[4].fulfilled = true
+    mission.data.description[5].visible = true
+end
+
 mission.phases[3].onBeginServer = function()
     setCustomMusic(mission.data.custom.defendPrototypeTrack)
 end
@@ -758,7 +765,7 @@ function finishAndReward()
     mission.Log(_MethodName, "Running win condition.")
 
     if mission.data.custom.rewardBonus then
-        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " Plus a bonus for excellent work."
+        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus for excellent work."
         mission.data.reward.credits = mission.data.reward.credits * 1.1
     end
 
