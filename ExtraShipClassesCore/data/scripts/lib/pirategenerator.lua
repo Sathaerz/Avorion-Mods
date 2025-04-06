@@ -16,12 +16,13 @@
     18      - Pillager*		- (Disruptor / Persecutor / Torpedo) + Military x2
     28      - Devastator*	- (Artillery / Persecutor) + Military x3 + Military x3
     25      - Mothership	- (Carrier / Flagship) + Boss Anti-Torpedo
-	25		- Flagship		- Flagship + Boss Anti-Torpedo
+	25		- Flagship***	- Flagship + Boss Anti-Torpedo
 	20-50  - Executioner*	- ExeStandard x3 + Artillery A/2 + Artillery A/2 + [2A] + [APD] + [ExeStandard x3 + 2A] + [4A] + [4A]**
 
 	* - Custom ships added by ESCC
 	** - Yes, it has ALL of these, depending on a special scale value. This special scale determines the 20-50 size as well.
 	** - The executioner has a bonus to DPS / HP that increases after it reaches maximum size. This does not have a cap.
+	*** - Technically a copy of the Mothership. I needed one without the "carrier" equipment.
 ]]
 include ("utility")
 
@@ -357,8 +358,8 @@ function PirateGenerator.addPirateEquipment(craft, title)
 		elseif title == "Stinger" then
 			--A fast, tiny ship that focuses on destroying shields. Focus on death by 1000 paper cuts.
 			ShipUtility.addDisruptorEquipment(craft)
-			Entity(craft.index):addMultiplier(acceleration, 4)
-			Entity(craft.index):addMultiplier(velocity, 4)
+			Entity(craft.index):addMultiplier(StatsBonuses.Acceleration, 8)
+			Entity(craft.index):addMultiplier(StatsBonuses.Velocity, 8)
 
 			Boarding(craft).boardable = false
 			craft:setValue("is_stinger", true)

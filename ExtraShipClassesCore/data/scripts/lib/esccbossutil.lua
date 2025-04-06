@@ -88,7 +88,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _ShipUtil.addBossAntiTorpedoEquipment(_Boss, nil, nil, 2000)
             _Boss:setValue("_escc_is_dervish_goliath", true)
         end },
-        { _PlanFile = "data/plans/escc/Hellcat.xml", _Title = "Relentless Hellcat", _EngineFactor = 6, _ThrustFactor = 2, _CustomFunction = function(_Boss, _ShipUtil)
+        { _PlanFile = "data/plans/escc/Hellcat.xml", _Title = "Relentless Hellcat", _EngineFactor = 8, _ThrustFactor = 2, _CustomFunction = function(_Boss, _ShipUtil)
             _Boss:addScriptOnce("phasemode.lua")
             _Boss:addScriptOnce("eternal.lua", 0.005, 10)
             _Boss:addScriptOnce("dialogs/encounters/relentlesshellcat.lua")
@@ -120,7 +120,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
             _ShipUtil.addHunterLightningGuns(_Boss)
             _Boss:setValue("_escc_is_steadfast_hunter", true)
         end },
-        { _PlanFile = "data/plans/escc/Shield.xml", _Title = "Vigilant Shield", _EngineFactor = 0, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
+        { _PlanFile = "data/plans/escc/Shield.xml", _Title = "Vigilant Shield", _EngineFactor = 0.25, _ThrustFactor = 1, _CustomFunction = function(_Boss, _ShipUtil)
             local _APDValues = {
                 _ROF = 0.45,
                 _TargetTorps = true,
@@ -196,8 +196,8 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
     _Thrusters.basePitch = _Thrusters.basePitch * 2 * _BossData._ThrustFactor
     _Thrusters.baseRoll = _Thrusters.baseRoll * 2 * _BossData._ThrustFactor
     _Thrusters.fixedStats = true
-    _IncreasingThreatBoss:addMultiplier(acceleration, _BossData._EngineFactor)
-    _IncreasingThreatBoss:addMultiplier(velocity, _BossData._EngineFactor)
+    _IncreasingThreatBoss:addMultiplier(StatsBonuses.Acceleration, _BossData._EngineFactor)
+    _IncreasingThreatBoss:addMultiplier(StatsBonuses.Velocity, _BossData._EngineFactor)
 
     ESCCBossUtil.Log(_MethodName, "Upgrading Boarding and Docking")
     Boarding(_IncreasingThreatBoss).boardable = false
@@ -295,7 +295,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
     _IncreasingThreatBoss:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
     _IncreasingThreatBoss:setValue("_DefenseController_Manage_Own_Invincibility", true)
     _IncreasingThreatBoss:setValue("is_pirate", true) --These guys should always spawn for pirate factions.
-    _IncreasingThreatBoss:setValuesetValue("IW_nuclear_m", 0.125)
+    _IncreasingThreatBoss:setValue("IW_nuclear_m", 0.125)
 
     _IncreasingThreatBoss:setDropsAttachedTurrets(false)
 
