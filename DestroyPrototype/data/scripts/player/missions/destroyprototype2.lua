@@ -640,7 +640,7 @@ mission.makeBulletin = function(_Station)
     local _LoseMsg = formatLoseMessage(_Station)
 
     local _BaseReward = 500000
-    if _DangerLevel >= 5 then
+    if _DangerLevel > 5 then
         _BaseReward = _BaseReward + 200000
     end
     if _DangerLevel == 10 then
