@@ -12,7 +12,7 @@ self._Debug = 0
 
 function IronCurtain.initialize(_Values)
     local methodName = "Initialize"
-    self.Log(methodName, "Initializing Iron Curtain v18")
+    self.Log(methodName, "Initializing Iron Curtain v19")
 
     self._Data = _Values or {}
 
@@ -67,7 +67,10 @@ function IronCurtain.updateServer(_TimeStep)
             _entity.invincible = true
         end
     else
-        _durability.invincibility = self._Data._MinDura --So we don't get blasted before invincibility can be set.
+        if not _entity.invincible then
+            self.Log(methodName, "Entity is not invincible and has Iron Curtain - setting minimum durability.")
+            _durability.invincibility = self._Data._MinDura --So we don't get blasted before invincibility can be set.
+        end
     end
 end
 
