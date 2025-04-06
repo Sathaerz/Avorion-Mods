@@ -82,6 +82,7 @@ function initialize(_Data_in)
             mission.data.custom.killedTargets = 0
             mission.data.custom.timePassed = 0
             mission.data.custom.playerSwitchedViaJump = false
+            mission.data.custom.freeSectorSwitches = 3
 
             local _TargetFaction = Faction(mission.data.custom.pirateFaction)
 
@@ -224,7 +225,17 @@ function pirateBountyOnSectorEntered(player, x, y, changeType)
         mission.Log(methodName, "Player arrived via jump. Hunters can spawn if applicable.")
         mission.data.custom.playerSwitchedViaJump = true
     else
+        if changeType == SectorChangeType.Switch then
+            mission.data.custom.freeSectorSwitches = mission.data.custom.freeSectorSwitches - 1
+            if mission.data.custom.dangerLevel == 10 and random():test(0.5) then
+                mission.data.custom.freeSectorSwitches = mission.data.custom.freeSectorSwitches - 1
+            end
+        end
         mission.data.custom.playerSwitchedViaJump = false
+        if mission.data.custom.freeSectorSwitches <= 0 then --If we're out of free switches, consider the player to have jumped.
+            mission.Log(methodName, "Player is out of free switches. Consdiering this a jump.")
+            mission.data.custom.playerSwitchedViaJump = true
+        end
     end
 end
 
@@ -287,7 +298,7 @@ function onHuntersFinished(_Generated)
         end
     end
 
-    local note = makeHeadHunterNote(Player(), Faction(mission.data.custom.pirateFaction))
+    local note = makeHeadHunterNote(Player(), Faction(mission.data.custom.pirateFaction), mission.data.custom.dangerLevel)
     Loot(_Generated[1]):insert(note)
 
     Placer.resolveIntersections(_Generated)
@@ -304,11 +315,16 @@ function onHuntersFinished(_Generated)
     }
 
     _Player:sendChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(headhunterMessages) % {player = _Player.name})
+
+    mission.data.custom.freeSectorSwitches = 3 --Reset to 3 switches.
 end
 
-function makeHeadHunterNote(player, huntingFaction)
+function makeHeadHunterNote(player, huntingFaction, dangerLevel)
     local x, y = Sector():getCoordinates()
     local money = round(math.max(50000, 500000 * Balancing_GetSectorRichnessFactor(x, y)) / 10000) * 10000
+    if dangerLevel == 10 then
+        money = money * 3
+    end
     local reward = "¢${money}" % {money = createMonetaryString(money)}
     local shipName = "Unknown"%_t
 
@@ -440,8 +456,10 @@ end
 mission.makeBulletin = function(_Station)
     local _MethodName = "Make Bulletin"
 
-    local _Rgen = ESCCUtil.getRand()
-    local _X, _Y = Sector():getCoordinates()
+    local _random = random()
+    local _sector = Sector()
+
+    local _X, _Y = _sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(_X, _Y)
 
     local _PirateLevel = Balancing_GetPirateLevel(_X, _Y)
@@ -450,11 +468,11 @@ mission.makeBulletin = function(_Station)
     
     local _Description = formatDescription(_Station)
 
-    local _DangerLevel = _Rgen:getInt(1, 10)
+    local _DangerLevel = _random:getInt(1, 10)
     --local _DangerLevel = 10
     local _MaxTargets = 22
     local _Difficulty = "Easy"
-    local _Targets = _Rgen:getInt(5, _MaxTargets)
+    local _Targets = _random:getInt(5, _MaxTargets)
 
     local _BaseReward = 5500
     if _DangerLevel == 10 then
@@ -464,7 +482,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * _Targets * Balancing.GetSectorRewardFactor(Sector():getCoordinates())
+    reward = _BaseReward * _Targets * Balancing.GetSectorRewardFactor(_sector:getCoordinates())
 
     local bulletin =
     {
