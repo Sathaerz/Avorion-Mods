@@ -389,6 +389,7 @@ function spawnPrototype()
         
         --local _Type = 3
         local _Type = _Rgen:getInt(1, 3)
+        local sectorWeaponDPS = Balancing_GetSectorWeaponDPS(_X, _Y)
         
         if _Type == 1 then
             mission.Log(_MethodName, "Torpedo type chosen.")
@@ -418,7 +419,7 @@ function spawnPrototype()
                 _UseSupply = false,
                 _FragileShots = false,
                 _TargetPriority = 1,
-                _BaseDamagePerShot = Balancing_GetSectorWeaponDPS(_X, _Y) * 2500,
+                _BaseDamagePerShot = sectorWeaponDPS * 2500,
                 _TimeToActive = 30,
                 _UseEntityDamageMult = true,
                 _UseStaticDamageMult = _StaticMult
@@ -428,8 +429,15 @@ function spawnPrototype()
         elseif _Type == 3 then
             mission.Log(_MethodName, "Laser Sniper type chosen.")
             --Laser sniper
+            local distToCenter = length(vec2(_X, _Y))
+            local laserSniperFactor = 150 --20% more damage than a longinus.
+            if distToCenter > 360 then
+                mission.Log(_MethodName, "No shields available - cut damage in half.")
+                laserSniperFactor = 75 --Cut it in half to compensate for lack of shields.
+            end
+
             local _LaserSniperValues = {
-                _DamagePerFrame = Balancing_GetSectorWeaponDPS(_X, _Y) * 250,
+                _DamagePerFrame = sectorWeaponDPS * laserSniperFactor,
                 _TimeToActive = 30,
                 _UseEntityDamageMult = true,
                 _UseStaticDamageMult = _StaticMult
@@ -622,8 +630,8 @@ mission.makeBulletin = function(_Station)
         return 
     end
 
-    --local _DangerLevel = 10
     local _DangerLevel = _Rgen:getInt(1, 10)
+    --local _DangerLevel = 10
 
     local _IconIn = nil
     local _Difficulty = "Difficult"

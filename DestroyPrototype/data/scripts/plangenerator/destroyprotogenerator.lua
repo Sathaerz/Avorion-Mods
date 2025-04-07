@@ -69,6 +69,7 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	local systemDrops = 0
 
     local x, y = Sector():getCoordinates()
+	local distFromCenter = length(vec2(x, y))
     local turretGenerator = SectorTurretGenerator()
     local rarities = turretGenerator:getSectorRarityDistribution(x, y)
 	local upgradeGenerator = SectorUpgradeGenerator()
@@ -121,14 +122,25 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
     rarities[-1] = 0 -- no petty turrets
     rarities[0] = 0 -- no common turrets
     rarities[1] = 0 -- no uncommon turrets
-	rarities[2] = 0 -- no rare turrets - exceptional + only!
-    rarities[3] = rarities[3] * 0.5 -- reduce rates for rare turrets to have higher chance for the others
-
+	if distFromCenter < 350 then
+		rarities[2] = 0 -- no rare turrets - exceptional + only!
+		rarities[3] = rarities[3] * 0.5 -- reduce rates for rare turrets to have higher chance for the others
+	else
+		rarities[2] = rarities[2] * 0.5
+		--Don't mess with exceptional rarities @ > 350
+	end
+	
 	sysrarities[-1] = 0
 	sysrarities[0] = 0
 	sysrarities[1] = 0
-	sysrarities[2] = 0
-	sysrarities[3] = sysrarities[3] * 0.5
+	if distFromCenter < 350 then
+		sysrarities[2] = 0
+		sysrarities[3] = sysrarities[3] * 0.5
+	else
+		sysrarities[2] = sysrarities[2] * 0.5
+		--Don't mess with exceptional rarities @ > 350
+	end
+	
 
     turretGenerator.rarities = rarities
     for _ = 1, turretDrops do
