@@ -62,15 +62,14 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     local _ActiveMods = Mods()
     local _ic1 = false
     local _ic2 = false
-    local _ic0 = false
 
     self.Log(_MethodName, "Checking Amp")
 
     local _AmpTable = {
-        ["3452526124"] = 9999,    --Can auto-kill the boss. Better move fast before it blows all your stuff up.
         ["2017677089"] = 0.0,     --Weapon Engineering is _Amp + 3 - Just want to note that it is on the list here. We have a special set of detection triggers for this later in the file.
         ["2849203442"] = 4,       --Overpowerinator. I mean, it's deliberately designed to be overpowered.
         ["3229979623"] = 4,       --Same comment as above.
+        ["3452526124"] = 2,       --Nuclear Warhead Item Wheel. Can auto-damage the boss.
         ["2191291553"] = 2,       --HarderEnemys - Your wish has been granted.
         ["2442089978"] = 2,       --Amped UP DPS - Sure, it makes the Gordian Knot hit harder, but we need to compensate with HP.
         ["2674515274"] = 2,       --Voidspark upgrade
@@ -148,11 +147,6 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         if _Xmod.id == "2052687922" or _Xmod.id == "1991691736" or _Xmod.id == "2289497873" then
             _ic1 = true
         end
-        if _Xmod.id == "3452526124" then
-            _ic0 = true
-            _ic1 = true
-            _ic2 = true
-        end
         local _xAmp = _AmpTable[_Xmod.id]
         if _xAmp then
             _Amp = _Amp + _xAmp
@@ -187,7 +181,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     local _Superweapon = Sector():createShip(_Faction, "", _Plan, PirateGenerator.getGenericPosition())
     local _AdjustSlammer = false
     local _TurnFactor = 1.0
-    if _ic0 then
+    if _ic1 and _ic2 then
         _Superweapon:setValue("autokill", true)
     end
 
@@ -246,6 +240,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     _Superweapon.crew = _Superweapon.idealCrew
     _Superweapon:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
     _Superweapon:setValue("is_attackresearchbase_superweapon", true)
+    _Superweapon:setValue("IW_nuclear_m", 0.05) --If you can live long enough to drop 20 nukes on this thing, you deserve to win.
     
     --Just remember. If you alter the code to make this easier, you cheated :P
     self.Log(_MethodName, "Upgrading Thrusters and engine to x2")
@@ -254,8 +249,8 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     _Thrusters.basePitch = _Thrusters.basePitch * 2 * _TurnFactor
     _Thrusters.baseRoll = _Thrusters.baseRoll * 2 * _TurnFactor
     _Thrusters.fixedStats = true
-    _Superweapon:addMultiplier(acceleration, 2)
-    _Superweapon:addMultiplier(velocity, 2)
+    _Superweapon:addMultiplier(StatsBonuses.Acceleration, 2)
+    _Superweapon:addMultiplier(StatsBonuses.Velocity, 2)
 
     self.Log(_MethodName, "Upgrading Weapons")
     _Superweapon.damageMultiplier = (_Superweapon.damageMultiplier or 1) * _FinalDamageFactor
@@ -286,17 +281,15 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     local _TurretGenerator = SectorTurretGenerator()
     local _UpgradeGenerator = SectorUpgradeGenerator()
 
-    if not _ic0 then
-        local _Loot = Loot(_Superweapon)
-        local _TurretCount = _Rgen:getInt(20, 26)
-        local _SystemCount = _Rgen:getInt(20, 24)
+    local _Loot = Loot(_Superweapon)
+    local _TurretCount = _Rgen:getInt(30, 40)
+    local _SystemCount = _Rgen:getInt(30, 40)
 
-        for _ = 1, _TurretCount do
-            _Loot:insert(InventoryTurret(_TurretGenerator:generate(_X, _Y, -156, Rarity(self.getRandomRarity()))))
-        end
-        for _ = 1, _SystemCount do
-            _Loot:insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, Rarity(self.getRandomRarity())))
-        end
+    for _ = 1, _TurretCount do
+        _Loot:insert(InventoryTurret(_TurretGenerator:generate(_X, _Y, -156, Rarity(self.getRandomRarity()))))
+    end
+    for _ = 1, _SystemCount do
+        _Loot:insert(_UpgradeGenerator:generateSectorSystem(_X, _Y, Rarity(self.getRandomRarity())))
     end
 
     local _TorpDamageFactor = 2
@@ -308,7 +301,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     if _TechLevel <= 40 then
         _TorpDamageFactor = 6
     end
-    if _ic0 then
+    if _ic1 and _ic2 then
         _TorpDamageFactor = _TorpDamageFactor * 16
         _TorpDurabilityFactor = _TorpDurabilityFactor * 16
     end
@@ -318,7 +311,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
     local _tta = 10
     local _avtFactor = 1.5
     local _shockFactor = 2
-    if _ic0 then
+    if _ic1 and _ic2 then
         _tta = 0
         _avtFactor = 4
         _shockFactor = 10
