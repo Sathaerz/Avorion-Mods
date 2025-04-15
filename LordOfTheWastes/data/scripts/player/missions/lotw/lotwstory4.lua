@@ -52,8 +52,8 @@ mission.data.accomplishMessage = "Thank you. The reward has been transferred to 
 
 local LOTW_Mission_init = initialize
 function initialize()
-    local _MethodName = "initialize"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "initialize"
+    mission.Log(methodName, "Beginning...")
 
     if onServer()then
         local _Sector = Sector()
@@ -80,7 +80,7 @@ function initialize()
             mission.data.custom.missionsFailed = _FailureCt
             mission.data.custom.failureCounter = 0 --Used to fail the mission if the player is out of sector for to long, not to count mission failures.
 
-            mission.data.custom.outpostLocation = getNextLocation()
+            mission.data.custom.outpostLocation = lotwStory4_getNextLocation()
             
             local missionReward = ESCCUtil.clampToNearest(150000 + (50000 * Balancing.GetSectorRewardFactor(_Sector:getCoordinates())), 5000, "Up")
 
@@ -88,7 +88,7 @@ function initialize()
     
             LOTW_Mission_init(missionData_in)
 
-            setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
+            lotwStory4_setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
         else
             --Restoring
             LOTW_Mission_init()
@@ -120,8 +120,8 @@ end
 mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].onBeginServer = function()
-    local _MethodName = "Phase 1 On Begin Server"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "Phase 1 On Begin Server"
+    mission.Log(methodName, "Beginning...")
 
     local _Faction = Faction(mission.data.custom.friendlyFaction) --The phase is already set to 1 by the time we hit this, so it has to be done it this way.
     local _Player = Player()
@@ -158,8 +158,8 @@ mission.phases[2].noPlayerEventsTargetSector = true
 mission.phases[2].noLocalPlayerEventsTargetSector = true
 mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].onBeginServer = function()
-    local _MethodName = "Phase 2 On Begin Server"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "Phase 2 On Begin Server"
+    mission.Log(methodName, "Beginning...")
 
     mission.data.location = mission.data.custom.outpostLocation
 
@@ -169,15 +169,15 @@ mission.phases[2].onBeginServer = function()
 end
 
 mission.phases[2].onTargetLocationEntered = function(x, y)
-    local _MethodName = "Phase 2 On Enter Target Location"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "Phase 2 On Enter Target Location"
+    mission.Log(methodName, "Beginning...")
 
     mission.data.description[4].fulfilled = true
     mission.data.description[5].visible = true
     mission.data.description[6].visible = true
 
     --Make sector.
-    buildSector(x, y)   
+    lotwStory4_buildSector(x, y)   
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(x, y)
@@ -196,17 +196,17 @@ mission.phases[3].noPlayerEventsTargetSector = true
 mission.phases[3].noLocalPlayerEventsTargetSector = true
 mission.phases[3].onBeginServer = function()
     --Spawn enemies.
-    spawnBackgroundPirates()
+    lotwStory4_spawnBackgroundPirates()
 end
 
 mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
-    local _MethodName = "Phase 2 on Entity Destroyed"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "Phase 2 on Entity Destroyed"
+    mission.Log(methodName, "Beginning...")
 
     local _Entity = Entity(_ID)
 
     if _Entity:getValue("_lotw_mission4_objective") then
-        mission.Log(_MethodName, "Was an objective.")
+        mission.Log(methodName, "Was an objective.")
         mission.data.custom.destroyed = mission.data.custom.destroyed + 1
     end
 
@@ -225,39 +225,35 @@ end
 if onServer() then
 
 --Set timers.
-mission.phases[3].timers[1] = {
+mission.phases[3].timers[1] = { --make pirate attack waves
     time = 45,
     callback = function()
-        local _Sector = Sector()
-        local _X, _Y = _Sector:getCoordinates()
-        if _X == mission.data.location.x and _Y == mission.data.location.y then
-            spawnBackgroundPirates()
+        if atTargetLocation() then
+            lotwStory4_spawnBackgroundPirates()
         end
     end,
     repeating = true
 }
---Timer 3 = soft fail timer
-mission.phases[3].timers[2] = {
+
+mission.phases[3].timers[2] = { --soft fail timer (3 minutes outside the sector fails the mission)
         time = 60, 
-        callback = function() 
-            local _Sector = Sector()
-            local _X, _Y = _Sector:getCoordinates()
-            if _X ~= mission.data.location.x or _Y ~= mission.data.location.y then
+        callback = function()
+            if not atTargetLocation() then
                 mission.data.custom.failureCounter = mission.data.custom.failureCounter + 1
             end
         end,
         repeating = true
 }
---Timer 4 = advancement / objective timer
-mission.phases[3].timers[3] = {
+
+mission.phases[3].timers[3] = { --advancement / objective timer
         time = 10,
         callback = function()
-            local _MethodName = "Phase 1 Timer 4 Callback"
-            mission.Log(_MethodName, "Beginning...")
-            mission.Log(_MethodName, "Number of pirates destroyed " .. tostring(mission.data.custom.destroyed))
+            local methodName = "Phase 1 Timer 4 Callback"
+            mission.Log(methodName, "Beginning...")
+            mission.Log(methodName, "Number of pirates destroyed " .. tostring(mission.data.custom.destroyed))
             if mission.data.custom.destroyed >= 20 then
                 ESCCUtil.allPiratesDepart()
-                finishAndReward()
+                lotwStory4_finishAndReward()
             end
             if mission.data.custom.failureCounter >= 3 then
                 fail()
@@ -274,9 +270,9 @@ end
 
 --region #SERVER CALLS
 
-function setMissionFactionData(_X, _Y)
-    local _MethodName = "Set Mission Faction Data"
-    mission.Log(_MethodName, "Beginning...")
+function lotwStory4_setMissionFactionData(_X, _Y)
+    local methodName = "Set Mission Faction Data"
+    mission.Log(methodName, "Beginning...")
     --We're going to have to do some sneaky stuff w/ credits here.
     local _Faction = Faction(Player():getValue("_lotw_faction"))
     mission.data.giver = {}
@@ -286,18 +282,18 @@ function setMissionFactionData(_X, _Y)
     mission.data.giver.baseTitle = _Faction.name
 end
 
-function getNextLocation()
-    local _MethodName = "Get Next Location"
+function lotwStory4_getNextLocation()
+    local methodName = "Get Next Location"
     
-    mission.Log(_MethodName, "Getting a location.")
+    mission.Log(methodName, "Getting a location.")
     local x, y = Sector():getCoordinates()
     local target = {}
 
-    target.x, target.y = MissionUT.getSector(x, y, 4, 10, false, false, false, false, false)
+    target.x, target.y = MissionUT.getEmptySector(x, y, 4, 10, false)
 
-    mission.Log(_MethodName, "X coordinate of next location is : " .. tostring(target.x) .. " Y coordinate of next location is : " .. tostring(target.y))
+    mission.Log(methodName, "X coordinate of next location is : " .. tostring(target.x) .. " Y coordinate of next location is : " .. tostring(target.y))
     if not target or not target.x or not target.y then
-        mission.Log(_MethodName, "Could not find a suitable mission location. Terminating script.")
+        mission.Log(methodName, "Could not find a suitable mission location. Terminating script.")
         terminate()
         return
     end
@@ -305,18 +301,21 @@ function getNextLocation()
     return target
 end
 
-function buildSector(_X, _Y)
-    local _MethodName = "Build Sector"
-    local _Faction = Faction(mission.data.custom.friendlyFaction)
+function lotwStory4_buildSector(_X, _Y)
+    local methodName = "Build Sector"
 
+    local _Faction = Faction(mission.data.custom.friendlyFaction)
+    
     if not _Faction or _Faction.isPlayer or _Faction.isAlliance then
         print("ERROR - COULD NOT FIND MISSION FACTION")
         terminate()
         return
     end
 
-    local generator = SectorGenerator(_X, _Y)
+    local _sector = Sector()
     local _Rgen = ESCCUtil.getRand()
+    local generator = SectorGenerator(_X, _Y)
+
     for _ = 1, _Rgen:getInt(3, 5) do
         generator:createSmallAsteroidField()
     end
@@ -324,22 +323,24 @@ function buildSector(_X, _Y)
 
     local _Station = generator:createMilitaryBase(_Faction)
     _Station.position = Matrix()
+    _Station:setValue("no_chatter", true)
     _Station:setValue("_lotw_mission4_defendobjective", true)
     local _StationSphere = _Station:getBoundingSphere()
     local _AsteroidRemovalSphere = Sphere(_StationSphere.center, _StationSphere.radius * 15) 
-    local _RemovalCandidates = {Sector():getEntitiesByLocation(_AsteroidRemovalSphere)}
-    mission.Log(_MethodName, "Found " .. #_RemovalCandidates .. " candidates for removal. Any asteroids in this list will be removed.")
+    local _RemovalCandidates = {_sector:getEntitiesByLocation(_AsteroidRemovalSphere)}
+    mission.Log(methodName, "Found " .. #_RemovalCandidates .. " candidates for removal. Any asteroids in this list will be removed.")
     for _, _En in pairs(_RemovalCandidates) do
         if _En.isAsteroid then
             --Don't stump the AI.
-            Sector():deleteEntity(_En)
+            _sector:deleteEntity(_En)
         end
     end
     --Remove scripts.
     _Station:removeScript("icon.lua")
     _Station:removeScript("consumer.lua")
     _Station:removeScript("backup.lua")
-    Sector():removeScript("traders.lua")
+    _Station:removeScript("missionbulletins.lua")
+    _sector:removeScript("traders.lua")
     --Set AI to aggressive.
     local _ShipAI = ShipAI(_Station)
     _ShipAI:setAggressive()
@@ -381,12 +382,12 @@ function buildSector(_X, _Y)
     Placer.resolveIntersections()
 
     local _EntityTypes = ESCCUtil.allEntityTypes()
-    Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
+    _sector:addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
 end
 
-function getWingSpawnTables(_WingScriptValue)
-    local _MethodName = "Get Wing Spawn Table"
-    mission.Log(_MethodName, "Beginning...")
+function lotwStory4_getWingSpawnTables(_WingScriptValue)
+    local methodName = "Get Wing Spawn Table"
+    mission.Log(methodName, "Beginning...")
 
     local _Destroyed = mission.data.custom.destroyed
     
@@ -403,21 +404,21 @@ function getWingSpawnTables(_WingScriptValue)
     local _MarauderCt = 0
 
     local _Pirates = {Sector():getEntitiesByScriptValue(_WingScriptValue)}
-    mission.Log(_MethodName, "Counting pirates " .. tostring(#_Pirates) .. " found")
+    mission.Log(methodName, "Counting pirates " .. tostring(#_Pirates) .. " found")
     for _, _Pirate in pairs (_Pirates) do
         local _TArgs = _Pirate:getTitleArguments()
         for _, _TArg in pairs(_TArgs) do
             local _Title = _TArg
             if _Title == "Bandit" then
-                mission.Log(_MethodName, "Bandit")
+                mission.Log(methodName, "Bandit")
                 _BanditCt = _BanditCt + 1
             end
             if _Title == "Pirate" then
-                mission.Log(_MethodName, "Pirate")
+                mission.Log(methodName, "Pirate")
                 _PirateCt = _PirateCt + 1
             end
             if _Title == "Marauder" then
-                mission.Log(_MethodName, "Marauder")
+                mission.Log(methodName, "Marauder")
                 _MarauderCt = _MarauderCt + 1
             end
         end
@@ -446,42 +447,35 @@ function getWingSpawnTables(_WingScriptValue)
     return _SpawnTable
 end
 
-function spawnBackgroundPirates()
-    local _MethodName = "Spawn Background Pirates"
-    mission.Log(_MethodName, "Beginning...")
+function lotwStory4_spawnBackgroundPirates()
+    local methodName = "Spawn Background Pirates"
+    mission.Log(methodName, "Beginning...")
 
-    local _AlphaSpawnTable = getWingSpawnTables("_lotw_alpha_wing")
-    local generator = AsyncPirateGenerator(nil, onAlphaBackgroundPiratesFinished)
-
-    generator:startBatch()
-
-    local posCounter = 1
     local distance = 100
-    local pirate_positions = generator:getStandardPositions(#_AlphaSpawnTable, distance)
-    for _, p in pairs(_AlphaSpawnTable) do
-        generator:createScaledPirateByName(p, pirate_positions[posCounter])
-        posCounter = posCounter + 1
+
+    local spawnFunc = function(wingScriptValue, wingOnSpawnFunc)
+        local wingSpawnTable = lotwStory4_getWingSpawnTables(wingScriptValue)
+        local wingGenerator = AsyncPirateGenerator(nil, wingOnSpawnFunc)
+
+        local posCtr = 1
+        local wingPositions = wingGenerator:getStandardPositions(#wingSpawnTable, distance)
+
+        wingGenerator:startBatch()
+
+        for _, p in pairs(wingSpawnTable) do
+            wingGenerator:createScaledPirateByName(p, wingPositions[posCtr])
+            posCtr = posCtr + 1
+        end
+
+        wingGenerator:endBatch()
     end
 
-    generator:endBatch()
+    spawnFunc("_lotw_alpha_wing", lotwStory4_onAlphaBackgroundPiratesFinished)
 
-    local _BetaSpawnTable = getWingSpawnTables("_lotw_beta_wing")
-    generator = AsyncPirateGenerator(nil, onBetaBackgroundPiratesFinished)
-
-    generator:startBatch()
-
-    local posCounter = 1
-    local distance = 100
-    local pirate_positions = generator:getStandardPositions(#_BetaSpawnTable, distance)
-    for _, p in pairs(_BetaSpawnTable) do
-        generator:createScaledPirateByName(p, pirate_positions[posCounter])
-        posCounter = posCounter + 1
-    end
-
-    generator:endBatch()
+    spawnFunc("_lotw_beta_wing", lotwStory4_onBetaBackgroundPiratesFinished)
 end
 
-function onAlphaBackgroundPiratesFinished(_Generated)
+function lotwStory4_onAlphaBackgroundPiratesFinished(_Generated)
     --Make the first alpha wing invincible vs. the station.
     local _Invincible = false
     local _DefenseObjective = nil
@@ -503,28 +497,33 @@ function onAlphaBackgroundPiratesFinished(_Generated)
             end
         end
     end
+
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function onBetaBackgroundPiratesFinished(_Generated)
+function lotwStory4_onBetaBackgroundPiratesFinished(_Generated)
+    local _sector = Sector()
+
     local _SlamCtMax = 2
-    local _Slammers = {Sector():getEntitiesByScript("torpedoslammer.lua")}
+    local _Slammers = {_sector:getEntitiesByScript("torpedoslammer.lua")}
     local _SlamCt = #_Slammers
     local _SlamAdded = 0
 
-    local _TorpSlammerValues = {}
-    _TorpSlammerValues._TimeToActive = 35
-    _TorpSlammerValues._ROF = 10
-    _TorpSlammerValues._UpAdjust = false
-    _TorpSlammerValues._DamageFactor = 0.33 --If you get a bad seed, this might just obliterate the station. That's why it gets more HP for every failure.
-    _TorpSlammerValues._TorpOffset = -750 --Already balanced this for tech 52 torps in the starting sector, lmao
-    _TorpSlammerValues._DurabilityFactor = 8
-    _TorpSlammerValues._ForwardAdjustFactor = 2
-    _TorpSlammerValues._PreferWarheadType = TorpedoUtility.WarheadType.Nuclear
-    _TorpSlammerValues._TargetPriority = 2
-    _TorpSlammerValues._TargetTag = "_lotw_mission4_defendobjective"
+    local _TorpSlammerValues = {
+        _TimeToActive = 35,
+        _ROF = 10,
+        _UpAdjust = false,
+        _DamageFactor = 0.33, --If you get a bad seed, this might just obliterate the station. That's why it gets more HP for every failure.
+        _TorpOffset = -750, --Already balanced this for tech 52 torps in the starting sector, 
+        _DurabilityFactor = 8,
+        _ForwardAdjustFactor = 2,
+        _PreferWarheadType = TorpedoUtility.WarheadType.Nuclear,
+        _TargetPriority = 2,
+        _TargetTag = "_lotw_mission4_defendobjective",
+        _ShockwaveFactor = 2 --Give them a show!
+    }
 
-    local _DefenseObjectives = {Sector():getEntitiesByScriptValue("_lotw_mission4_defendobjective")}
+    local _DefenseObjectives = {_sector:getEntitiesByScriptValue("_lotw_mission4_defendobjective")}
     local _DefenseObjective = _DefenseObjectives[1]
 
     --Make the first beta wing invincible.
@@ -568,17 +567,19 @@ function onBetaBackgroundPiratesFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function finishAndReward()
-    local _MethodName = "Finish and Reward"
-    mission.Log(_MethodName, "Running win condition.")
+function lotwStory4_finishAndReward()
+    local methodName = "Finish and Reward"
+    mission.Log(methodName, "Running win condition.")
 
     local _Player = Player()
     _Player:setValue("_lotw_story_stage", 5)
 
+    local station = Entity(Uuid(mission.data.custom.stationId))
+    station:setValue("no_chatter", nil)
+
     --Give the player a 25% bonus if they cmoplete this within 3 attempts and don't let the station HP drop below 80%
     local failedAttempts = _Player:getValue("_lotw_mission4_failures") or 0
     if failedAttempts < 3 then
-        local station = Entity(Uuid(mission.data.custom.stationId))
         local hpRatio = station.durability / station.maxDurability
 
         if hpRatio >= 0.75 then
