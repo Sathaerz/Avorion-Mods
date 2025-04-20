@@ -100,6 +100,8 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
 	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
 	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 1, turretRange)
+
+	ship:setDropsAttachedTurrets(false) --We futz with the turrets after adding them, so we don't necessarily want to drop them.
 	
 	--Finally, increase the ship's damage multiplier by a random amount depending on the danger level of the mission.
 	local forceMultiplier = 1 + (random():getInt(0, dangerValue) / 50)

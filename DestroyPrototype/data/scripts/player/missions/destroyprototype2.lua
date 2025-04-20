@@ -75,12 +75,12 @@ mission.data.failMessage = "..." --Placeholder, varies by faction.
 
 local DestroyPrototype_init = initialize
 function initialize(_Data_in)
-    local _MethodName = "initialize"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "initialize"
+    mission.Log(methodName, "Beginning...")
 
     if onServer()then
         if not _restoring then
-            mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
+            mission.Log(methodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
 
             local _X, _Y = _Data_in.location.x, _Data_in.location.y
 
@@ -140,15 +140,15 @@ if onServer() then
 mission.globalPhase.timers[1] = {
     time = 10,
     callback = function()
-        local _MethodName = "Global Phase Timer"
-        mission.Log(_MethodName, "Beginning.")
+        local methodName = "Global Phase Timer"
+        mission.Log(methodName, "Beginning.")
 
         if atTargetLocation() and mission.data.custom.dangerLevel >= 8 and not mission.data.custom.spawnedSecondWave then
             local _Pirates = {Sector():getEntitiesByScriptValue("is_pirate")}
 
             if #_Pirates == 1 then
                 mission.data.custom.spawnedSecondWave = true
-                spawnSecondWave()
+                destroyPrototype_spawnSecondWave()
             end
         end
     end,
@@ -165,8 +165,8 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
 
-    spawnPrototype()
-    spawnInitialDefenders()
+    destroyPrototype_spawnPrototype()
+    destroyPrototype_spawnInitialDefenders()
 
     mission.data.custom.cleanUpSector = true
 end
@@ -220,7 +220,7 @@ mission.phases[2].sectorCallbacks[1] = {
                 local _HullThreshold = _DamagedEntity.maxDurability / 2
                 if _Hull < _HullThreshold then
                     mission.data.custom.spawnedSecondWave = true
-                    spawnSecondWave()
+                    destroyPrototype_spawnSecondWave()
                 end
             end
         end
@@ -264,21 +264,21 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
             end
         end
 
-        finishAndReward()
+        destroyPrototype_finishAndReward()
     end
 end
 
 mission.phases[2].onAbandon = function()
-    failAndPunish()
+    destroyPrototype_failAndPunish()
 end
 
 --endregion
 
 --region #SERVER CALLS
 
-function spawnPrototype()
-    local _MethodName = "Spawn Prototype"
-    mission.Log(_MethodName, "Beginning.")
+function destroyPrototype_spawnPrototype()
+    local methodName = "Spawn Prototype"
+    mission.Log(methodName, "Beginning.")
 
     local _Rgen = ESCCUtil:getRand()
 
@@ -330,7 +330,7 @@ function spawnPrototype()
     end
 
     if _AddBlocker then
-        mission.Log(_MethodName, "Adding blocker script.")
+        mission.Log(methodName, "Adding blocker script.")
         _BattleShip:addScriptOnce(_BlockerToAdd)
     end
 
@@ -351,7 +351,7 @@ function spawnPrototype()
     if _DefensiveScriptsct > 0 then
         for idx = 1, _DefensiveScriptsct do
             local _Script = _DefensiveScripts[idx]
-            mission.Log(_MethodName, "Adding defensive script : " .. tostring(_Script))
+            mission.Log(methodName, "Adding defensive script : " .. tostring(_Script))
             _BattleShip:addScriptOnce(_Script)
         end
     end
@@ -359,7 +359,7 @@ function spawnPrototype()
     if _OffensiveScriptsct > 0 then
         for idx = 1, _OffensiveScriptsct do
             local _Script = _OffensiveScripts[idx]
-            mission.Log(_MethodName, "Adding offensive script : " .. tostring(_Script))
+            mission.Log(methodName, "Adding offensive script : " .. tostring(_Script))
             _BattleShip:addScriptOnce(_Script)
         end
     end
@@ -368,13 +368,13 @@ function spawnPrototype()
     local durability = Durability(_BattleShip)
     if durability then 
         local _Factor = (durability.maxDurabilityFactor or 1) * _DuraFactor
-        mission.Log(_MethodName, "Setting durability factor of the prototype to : " .. tostring(_Factor))
+        mission.Log(methodName, "Setting durability factor of the prototype to : " .. tostring(_Factor))
         durability.maxDurabilityFactor = _Factor
     end
 
     --Add damage.
     local _FinalDamageFactor = (_BattleShip.damageMultiplier or 1) * _DamageFactor
-    mission.Log(_MethodName, "Setting final damage factor to : " .. tostring(_FinalDamageFactor))
+    mission.Log(methodName, "Setting final damage factor to : " .. tostring(_FinalDamageFactor))
     _BattleShip.damageMultiplier = _FinalDamageFactor
 
     --Add the superweapon script.
@@ -392,7 +392,7 @@ function spawnPrototype()
         local sectorWeaponDPS = Balancing_GetSectorWeaponDPS(_X, _Y)
         
         if _Type == 1 then
-            mission.Log(_MethodName, "Torpedo type chosen.")
+            mission.Log(methodName, "Torpedo type chosen.")
             --Torpedo
             local _TorpValues = {
                 _ROF = 4,
@@ -409,7 +409,7 @@ function spawnPrototype()
             _BattleShip:addScriptOnce("torpedoslammer.lua", _TorpValues)
             _BattleShip:setValue("_prototype_superweapon_script", "torpedoslammer.lua")
         elseif _Type == 2 then
-            mission.Log(_MethodName, "Siege Gun type chosen.")
+            mission.Log(methodName, "Siege Gun type chosen.")
             --Siege Gun
             local _SiegeGunValues = {
                 _Velocity = 150,
@@ -427,12 +427,12 @@ function spawnPrototype()
             _BattleShip:addScriptOnce("stationsiegegun.lua", _SiegeGunValues)
             _BattleShip:setValue("_prototype_superweapon_script", "stationsiegegun.lua")
         elseif _Type == 3 then
-            mission.Log(_MethodName, "Laser Sniper type chosen.")
+            mission.Log(methodName, "Laser Sniper type chosen.")
             --Laser sniper
             local distToCenter = length(vec2(_X, _Y))
             local laserSniperFactor = 150 --20% more damage than a longinus.
             if distToCenter > 360 then
-                mission.Log(_MethodName, "No shields available - cut damage in half.")
+                mission.Log(methodName, "No shields available - cut damage in half.")
                 laserSniperFactor = 75 --Cut it in half to compensate for lack of shields.
             end
 
@@ -455,9 +455,9 @@ function spawnPrototype()
     end
 end
 
-function spawnInitialDefenders()
-    local _MethodName = "Spawn Initial Defenders"
-    mission.Log(_MethodName, "Beginning.")
+function destroyPrototype_spawnInitialDefenders()
+    local methodName = "Spawn Initial Defenders"
+    mission.Log(methodName, "Beginning.")
 
     local _Table = "Standard"
     if mission.data.custom.dangerLevel == 10 then
@@ -476,7 +476,7 @@ function spawnInitialDefenders()
         _Piratect = _Piratect + 1
     end
 
-    mission.Log(_MethodName, "Spawning table of " .. tostring(_Piratect) .. " " .. tostring(_Table) .. " pirates.")
+    mission.Log(methodName, "Spawning table of " .. tostring(_Piratect) .. " " .. tostring(_Table) .. " pirates.")
 
     local _PirateTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _Piratect, _Table, false)
     local _CreatedPirateTable = {}
@@ -489,9 +489,9 @@ function spawnInitialDefenders()
     SpawnUtility.addEnemyBuffs(_CreatedPirateTable)
 end
 
-function spawnSecondWave()
-    local _MethodName = "Spawn Pirate Wave"
-    mission.Log(_MethodName, "Beginning.")
+function destroyPrototype_spawnSecondWave()
+    local methodName = "Spawn Pirate Wave"
+    mission.Log(methodName, "Beginning.")
 
     local _Table = "Standard"
     if mission.data.custom.dangerLevel == 10 then
@@ -500,7 +500,7 @@ function spawnSecondWave()
 
     local waveTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 6, _Table, false)
 
-    local generator = AsyncPirateGenerator(nil, onSecondWaveFinished)
+    local generator = AsyncPirateGenerator(nil, destroyPrototype_onSecondWaveFinished)
     generator.pirateLevel = Balancing_GetPirateLevel(mission.data.location.x, mission.data.location.y)
 
     generator:startBatch()
@@ -519,7 +519,7 @@ function spawnSecondWave()
     generator:endBatch()
 end
 
-function onSecondWaveFinished(_Generated)
+function destroyPrototype_onSecondWaveFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 
     local _Name = mission.data.custom.battleshipName
@@ -535,17 +535,17 @@ function onSecondWaveFinished(_Generated)
     Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(_Taunts))
 end
 
-function finishAndReward()
-    local _MethodName = "Finish and Reward"
-    mission.Log(_MethodName, "Running win condition.")
+function destroyPrototype_finishAndReward()
+    local methodName = "Finish and Reward"
+    mission.Log(methodName, "Running win condition.")
 
     reward()
     accomplish()
 end
 
-function failAndPunish()
-    local _MethodName = "Fail and Punish"
-    mission.Log(_MethodName, "Running lose condition.")
+function destroyPrototype_failAndPunish()
+    local methodName = "Fail and Punish"
+    mission.Log(methodName, "Running lose condition.")
 
     punish()
     fail()
@@ -555,7 +555,7 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatWinMessage(_Station)
+function destroyPrototype_formatWinMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
@@ -576,7 +576,7 @@ function formatWinMessage(_Station)
     return _Msgs[_MsgType]
 end
 
-function formatLoseMessage(_Station)
+function destroyPrototype_formatLoseMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
@@ -596,7 +596,7 @@ function formatLoseMessage(_Station)
     return _Msgs[_MsgType]
 end
 
-function formatDescription(_Station)
+function destroyPrototype_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -617,16 +617,19 @@ function formatDescription(_Station)
 end
 
 mission.makeBulletin = function(_Station)
-    local _MethodName = "Make Bulletin"
+    local methodName = "Make Bulletin"
+
     --We don't need a specific type of sector here. Just an empty one that's on the same side of the barrier as the questgiver.
     local _Rgen = ESCCUtil.getRand()
+    local _sector = Sector()
+
     local target = {}
-    local x, y = Sector():getCoordinates()
+    local x, y = _sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
     target.x, target.y = MissionUT.getEmptySector(x, y, 7, 20, insideBarrier)
 
     if not target.x or not target.y then
-        mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
+        mission.Log(methodName, "Target.x or Target.y not set - returning nil.")
         return 
     end
 
@@ -643,9 +646,9 @@ mission.makeBulletin = function(_Station)
         _Difficulty = "Death Sentence"
     end
     
-    local _Description = formatDescription(_Station)
-    local _WinMsg = formatWinMessage(_Station)
-    local _LoseMsg = formatLoseMessage(_Station)
+    local _Description = destroyPrototype_formatDescription(_Station)
+    local _WinMsg = destroyPrototype_formatWinMessage(_Station)
+    local _LoseMsg = destroyPrototype_formatLoseMessage(_Station)
 
     local _BaseReward = 500000
     if _DangerLevel > 5 then
@@ -658,7 +661,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates()) --SET REWARD HERE
+    reward = _BaseReward * Balancing.GetSectorRewardFactor(_sector:getCoordinates()) --SET REWARD HERE
     reputation = 8000
     if _DangerLevel == 10 then
         reputation = 12000
