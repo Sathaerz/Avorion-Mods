@@ -53,12 +53,12 @@ mission.data.failMessage = "You have failed. The pirates have escaped."
 
 local AmbushRaiders_init = initialize
 function initialize(_Data_in)
-    local _MethodName = "initialize"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "initialize"
+    mission.Log(methodName, "Beginning...")
 
     if onServer()then
         if not _restoring then
-            mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
+            mission.Log(methodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
 
             local _X, _Y = _Data_in.location.x, _Data_in.location.y
 
@@ -138,7 +138,7 @@ mission.phases[1].triggers[1] = {
         end
     end,
     callback = function()
-        spawnPirateWave(false)
+        ambushRaiders_spawnPirateWave(false)
     end,
     repeating = false
 }
@@ -154,11 +154,7 @@ if onServer() then
 mission.phases[1].timers[1] = {
     time = 10, 
     callback = function() 
-        local _MethodName = "Phase 1 Timer 1 Callback"
-        local _Sector = Sector()
-        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
-        mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
+        if ambushRaiders_allowPhaseAdvancement() then
             mission.data.custom.timerAdvance = false
             nextPhase()
         end
@@ -180,11 +176,7 @@ if onServer() then
 mission.phases[2].timers[1] = {
     time = 10, 
     callback = function() 
-        local _MethodName = "Phase 2 Timer 1 Callback"
-        local _Sector = Sector()
-        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
-        mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
+        if ambushRaiders_allowPhaseAdvancement() then
             mission.data.custom.timerAdvance = false
             nextPhase()
         end
@@ -197,7 +189,7 @@ end
 --endregion
 
 mission.phases[2].onBeginServer = function()
-    spawnPirateWave(false)
+    ambushRaiders_spawnPirateWave(false)
 end
 
 mission.phases[3] = {}
@@ -210,17 +202,12 @@ if onServer() then
 mission.phases[3].timers[1] = {
     time = 10, 
     callback = function() 
-        local _MethodName = "Phase 3 Timer 1 Callback"
-        local _Sector = Sector()
-        local _DangerLevel = mission.data.custom.dangerLevel
-        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
-        mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
-            if _DangerLevel >= 6 then
+        if ambushRaiders_allowPhaseAdvancement() then
+            if mission.data.custom.dangerLevel >= 6 then
                 mission.data.custom.timerAdvance = false
                 nextPhase()
             else
-                finishAndReward()
+                ambushRaiders_finishAndReward()
             end
         end
     end,
@@ -232,14 +219,13 @@ end
 --endregion
 
 mission.phases[3].onBeginServer = function()
-    local _DangerLevel = mission.data.custom.dangerLevel
     local _LastWave = true
 
-    if _DangerLevel >= 6 then
+    if mission.data.custom.dangerLevel >= 6 then
         _LastWave = false
     end
 
-    spawnPirateWave(_LastWave)
+    ambushRaiders_spawnPirateWave(_LastWave)
 end
 
 mission.phases[4] = {}
@@ -252,17 +238,12 @@ if onServer() then
 mission.phases[4].timers[1] = {
     time = 10, 
     callback = function() 
-        local _MethodName = "Phase 4 Timer 1 Callback"
-        local _Sector = Sector()
-        local _DangerLevel = mission.data.custom.dangerLevel
-        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
-        mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
-            if _DangerLevel == 10 then
+        if ambushRaiders_allowPhaseAdvancement() then
+            if mission.data.custom.dangerLevel == 10 then
                 mission.data.custom.timerAdvance = false
                 nextPhase()
             else
-                finishAndReward()
+                ambushRaiders_finishAndReward()
             end
         end
     end,
@@ -274,14 +255,13 @@ end
 --endregion
 
 mission.phases[4].onBeginServer = function()
-    local _DangerLevel = mission.data.custom.dangerLevel
     local _LastWave = true
 
-    if _DangerLevel == 10 then
+    if mission.data.custom.dangerLevel == 10 then
         _LastWave = false
     end
 
-    spawnPirateWave(_LastWave)
+    ambushRaiders_spawnPirateWave(_LastWave)
 end
 
 mission.phases[5] = {}
@@ -294,12 +274,9 @@ if onServer() then
 mission.phases[5].timers[1] = {
     time = 10, 
     callback = function() 
-        local _MethodName = "Phase 5 Timer 1 Callback"
-        local _Sector = Sector()
-        local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
-        mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
-        if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
-            finishAndReward()
+        --We always end here - this is the last possible wave.
+        if ambushRaiders_allowPhaseAdvancement() then
+            ambushRaiders_finishAndReward()
         end
     end,
     repeating = true 
@@ -311,16 +288,16 @@ end
 
 mission.phases[5].onBeginServer = function()
     --We only get here on danger level 10 - this is always the last wave, no matter what.
-    spawnPirateWave(true)
+    ambushRaiders_spawnPirateWave(true)
 end
 
 --endregion
 
 --region #SERVER CALLS
 
-function spawnPirateWave(_LastWave) 
-    local _MethodName = "Spawn Pirate Wave"
-    mission.Log(_MethodName, "Beginning. Last wave is : " .. tostring(_LastWave))
+function ambushRaiders_spawnPirateWave(_LastWave) 
+    local methodName = "Spawn Pirate Wave"
+    mission.Log(methodName, "Beginning. Last wave is : " .. tostring(_LastWave))
 
     local _SpawnLevel = mission.data.custom.waveDangerLevel
     if _LastWave then
@@ -329,7 +306,7 @@ function spawnPirateWave(_LastWave)
 
     local waveTable = ESCCUtil.getStandardWave(_SpawnLevel, 4, "Standard", false)
 
-    local generator = AsyncPirateGenerator(nil, onPiratesFinished)
+    local generator = AsyncPirateGenerator(nil, ambushRaiders_onPiratesFinished)
 
     generator:startBatch()
 
@@ -344,25 +321,39 @@ function spawnPirateWave(_LastWave)
     generator:endBatch()
 end
 
-function onPiratesFinished(_Generated)
-    local _MethodName = "On Pirates Generated (Server)"
-    mission.Log(_MethodName, "Beginning - setting timerAdvance to true and adding buffs.")
+function ambushRaiders_onPiratesFinished(_Generated)
+    local methodName = "On Pirates Generated (Server)"
+    mission.Log(methodName, "Beginning - setting timerAdvance to true and adding buffs.")
 
     mission.data.custom.timerAdvance = true
-    pirateTaunt()
+    ambushRaiders_pirateTaunt()
 
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function pirateTaunt()
-    local _MethodName = "Pirate Taunt"
-    mission.Log(_MethodName, "Beginning...")
+function ambushRaiders_allowPhaseAdvancement()
+    local methodName = "Allow Phase Advancement"
+
+    local pirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
+
+    mission.Log(methodName, "At Target Location: " .. tostring(atTargetLocation()) .. " number of pirates : " .. tostring(pirateCt) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
+
+    if atTargetLocation() and pirateCt == 0 and mission.data.custom.timerAdvance then
+        return true
+    else
+        return false
+    end
+end
+
+function ambushRaiders_pirateTaunt()
+    local methodName = "Pirate Taunt"
+    mission.Log(methodName, "Beginning...")
 
     local _Pirates = {Sector():getEntitiesByScriptValue("is_pirate")}
 
     if not mission.data.custom.firstWaveTaunt and #_Pirates > 0 then
-        mission.Log(_MethodName, "Broadcasting Pirate Taunt to Sector")
-        mission.Log(_MethodName, "Entity: " .. tostring(_Pirates[1].id))
+        mission.Log(methodName, "Broadcasting Pirate Taunt to Sector")
+        mission.Log(methodName, "Entity: " .. tostring(_Pirates[1].id))
 
         local _Lines = {
             "Who sold us out? We're going to kill you after we deal with this!",
@@ -381,9 +372,9 @@ function pirateTaunt()
     end
 end
 
-function finishAndReward()
-    local _MethodName = "Finish and Reward"
-    mission.Log(_MethodName, "Running win condition.")
+function ambushRaiders_finishAndReward()
+    local methodName = "Finish and Reward"
+    mission.Log(methodName, "Running win condition.")
 
     reward()
     accomplish()
@@ -393,7 +384,7 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription()
+function ambushRaiders_formatDescription()
     --"please help, nobody believes me" (DONE)
     --"please help, there's no time" (DONE)
     --"please help, they're after me" (DONE)
@@ -414,20 +405,21 @@ function formatDescription()
 end
 
 mission.makeBulletin = function(_Station)
-    local _MethodName = "Make Bulletin"
+    local methodName = "Make Bulletin"
     --We don't need a specific type of sector here. Just an empty one that's on the same side of the barrier as the questgiver.
-    local _Rgen = ESCCUtil.getRand()
+    local _sector = Sector()
+
     local target = {}
-    local x, y = Sector():getCoordinates()
+    local x, y = _sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
-    target.x, target.y = MissionUT.getSector(x, y, 2, 15, false, false, false, false, insideBarrier)
+    target.x, target.y = MissionUT.getEmptySector(x, y, 2, 15, insideBarrier)
 
     if not target.x or not target.y then
-        mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
+        mission.Log(methodName, "Target.x or Target.y not set - returning nil.")
         return 
     end
 
-    local _DangerLevel = _Rgen:getInt(1, 10)
+    local _DangerLevel = random():getInt(1, 10)
 
     local _Difficulty = "Easy"
     if _DangerLevel >= 6 then
@@ -437,7 +429,7 @@ mission.makeBulletin = function(_Station)
         _Difficulty = "Difficult"
     end
     
-    local _Description = formatDescription()
+    local _Description = ambushRaiders_formatDescription()
 
     local _BaseReward = 37000
     if _DangerLevel >= 5 then
@@ -450,7 +442,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates()) --SET REWARD HERE
+    reward = _BaseReward * Balancing.GetSectorRewardFactor(_sector:getCoordinates()) --SET REWARD HERE
 
     local bulletin =
     {

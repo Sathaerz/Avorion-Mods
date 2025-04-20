@@ -20,6 +20,7 @@ function MissionBulletins.getPossibleMissions()
         "Fighter Factory",
         "Resource Depot",
         "Turret Factory",
+        "Turret Factory Supplier",
         "Mine",
         "Scrapyard"
     }
