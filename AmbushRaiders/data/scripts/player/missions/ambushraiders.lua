@@ -64,12 +64,9 @@ function initialize(_Data_in)
 
             local _Sector = Sector()
             local _Giver = Entity(_Data_in.giver)
+
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .waveDangerLevel
-                .firstWaveTaunt
-                .timerAdvance
+                CUSTOM MISSION DATA SETUP
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.waveDangerLevel = math.ceil(_Data_in.dangerLevel / 2)
@@ -77,6 +74,9 @@ function initialize(_Data_in)
             mission.data.custom.showedFirstUpdate = false
             mission.data.custom.timeInPhaseOne = 0
 
+            --[[=====================================================
+                MISSION DESCRIPTION SETUP:
+            =========================================================]]
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = { x = _X, y = _Y }
