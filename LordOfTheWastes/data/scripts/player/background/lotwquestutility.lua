@@ -35,7 +35,7 @@ mission.globalPhase.updateServer = function()
     end
 
     --Port old version if needed
-    portOldVersion(_player)
+    lotwQuestUtil_portOldVersion(_player)
 
     --Set Side mission values
     if not _player:getValue("_lotw_last_side1") then
@@ -58,7 +58,7 @@ mission.globalPhase.onRestore = function()
     local _player = Player()
 
     --Port old version if needed
-    portOldVersion(_player)
+    lotwQuestUtil_portOldVersion(_player)
 
     if not _player:getValue(mission._StoryStageValue) then
         _player:setValue(mission._StoryStageValue, 1)
@@ -75,7 +75,7 @@ mission.phases[1].onSectorEntered = function(x, y)
     end
 
     --Checks the distance already, so no need to run the other distance check.
-    addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwstory1.lua")
+    lotwQuestUtil_addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwstory1.lua")
 end
 
 mission.phases[2] = {}
@@ -86,7 +86,7 @@ mission.phases[2].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local frameworkStoryStage = _player:getValue(mission._StoryStageValue)
-    if frameworkStoryStage and frameworkStoryStage == stageReq and checkDistanceOK(x, y) then
+    if frameworkStoryStage and frameworkStoryStage == stageReq and lotwQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -101,7 +101,7 @@ mission.phases[3].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local frameworkStoryStage = _player:getValue(mission._StoryStageValue)
-    if frameworkStoryStage and frameworkStoryStage == stageReq and checkDistanceOK(x, y) then
+    if frameworkStoryStage and frameworkStoryStage == stageReq and lotwQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -116,7 +116,7 @@ mission.phases[4].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local frameworkStoryStage = _player:getValue(mission._StoryStageValue)
-    if frameworkStoryStage and frameworkStoryStage == stageReq and checkDistanceOK(x, y) then
+    if frameworkStoryStage and frameworkStoryStage == stageReq and lotwQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -131,7 +131,7 @@ mission.phases[5].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local frameworkStoryStage = _player:getValue(mission._StoryStageValue)
-    if frameworkStoryStage and frameworkStoryStage == stageReq and checkDistanceOK(x, y) then
+    if frameworkStoryStage and frameworkStoryStage == stageReq and lotwQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -161,17 +161,17 @@ mission.phases[6].onSectorEntered = function(x, y)
 
     if currentTime >= nextValidSide1Time and _random:test(0.5) then
         mission.Log(methodName, "Adding side 1 to board.")
-        addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwside1.lua")
+        lotwQuestUtil_addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwside1.lua")
     end
     if currentTime >= nextValidSide2Time and _random:test(0.5) then
         mission.Log(methodName, "Adding side 2 to board.")
-        addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwside2.lua")
+        lotwQuestUtil_addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwside2.lua")
     end
 end
 
 --region #SERVER CALLS
 
-function portOldVersion(_player)
+function lotwQuestUtil_portOldVersion(_player)
     if _player:getValue("_lotw_story_5_accomplished") then
         _player:setValue(mission._StoryStageValue, 6)
         _player:setValue("_lotw_story_complete", true)
@@ -179,7 +179,7 @@ function portOldVersion(_player)
     end
 end
 
-function checkDistanceOK(x, y)
+function lotwQuestUtil_checkDistanceOK(x, y)
     local _Dist = math.sqrt(x*x + y*y)
     local _MinDist = 430
     
@@ -190,7 +190,7 @@ function checkDistanceOK(x, y)
     return true
 end
 
-function addMissionToStation(x, y, missionScript)
+function lotwQuestUtil_addMissionToStation(x, y, missionScript)
     local methodName = "Add Mission To Station"
 
     local dist = math.sqrt(x*x + y*y)

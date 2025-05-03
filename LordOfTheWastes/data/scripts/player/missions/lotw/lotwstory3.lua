@@ -48,7 +48,7 @@ function initialize()
     local _MethodName = "initialize"
     mission.Log(_MethodName, "Beginning...")
 
-    if onServer()then
+    if onServer() then
         local _Sector = Sector()
         local _X, _Y = _Sector:getCoordinates()
 
@@ -57,13 +57,7 @@ function initialize()
             local _FailureCt =_Player:getValue("_lotw_mission3_failures") or 0
 
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .destroyed
-                .escaped
-                .maxEscaped
-                .friendlyFaction
-                .piratesSpawned
+                CUSTOM MISSION DATA SETUP
             =========================================================]]
             mission.data.custom.dangerLevel = 5 --This is a story mission, so we keep things predictable.
             mission.data.custom.destroyed = 0
@@ -78,7 +72,7 @@ function initialize()
     
             LOTW_Mission_init(missionData_in)
 
-            setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
+            lotwStory3_setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
         else
             --Restoring
             LOTW_Mission_init()
@@ -118,7 +112,7 @@ mission.phases[1].onBeginServer = function()
 
     local _Faction = Faction(mission.data.custom.friendlyFaction) --The phase is already set to 1 by the time we hit this, so it has to be done it this way.
 
-    mission.data.location = getNextLocation()
+    mission.data.location = lotwStory3_getNextLocation()
     mission.data.description[1].arguments = { factionName = _Faction.name }
     mission.data.description[2].arguments = { x = mission.data.location.x, y = mission.data.location.y }
     mission.data.description[3].arguments = { x = mission.data.location.x, y = mission.data.location.y }
@@ -137,7 +131,7 @@ mission.phases[2].onBeginServer = function()
     mission.data.description[4].visible = true
     mission.data.description[5].visible = true
 
-    spawnBackgroundPirates()
+    lotwStory3_spawnBackgroundPirates()
 end
 
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
@@ -169,7 +163,7 @@ mission.phases[2].timers[1] = {
         local _Sector = Sector()
         local _X, _Y = _Sector:getCoordinates()
         if _X == mission.data.location.x and _Y == mission.data.location.y then
-            spawnBackgroundPirates()
+            lotwStory3_spawnBackgroundPirates()
         end
     end,
     repeating = true
@@ -181,7 +175,7 @@ mission.phases[2].timers[2] = {
         local _Sector = Sector()
         local _X, _Y = _Sector:getCoordinates()
         if _X == mission.data.location.x and _Y == mission.data.location.y then
-            spawnPirateFreighter()
+            lotwStory3_spawnPirateFreighter()
         end
     end,
     repeating = true
@@ -209,7 +203,7 @@ mission.phases[2].timers[4] = {
         mission.Log(_MethodName, "Number of freighters destroyed " .. tostring(mission.data.custom.destroyed))
         if mission.data.custom.destroyed >= 3 then
             ESCCUtil.allPiratesDepart()
-            finishAndReward()
+            lotwStory3_finishAndReward()
         end
         if mission.data.custom.escaped >= mission.data.custom.maxEscaped then
             ESCCUtil.allPiratesDepart()
@@ -227,7 +221,7 @@ end
 
 --region #SERVER CALLS
 
-function setMissionFactionData(_X, _Y)
+function lotwStory3_setMissionFactionData(_X, _Y)
     local _MethodName = "Set Mission Faction Data"
     mission.Log(_MethodName, "Beginning...")
     --We're going to have to do some sneaky stuff w/ credits here.
@@ -239,7 +233,7 @@ function setMissionFactionData(_X, _Y)
     mission.data.giver.baseTitle = _Faction.name
 end
 
-function getNextLocation()
+function lotwStory3_getNextLocation()
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -258,7 +252,7 @@ function getNextLocation()
     return target
 end
 
-function spawnBackgroundPirates()
+function lotwStory3_spawnBackgroundPirates()
     local _MethodName = "Spawn Background Pirates"
     mission.Log(_MethodName, "Beginning...")
 
@@ -317,7 +311,7 @@ function spawnBackgroundPirates()
         end
     end
 
-    local generator = AsyncPirateGenerator(nil, onBackgroundPiratesFinished)
+    local generator = AsyncPirateGenerator(nil, lotwStory3_onBackgroundPiratesFinished)
 
     generator:startBatch()
 
@@ -333,7 +327,7 @@ function spawnBackgroundPirates()
     generator:endBatch()
 end
 
-function onBackgroundPiratesFinished(_Generated)
+function lotwStory3_onBackgroundPiratesFinished(_Generated)
     for _, _Pirate in pairs(_Generated) do
         if mission.data.custom.piratesSpawned > 10 then
             _Pirate:setDropsLoot(false)
@@ -342,7 +336,7 @@ function onBackgroundPiratesFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function spawnPirateFreighter()
+function lotwStory3_spawnPirateFreighter()
     --Check to see if there's an existing freighter.
     local _Freighters = {Sector():getEntitiesByScriptValue("_lotw_mission3_objective")}
     --If there is, delete it and increment the escaped counter.
@@ -350,13 +344,13 @@ function spawnPirateFreighter()
     if #_Freighters > 0 then
         for _, _F in pairs(_Freighters) do
             _F:addScriptOnce("deletejumped.lua", 2)
-            freighterEscaped()
+            lotwStory3_freighterEscaped()
         end
     end
     --Spawn a new freighter.
     local _Sector = Sector()
     local _X, _Y = _Sector:getCoordinates()
-    local _ShipGenerator = AsyncShipGenerator(nil, onPirateFreighterFinished)
+    local _ShipGenerator = AsyncShipGenerator(nil, lotwStory3_onPirateFreighterFinished)
     local _PirateGenerator = AsyncPirateGenerator(nil, nil)
     local _Vol1 = Balancing_GetSectorShipVolume(_X, _Y) * 2.5
     local _Faction = _PirateGenerator:getPirateFaction()
@@ -368,7 +362,7 @@ function spawnPirateFreighter()
     _ShipGenerator:endBatch()
 end
 
-function onPirateFreighterFinished(_Generated)
+function lotwStory3_onPirateFreighterFinished(_Generated)
     local _Player = Player()
     local _FreightersDestroyed = _Player:getValue("_lotw_mission3_freighterskilled") or 0
 
@@ -400,13 +394,13 @@ function onPirateFreighterFinished(_Generated)
     end
 end
 
-function freighterEscaped()
+function lotwStory3_freighterEscaped()
     mission.data.custom.escaped = mission.data.custom.escaped + 1
     mission.data.description[5].arguments = { _ESCAPED = mission.data.custom.escaped, _MAXESCAPED = mission.data.custom.maxEscaped }
     sync()
 end
 
-function finishAndReward()
+function lotwStory3_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 

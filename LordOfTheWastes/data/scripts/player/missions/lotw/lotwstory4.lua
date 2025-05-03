@@ -336,7 +336,6 @@ function lotwStory4_buildSector(_X, _Y)
         end
     end
     --Remove scripts.
-    _Station:removeScript("icon.lua")
     _Station:removeScript("consumer.lua")
     _Station:removeScript("backup.lua")
     _Station:removeScript("missionbulletins.lua")

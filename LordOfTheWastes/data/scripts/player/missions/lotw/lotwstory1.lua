@@ -111,11 +111,11 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.description[4].visible = true
 
     showMissionUpdated(mission._Name)
-    spawnPirateWave(false, 1)
+    lotwStory1_spawnPirateWave(false, 1)
 end
 
 mission.phases[1].onSectorArrivalConfirmed = function(x, y)
-    pirateTaunt()
+    lotwStory1_pirateTaunt()
 end
 
 --region #PHASE 1 TIMERS
@@ -149,7 +149,7 @@ mission.phases[2].onBeginServer = function()
     mission.data.description[4].fulfilled = true
     mission.data.description[5].visible = true
 
-    spawnPirateWave(false, 2)
+    lotwStory1_spawnPirateWave(false, 2)
 end
 
 --region #PHASE 2 TIMERS
@@ -183,7 +183,7 @@ mission.phases[3].onBeginServer = function()
     mission.data.description[5].fulfilled = true
     mission.data.description[6].visible = true
 
-    spawnPirateWave(true, 3)
+    lotwStory1_spawnPirateWave(true, 3)
 end
 
 --region #PHASE 3 TIMERS
@@ -215,7 +215,7 @@ mission.phases[4].onBeginServer = function()
     mission.Log(_MethodName, "Beginning...")
     mission.data.description[6].fulfilled = true
 
-    mission.data.location = getNextLocation()
+    mission.data.location = lotwStory1_getNextLocation()
     mission.data.description[7].arguments = { _X = mission.data.location.x, _Y = mission.data.location.y }
 
     mission.data.description[7].visible = true
@@ -226,14 +226,14 @@ end
 
 mission.phases[4].onTargetLocationEntered = function(x, y)
     --Spawn liason
-    spawnLiason()
+    lotwStory1_spawnLiason()
 end
 
 --endregion
 
 --region #SERVER CALLS
 
-function spawnPirateWave(_LastWave, _WaveNumber) 
+function lotwStory1_spawnPirateWave(_LastWave, _WaveNumber) 
     local _MethodName = "Spawn Pirate Wave"
     mission.Log(_MethodName, "Beginning...")
 
@@ -265,7 +265,7 @@ function spawnPirateWave(_LastWave, _WaveNumber)
 
     mission.data.custom.waveCounter = _WaveNumber
 
-    local generator = AsyncPirateGenerator(nil, onPiratesFinished)
+    local generator = AsyncPirateGenerator(nil, lotwStory1_onPiratesFinished)
 
     generator:startBatch()
 
@@ -280,7 +280,7 @@ function spawnPirateWave(_LastWave, _WaveNumber)
     generator:endBatch()
 end
 
-function onPiratesFinished(_Generated)
+function lotwStory1_onPiratesFinished(_Generated)
     local _MethodName = "On Pirates Generated (Server)"
     local _WaveNumber = mission.data.custom.waveCounter
     mission.Log(_MethodName, "Beginning. Wave number is : " .. tostring(_WaveNumber))
@@ -300,7 +300,7 @@ function onPiratesFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function pirateTaunt()
+function lotwStory1_pirateTaunt()
     local _MethodName = "Pirate Taunt"
     mission.Log(_MethodName, "Beginning...")
 
@@ -323,11 +323,11 @@ function pirateTaunt()
     end
 end
 
-function spawnLiason()
+function lotwStory1_spawnLiason()
     local _MethodName = "Spawn Relief Defenders"
     mission.Log(_MethodName, "Beginning...")
     --Spawn background corvettes.
-    local shipGenerator = AsyncShipGenerator(nil, onFactionShipsFinished)
+    local shipGenerator = AsyncShipGenerator(nil, lotwStory1_onFactionShipsFinished)
     local faction = Faction(mission.data.custom.friendlyFaction)
 
     if not faction or faction.isPlayer or faction.isAlliance then
@@ -343,7 +343,7 @@ function spawnLiason()
 
     shipGenerator:endBatch()
 
-    local liasonGenerator = AsyncShipGenerator(nil, onLiasonShipFinished)
+    local liasonGenerator = AsyncShipGenerator(nil, lotwStory1_onLiasonShipFinished)
 
     liasonGenerator:startBatch()
 
@@ -352,7 +352,7 @@ function spawnLiason()
     liasonGenerator:endBatch()
 end
 
-function onLiasonShipFinished(_Generated)
+function lotwStory1_onLiasonShipFinished(_Generated)
     for _, _Ship in pairs(_Generated) do
         local _Faction = Faction(_Ship.factionIndex)
         local _ShipAI = ShipAI(_Ship)
@@ -367,14 +367,14 @@ function onLiasonShipFinished(_Generated)
     end
 end
 
-function onFactionShipsFinished(_Generated)
+function lotwStory1_onFactionShipsFinished(_Generated)
     for _, _Ship in pairs(_Generated) do
         _Ship:removeScript("antismuggle.lua") --Need to get in the habit of doing this b/c the player may have stolen shit.
         MissionUT.deleteOnPlayersLeft(_Ship)
     end  
 end
 
-function getNextLocation()
+function lotwStory1_getNextLocation()
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -393,7 +393,7 @@ function getNextLocation()
     return target
 end
 
-function finishAndReward()
+function lotwStory1_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -410,27 +410,28 @@ end
 
 --region #CLIENT / SERVER CALLS
 
-function contactedLiason()
+--Invoked in lotwliasonm1.lua
+function lotwStory1_contactedLiason()
     local _MethodName = "Contacted Liason"
 
     if onClient() then
         mission.Log(_MethodName, "Calling on Client")
         mission.Log(_MethodName, "Invoking on server.")
 
-        invokeServerFunction("contactedLiason")
+        invokeServerFunction("lotwStory1_contactedLiason")
     else
         mission.Log(_MethodName, "Calling on Server")
 
-        finishAndReward()
+        lotwStory1_finishAndReward()
     end
 end
-callable(nil, "contactedLiason")
+callable(nil, "lotwStory1_contactedLiason")
 
 --endregion
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription(_Station)
+function lotwStory1_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -471,7 +472,7 @@ mission.makeBulletin = function(_Station)
 
     local _DangerLevel = 5
     
-    local _Description = formatDescription(_Station)
+    local _Description = lotwStory1_formatDescription(_Station)
 
     reward = ESCCUtil.clampToNearest(125000 + (50000 * Balancing.GetSectorRewardFactor(_Sector:getCoordinates())), 5000, "Up") --SET REWARD HERE
 

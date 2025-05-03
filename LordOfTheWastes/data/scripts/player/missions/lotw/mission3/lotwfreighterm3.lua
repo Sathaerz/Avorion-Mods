@@ -18,7 +18,7 @@ function LOTWFreighterMission3.initialize(_AddLoot, _AddMainMissionLoot, _AddSid
 
         ship:addScriptOnce("data/scripts/entity/deleteonplayersleft.lua")
         local lines = LOTWFreighterMission3.getChatterLines()
-        ship:addScriptOnce("data/scripts/entity/utility/radiochatter.lua", lines, 90, 120, random():getInt(30, 45))
+        ship:addScriptOnce("data/scripts/entity/utility/radiochatter.lua", lines, 60, 90, random():getInt(10, 20))
 
         ship:registerCallback("onDamaged", "onDamaged")
         ship:registerCallback("onDestroyed", "onDestroyed")
@@ -87,15 +87,14 @@ function LOTWFreighterMission3.onDestroyed()
 end
 
 function LOTWFreighterMission3.updateServer(timeStep)
-    local entity = Entity()
     -- delete one minute after getting damage
     if runningAway then
         deleteTime = deleteTime - timeStep
     end
 
-    local scripts = {
-        "player/missions/lotw/lotwstory3.lua",
-        "player/missions/lotw/lotwside2.lua"
+    local scriptFuncs = {
+        { script = "player/missions/lotw/lotwstory3.lua", func = "lotwStory3_freighterEscaped" },
+        { script = "player/missions/lotw/lotwside2.lua", func = "lotwSide2_freighterEscaped" }
     }
 
     if deleteTime <= 10 and deleteTime + timeStep > 10 then
@@ -107,9 +106,9 @@ function LOTWFreighterMission3.updateServer(timeStep)
         local _Players = {Sector():getPlayers()}
         for _, _P in pairs(_Players) do
             if not invokedEscape then
-                for _, script in pairs(scripts) do
-                    if _P:hasScript(script) then
-                        _P:invokeFunction(script, "freighterEscaped")
+                for _, scriptFunc in pairs(scriptFuncs) do
+                    if _P:hasScript(scriptFunc.script) then
+                        _P:invokeFunction(scriptFunc.script, scriptFunc.func)
                         invokedEscape = true
                     end
                 end

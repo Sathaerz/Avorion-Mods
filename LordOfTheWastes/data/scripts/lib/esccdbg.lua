@@ -26,6 +26,30 @@ end
 --0x657363632064656275672074616220726567696F6E205354415254
 --region #LOTW tab
 
+_lordofthewastes_campaign_script_values = {
+    "_lotw_story_stage",
+    "_lotw_story_complete",
+    "_lotw_last_side1",
+    "_lotw_last_side2",
+    "_lotw_faction",
+    "_lotw_mission2_failures",
+    "_lotw_mission2_freighterskilled",
+    "_lotw_mission3_failures",
+    "_lotw_mission3_freighterskilled",
+    "_lotw_mission4_failures",
+    "swenks_beaten",
+}
+
+_lordofthewastes_campaign_mission_scripts = {
+    "missions/lotw/lotwstory1.lua",
+    "missions/lotw/lotwstory2.lua",
+    "missions/lotw/lotwstory3.lua",
+    "missions/lotw/lotwstory4.lua",
+    "missions/lotw/lotwstory5.lua",
+    "missions/lotw/lotwside1.lua",
+    "missions/lotw/lotwside2.lua",
+}
+
 function onLOTWMission1ButtonPressed()
     if onClient() then
         invokeServerFunction("onLOTWMission1ButtonPressed")
@@ -194,37 +218,20 @@ function onLOTWClearValuesPressed()
         return
     end
 
-    local _Player = Player(callingPlayer)
+    local _player = Player(callingPlayer)
 
-    local _Scripts = {
-        "missions/lotw/lotwstory1.lua",
-        "missions/lotw/lotwstory2.lua",
-        "missions/lotw/lotwstory3.lua",
-        "missions/lotw/lotwstory4.lua",
-        "missions/lotw/lotwstory5.lua",
-        "missions/lotw/lotwside1.lua",
-        "missions/lotw/lotwside2.lua",
-    }
-
-    for _k, _v in pairs(_Scripts) do
-        _Player:removeScript(_v)
+    for k, v in pairs(_lordofthewastes_campaign_mission_scripts) do
+        _player:removeScript(v)
     end
 
-    _Player:setValue("_lotw_story_stage", nil)
-    _Player:setValue("_lotw_story_complete", nil)
-    _Player:setValue("_lotw_last_side1", nil)
-    _Player:setValue("_lotw_last_side2", nil)
-    _Player:setValue("_lotw_faction", nil)
-    _Player:setValue("_lotw_mission2_failures", nil)
-    _Player:setValue("_lotw_mission2_freighterskilled", nil)
-    _Player:setValue("_lotw_mission3_failures", nil)
-    _Player:setValue("_lotw_mission3_freighterskilled", nil)
-    _Player:setValue("_lotw_mission4_failures", nil)
-    _Player:setValue("swenks_beaten", nil)
-
+    for k, v in pairs(_lordofthewastes_campaign_script_values) do
+        _player:setValue(v, nil)
+    end
+    _player:setValue("_lotw_story_stage", 1) --Have to reset this one individually because the loop nils all of them.
+    
     local _msg = "All Lord of the Wastes data cleared."
     print(_msg)
-    _Player:sendChatMessage("Server", ChatMessageType.Information, _msg)
+    _player:sendChatMessage("Server", ChatMessageType.Information, _msg)
 end
 callable(nil, "onLOTWClearValuesPressed")
 

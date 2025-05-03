@@ -18,7 +18,7 @@ function LOTWFreighterMission2.initialize()
 
         local _Lines = LOTWFreighterMission2.getChatterLines()
 
-        _Ship:addScriptOnce("data/scripts/entity/utility/radiochatter.lua", _Lines, 90, 120, random():getInt(30, 45))
+        _Ship:addScriptOnce("data/scripts/entity/utility/radiochatter.lua", _Lines, 60, 90, random():getInt(10, 20))
 
         _Ship:registerCallback("onDamaged", "onDamaged")
         _Ship:registerCallback("onDestroyed", "onDestroyed")
@@ -54,29 +54,28 @@ function LOTWFreighterMission2.onDestroyed()
 end
 
 function LOTWFreighterMission2.updateServer(_TimeStep)
-    local entity = Entity()
     -- delete one minute after getting damage
     if runningAway then
         deleteTime = deleteTime - _TimeStep
     end
 
-    local scripts = {
-        "player/missions/lotw/lotwstory2.lua",
-        "player/missions/lotw/lotwside1.lua"
+    local scriptFuncs = {
+        { script = "player/missions/lotw/lotwstory2.lua", func = "lotwStory2_freighterEscaped" },
+        { script = "player/missions/lotw/lotwside1.lua", func = "lotwSide1_freighterEscaped" }
     }
 
     if deleteTime <= 10 and deleteTime + _TimeStep > 10 then
-        Sector():broadcastChatMessage(entity, ChatMessageType.Chatter, "Go, go, go! We're almost there! We're almost out of here!"%_t)
+        Sector():broadcastChatMessage(Entity(), ChatMessageType.Chatter, "Go, go, go! We're almost there! We're almost out of here!"%_t)
     elseif deleteTime <= 4 then
-        entity:addScriptOnce("deletejumped.lua", 5)
+        Entity():addScriptOnce("deletejumped.lua", 5)
     end
     if deleteTime <= 1 then
         local _Players = {Sector():getPlayers()}
         for _, _P in pairs(_Players) do
             if not invokedEscape then
-                for _, script in pairs(scripts) do
-                    if _P:hasScript(script) then
-                        _P:invokeFunction(script, "freighterEscaped")
+                for _, scriptFunc in pairs(scriptFuncs) do
+                    if _P:hasScript(scriptFunc.script) then
+                        _P:invokeFunction(scriptFunc.script, scriptFunc.func)
                         invokedEscape = true
                     end
                 end
@@ -93,4 +92,6 @@ function LOTWFreighterMission2.getChatterLines()
         "Let's get moving. These goods won't deliver themselves.",
         "Keep an eye out for enemy activity."
     }
+
+    return chatterLines
 end

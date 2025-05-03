@@ -62,11 +62,11 @@ function initialize()
 
             local missionReward = ESCCUtil.clampToNearest(200000 + (50000 * Balancing.GetSectorRewardFactor(_Sector:getCoordinates())), 5000, "Up")
 
-            missionData_in = {location = getNextLocation(), reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for destroying Swenks."}}
+            missionData_in = {location = lotwStory5_getNextLocation(), reward = {credits = missionReward, relations = 12000, paymentMessage = "Earned %1% credits for destroying Swenks."}}
     
             LOTW_Mission_init(missionData_in)
 
-            setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
+            lotwStory5_setMissionFactionData(_X, _Y) --Have to be sneaky about this. Normaly this SHOULD be set by the init function, but since it's not from a station it will get funky.
         else
             --Restoring
             LOTW_Mission_init()
@@ -104,10 +104,22 @@ mission.phases[1].onBeginServer = function()
 end
 
 mission.phases[1].onTargetLocationEntered = function(x, y)
+    local _sector = Sector()
+
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
-    spawnSwenks()
-    Sector():addScriptOnce("deleteentitiesonplayersleft.lua")
+
+    --Stop all player ships.
+    local ships = { _sector:getEntitiesByType(EntityType.Ship)}
+    for _, ship in pairs(ships) do
+        if ship.playerOrAllianceOwned then
+            local ai = ShipAI(ship)
+            ai:stop()
+        end
+    end
+
+    lotwStory5_spawnSwenks()
+    _sector:addScriptOnce("deleteentitiesonplayersleft.lua")
 end
 
 mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
@@ -120,7 +132,7 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
         Player():setValue("swenks_beaten", true)
         mission.Log(_MethodName, "Was an objective.")
         ESCCUtil.allPiratesDepart()
-        finishAndReward()
+        lotwStory5_finishAndReward()
     end
 end
 
@@ -128,7 +140,7 @@ end
 
 --region #SERVER CALLS
 
-function setMissionFactionData(_X, _Y)
+function lotwStory5_setMissionFactionData(_X, _Y)
     local _MethodName = "Set Mission Faction Data"
     mission.Log(_MethodName, "Beginning...")
     --We're going to have to do some sneaky stuff w/ credits here.
@@ -140,7 +152,7 @@ function setMissionFactionData(_X, _Y)
     mission.data.giver.baseTitle = _Faction.name
 end
 
-function getNextLocation()
+function lotwStory5_getNextLocation()
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -159,7 +171,7 @@ function getNextLocation()
     return target
 end
 
-function spawnSwenks()
+function lotwStory5_spawnSwenks()
     local _MethodName = "Spawn Swenks"
 
     local function piratePosition()
@@ -221,7 +233,7 @@ function spawnSwenks()
     Boarding(boss).boardable = false
 end
 
-function finishAndReward()
+function lotwStory5_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
