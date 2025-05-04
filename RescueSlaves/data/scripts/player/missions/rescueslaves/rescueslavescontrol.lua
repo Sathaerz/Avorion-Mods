@@ -16,15 +16,15 @@ local data = {}
 data.controlledByIndices = {}
 data._Debug = 0
 function RescueSlavesControl.initialize()
-    local _MethodName = "Initialize"
+    local methodName = "Initialize"
 
-    RescueSlavesControl.Log(_MethodName, "Running v13")
+    RescueSlavesControl.Log(methodName, "Running v14")
 end
 
 function RescueSlavesControl.interactionPossible(playerIndex)
-    local _MethodName = "Interaction Possible"
+    local methodName = "Interaction Possible"
 
-    RescueSlavesControl.Log(_MethodName, "Running.")
+    RescueSlavesControl.Log(methodName, "Running.")
 
     local trader = Entity()
     local isPirate = trader:getValue("is_pirate")
@@ -116,9 +116,9 @@ function RescueSlavesControl.onNoHitDialog()
 end
 
 function RescueSlavesControl.onHitDialog(bribe)
-    local _MethodName = "On Hit Dialog"
+    local methodName = "On Hit Dialog"
 
-    RescueSlavesControl.Log(_MethodName, "Running on hit dialog.")
+    RescueSlavesControl.Log(methodName, "Running on hit dialog.")
 
     local traderUI = ScriptUI()
     traderUI:showDialog(Dialog.empty())
@@ -129,8 +129,10 @@ end
 
 -- Ship has illegal cargo
 function RescueSlavesControl.makeControlDialogHit(bribe)
-    local _MethodName = "Make Control Dialog Hit"
+    local methodName = "Make Control Dialog Hit"
     
+    local _random = random()
+
     local d0_dialog = {}
     local d1_bribe = {}
     local d1_comply = {}
@@ -140,39 +142,19 @@ function RescueSlavesControl.makeControlDialogHit(bribe)
     local d2_bribe = {}
     local d2_runaway = {}
 
+    local dialogBranch = _random:getInt(1, 4) --Can't code golf this one - we log it below.
+    RescueSlavesControl.Log(methodName, "Running dialog branch " .. tostring(dialogBranch))
     --Even split between comply / bribe / taunt / run
-    local _possibilities = random():getInt(1, 4)
-    RescueSlavesControl.Log(_MethodName, "Running dialog branch " .. tostring(_possibilities))
-    local _answer
-    if _possibilities == 1 then
-        _answer = d1_bribe
-    elseif _possibilities == 2 then
-        _answer = d1_comply
-    elseif _possibilities == 3 then
-        _answer = d1_runaway
-    else
-        _answer = d1_taunt
-    end
+    local answerTable1 = { d1_bribe, d1_comply, d1_runaway, d1_taunt }
+    local _answer = answerTable1[dialogBranch]
 
     --If the player threatens on the bribe, even split between run / comply
-    local _possibilities2 = random():getInt(1, 2)
-    local _bribeThreatenAnswer
-    if _possibilities2 == 1 then
-        _bribeThreatenAnswer = d1_comply
-    else
-        _bribeThreatenAnswer = d1_runaway
-    end
+    local answerTable2 = { d1_comply, d1_runaway }
+    local _bribeThreatenAnswer = answerTable2[_random:getInt(1, 2)]
 
     --If the player threatens on taunt, even split between run / comply / murder
-    local _possibilities3 = random():getInt(1, 3)
-    local _tauntThreatenAnswer
-    if _possibilities3 == 1 then
-        _tauntThreatenAnswer = d1_runaway
-    elseif _possibilities3 == 2 then
-        _tauntThreatenAnswer = d1_comply
-    else
-        _tauntThreatenAnswer = d1_murder
-    end
+    local answerTable3 = { d1_runaway, d1_comply, d1_murder }
+    local _tauntThreatenAnswer = answerTable3[_random:getInt(1, 3)]
 
     d0_dialog.text = "... What are you doing? This is our territory. We have a right to transport goods here."
     d0_dialog.answers = {{answer = "There are vital signs in your cargo bay. You are carrying slaves.", followUp = _answer}}
@@ -350,12 +332,12 @@ function RescueSlavesControl.onControlEndRunawayNOW()
         return 
     end
 
-    RescueSlavesControl.onConrolEndRunrunrun(random():getFloat(2, 3))
+    RescueSlavesControl.onConrolEndRunrunrun(random():getFloat(1, 2))
 end
 callable(RescueSlavesControl, "onControlEndRunawayNOW")
 
 function RescueSlavesControl.onConrolEndRunrunrun(_TimeToRun)
-    local _MethodName = "Control End Run"
+    local methodName = "Control End Run"
 
     local _Trader = Entity()
 
@@ -445,13 +427,13 @@ end
 
 --Drop slaves in player ship's cargo. Remove them from our own.
 function RescueSlavesControl.turnOverSlaves()
-    local _MethodName = "Turn Over Slaves"
+    local methodName = "Turn Over Slaves"
 
     local _Trader = Entity()
     local player = Player(callingPlayer)
     local _SlavesInHold = _Trader:getValue("rescueslaves_slave_qty")
 
-    RescueSlavesControl.Log(_MethodName, "Turning over " .. tostring(_SlavesInHold) .. " slaves.")
+    RescueSlavesControl.Log(methodName, "Turning over " .. tostring(_SlavesInHold) .. " slaves.")
 
     -- add as many slaves as fit - drop the rest
     local ship = player.craft
@@ -474,12 +456,12 @@ function RescueSlavesControl.turnOverSlaves()
 end
 
 function RescueSlavesControl.replaceIllegalSlaves(_Trader)
-    local _MethodName = "Replace Illegal Slaves"
+    local methodName = "Replace Illegal Slaves"
 
     --Remove slaves in cargo hold
     local _SlavesInHold = _Trader:getValue("rescueslaves_slave_qty")
 
-    RescueSlavesControl.Log(_MethodName, "Replacing " .. tostring(_SlavesInHold) .. " illegal slaves w/ freed slaves.")
+    RescueSlavesControl.Log(methodName, "Replacing " .. tostring(_SlavesInHold) .. " illegal slaves w/ freed slaves.")
 
     _Trader:removeCargo(goods["Slave"]:good(), _SlavesInHold)
 
@@ -488,7 +470,7 @@ function RescueSlavesControl.replaceIllegalSlaves(_Trader)
 end
 
 function RescueSlavesControl.murderRescuedSlave()
-    local _MethodName = "Murder Rescued Slave"
+    local methodName = "Murder Rescued Slave"
     local _Trader = Entity()
 
     local _MurderMessages = {
@@ -505,11 +487,11 @@ function RescueSlavesControl.murderRescuedSlave()
     local _SlavesLeft = _Trader:getCargoAmount(RescueSlavesControl.RescuedSlavesGood())
 
     if _SlavesLeft > 0 then
-        RescueSlavesControl.Log(_MethodName, tostring(_SlavesLeft) .. " slaves left. Killing one.")
+        RescueSlavesControl.Log(methodName, tostring(_SlavesLeft) .. " slaves left. Killing one.")
 
         _Trader:removeCargo(RescueSlavesControl.RescuedSlavesGood(), 1)
 
-        RescueSlavesControl.Log(_MethodName, "Killed a slave " .. tostring(_Trader:getCargoAmount(RescueSlavesControl.RescuedSlavesGood())) .. " remain")
+        RescueSlavesControl.Log(methodName, "Killed a slave " .. tostring(_Trader:getCargoAmount(RescueSlavesControl.RescuedSlavesGood())) .. " remain")
 
         Sector():broadcastChatMessage(_Trader, ChatMessageType.Chatter, _MurderMessages[1])
     else
@@ -518,11 +500,11 @@ function RescueSlavesControl.murderRescuedSlave()
 end
 
 function RescueSlavesControl.removeAllSlaves(_Trader)
-    local _MethodName = "Remove All Slaves"
+    local methodName = "Remove All Slaves"
 
     local _SlavesInHold = _Trader:getValue("rescueslaves_slave_qty")
 
-    RescueSlavesControl.Log(_MethodName, "Removing " .. tostring(_SlavesInHold) .. " freed / illegal slaves from hold.")
+    RescueSlavesControl.Log(methodName, "Removing " .. tostring(_SlavesInHold) .. " freed / illegal slaves from hold.")
 
     _Trader:removeCargo(goods["Slave"]:good(), _SlavesInHold)
     _Trader:removeCargo(RescueSlavesControl.RescuedSlavesGood(), _SlavesInHold)
@@ -532,9 +514,9 @@ end
 
 --region #LOGGING
 
-function RescueSlavesControl.Log(_MethodName, _Msg)
+function RescueSlavesControl.Log(methodName, _Msg)
     if data._Debug == 1 then
-        print("[Rescue Slaves Control] - [" .. _MethodName .. "] - " .. _Msg)
+        print("[Rescue Slaves Control] - [" .. methodName .. "] - " .. _Msg)
     end
 end
 

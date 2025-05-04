@@ -105,7 +105,7 @@ end
 
 mission.globalPhase.timers = {}
 mission.globalPhase.onAbandon = function()
-    failAndPunish() --We don't want to clean up the sector since it's a regular on-grid generated sector, but the player doesn't get to abandon this mission for free.
+    rescueSlaves_failAndPunish() --We don't want to clean up the sector since it's a regular on-grid generated sector, but the player doesn't get to abandon this mission for free.
 end
 
 mission.globalPhase.updateServer = function(_TimeStep)
@@ -128,10 +128,10 @@ mission.globalPhase.updateServer = function(_TimeStep)
             --If the faction declares war on the player due to the player making bad decisions, just fail the mission.
             local relation = _craftFaction:getRelation(mission.data.custom.missionFaction)
             if relation.status == RelationStatus.War then
-                failAndPunish()
+                rescueSlaves_failAndPunish()
              end
             if relation.level <= -80000 then 
-                failAndPunish()
+                rescueSlaves_failAndPunish()
             end
         end
     end
@@ -175,7 +175,7 @@ mission.phases[1].updateTargetLocationServer = function(_TimeStep)
         local _MoveToNextPhase = false
     
         --Check to see if we can go to the next phase.
-        local _RescuedSlaveAmount = _PlayerShip:getCargoAmount(RescuedSlavesGood())
+        local _RescuedSlaveAmount = _PlayerShip:getCargoAmount(rescueSlaves_RescuedSlavesGood())
         --mission.Log(methodName, "Player has " .. tostring(_RescuedSlaveAmount) .. " freed slaves.")
         if _RescuedSlaveAmount >= mission.data.custom.amountSlaves then
             _MoveToNextPhase = true
@@ -196,7 +196,7 @@ mission.phases[1].updateTargetLocationServer = function(_TimeStep)
     end
 
     --Check to see if we need to highlight any slaves.
-    invokeClientFunction(Player(), "highlightRescuedSlaves")
+    invokeClientFunction(Player(), "rescueSlaves_highlightRescuedSlaves")
 end
 
 mission.phases[1].onStartDialog = function(entityId)
@@ -250,7 +250,7 @@ mission.phases[1].timers[1] = {
 
             if random():test(threatChance) or mission.data.custom.spawnThreatCycle == 2 then
                 mission.Log(methodName, tostring(threatChance) .. " test passed - spawning threat.")
-                spawnThreat()
+                rescueSlaves_spawnThreat()
                 mission.data.custom.spawnThreatCycle = 0
             else
                 mission.Log(methodName, "Threat test not passed. Player is safe. For now...")
@@ -280,7 +280,7 @@ mission.phases[1].timers[2] = {
 
             if spawnThreat then
                 mission.Log(methodName, "Danger 10 - spawning threat.")
-                spawnThreat()
+                rescueSlaves_spawnThreat()
                 mission.data.custom.spawnedDangerTenThreat = true
             end
         end
@@ -292,7 +292,7 @@ mission.phases[1].timers[3] = {
     time = 360,
     callback = function()
         if atTargetLocation() then
-            spawnLocalTransport()
+            rescueSlaves_spawnLocalTransport()
         end
     end,
     repeating = true
@@ -303,7 +303,7 @@ mission.phases[1].timers[4] = {
     callback = function()
         --Spawn extra transports @ danger level 10 - player needs to be more speedy about checking for slaves.
         if mission.data.custom.dangerLevel == 10 and atTargetLocation() then
-            spawnLocalTransport()
+            rescueSlaves_spawnLocalTransport()
         end
     end,
     repeating = true
@@ -321,7 +321,7 @@ mission.phases[1].timers[5] = {
 
                 if #_CivilShips > 0 then
                     Hud():displayHint("You can fly close to a ship to determine what cargo it is carrying before actively scanning it.\nThis passive scan range can be increased by using a Scanner Booster upgrade.", _CivilShips[1])
-                    invokeServerFunction("playerDoneTutorial")
+                    invokeServerFunction("rescueSlaves_playerDoneTutorial")
                 end
             end
         end
@@ -353,20 +353,20 @@ mission.phases[2].onBeginServer = function()
     end
 end
 
-local onBroughtHomeEnd = makeDialogServerCallback("onBroughtHomeEn", 2, function()
+local rescueSlaves_onBroughtHomeEnd = makeDialogServerCallback("rescueSlaves_onBroughtHomeEnd", 2, function()
     -- we're happy and take them
     local ship = Player().craft
     -- if player doesn't bring back at least 10 slaves (somehow), the reward needs to be adjusted to the actual amount of freed slaves
     -- regardless, we remove all freed slaves from the cargo hold, even if the player gets more than 10.
-    local slaveAmount = ship:getCargoAmount(RescuedSlavesGood())
+    local slaveAmount = ship:getCargoAmount(rescueSlaves_RescuedSlavesGood())
     local repNumerator = slaveAmount
     if repNumerator > mission.data.custom.amountSlaves then
         repNumerator = mission.data.custom.amountSlaves
     end
 
     mission.data.reward.relations = mission.data.reward.relations * (repNumerator / mission.data.custom.amountSlaves)
-    ship:removeCargo(RescuedSlavesGood(), slaveAmount)
-    finishAndReward()
+    ship:removeCargo(rescueSlaves_RescuedSlavesGood(), slaveAmount)
+    rescueSlaves_finishAndReward()
 end)
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function()
@@ -376,10 +376,10 @@ mission.phases[2].onTargetLocationArrivalConfirmed = function()
         local ship = player.craft
         if not ship then return end
 
-        local playerHas = ship:getCargoAmount(RescuedSlavesGood())
+        local playerHas = ship:getCargoAmount(rescueSlaves_RescuedSlavesGood())
         local station = Entity(mission.data.giver.id)
         if station and playerHas > 0 then
-            invokeClientFunction(Player(), "showBroughtHomeDialog", station.id, playerHas, false)
+            invokeClientFunction(Player(), "rescueSlaves_showBroughtHomeDialog", station.id, playerHas, false)
         end
     end
 end
@@ -392,30 +392,30 @@ end
 
 --region #SERVER CALLS
 
-function RescuedSlavesGood()
+function rescueSlaves_RescuedSlavesGood()
     local good = TradingGood("Rescued Slave"%_T, plural_t("Rescued Slave", "Rescued Slaves", 1), "A now freed life form that was forced to work for almost no food."%_T, "data/textures/icons/slave.png", 0, 1)
     good.tags = {mission_relevant = true}
     return good
 end
 
 --Spawn threat
-function spawnThreat()
+function rescueSlaves_spawnThreat()
     local _xFuncs = {
-        { _func = function() spawnTorpedoStrike() end },
-        { _func = function() spawnBountyHunterAttack() end },
-        { _func = function() spawnHijackedFactionShip() end }
+        { _func = function() rescueSlaves_spawnTorpedoStrike() end },
+        { _func = function() rescueSlaves_spawnBountyHunterAttack() end },
+        { _func = function() rescueSlaves_spawnHijackedFactionShip() end }
     }
     shuffle(random(), _xFuncs)
     _xFuncs[1]._func()
 end
 
 --Torp strike
-function spawnTorpedoStrike()
+function rescueSlaves_spawnTorpedoStrike()
     local methodName = "Spawning Torpedo Strike"
 
     local waveTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 3, "High", false) --They're only in for 8-9 seconds. Make them the larger ships.
 
-    local generator = AsyncPirateGenerator(nil, onTorpStrikePirateSpawned)
+    local generator = AsyncPirateGenerator(nil, rescueSlaves_onTorpStrikePirateSpawned)
 
     generator:startBatch()
 
@@ -427,7 +427,7 @@ function spawnTorpedoStrike()
     generator:endBatch()
 end
 
-function onTorpStrikePirateSpawned(_Generated)
+function rescueSlaves_onTorpStrikePirateSpawned(_Generated)
     local _dmgFactor = 2
     local _duraFactor = 2
     if mission.data.custom.dangerLevel >= 6 then
@@ -465,16 +465,16 @@ function onTorpStrikePirateSpawned(_Generated)
 end
 
 --Bounty hunters
-function spawnBountyHunterAttack()
+function rescueSlaves_spawnBountyHunterAttack()
     local methodName = "Spawn Bounty Hunter Attack"
 
     mission.Log(methodName, "Spawning bounty hunters")
 
     local _Rgen = ESCCUtil.getRand()
     --Headhunters.
-    local _HeadHunterFaction = getHeadHunterFaction()
+    local _HeadHunterFaction = rescueSlaves_getHeadHunterFaction()
 
-    local _HunterGenerator = AsyncFactionShipGenerator(nil, onHuntersFinished)
+    local _HunterGenerator = AsyncFactionShipGenerator(nil, rescueSlaves_onHuntersFinished)
     _HunterGenerator:startBatch()
     
     local x, y = Sector():getCoordinates()
@@ -492,13 +492,13 @@ function spawnBountyHunterAttack()
     _HunterGenerator:endBatch()
 end
 
-function getHeadHunterFaction()
+function rescueSlaves_getHeadHunterFaction()
     local _X, _Y = Sector():getCoordinates()
 
     return EventUT.getHeadhunterFaction(_X, _Y)
 end
 
-function onHuntersFinished(_Generated)
+function rescueSlaves_onHuntersFinished(_Generated)
     local methodName = "On Hunters Finished"
     mission.Log(methodName, "Running.")
     local _Player = Player()
@@ -544,7 +544,7 @@ function onHuntersFinished(_Generated)
 end
 
 --Hijacked ships
-function spawnHijackedFactionShip()
+function rescueSlaves_spawnHijackedFactionShip()
     local methodName = "Spawn Hijacked Faction Ship"
 
     mission.Log(methodName, "Spawning hijacked ships")
@@ -552,7 +552,7 @@ function spawnHijackedFactionShip()
     local _Faction = Faction(mission.data.giver.factionIndex)
 
     local _FactionWave = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 2, "High", true)
-    local _FactionGenerator = AsyncShipGenerator(nil, onHijackedShipsFinished)
+    local _FactionGenerator = AsyncShipGenerator(nil, rescueSlaves_onHijackedShipsFinished)
 
     _FactionGenerator:startBatch()
 
@@ -563,7 +563,7 @@ function spawnHijackedFactionShip()
     _FactionGenerator:endBatch()
 end
 
-function onHijackedShipsFinished(_Generated)
+function rescueSlaves_onHijackedShipsFinished(_Generated)
     for _, _Ship in pairs(_Generated) do
         _Ship:addScriptOnce("entity/ai/hijackedfactionship.lua")
         --Do 25% more damage on danger 10.
@@ -578,7 +578,7 @@ function onHijackedShipsFinished(_Generated)
 end
 
 --Transports
-function spawnLocalTransport()
+function rescueSlaves_spawnLocalTransport()
     local methodName = "Spawn Local Transport"
 
     mission.Log(methodName, "Running.")
@@ -645,6 +645,8 @@ function spawnLocalTransport()
         end
 
         if _AddSlaves then
+            mission.Log(methodName, "Adding slaves - transport name is " .. tostring(_Transport.name))
+
             _Transport:addCargo(goods["Slave"]:good(), _SlavesInHold)
             _Transport:setValue("rescueslaves_has_slaves", true)
             _Transport:setValue("rescueslaves_slave_qty", _SlavesInHold)
@@ -675,12 +677,12 @@ function spawnLocalTransport()
 end
 
 --other
-function playerDoneTutorial()
+function rescueSlaves_playerDoneTutorial()
     Player():setValue("_rescueslaves_tutorial_shown", true)
 end
-callable(nil, "playerDoneTutorial")
+callable(nil, "rescueSlaves_playerDoneTutorial")
 
-function finishAndReward()
+function rescueSlaves_finishAndReward()
     local methodName = "Finish and Reward"
     mission.Log(methodName, "Running win condition.")
 
@@ -688,7 +690,7 @@ function finishAndReward()
     accomplish()
 end
 
-function failAndPunish()
+function rescueSlaves_failAndPunish()
     local methodName = "Fail and Punish"
     mission.Log(methodName, "Running lose condition.")
 
@@ -700,12 +702,12 @@ end
 
 --region #CLIENT CALLS
 
-function showBroughtHomeDialog(stationId, amount, closeable)
+function rescueSlaves_showBroughtHomeDialog(stationId, amount, closeable)
     local ui = ScriptUI(stationId)
-    ui:interactShowDialog(broughtHomeDialog(amount), closeable)
+    ui:interactShowDialog(rescueSlaves_broughtHomeDialog(amount), closeable)
 end
 
-function broughtHomeDialog(amount)
+function rescueSlaves_broughtHomeDialog(amount)
     amount = amount or 0
 
     local xrandom = random() --small optimization to avoid having to init this like 5 times.
@@ -716,7 +718,7 @@ function broughtHomeDialog(amount)
     if amount < mission.data.custom.amountSlaves then
         --In theory shouldn't be possible. In practice, someone will figure out a way to do this.
         dialog.text = "Ah. That's not... everyone. Thank you for those you brought back... we'll have to prepare mourning ceremonies."
-        dialog.onEnd = onBroughtHomeEnd
+        dialog.onEnd = rescueSlaves_onBroughtHomeEnd
     else
         local _initialGreetingLines = {
             "Thank you so much for getting our people home! Everything went smoothly, I hope?",
@@ -738,7 +740,7 @@ function broughtHomeDialog(amount)
         shuffle(xrandom, _thankYouLines)
     
         d1_End.text = _thankYouLines[1]
-        d1_End.onEnd = onBroughtHomeEnd
+        d1_End.onEnd = rescueSlaves_onBroughtHomeEnd
     
         local _noMoneyLines = {
             "You had to pay for them? I'm so sorry to hear that, but we can't pay you back. If we had that kind of money lying around, we would've bought them immediately.",
@@ -747,13 +749,13 @@ function broughtHomeDialog(amount)
         shuffle(xrandom, _noMoneyLines)
         
         d2_Reimburse.text = _noMoneyLines[1]
-        d2_Reimburse.onEnd = onBroughtHomeEnd
+        d2_Reimburse.onEnd = rescueSlaves_onBroughtHomeEnd
     end
 
     return dialog
 end
 
-function highlightRescuedSlaves()
+function rescueSlaves_highlightRescuedSlaves()
     local methodName = "Highlight Rescued Slaves"
 
     for _, entity in pairs({Sector():getEntitiesByComponent(ComponentType.CargoLoot)}) do
@@ -769,7 +771,7 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription(_Station)
+function rescueSlaves_formatDescription(_Station)
     local descriptionTable = {
         "Traffickers kidnapped some of our people. They were just normal males, females and children. We know what sector they're going to get shipped through, but the traffickers are deeply embedded in the local faction. There's no way that we'll be able to find them. If you help, you'll have our endless gratitude.",
         "Some of our people have been kidnapped! We know what sector they're going to be trafficked through, but we don't have the resources to investigate it ourselves. Please help us! If we're not able to find them before they're transferred, they'll vanish and we won't be able to find them again!",
@@ -838,7 +840,7 @@ mission.makeBulletin = function(_Station)
         _Difficulty = "Extreme"
     end
 
-    local _Description = formatDescription(_Station)
+    local _Description = rescueSlaves_formatDescription(_Station)
 
     reward = 0 --SET REWARD HERE
     reputation = 16000 --We actually get more than this due to potentially killing some pirates and stuff.
