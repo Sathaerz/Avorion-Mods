@@ -18,8 +18,28 @@ mission.globalPhase.updateServer = function()
 
     local _player = Player()
 
+    --Port old version if needed
+    lotwQuestUtil_portOldVersion(_player)
+
+    --Set mission phase
+    if not _player:getValue(mission._StoryStageValue) then
+        _player:setValue(mission._StoryStageValue, 1)
+    else
+        local phaseID = _player:getValue(mission._StoryStageValue)
+        setPhase(phaseID)
+    end
+
+    --Set Side mission values
+    if not _player:getValue("_lotw_last_side1") then
+        _player:setValue("_lotw_last_side1", 0)
+    end
+    if not _player:getValue("_lotw_last_side2") then
+        _player:setValue("_lotw_last_side2", 0)
+    end
+
     --Check faction OK
     --If the player somehow accepted the mission from their own station (or an ally's station... or another player's station, etc. just set it to the start ally)
+    --Do this after other set values earlier in the script - that way it guarantees that the player has the value.
     local _StartFaction = _player:getValue("start_ally")
     if _player:getValue("_lotw_faction") then
         local _LOTWFaction = Faction(_player:getValue("_lotw_faction"))
@@ -32,25 +52,6 @@ mission.globalPhase.updateServer = function()
         if storyStage > 1 then
             _player:setValue("_lotw_faction", _StartFaction)
         end
-    end
-
-    --Port old version if needed
-    lotwQuestUtil_portOldVersion(_player)
-
-    --Set Side mission values
-    if not _player:getValue("_lotw_last_side1") then
-        _player:setValue("_lotw_last_side1", 0)
-    end
-    if not _player:getValue("_lotw_last_side2") then
-        _player:setValue("_lotw_last_side2", 0)
-    end
-
-    --Set mission phase
-    if not _player:getValue(mission._StoryStageValue) then
-        _player:setValue(mission._StoryStageValue, 1)
-    else
-        local phaseID = _player:getValue(mission._StoryStageValue)
-        setPhase(phaseID)
     end
 end
 
