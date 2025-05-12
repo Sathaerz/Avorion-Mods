@@ -88,17 +88,17 @@ mission.globalPhase.getRewardedItems = function()
 end
 
 mission.globalPhase.onAbandon = function()
-    runSectorScriptAndValueCleanup()
+    analyzeXsotanSpecimen_runSectorScriptAndValueCleanup()
 end
 
 mission.globalPhase.onAccomplish = function()
-    runSectorScriptAndValueCleanup()
+    analyzeXsotanSpecimen_runSectorScriptAndValueCleanup()
 end
 
 mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].triggers = {}
-mission.phases[1].updateInterval = getUpdateInterval()
+mission.phases[1].updateInterval = analyzeXsotanSpecimen_getUpdateInterval()
 
 mission.phases[1].onBegin = function()
     local methodName = "Phase 1 On Begin"
@@ -140,7 +140,7 @@ mission.phases[1].onStartDialog = function(entityId)
 end
 
 mission.phases[1].onPreRenderHud = function()
-    onMarkAnalyzableXsotan()
+    analyzeXsotanSpecimen_onMarkAnalyzableXsotan()
 end
 
 mission.phases[1].updateServer = function(timeStep)
@@ -153,7 +153,7 @@ mission.phases[1].updateServer = function(timeStep)
     --mission.Log(methodName, "Found " .. tostring(#sectorXsotan) .. " Xsotan") --Careful about enabling these - spam.
     --Find potential analysis targets
     for idx, xsotan in pairs(sectorXsotan) do
-        if isTargetXsotan(mission.data.custom.targetXsotanType, xsotan) and not xsotan:hasScript(mission.data.custom.scriptPath) then
+        if analyzeXsotanSpecimen_isTargetXsotan(mission.data.custom.targetXsotanType, xsotan) and not xsotan:hasScript(mission.data.custom.scriptPath) then
             --mission.Log(methodName, "Adding script to candidate Xsotan.") --Careful about enabling these - spam.
             xsotan:addScriptOnce(mission.data.custom.scriptPath)
             if not sentDetectionMessage then
@@ -183,7 +183,7 @@ mission.phases[1].updateServer = function(timeStep)
 
         if craft and craft.type == EntityType.Ship and xsotan then
             local dist = craft:getNearestDistance(xsotan)
-            if dist <= getAnalysisDistance(craft) then
+            if dist <= analyzeXsotanSpecimen_getAnalysisDistance(craft) then
                 mission.data.custom.currentAnalysisTime = (mission.data.custom.currentAnalysisTime or 0) + timeStep
                 sync()
             end
@@ -204,12 +204,12 @@ mission.phases[1].updateServer = function(timeStep)
 end
 
 mission.phases[1].onSectorLeft = function(x, y)
-    runSectorScriptAndValueCleanup()
+    analyzeXsotanSpecimen_runSectorScriptAndValueCleanup()
 end
 
 mission.phases[1].onSectorArrivalConfirmed = function(x, y)
     --Something about adding the scripts before the sector is fully loaded absolutely borks the prerender call, so we clean them on jumping in.
-    runSectorScriptAndValueCleanup()
+    analyzeXsotanSpecimen_runSectorScriptAndValueCleanup()
 end
 
 --region #PHASE 1 TIMER CALLS
@@ -229,7 +229,7 @@ mission.phases[1].timers[1] = {
                 
                 local dist = craft:getNearestDistance(targetXsotan)
 
-                if dist <= getAnalysisDistance(craft) then
+                if dist <= analyzeXsotanSpecimen_getAnalysisDistance(craft) then
                     local _random = random()
                     local dir = _random:getDirection()
                     local magnitude = _random:getInt(10, 25)
@@ -285,7 +285,7 @@ mission.phases[1].triggers[1] = {
     end,
     callback = function()
         local _MethodName = "Phase 1 Trigger 1 Callback"
-        finishAndReward()
+        analyzeXsotanSpecimen_finishAndReward()
     end,
     repeating = false    
 }
@@ -298,7 +298,7 @@ end
 
 --region #SERVER CALLS
 
-function isTargetXsotan(idx, xsotan)
+function analyzeXsotanSpecimen_isTargetXsotan(idx, xsotan)
     local funcTable = {
         function() --Quantum
             if xsotan:getValue("is_xsotan") and xsotan:hasScript("blinker.lua") then
@@ -354,7 +354,7 @@ function isTargetXsotan(idx, xsotan)
     return funcTable[idx]()
 end
 
-function modTableOK(idx)
+function analyzeXsotanSpecimen_modTableOK(idx)
     local methodName = "Mod Table OK"
 
     local xMods = Mods()
@@ -431,7 +431,7 @@ function modTableOK(idx)
     return funcTable[idx]()
 end
 
-function getUpdateInterval()
+function analyzeXsotanSpecimen_getUpdateInterval()
     if mission.data.custom.currentAnalysisXsotan then
         return 0
     else
@@ -439,7 +439,7 @@ function getUpdateInterval()
     end
 end
 
-function getAnalysisDistance(craft)
+function analyzeXsotanSpecimen_getAnalysisDistance(craft)
     local methodName = "Get Analysis Distance"
 
     local baseDistance = 1000
@@ -470,7 +470,7 @@ function getAnalysisDistance(craft)
     return baseDistance * scannerBonus
 end
 
-function runSectorScriptAndValueCleanup()
+function analyzeXsotanSpecimen_runSectorScriptAndValueCleanup()
     local sectorXsotan = { Sector():getEntitiesByScript(mission.data.custom.scriptPath) }
 
     for idx, xsotan in pairs(sectorXsotan) do
@@ -484,7 +484,7 @@ function runSectorScriptAndValueCleanup()
     end
 end
 
-function finishAndReward()
+function analyzeXsotanSpecimen_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -496,7 +496,7 @@ end
 
 --region #CLIENT CALLS
 
-function onMarkAnalyzableXsotan()
+function analyzeXsotanSpecimen_onMarkAnalyzableXsotan()
     local methodName = "On Mark Analyzable Xsotan"
 
     local _player = Player()
@@ -535,7 +535,7 @@ function onMarkAnalyzableXsotan()
             local dist = craft:getNearestDistance(xsotan)
 
             local str = "ANALYSIS HALTED"
-            if dist <= getAnalysisDistance(craft) and craft.type == EntityType.Ship then
+            if dist <= analyzeXsotanSpecimen_getAnalysisDistance(craft) and craft.type == EntityType.Ship then
                 str = "ANALYSIS IN PROGRESS"
             end
     
@@ -562,7 +562,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription(_Station)
+function analyzeXsotanSpecimen_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -589,13 +589,13 @@ mission.makeBulletin = function(_Station)
     local x, y = _sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
 
-    local _Description = formatDescription(_Station)
+    local _Description = analyzeXsotanSpecimen_formatDescription(_Station)
 
     --Pick the Xsotan we're after.
     local possibleXsotanTypes = {}
 
     for _, xsotanType in pairs(mission.data.custom.xsotanTypes) do
-        if modTableOK(xsotanType.idx) then
+        if analyzeXsotanSpecimen_modTableOK(xsotanType.idx) then
             table.insert(possibleXsotanTypes, xsotanType)
         end
     end
