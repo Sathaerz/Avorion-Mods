@@ -60,7 +60,7 @@ function initialize(_Data_in)
 
     if onServer() then
         --We don't care about this on the client. We can't use the one built into structuredmission because it lacks SectorChangeType.
-        Player():registerCallback("onSectorEntered", "pirateBountyOnSectorEntered")
+        Player():registerCallback("onSectorEntered", "collectPirateBounty_pirateBountyOnSectorEntered")
 
         if not _restoring then
             mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel) .. " - enemy : " .. tostring(_Data_in.targetFaction))
@@ -125,7 +125,7 @@ mission.phases[1].triggers[1] = {
     end,
     callback = function()
         local _MethodName = "Phase 1 Trigger 1 Callback"
-        finishAndReward()
+        collectPirateBounty_finishAndReward()
     end,
     repeating = false    
 }
@@ -200,7 +200,7 @@ mission.phases[1].onSectorArrivalConfirmed = function(_X, _Y)
                     mission.Log(_MethodName, "Spawning headhunters.")
                     mission.phases[1].timers[1] = {
                         time = 5, 
-                        callback = function() spawnHunters() end, 
+                        callback = function() collectPirateBounty_spawnHunters() end, 
                         repeating = false
                     }
                 end
@@ -217,7 +217,7 @@ end
 
 --region #SERVER CALLS
 
-function pirateBountyOnSectorEntered(player, x, y, changeType)
+function collectPirateBounty_pirateBountyOnSectorEntered(player, x, y, changeType)
     local methodName = "Pirate Bounty On Sector Entered"
     mission.Log(methodName, "Checking arrival type")
 
@@ -239,18 +239,18 @@ function pirateBountyOnSectorEntered(player, x, y, changeType)
     end
 end
 
-function getHeadHunterFaction()
+function collectPirateBounty_getHeadHunterFaction()
     local _X, _Y = Sector():getCoordinates()
 
     return EventUT.getHeadhunterFaction(_X, _Y)
 end
 
-function spawnHunters()
+function collectPirateBounty_spawnHunters()
     local _MethodName = "Spawn Hunters"
-    local _HeadHunterFaction = getHeadHunterFaction()
+    local _HeadHunterFaction = collectPirateBounty_getHeadHunterFaction()
     local _Rgen = ESCCUtil.getRand()
 
-    local _HunterGenerator = AsyncShipGenerator(nil, onHuntersFinished)
+    local _HunterGenerator = AsyncShipGenerator(nil, collectPirateBounty_onHuntersFinished)
     _HunterGenerator:startBatch()
     
     local _Volume = Balancing_GetSectorShipVolume(Sector():getCoordinates())
@@ -274,7 +274,7 @@ function spawnHunters()
     _HunterGenerator:endBatch()
 end
 
-function onHuntersFinished(_Generated)
+function collectPirateBounty_onHuntersFinished(_Generated)
     local _MethodName = "On Hunters Finished"
     local _Player = Player()
 
@@ -298,7 +298,7 @@ function onHuntersFinished(_Generated)
         end
     end
 
-    local note = makeHeadHunterNote(Player(), Faction(mission.data.custom.pirateFaction), mission.data.custom.dangerLevel)
+    local note = collectPirateBounty_makeHeadHunterNote(Player(), Faction(mission.data.custom.pirateFaction), mission.data.custom.dangerLevel)
     Loot(_Generated[1]):insert(note)
 
     Placer.resolveIntersections(_Generated)
@@ -319,7 +319,7 @@ function onHuntersFinished(_Generated)
     mission.data.custom.freeSectorSwitches = 3 --Reset to 3 switches.
 end
 
-function makeHeadHunterNote(player, huntingFaction, dangerLevel)
+function collectPirateBounty_makeHeadHunterNote(player, huntingFaction, dangerLevel)
     local x, y = Sector():getCoordinates()
     local money = round(math.max(50000, 500000 * Balancing_GetSectorRichnessFactor(x, y)) / 10000) * 10000
     if dangerLevel == 10 then
@@ -415,7 +415,7 @@ function makeHeadHunterNote(player, huntingFaction, dangerLevel)
     return note
 end
 
-function finishAndReward()
+function collectPirateBounty_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -433,7 +433,7 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription(_Station)
+function collectPirateBounty_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -466,7 +466,7 @@ mission.makeBulletin = function(_Station)
     local _TargetFaction = Galaxy():getPirateFaction(_PirateLevel)
     --No target sector. Just take it and keep it.
     
-    local _Description = formatDescription(_Station)
+    local _Description = collectPirateBounty_formatDescription(_Station)
 
     local _DangerLevel = _random:getInt(1, 10)
     --local _DangerLevel = 10
