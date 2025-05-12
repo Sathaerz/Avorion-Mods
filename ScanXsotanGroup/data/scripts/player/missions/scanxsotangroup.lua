@@ -172,7 +172,7 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     mission.data.description[4].visible = true
 
     if onServer() then
-        spawnMissionSector()
+        scanXsotanGroup_spawnMissionSector()
     end
 end
 
@@ -186,7 +186,7 @@ end
 mission.phases[2] = {}
 mission.phases[2].timers = {}
 mission.phases[2].onPreRenderHud = function()
-    onMarkScannableXsotan()
+    scanXsotanGroup_onMarkScannableXsotan()
 end
 
 --region #PHASE 2 PLAYER CALLBACKS
@@ -219,7 +219,7 @@ mission.phases[2].playerCallbacks = {
                 local xsotanAggroAfter = math.floor(mission.data.custom.scannedXsotanTgt / 2)
                 if mission.data.custom.scannedXsotan >= xsotanAggroAfter then
                     mission.Log(methodName, "Scanned " .. tostring(mission.data.custom.scannedXsotan) .. " this is greater or equal to " .. tostring(xsotanAggroAfter) .. " - aggroing.")
-                    aggroXsotan()
+                    scanXsotanGroup_aggroXsotan()
                 end
             end
 
@@ -247,7 +247,7 @@ mission.phases[2].timers[1] = {
         mission.Log(methodName, "Running win condition")
 
         if mission.data.custom.scannedXsotan >= mission.data.custom.scannedXsotanTgt then
-            finishAndReward()
+            scanXsotanGroup_finishAndReward()
         end
     end,
     repeating = true
@@ -272,7 +272,7 @@ mission.phases[2].timers[2] = {
 
             if mission.data.custom.scannedXsotan + remainingXsotanToScan < mission.data.custom.scannedXsotanTgt then
                 mission.Log(methodName, "Not enough Xsotan left to scan - failing mission.")
-                failAndPunish()
+                scanXsotanGroup_failAndPunish()
             end
         end
     end,
@@ -287,7 +287,7 @@ end
 
 --region #SERVER CALLS
 
-function spawnMissionSector()
+function scanXsotanGroup_spawnMissionSector()
     local methodName = "Spawn Mission Sector"
     mission.Log(methodName, "Beginning...")
 
@@ -410,7 +410,7 @@ function spawnMissionSector()
     sync()
 end
 
-function aggroXsotan()
+function scanXsotanGroup_aggroXsotan()
     local _sector = Sector()
     local xsotan = {_sector:getEntitiesByScriptValue("is_xsotan")}
     local players = {_sector:getPlayers()}
@@ -431,7 +431,7 @@ function aggroXsotan()
     end
 end
 
-function finishAndReward()
+function scanXsotanGroup_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -439,7 +439,7 @@ function finishAndReward()
     accomplish()
 end
 
-function failAndPunish()
+function scanXsotanGroup_failAndPunish()
     local _MethodName = "Fail and Punish"
     mission.Log(_MethodName, "Running lose condition.")
 
@@ -451,7 +451,7 @@ end
 
 --region #CLIENT CALLS
 
-function onMarkScannableXsotan()
+function scanXsotanGroup_onMarkScannableXsotan()
     local _MethodName = "On Mark Scannable Xsotan"
 
     local player = Player()
@@ -482,7 +482,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription(_Station)
+function scanXsotanGroup_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -534,7 +534,7 @@ mission.makeBulletin = function(_Station)
 
     local _DangerLevel = _Rgen:getInt(1, 10)
     
-    local _Description = formatDescription(_Station)
+    local _Description = scanXsotanGroup_formatDescription(_Station)
 
     local _Difficulty = "Medium"
     if _DangerLevel > 5 then
