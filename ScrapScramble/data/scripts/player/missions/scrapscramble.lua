@@ -132,7 +132,7 @@ mission.phases[1].onStartDialog = function(entityId)
             return
         end
 
-        scriptUI:addDialogOption("Deliver scrap metal", "onDeliverScrap")
+        scriptUI:addDialogOption("Deliver scrap metal", "scrapScramble_onDeliverScrap")
     end
 end
 
@@ -172,11 +172,12 @@ end
 
 --region #SERVER CALLS
 
-function incrementScrapDelivery()
+--Invoked in scrapScramble_onDeliverScrap - check dockedDialog.onEnd
+function scrapScramble_incrementScrapDelivery()
     local methodName = "Increment Scrap Count"
     if onClient() then
         mission.Log(methodName, "Calling on Client => Invoking on server")
-        invokeServerFunction("incrementScrapDelivery")
+        invokeServerFunction("scrapScramble_incrementScrapDelivery")
         return
     end
     mission.Log(methodName, "Called on server.")
@@ -208,13 +209,14 @@ function incrementScrapDelivery()
     --sync w/ client.
     sync()
 end
-callable(nil, "incrementScrapDelivery")
+callable(nil, "scrapScramble_incrementScrapDelivery")
 
 --endregion
 
 --region #CLIENT CALLS
 
-function onDeliverScrap(entityId)
+--Invoked in mission.phases[1].onStartDialog - check scriptUI:addDialogOption(...)
+function scrapScramble_onDeliverScrap(entityId)
     local methodName = "On Deliver Scrap"
     mission.Log(methodName, "Beginning. Entity ID is " .. tostring(entityId))
 
@@ -244,7 +246,7 @@ function onDeliverScrap(entityId)
     local dockedFunc = function()
         local dockedDialog = {}
         dockedDialog.text = "Thank you for the scrap delivery! We'll add this to your account."
-        dockedDialog.onEnd = "incrementScrapDelivery"
+        dockedDialog.onEnd = "scrapScramble_incrementScrapDelivery"
 
         return dockedDialog
     end
@@ -271,7 +273,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription(_Station)
+function scrapScramble_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -303,7 +305,7 @@ mission.makeBulletin = function(_Station)
         return 
     end
     
-    local _Description = formatDescription(_Station)
+    local _Description = scrapScramble_formatDescription(_Station)
 
     reward = 0
 
