@@ -24,6 +24,7 @@ mission._Name = "The Dig"
 --Standard mission data.
 mission.data.brief = mission._Name
 mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." },
@@ -41,11 +42,11 @@ mission.data.failMessage = "Our miners have been destroyed. Thousands of skilled
 
 local TheDig_init = initialize
 function initialize(_Data_in, bulletin)
-    local _MethodName = "initialize"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "initialize"
+    mission.Log(methodName, "Beginning...")
 
     if onServer() and not _restoring then
-        mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel) .. " threattype: " .. tostring(_Data_in.threatType))
+        mission.Log(methodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel) .. " threattype: " .. tostring(_Data_in.threatType))
 
         local _X, _Y = _Data_in.location.x, _Data_in.location.y
 
@@ -79,7 +80,7 @@ function initialize(_Data_in, bulletin)
             mission.data.custom.enemyRelationLevel2Giver = _Relation2Giver.level
             mission.data.custom.enemyRelationStatus2Giver = _Relation2Giver.status
 
-            mission.Log(_MethodName, "Enemy faction is : " .. tostring(_EnemyFaction.name))
+            mission.Log(methodName, "Enemy faction is : " .. tostring(_EnemyFaction.name))
             mission.data.custom.enemyName = _EnemyFaction.name
         end
         local minXsoSize = 0
@@ -164,7 +165,7 @@ mission.globalPhase.onAbandon = function()
 end
 
 mission.globalPhase.onFail = function()
-    --miners departing is handled by doMissionEndCleanup in phase 2 onfail.
+    --miners departing is handled by theDig_doMissionEndCleanup in phase 2 onfail.
     if mission.data.location then
         runFullSectorCleanup(true)
     end
@@ -183,20 +184,20 @@ if onServer() then
 mission.globalPhase.timers[1] = {
     time = 130, 
     callback = function() 
-        local _MethodName = "Global Phase Timer 1"
-        mission.Log(_MethodName, "Beginning...")
+        local methodName = "Global Phase Timer 1"
+        mission.Log(methodName, "Beginning...")
 
         mission.data.custom.timePassed = (mission.data.custom.timePassed or 0) + 130
 
-        mission.Log(_MethodName, "Time passed is " .. tostring(mission.data.custom.timePassed))
+        mission.Log(methodName, "Time passed is " .. tostring(mission.data.custom.timePassed))
 
         --Give the player a 5 minute grace period.
         if mission.data.custom.timePassed >= 300 and not atTargetLocation() then
             mission.data.custom.destroyed = mission.data.custom.destroyed + 1
-            mission.Log(_MethodName, "Not on location - incrementing destroyed to : " .. tostring(mission.data.custom.destroyed))
+            mission.Log(methodName, "Not on location - incrementing destroyed to : " .. tostring(mission.data.custom.destroyed))
 
             if mission.data.custom.destroyed >= mission.data.custom.maxDestroyed then
-                failAndPunish()
+                theDig_failAndPunish()
             end
 
             mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
@@ -229,7 +230,7 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.description[6].visible = true
 
     if onServer() then
-        spawnMiningSector(x, y)
+        theDig_spawnMiningSector(x, y)
     end
 end
 
@@ -271,7 +272,7 @@ end
 
 mission.phases[2].updateServer = function(timeStep)
     if mission.data.custom.destroyed >= mission.data.custom.maxDestroyed then
-        failAndPunish()
+        theDig_failAndPunish()
     end
 end
 
@@ -290,10 +291,10 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
 end
 
 mission.phases[2].onAccomplish = function()
-    doMissionEndCleanup()
+    theDig_doMissionEndCleanup()
 
     if mission.data.custom.destroyed == 0 then --give the player a bonus if no miners are lost.
-        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " Plus a bonus for no losses."
+        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus for no losses."
         mission.data.reward.credits = mission.data.reward.credits * 1.25 
     end
 
@@ -301,9 +302,9 @@ mission.phases[2].onAccomplish = function()
 end
 
 mission.phases[2].onFail = function()
-    doMissionEndCleanup() --minersDepart
+    theDig_doMissionEndCleanup() --theDig_minersDepart
     if atTargetLocation() then
-        spawnKickoutWave()
+        theDig_spawnKickoutWave()
     end
 end
 
@@ -319,8 +320,8 @@ mission.phases[2].onAbandon = function()
     end
 
     if atTargetLocation() then
-        minersDepart()
-        spawnKickoutWave()
+        theDig_minersDepart()
+        theDig_spawnKickoutWave()
     end
 end
 
@@ -345,7 +346,7 @@ mission.phases[2].timers[2] = {
     time = 60,
     callback = function()
         if atTargetLocation() then
-            spawnGiverFactionMiner()
+            theDig_spawnGiverFactionMiner()
         end
     end,
     repeating = false
@@ -356,7 +357,7 @@ mission.phases[2].timers[3] = {
     callback = function()
         --Every 2 minutes, spawn miners until there are 4.
         if atTargetLocation() then
-            spawnGiverFactionMiner()
+            theDig_spawnGiverFactionMiner()
         end
     end,
     repeating = true
@@ -369,13 +370,13 @@ mission.phases[2].timers[4] = {
         if atTargetLocation() then
             local threatFuncs = {
                 function()
-                    spawnFactionWave()
+                    theDig_spawnFactionWave()
                 end,
                 function()
-                    spawnPirateWave()
+                    theDig_spawnPirateWave()
                 end,
                 function()
-                    spawnXsotanWave()
+                    theDig_spawnXsotanWave()
                 end,
             }
 
@@ -395,7 +396,7 @@ mission.phases[2].timers[5] = {
 
             if _random:test(pctChance) or mission.data.custom.spawnXsotanWaveNext then
                 mission.data.custom.spawnXsotanWaveNext = false
-                spawnXsotanWave()
+                theDig_spawnXsotanWave()
             else
                 local pctChance2 = math.min(pctChance * 2, 1.0) --caps @ danger 5.
                 if _random:test(pctChance2) then
@@ -415,33 +416,52 @@ end
 
 --region #SERVER CALLS
 
-function spawnMiningSector(x, y)
+function theDig_spawnMiningSector(x, y)
     local methodName = "Spawn Mining Sector"
 
     local generator = SectorGenerator(x, y)
     local _random = random()
 
-    local numFields = _random:getInt(2, 4)
-
-    for i = 1, numFields do
-        local mat = generator:createAsteroidField(0.075)
-        if _random:test(0.5) then generator:createBigAsteroid(mat) end
+    local poiMaxCt = math.max(math.floor(mission.data.custom.dangerLevel / 3), 1)
+    if mission.data.custom.dangerLevel == 10 then
+        if _random:test(0.5) then
+            poiMaxCt = poiMaxCt + 1
+        end
+        if _random:test(0.25) then
+            poiMaxCt = poiMaxCt + 1
+        end
     end
 
-    --Always do 1 @ maximum
-    generator:createAsteroidField(1)
+    local numFields = _random:getInt(2, 4)
+    local bigAsteroidCt = 0
+
+    for i = 1, numFields do
+        local position = generator:createAsteroidField(0.075)
+        if _random:test(0.5) and bigAsteroidCt < poiMaxCt then 
+            generator:createBigAsteroid(position) 
+            bigAsteroidCt = bigAsteroidCt + 1
+        end
+    end
+
+    --Always do a very high yield one.
+    generator:createAsteroidField(0.1 * mission.data.custom.dangerLevel)
 
     --Then do 4-6 that are rich depending on danger level
     local numRichFields = _random:getInt(5, 7)
 
     for _ = 1, numRichFields do
-        generator:createAsteroidField(0.1 * mission.data.custom.dangerLevel)
+        generator:createAsteroidField(0.015 * mission.data.custom.dangerLevel)
     end
 
     local numSmallFields = _random:getInt(8, 15)
+    local stashCt = 0
+    local stashChance = 0.015 * mission.data.custom.dangerLevel
     for i = 1, numSmallFields do
-        local mat = generator:createSmallAsteroidField(0.1)
-        if _random:test(0.15) then generator:createStash(mat) end
+        local position = generator:createSmallAsteroidField(0.1)
+        if _random:test(stashChance) and stashCt < poiMaxCt then 
+            generator:createStash(position) 
+            stashCt = stashCt + 1
+        end
     end
 
     Placer.resolveIntersections()
@@ -449,14 +469,14 @@ function spawnMiningSector(x, y)
     mission.data.custom.cleanUpSector = true
 end
 
-function spawnGiverFactionMiner()
+function theDig_spawnGiverFactionMiner()
     local miners = {Sector():getEntitiesByScriptValue("_thedig_defendobjective")}
 
     if #miners < 4 then
         --spawn a new miner.
         local _Sector = Sector()
         local _X, _Y = _Sector:getCoordinates()
-        local _ShipGenerator = AsyncShipGenerator(nil, onMinerFinished)
+        local _ShipGenerator = AsyncShipGenerator(nil, theDig_onMinerFinished)
         local _Vol1 = Balancing_GetSectorShipVolume(_X, _Y) * random():getInt(2, 8)
         local _Faction = Faction(mission.data.custom.friendlyFaction)
     
@@ -468,7 +488,7 @@ function spawnGiverFactionMiner()
     end
 end
 
-function onMinerFinished(_Generated)
+function theDig_onMinerFinished(_Generated)
     local methodName = "On Miner Finished"
     mission.Log(methodName, "Starting.")
 
@@ -505,7 +525,7 @@ function onMinerFinished(_Generated)
     _Ship:setValue("_thedig_player", Player().index)
 end
 
-function minersDepart()
+function theDig_minersDepart()
     local methodName = "Miners Depart"
     mission.Log(methodName, "Running.")
 
@@ -516,9 +536,9 @@ function minersDepart()
     end
 end
 
-function getPirateWingTable(wingScriptValue)
-    local _MethodName = "Get Pirate Wing Spawn Table"
-    mission.Log(_MethodName, "Beginning...")
+function theDig_getPirateWingTable(wingScriptValue)
+    local methodName = "Get Pirate Wing Spawn Table"
+    mission.Log(methodName, "Beginning...")
 
     local _MaxCt = 4
     if mission.data.custom.dangerLevel == 10 and random():test(0.5) then
@@ -537,7 +557,7 @@ function getPirateWingTable(wingScriptValue)
     return _SpawnTable
 end
 
-function spawnPirateWave()
+function theDig_spawnPirateWave()
     local methodName = "Spawn Pirate Wave"
     mission.Log(methodName, "Running.")
 
@@ -545,7 +565,7 @@ function spawnPirateWave()
     local distance = 250 --_#DistAdj
 
     local _spawnFunc = function(wingScriptValue, wingOnSpawnFunc)
-        local _WingSpawnTable = getPirateWingTable(wingScriptValue)
+        local _WingSpawnTable = theDig_getPirateWingTable(wingScriptValue)
         local wingGenerator = AsyncPirateGenerator(nil, wingOnSpawnFunc)
 
         local posCounter = 1
@@ -562,15 +582,15 @@ function spawnPirateWave()
     end
 
     --spawn alpha
-    _spawnFunc("_thedig_alpha_wing", onEnemyAlphaWingFinished)
+    _spawnFunc("_thedig_alpha_wing", theDig_onEnemyAlphaWingFinished)
 
     --spawn beta
-    _spawnFunc("_thedig_beta_wing", onEnemyBetaWingFinished)
+    _spawnFunc("_thedig_beta_wing", theDig_onEnemyBetaWingFinished)
 end
 
-function getFactionWingTable(wingScriptValue)
-    local _MethodName = "Get Faction Wing Spawn Table"
-    mission.Log(_MethodName, "Beginning...")
+function theDig_getFactionWingTable(wingScriptValue)
+    local methodName = "Get Faction Wing Spawn Table"
+    mission.Log(methodName, "Beginning...")
 
     local _Enemies = {Sector():getEntitiesByScriptValue(wingScriptValue)}
 
@@ -593,7 +613,7 @@ function getFactionWingTable(wingScriptValue)
     return _SpawnTable
 end
 
-function spawnFactionWave()
+function theDig_spawnFactionWave()
     local methodName = "Spawn Faction Wave"
     mission.Log(methodName, "Running.")
 
@@ -601,7 +621,7 @@ function spawnFactionWave()
     local distance = 2500 --_#FACTDistAdj
 
     local _spawnFunc = function(wingScriptValue, wingOnSpawnFunc)
-        local wingSpawnTable = getFactionWingTable(wingScriptValue)
+        local wingSpawnTable = theDig_getFactionWingTable(wingScriptValue)
         local wingGenerator = AsyncShipGenerator(nil, wingOnSpawnFunc)
         local enemyFaction = Faction(mission.data.custom.enemyFaction)
 
@@ -619,13 +639,13 @@ function spawnFactionWave()
     end
 
     --spawn alpha
-    _spawnFunc("_thedig_alpha_wing", onEnemyAlphaWingFinished)
+    _spawnFunc("_thedig_alpha_wing", theDig_onEnemyAlphaWingFinished)
 
     --spawn beta
-    _spawnFunc("_thedig_beta_wing", onEnemyBetaWingFinished)
+    _spawnFunc("_thedig_beta_wing", theDig_onEnemyBetaWingFinished)
 end
 
-function onEnemyAlphaWingFinished(generated)
+function theDig_onEnemyAlphaWingFinished(generated)
     for _, enemyShip in pairs(generated) do
         enemyShip:setValue("_thedig_alpha_wing", true)
 
@@ -656,7 +676,7 @@ function onEnemyAlphaWingFinished(generated)
     Placer.resolveIntersections(generated)
 end
 
-function onEnemyBetaWingFinished(generated)
+function theDig_onEnemyBetaWingFinished(generated)
     local methodName = "On Enemy Beta Wing Finished"
 
     local _sector = Sector()
@@ -745,7 +765,7 @@ function onEnemyBetaWingFinished(generated)
     Placer.resolveIntersections(generated)
 end
 
-function spawnXsotanWave()
+function theDig_spawnXsotanWave()
     local methodName = "Spawn Xsotan Wave"
     mission.Log(methodName, "Running.")
 
@@ -832,7 +852,7 @@ function spawnXsotanWave()
     Placer.resolveIntersections(xsotanTable)
 end
 
-function doMissionEndCleanup()
+function theDig_doMissionEndCleanup()
     if mission.data.custom.threatType == 1 then --enemy faction
         local _MissionDoer = Player().craftFaction or Player()
         local _Faction = Faction(mission.data.custom.enemyFaction)
@@ -845,10 +865,10 @@ function doMissionEndCleanup()
         _Galaxy:setFactionRelationStatus(_Faction, _MissionDoer, mission.data.custom.enemyRelationStatus)
     end
 
-    minersDepart()
+    theDig_minersDepart()
 end
 
-function spawnKickoutWave()
+function theDig_spawnKickoutWave()
     local methodName = "Spawn Kickout Wave"
     mission.Log(methodName, "Starting")
 
@@ -865,7 +885,7 @@ function spawnKickoutWave()
         local flagShip = ShipGenerator.createFlagShip(enemyFaction, secGenerator:getPositionInSector(dist))
 
         flagShip:addScriptOnce("ironcurtain.lua", { _Duration = math.huge })
-        flagShip:addScriptOnce("avenger.lua")
+        flagShip:addScriptOnce("avenger.lua", { _Multiplier = 1.5 })
         flagShip:addScriptOnce("warcountdown.lua")
         flagShip:setValue("_DefenseController_Manage_Own_Invincibility", true)
 
@@ -888,10 +908,10 @@ function spawnKickoutWave()
         _sector:addScriptOnce("sector/background/defensecontroller.lua", defControlValues)
     elseif mission.data.custom.threatType == 2 then --2 = pirates
         --can't do this async or the script is terminated before we make the ship.
-        local motherShip = PirateGenerator.createScaledBoss(PirateGenerator.getGenericPosition())
+        local motherShip = PirateGenerator.createScaledFlagship(PirateGenerator.getGenericPosition())
 
         motherShip:addScriptOnce("ironcurtain.lua", { _Duration = math.huge })
-        motherShip:addScriptOnce("avenger.lua")
+        motherShip:addScriptOnce("avenger.lua", { _Multiplier = 1.5 })
         motherShip:addScriptOnce("allybooster.lua")
         motherShip:setValue("_DefenseController_Manage_Own_Invincibility", true)
 
@@ -938,9 +958,9 @@ function spawnKickoutWave()
     mission.Log(methodName, "finished")
 end
 
-function failAndPunish()
-    local _MethodName = "Fail and Punish"
-    mission.Log(_MethodName, "Running lose condition.")
+function theDig_failAndPunish()
+    local methodName = "Fail and Punish"
+    mission.Log(methodName, "Running lose condition.")
 
     punish()
     fail()
@@ -950,7 +970,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription(_Station, _ThreatType)
+function theDig_formatDescription(_Station, _ThreatType)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
     local threatIdx = 1
@@ -980,42 +1000,12 @@ function formatDescription(_Station, _ThreatType)
     return descriptionTable[descriptionType] .. descriptionThreatTable[descriptionType][threatIdx]
 end
 
-mission.makeBulletin = function(_Station)
-    local _MethodName = "Make Bulletin"
-    --We don't need a specific type of sector here. Just an empty one that's on the same side of the barrier as the questgiver.
-    local _Rgen = ESCCUtil.getRand()
-    local target = {}
-    local x, y = Sector():getCoordinates()
-    local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
-    target.x, target.y = MissionUT.getEmptySector(x, y, 8, 16, insideBarrier)
+function theDig_getThreatType(rand, station)
+    local methodName = "Get Threat Type"
 
-    if not target.x or not target.y then
-        mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
-        return 
-    end
+    local threatType = rand:getInt(1, 3) --1 = faction / 2 = pirates / 3 = xsotan
 
-    local dangerLevel = _Rgen:getInt(1, 10)
-    local threatType = _Rgen:getInt(1, 3) --1 = faction / 2 = pirates / 3 = xsotan
-
-    local _Difficulty = "Medium"
-    if threatType == 1 then
-        _Difficulty = "Difficult"
-    end
-
-    if dangerLevel >= 5 then --the faction defenders are powerful and can blow up miners quickly.
-        _Difficulty = "Difficult"
-        if threatType == 1 then
-            _Difficulty = "Extreme"
-        end
-    end
-
-    if dangerLevel == 10 then
-        _Difficulty = "Extreme"
-    end
-    
-    local _Description = formatDescription(_Station, threatType)
-
-    local giverFaction = _Station.factionIndex
+    local giverFaction = station.factionIndex
     local enemyFaction = nil
     local enemyFactionName = nil
     if threatType == 1 then
@@ -1025,13 +1015,51 @@ mission.makeBulletin = function(_Station)
         if #factionNeighbors > 0 then
             enemyFaction = factionNeighbors[1].index
             enemyFactionName = factionNeighbors[1].name
-            mission.Log(_MethodName, "The enemy faction is " .. tostring(enemyFactionName))
+            mission.Log(methodName, "The enemy faction is " .. tostring(enemyFactionName))
         else
-            threatType = _Rgen:getInt(1, 2) + 1 --pirates or xsotan.
+            threatType = rand:getInt(1, 2) + 1 --pirates or xsotan.
         end
         if giverFaction == enemyFaction then
-            threatType = _Rgen:getInt(1, 2) + 1 --pirates or xsotan.
+            threatType = rand:getInt(1, 2) + 1 --pirates or xsotan.
         end
+    end
+
+    mission.Log(methodName, "Final threat type is " .. tostring(threatType))
+
+    return enemyFaction, enemyFactionName, threatType
+end
+
+mission.makeBulletin = function(_Station)
+    local methodName = "Make Bulletin"
+    --We don't need a specific type of sector here. Just an empty one that's on the same side of the barrier as the questgiver.
+    local _Rgen = ESCCUtil.getRand()
+    local target = {}
+    local x, y = Sector():getCoordinates()
+    local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
+    target.x, target.y = MissionUT.getEmptySector(x, y, 8, 16, insideBarrier)
+
+    if not target.x or not target.y then
+        mission.Log(methodName, "Target.x or Target.y not set - returning nil.")
+        return 
+    end
+
+    local dangerLevel = _Rgen:getInt(1, 10)
+    local enemyFaction, enemyFactionName, threatType = theDig_getThreatType(_Rgen, _Station)
+
+    local _Description = theDig_formatDescription(_Station, threatType)
+
+    local _Difficulty = "Medium"
+    if threatType == 1 then
+        _Difficulty = "Difficult"
+    end
+    if dangerLevel >= 5 then 
+        _Difficulty = "Difficult"
+        if threatType == 1 then --the faction defenders are powerful and can blow up miners quickly.
+            _Difficulty = "Extreme"
+        end
+    end
+    if dangerLevel == 10 then
+        _Difficulty = "Extreme"
     end
 
     local baseReward = 52500

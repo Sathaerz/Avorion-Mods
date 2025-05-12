@@ -12,6 +12,8 @@ self._Debug = 0
 
 self._Data = {}
 
+local endpoint
+
 function TheDigMinerAI.initialize(_Values)
     local _MethodName = "Initialize"
     self.Log(_MethodName, "Starting v9 of The Dig Miner AI Script.")
@@ -21,6 +23,9 @@ function TheDigMinerAI.initialize(_Values)
     self._Data.timeInSector = 0
     self._Data.withdrawCommandSent = false
     self._Data.jumping = false
+
+    local dir = random():getDirection()
+    endpoint = dir * 20000
 end
 
 function TheDigMinerAI.getUpdateInterval()
@@ -41,21 +46,27 @@ function TheDigMinerAI.updateServer(timeStep)
 
     if self._Data.timeInSector >= 240 and _HPThreshold < 0.25 and not self._Data.withdrawCommandSent then
         self.Log(_MethodName, "Ship below HP threshold and requisite time has passed. Withdrawing.")
+        self._Data.withdrawCommandSent = true
+    end
 
+    if self._Data.withdrawCommandSent then
+        --Get rid of the mine script if applicable.
         local safetyBreakout = 0
         while _Entity:hasScript("ai/mine.lua") and safetyBreakout < 10 do
             _Entity:removeScript("ai/mine.lua")
             safetyBreakout = safetyBreakout + 1
         end
-        local dir = random():getDirection()
-        local endpoint = dir * 20000
 
+        --set endpoint if applicable
+        if not endpoint then
+            local dir = random():getDirection()
+            endpoint = dir * 20000
+        end
+
+        --fly to endpoint
         local shipAI = ShipAI()
         shipAI:setFlyLinear(endpoint, 0, false)
-        self._Data.withdrawCommandSent = true
-    end
 
-    if self._Data.withdrawCommandSent then
         --Check for nearby asteroids. If there are none, jump out.
         local _EntitySphere = _Entity:getBoundingSphere()
         local _AsteroidCheckSphere = Sphere(_EntitySphere.center, _EntitySphere.radius * 10)
@@ -139,7 +150,7 @@ function TheDigMinerAI.onPleaseWithdraw()
 
     self.Log(methodName, "Time in sector is " .. tostring(self._Data.timeInSector))
 
-    if self._Data.timeInSector < 240 then
+    if self._Data.timeInSector < 210 then
         d0.text = "But we just got here. Let us do some mining before we pull out!"
     else
         d0.text = "Understood! Withdrawing from the asteroid field. We'll activate our hyperdrive when we're clear."
