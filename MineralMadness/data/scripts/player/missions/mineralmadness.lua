@@ -150,7 +150,7 @@ mission.phases[1].onStartDialog = function(entityId)
             return
         end
 
-        scriptUI:addDialogOption("Deliver ores", "onDeliverOre")
+        scriptUI:addDialogOption("Deliver ores", "mineralMadness_onDeliverOre")
     end
 end
 
@@ -190,11 +190,11 @@ end
 
 --region #SERVER CALLS
 
-function incrementOreDelivery()
+function mineralMadness_incrementOreDelivery()
     local methodName = "Increment Ore Delivery"
     if onClient() then
         mission.Log(methodName, "Calling on Client => Invoking on server")
-        invokeServerFunction("incrementOreDelivery")
+        invokeServerFunction("mineralMadness_incrementOreDelivery")
         return
     end
     mission.Log(methodName, "Called on server.")
@@ -233,13 +233,13 @@ function incrementOreDelivery()
     --sync w/ client.
     sync()
 end
-callable(nil, "incrementOreDelivery")
+callable(nil, "mineralMadness_incrementOreDelivery")
 
 --endregion
 
 --region #CLIENT CALLS
 
-function onDeliverOre(entityId)
+function mineralMadness_onDeliverOre(entityId)
     local methodName = "On Deliver Ore"
     mission.Log(methodName, "Beginning. Entity ID is " .. tostring(entityId))
 
@@ -269,7 +269,7 @@ function onDeliverOre(entityId)
     local dockedFunc = function()
         local dockedDialog = {}
         dockedDialog.text = "Thank you for the ore delivery! We'll add this to your account."
-        dockedDialog.onEnd = "incrementOreDelivery"
+        dockedDialog.onEnd = "mineralMadness_incrementOreDelivery"
 
         return dockedDialog
     end
@@ -296,7 +296,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription()
+function mineralMadness_formatDescription()
     local descriptionTable = {
         "Hey there! Some of our miners are down for the count but the need for resources never ends! There's always something to build or repair. We'd appreciate it if you could mine some while we fix up our ships. Bring as much raw ore as you can! We'll pay you for it.",
         "We've been working as hard as we can to mine resources but it's not enough! We need some help. If you could go and strip some mineral fields we'd appreciate the help! Go ahead and drop off any raw ores you collect, we'll pay you an increased rate per unit!",
@@ -324,7 +324,7 @@ mission.makeBulletin = function(_Station)
         return 
     end
     
-    local _Description = formatDescription()
+    local _Description = mineralMadness_formatDescription()
 
     reward = 0
 
