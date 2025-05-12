@@ -74,7 +74,7 @@ mission.phases[1].sectorCallbacks[1] = {
 
                 Sector():deleteEntity(_Entity) --Clean up old entity.
     
-                local _PlanValue = getFullShipValue(_Plan)
+                local _PlanValue = wreckingHavoc_getFullShipValue(_Plan)
 
                 local _ActualWreck = _Sector:createWreckage(_Plan, _Entity.position)
                 local _WreckVelocity = Velocity(_ActualWreck)
@@ -99,6 +99,7 @@ mission.phases[1].sectorCallbacks[1] = {
         sync()
     end
 }
+
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     local _Giver = Entity(mission.data.giver.id)
@@ -146,6 +147,7 @@ mission.phases[1].onBeginServer = function()
 
     mission.internals.fulfilled = true --This mission will succeed at the end, and not fail. The only question is how much money the player gets.
 end
+
 mission.phases[1].onAccomplish = function()
     if mission.data.custom.wreckagesDropped and mission.data.custom.wreckagesDropped > 0 then
         --The mission only accomplishes when the time runs out and doesn't reward
@@ -159,7 +161,7 @@ end
 
 --region #SERVER CALLS
 
-function getFullShipValue(_Plan)
+function wreckingHavoc_getFullShipValue(_Plan)
     local _PlanValue = _Plan:getMoneyValue()
     local _ResValue = {_Plan:getResourceValue()}
 
@@ -175,27 +177,24 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription(_Station)
+function wreckingHavoc_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
-    local _DescriptionType = 1 --Neutral
+    local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
-        _DescriptionType = 2 --Aggressive.
+        descriptionType = 2 --Aggressive.
     elseif _Aggressive <= -0.5 then
-        _DescriptionType = 3 --Peaceful.
+        descriptionType = 3 --Peaceful.
     end
 
-    local _FinalDescription = ""
-    if _DescriptionType == 1 then --Neutral.
-        _FinalDescription = "To any enterprising captains out there, we're running shorter on wrecakges than we'd like. That's where you come in. We're willing to pay a premium for any extra wreckages you can deliver to this sector. No need for anything fancy when you drop the wrecks off. Just undock them in this sector and we'll keep count of them for you. Good luck!"
-    elseif _DescriptionType == 2 then --Aggressive.
-        _FinalDescription = "We are looking for additional wreckages to be dropped off in this scrapyard. Obviously, we are capable of destroying pirates and Xsotan ourselves, but they've learned to fear us and we're unable to hunt down as many as we'd like. That is where you come in. We want you to destroy ships and drop off their wreckages here for our use. Of course, you'll be rewarded. Get to it."
-    elseif _DescriptionType == 3 then --Peaceful.
-        _FinalDescription = "We need additional wreckages! Our salvaging operations can't keep up with the demand and our military isn't powerful enough to destroy all of the pirate and Xsotan ships that we'd need. We're willing to pay you to bring extra wreckages to this sector. Just drop them off and we'll take care of everything else! Thank you so much for your time!"
-    end
+    local descriptionOptions = {
+        "To any enterprising captains out there, we're running shorter on wrecakges than we'd like. That's where you come in. We're willing to pay a premium for any extra wreckages you can deliver to this sector. No need for anything fancy when you drop the wrecks off. Just undock them in this sector and we'll keep count of them for you. Good luck!", --Neutral
+        "We are looking for additional wreckages to be dropped off in this scrapyard. Obviously, we are capable of destroying pirates and Xsotan ourselves, but they've learned to fear us and we're unable to hunt down as many as we'd like. That is where you come in. We want you to destroy ships and drop off their wreckages here for our use. Of course, you'll be rewarded. Get to it.", --Aggressive
+        "We need additional wreckages! Our salvaging operations can't keep up with the demand and our military isn't powerful enough to destroy all of the pirate and Xsotan ships that we'd need. We're willing to pay you to bring extra wreckages to this sector. Just drop them off and we'll take care of everything else! Thank you so much for your time!" --Peaceful
+    }
 
-    return _FinalDescription
+    return descriptionOptions[descriptionType]
 end
 
 mission.makeBulletin = function(_Station)
@@ -210,7 +209,7 @@ mission.makeBulletin = function(_Station)
         return 
     end
     
-    local _Description = formatDescription(_Station)
+    local _Description = wreckingHavoc_formatDescription(_Station)
 
     reward = 0
 
