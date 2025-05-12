@@ -169,7 +169,7 @@ mission.globalPhase.onAbandon = function()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
-            transportsDepart()
+            escortCivilians_transportsDepart()
         end
         runFullSectorCleanup(true)
     end
@@ -211,7 +211,7 @@ mission.globalPhase.timers[1] = {
             mission.Log(_MethodName, "Not on location - incrementing destroyed to : " .. tostring(mission.data.custom.destroyed))
 
             if mission.data.custom.destroyed >= mission.data.custom.maxDestroyed then
-                failAndPunish()
+                escortCivilians_failAndPunish()
             end
 
             mission.data.description[5].arguments = { _DESTROYED = mission.data.custom.destroyed, _MAXDESTROYED = mission.data.custom.maxDestroyed }
@@ -252,7 +252,7 @@ mission.phases[2].timers[1] = {
         local _Sector = Sector()
         local _X, _Y = _Sector:getCoordinates()
         if _X == mission.data.location.x and _Y == mission.data.location.y then
-            spawnBackgroundPirates()
+            escortCivilians_spawnBackgroundPirates()
         end
     end,
     repeating = true
@@ -262,14 +262,14 @@ mission.phases[2].timers[1] = {
 mission.phases[2].timers[8] = {
     time = 30,
     callback = function()
-        spawnCivilTransport()
+        escortCivilians_spawnCivilTransport()
         mission.phases[2].timers[2] = {
             time = 130,
             callback = function()
                 local _Sector = Sector()
                 local _X, _Y = _Sector:getCoordinates()
                 if _X == mission.data.location.x and _Y == mission.data.location.y then
-                    spawnCivilTransport()
+                    escortCivilians_spawnCivilTransport()
                 end
             end,
             repeating = true
@@ -287,10 +287,10 @@ mission.phases[2].timers[4] = {
         mission.Log(_MethodName, "Beginning...")
         if mission.data.custom.escorted >= mission.data.custom.maxEscorted then
             ESCCUtil.allPiratesDepart()
-            finishAndReward()
+            escortCivilians_finishAndReward()
         end
         if mission.data.custom.destroyed >= mission.data.custom.maxDestroyed then
-            failAndPunish()
+            escortCivilians_failAndPunish()
         end
     end,
     repeating = true
@@ -307,7 +307,7 @@ mission.phases[2].onBeginServer = function()
     mission.data.description[4].visible = true
     mission.data.description[5].visible = true
 
-    spawnBackgroundPirates()
+    escortCivilians_spawnBackgroundPirates()
 end
 
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
@@ -328,7 +328,7 @@ end
 
 --region #SERVER CALLS
 
-function spawnCivilTransport()
+function escortCivilians_spawnCivilTransport()
     --Check to see if there's an existing transport.
     local _Transports = {Sector():getEntitiesByScriptValue("_escortcivilians_defendobjective")}
     --If there is, delete it and increment the escaped counter. (This is good for the player!)
@@ -336,13 +336,13 @@ function spawnCivilTransport()
     if #_Transports > 0 then
         for _, _F in pairs(_Transports) do
             _F:addScriptOnce("deletejumped.lua")
-            civilTransportEscaped()
+            escortCivilians_civilTransportEscaped()
         end
     end
     --Spawn a new freighter.
     local _Sector = Sector()
     local _X, _Y = _Sector:getCoordinates()
-    local _ShipGenerator = AsyncShipGenerator(nil, onCivilTransportFinished)
+    local _ShipGenerator = AsyncShipGenerator(nil, escortCivilians_onCivilTransportFinished)
     local _Vol1 = Balancing_GetSectorShipVolume(_X, _Y) * 16
     local _Faction = Faction(mission.data.custom.friendlyFaction)
 
@@ -353,7 +353,7 @@ function spawnCivilTransport()
     _ShipGenerator:endBatch()
 end
 
-function onCivilTransportFinished(_Generated)
+function escortCivilians_onCivilTransportFinished(_Generated)
     local _Ship = _Generated[1]
 
     --Multiply durability so the ship isn't instakilled.
@@ -381,7 +381,7 @@ function onCivilTransportFinished(_Generated)
             if #_Transports > 0 then
                 for _, _F in pairs(_Transports) do
                     _F:addScriptOnce("deletejumped.lua")
-                    civilTransportEscaped()
+                    escortCivilians_civilTransportEscaped()
                 end
             end
         end,
@@ -411,13 +411,13 @@ function onCivilTransportFinished(_Generated)
     }
 end
 
-function civilTransportEscaped()
+function escortCivilians_civilTransportEscaped()
     mission.data.custom.escorted = mission.data.custom.escorted + 1
     mission.data.description[4].arguments = { _ESCORTED = mission.data.custom.escorted, _MAXESCORTED = mission.data.custom.maxEscorted }
     sync()
 end
 
-function transportsDepart()
+function escortCivilians_transportsDepart()
     local methodName = "Transports Depart"
     mission.Log(methodName, "Running.")
 
@@ -428,7 +428,7 @@ function transportsDepart()
     end
 end
 
-function getWingSpawnTables(_WingScriptValue)
+function escortCivilians_getWingSpawnTables(_WingScriptValue)
     local _MethodName = "Get Wing Spawn Table"
     mission.Log(_MethodName, "Beginning...")
 
@@ -462,12 +462,12 @@ function getWingSpawnTables(_WingScriptValue)
     return _SpawnTable
 end
 
-function spawnBackgroundPirates()
+function escortCivilians_spawnBackgroundPirates()
     local _MethodName = "Spawn Background Pirates"
     mission.Log(_MethodName, "Beginning...")
 
-    local _AlphaSpawnTable = getWingSpawnTables("_escortcivilians_alpha_wing")
-    local generator = AsyncPirateGenerator(nil, onAlphaBackgroundPiratesFinished)
+    local _AlphaSpawnTable = escortCivilians_getWingSpawnTables("_escortcivilians_alpha_wing")
+    local generator = AsyncPirateGenerator(nil, escortCivilians_onAlphaBackgroundPiratesFinished)
 
     local distance = 250 --_#DistAdj
 
@@ -482,8 +482,8 @@ function spawnBackgroundPirates()
 
     generator:endBatch()
 
-    local _BetaSpawnTable = getWingSpawnTables("_escortcivilians_beta_wing")
-    generator = AsyncPirateGenerator(nil, onBetaBackgroundPiratesFinished)
+    local _BetaSpawnTable = escortCivilians_getWingSpawnTables("_escortcivilians_beta_wing")
+    generator = AsyncPirateGenerator(nil, escortCivilians_onBetaBackgroundPiratesFinished)
 
     generator:startBatch()
 
@@ -497,7 +497,7 @@ function spawnBackgroundPirates()
     generator:endBatch()
 end
 
-function onAlphaBackgroundPiratesFinished(_Generated)
+function escortCivilians_onAlphaBackgroundPiratesFinished(_Generated)
     for _, _Pirate in pairs(_Generated) do
         _Pirate:setValue("_escortcivilians_alpha_wing", true)
 
@@ -515,7 +515,7 @@ function onAlphaBackgroundPiratesFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function onBetaBackgroundPiratesFinished(_Generated)
+function escortCivilians_onBetaBackgroundPiratesFinished(_Generated)
     local _Sector = Sector()
     local _X, _Y = _Sector:getCoordinates()
 
@@ -594,7 +594,7 @@ function onBetaBackgroundPiratesFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function finishAndReward()
+function escortCivilians_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -607,7 +607,7 @@ function finishAndReward()
     accomplish()
 end
 
-function failAndPunish()
+function escortCivilians_failAndPunish()
     local _MethodName = "Fail and Punish"
     mission.Log(_MethodName, "Running lose condition.")
 
@@ -619,7 +619,7 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription(_Station, _DangerValue)
+function escortCivilians_formatDescription(_Station, _DangerValue)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -661,7 +661,7 @@ mission.makeBulletin = function(_Station)
 
     local _DangerLevel = _Rgen:getInt(1, 10)
     
-    local _Description = formatDescription(_Station, _DangerLevel)
+    local _Description = escortCivilians_formatDescription(_Station, _DangerLevel)
 
     local _Difficulty = "Medium"
     if _DangerLevel >= 5 then
