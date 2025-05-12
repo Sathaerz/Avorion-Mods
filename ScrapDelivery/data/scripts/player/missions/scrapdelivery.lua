@@ -84,7 +84,7 @@ end
 mission.phases[1].updateServer = function(timeStep)
     --We shouldn't be able to deliver more scrap than needed, but just in case.
     if mission.data.custom.scrapDelivered >= mission.data.custom.scrapNeeded then
-        finishAndReward()
+        scrapDelivery_finishAndReward()
     end
 end
 
@@ -103,7 +103,7 @@ mission.phases[1].onStartDialog = function(entityId)
             return
         end
 
-        scriptUI:addDialogOption("Deliver scrap metal", "onDeliverScrap")
+        scriptUI:addDialogOption("Deliver scrap metal", "scrapDelivery_onDeliverScrap")
     end
 end
 
@@ -111,11 +111,11 @@ end
 
 --region #SERVER CALLS
 
-function incrementScrapDelivery()
+function scrapDelivery_incrementScrapDelivery()
     local methodName = "Increment Scrap Count"
     if onClient() then
         mission.Log(methodName, "Calling on Client => Invoking on server")
-        invokeServerFunction("incrementScrapDelivery")
+        invokeServerFunction("scrapDelivery_incrementScrapDelivery")
         return
     end
     mission.Log(methodName, "Called on server.")
@@ -145,9 +145,9 @@ function incrementScrapDelivery()
     --sync w/ client.
     sync()
 end
-callable(nil, "incrementScrapDelivery")
+callable(nil, "scrapDelivery_incrementScrapDelivery")
 
-function finishAndReward()
+function scrapDelivery_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -159,7 +159,7 @@ end
 
 --region #CLIENT CALLS
 
-function onDeliverScrap(entityId)
+function scrapDelivery_onDeliverScrap(entityId)
     local methodName = "On Deliver Scrap"
     mission.Log(methodName, "Beginning. Entity ID is " .. tostring(entityId))
 
@@ -183,7 +183,7 @@ function onDeliverScrap(entityId)
     local dockedFunc = function()
         local dockedDialog = {}
         dockedDialog.text = "Thank you for the scrap delivery! We'll add this to your account."
-        dockedDialog.onEnd = "incrementScrapDelivery"
+        dockedDialog.onEnd = "scrapDelivery_incrementScrapDelivery"
 
         return dockedDialog
     end
@@ -210,7 +210,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription(_Station)
+function scrapDelivery_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -243,7 +243,7 @@ mission.makeBulletin = function(_Station)
         return 
     end
     
-    local _Description = formatDescription(_Station)
+    local _Description = scrapDelivery_formatDescription(_Station)
 
     --pick a random payout value
     local payout = random():getInt(1, 10) * 10000 * Balancing.GetSectorRewardFactor(x, y)
