@@ -327,16 +327,16 @@ function disruptPirateMiners_spawnMiningSector(x, y)
     local numFields = _random:getInt(3, 5)
 
     for i = 1, numFields do
-        local mat = generator:createAsteroidField(0.025)
+        local position = generator:createAsteroidField(0.025)
     end
 
     local numRichFields = _random:getInt(2, 3)
     local bigAsteroidCt = 0
 
     for _ = 1, numRichFields do
-        generator:createAsteroidField(0.025 * mission.data.custom.dangerLevel)
+        local position = generator:createAsteroidField(0.015 * mission.data.custom.dangerLevel)
         if _random:test(0.5) and bigAsteroidCt < poiMaxCt then 
-            generator:createBigAsteroid(mat) 
+            generator:createBigAsteroid(position) 
             bigAsteroidCt = bigAsteroidCt + 1
         end
     end
@@ -345,9 +345,9 @@ function disruptPirateMiners_spawnMiningSector(x, y)
     local stashCt = 0
     local stashChance = 0.015 * mission.data.custom.dangerLevel
     for i = 1, numSmallFields do
-        local mat = generator:createSmallAsteroidField(0.05)
+        local position = generator:createSmallAsteroidField(0.05)
         if _random:test(stashChance) and stashCt < poiMaxCt then 
-            generator:createStash(mat) 
+            generator:createStash(position) 
             stashCt = stashCt + 1
         end
     end
