@@ -120,7 +120,7 @@ mission.globalPhase.onEntityDestroyed = function(id, lastDamageInflictor)
     local _DestroyedEntity = Entity(id)
 
     if _DestroyedEntity:getValue("_transfersatellite_objective") then
-        failAndPunish()
+        transferSatellite_failAndPunish()
     end
 end
 
@@ -137,6 +137,7 @@ mission.phases[1].sectorCallbacks[1] = {
         end
     end
 }
+
 mission.phases[1].onBeginServer = function()
     --Create the satellite
     local _Giver = Entity(mission.data.giver.id)
@@ -168,7 +169,7 @@ mission.phases[1].onBeginServer = function()
     _SatellitePlan:scale(vec3(_ScaleFactor, _ScaleFactor, _ScaleFactor))
     _SatellitePlan.accumulatingHealth = true
 
-    desc.position = getPositionInFront(_Giver, 20)
+    desc.position = transferSatellite_getPositionInFront(_Giver, 20)
     desc:setMovePlan(_SatellitePlan)
     desc.factionIndex = _Faction.index
 
@@ -190,12 +191,13 @@ mission.phases[2].sectorCallbacks[1] = {
                 if mission.data.custom.playerAttacked then
                     nextPhase()
                 else
-                    finishAndReward()
+                    transferSatellite_finishAndReward()
                 end
             end
         end
     end
 }
+
 mission.phases[2].onBeginServer = function()
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
@@ -217,7 +219,7 @@ mission.phases[3].timers[2] = {
         local _Pirates = {_Sector:getEntitiesByScriptValue("is_pirate")}
         mission.Log(_MethodName, "Number of pirates : " .. tostring(#_Pirates) .. " timer allowed to advance : " .. tostring(mission.data.custom.timerAdvance))
         if atTargetLocation() and mission.data.custom.timerAdvance and #_Pirates == 0 then
-            finishAndReward()
+            transferSatellite_finishAndReward()
         end
     end,
     repeating = true
@@ -235,7 +237,7 @@ mission.phases[3].onBeginServer = function()
             local _MethodName = "Phase 3 Timer 1 Callback"
             mission.Log(_MethodName, "Beginning.")
 
-            spawnPirateAmbush()
+            transferSatellite_spawnPirateAmbush()
             mission.data.description[4].fulfilled = true
             mission.data.description[5].visible = true
             mission.data.description[6].visible = true
@@ -249,7 +251,7 @@ end
 
 --region #SERVER CALLS
 
-function getPositionInFront(craft, distance)
+function transferSatellite_getPositionInFront(craft, distance)
 
     local position = craft.position
     local right = position.right
@@ -262,7 +264,7 @@ function getPositionInFront(craft, distance)
     return MatrixLookUpPosition(right, up, pos)
 end
 
-function spawnPirateAmbush()
+function transferSatellite_spawnPirateAmbush()
     local _MethodName = "Spawn Pirate Ambush"
     mission.Log(_MethodName, "Beginning.")
 
@@ -271,7 +273,7 @@ function spawnPirateAmbush()
     table.insert(waveTable, 0, "Jammer")
     table.insert(waveTable, "Jammer")
 
-    local generator = AsyncPirateGenerator(nil, onPirateAmbushFinished)
+    local generator = AsyncPirateGenerator(nil, transferSatellite_onPirateAmbushFinished)
 
     generator:startBatch()
 
@@ -286,13 +288,13 @@ function spawnPirateAmbush()
     generator:endBatch()
 end
 
-function onPirateAmbushFinished(_Generated)
+function transferSatellite_onPirateAmbushFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 
     mission.data.custom.timerAdvance = true
 end
 
-function finishAndReward()
+function transferSatellite_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -300,7 +302,7 @@ function finishAndReward()
     accomplish()
 end
 
-function failAndPunish()
+function transferSatellite_failAndPunish()
     local _MethodName = "Fail and Punish"
     mission.Log(_MethodName, "Running lose condition.")
 
@@ -312,7 +314,7 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription(_Station)
+function transferSatellite_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -354,7 +356,7 @@ mission.makeBulletin = function(_Station)
         _Difficulty = "Medium"
     end
     
-    local _Description = formatDescription(_Station)
+    local _Description = transferSatellite_formatDescription(_Station)
 
     local _BaseReward = 37000
     --From 37000 to 40000
