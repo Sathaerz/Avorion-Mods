@@ -132,7 +132,7 @@ mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
 end
 
 mission.phases[2].onAbandon = function()
-    failAndPunish()
+    destroyXsoDread_failAndPunish()
 end
 
 --region #PHASE 2 TIMER CALLS
@@ -148,7 +148,7 @@ mission.phases[2].timers[1] = {
         local dreadnoughts = {Sector():getEntitiesByScriptValue("xsotan_dreadnought")}
 
         if atTargetLocation() and mission.data.custom.dreadnoughtKilled >= 1 and #dreadnoughts == 0 then
-            finishAndReward()
+            destroyXsoDread_finishAndReward()
         end
     end,
     repeating = true
@@ -164,7 +164,7 @@ mission.phases[2].timers[2] = {
 
         if atTargetLocation() and mission.data.custom.dreadnoughtKilled == 0 and #dreadnoughts == 0 then
             --The dreadnought left the sector. Realistically speaking this will not happen due to the fact that it aggros instantly.
-            failAndPunish()
+            destroyXsoDread_failAndPunish()
         end
     end,
     repeating = true
@@ -178,7 +178,7 @@ end
 
 --region #SERVER CALLS
 
-function finishAndReward()
+function destroyXsoDread_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -186,7 +186,7 @@ function finishAndReward()
     accomplish()
 end
 
-function failAndPunish()
+function destroyXsoDread_failAndPunish()
     local _MethodName = "Fail and Punish"
     mission.Log(_MethodName, "Running lose condition.")
 
@@ -198,7 +198,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatWinMessage(_Station)
+function destroyXsoDread_formatWinMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
@@ -213,14 +213,13 @@ function formatWinMessage(_Station)
     { 
         "Thanks for taking out that Xsotan for us. Here's your reward, as promised.",
         "Thank you for destroying the dreadnought. One less threat for us to deal with. We transferred the reward to your account.",
-        "We watched the battle telemetry and we coudln't have taken a threat of that magnitude. Thank you. Here's your reward."
+        "We watched the battle telemetry and we couldn't have taken a threat of that magnitude. Thank you. Here's your reward."
     }
 
     return _Msgs[_MsgType]
 end
 
---Realistically speaking, you won't see this. I thought maybe the player might see it after the dreadnought escapes but it aggros immediately.
-function formatLoseMessage(_Station)
+function destroyXsoDread_formatLoseMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
@@ -240,7 +239,7 @@ function formatLoseMessage(_Station)
     return _Msgs[_MsgType]
 end
 
-function formatDescription(_Station)
+function destroyXsoDread_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -286,9 +285,9 @@ mission.makeBulletin = function(_Station)
         _Difficulty = "Death Sentence"
     end
     
-    local _Description = formatDescription(_Station)
-    local _WinMsg = formatWinMessage(_Station)
-    local _LoseMsg = formatLoseMessage(_Station)
+    local _Description = destroyXsoDread_formatDescription(_Station)
+    local _WinMsg = destroyXsoDread_formatWinMessage(_Station)
+    local _LoseMsg = destroyXsoDread_formatLoseMessage(_Station)
 
     local _BaseReward = 500000
     if _DangerLevel > 5 then
