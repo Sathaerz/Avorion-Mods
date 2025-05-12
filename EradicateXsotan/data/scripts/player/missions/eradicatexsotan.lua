@@ -181,7 +181,7 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     local _MethodName = "Phase 1 On Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
 
-    spawnObjectiveSector(x, y)
+    eradicateXsotan_spawnObjectiveSector(x, y)
 end
 
 mission.phases[1].onTargetLocationArrivalConfirmed = function(x, y)
@@ -227,7 +227,7 @@ mission.phases[2].updateTargetLocationServer = function(timeStep)
     local _XKR = mission.data.custom.xsotanKillreq
     if mission.data.custom.xsotanKilled >= _XKR and not mission.data.custom.infestorSpawned then
         mission.Log(_MethodName, tostring(_XKR) .. "+ Xsotan killed. Spawning Infestor.")
-        spawnXsotanInfestor()   
+        eradicateXsotan_spawnXsotanInfestor()   
 
         mission.data.description[4].visible = true
         showMissionUpdated("Eradicate Xsotan Infestation")
@@ -255,7 +255,7 @@ mission.phases[2].onEntityDestroyed = function(id, lastDamageInflictor)
                 end
             end
     
-            finishAndReward()
+            eradicateXsotan_finishAndReward()
         end
         
         mission.Log(_MethodName, tostring(mission.data.custom.xsotanKilled) .. " Xsotan killed so far.")
@@ -270,7 +270,7 @@ mission.phases[2].timers[1] = {
     time = 60,
     callback = function()
         if atTargetLocation() then
-            spawnXsotanWave()
+            eradicateXsotan_spawnXsotanWave()
         end
     end,
     repeating = true
@@ -284,7 +284,7 @@ mission.phases[2].timers[1] = {
 
 --region #SERVER CALLS
 
-function spawnObjectiveSector(x, y)
+function eradicateXsotan_spawnObjectiveSector(x, y)
     local _MethodName = "Spawning Sector"
 
     local rgen = ESCCUtil.getRand()
@@ -296,12 +296,12 @@ function spawnObjectiveSector(x, y)
 
     mission.Log(_MethodName, "Generating Xsotan.")
     --Spawn the maximum number of Xsotan.
-    spawnXsotanWave()
+    eradicateXsotan_spawnXsotanWave()
 
     mission.data.custom.cleanUpSector = true
 end
 
-function spawnXsotanWave()
+function eradicateXsotan_spawnXsotanWave()
     local _MethodName = "Spawn Xsotan"
     
     local _SpawnCount = mission.data.custom.maximumXsotan - ESCCUtil.countEntitiesByValue("_infestation_xsotan")
@@ -408,7 +408,7 @@ function spawnXsotanWave()
     SpawnUtility.addEnemyBuffs(_XsotanTable)
 end
 
-function spawnXsotanInfestor()
+function eradicateXsotan_spawnXsotanInfestor()
     local _MethodName = "Spawn Xsotan Infestor"
     mission.Log(_MethodName, "Beginning...")
 
@@ -438,7 +438,7 @@ function spawnXsotanInfestor()
     invokeClientFunction(Player(), "startBossCameraAnimation", _XsotanInfestor.id)
 end
 
-function finishAndReward()
+function eradicateXsotan_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -450,7 +450,7 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription(_Station, _insideBarrier)
+function eradicateXsotan_formatDescription(_Station, _insideBarrier)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -507,7 +507,7 @@ mission.makeBulletin = function(_Station)
         end
     end
 
-    local _Description = formatDescription(_Station, insideBarrier)
+    local _Description = eradicateXsotan_formatDescription(_Station, insideBarrier)
 
     local _BaseReward = 73000
     local _BaseRelReward = 6000
