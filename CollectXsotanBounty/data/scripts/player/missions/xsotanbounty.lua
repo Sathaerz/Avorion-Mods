@@ -154,7 +154,7 @@ mission.phases[1].triggers[1] = {
     end,
     callback = function()
         local methodName = "Phase 1 Trigger 1 Callback"
-        finishAndReward()
+        collectXsotanBounty_finishAndReward()
     end,
     repeating = false    
 }
@@ -198,7 +198,7 @@ end
 
 --region #SERVER CALLS
 
-function finishAndReward()
+function collectXsotanBounty_finishAndReward()
     local methodName = "Finish and Reward"
     mission.Log(methodName, "Running win condition.")
 
@@ -221,7 +221,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription(_Station)
+function collectXsotanBounty_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -250,7 +250,7 @@ mission.makeBulletin = function(_Station)
     local _X, _Y = _sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(_X, _Y)
 
-    local _Description = formatDescription(_Station)
+    local _Description = collectXsotanBounty_formatDescription(_Station)
 
     local _DangerLevel = _random:getInt(1, 10)
     local _MaxTargets = 22
