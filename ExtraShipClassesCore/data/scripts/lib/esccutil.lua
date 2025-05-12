@@ -254,6 +254,30 @@ function ESCCUtil.countEntitiesByValue(_Value)
     end
 end
 
+function ESCCUtil.countEntitiesByType(entityType)
+    local entities = {Sector():getEntitiesByType(entityType)}
+    if entities then
+        return #entities
+    else
+        return 0
+    end
+end
+
+function ESCCUtil.countEntitiesByValueAndScript(value, script)
+    local entities = {Sector():getEntitiesByScriptValue(value)}
+    if entities then
+        local retValue = 0
+        for _, entity in pairs(entities) do
+            if entity:hasScript(script) then
+                retValue = retValue + 1
+            end
+        end
+        return retValue
+    else
+        return 0
+    end
+end
+
 function ESCCUtil.allPiratesDepart()
     local _Pirates = {Sector():getEntitiesByScriptValue("is_pirate")}
     local _Rgen = ESCCUtil.getRand()
@@ -352,6 +376,22 @@ function ESCCUtil.removeCivilScripts(_Ship)
     _Ship:removeScript("dialogs/storyhints.lua")
     _Ship:setValue("is_civil", nil)
     _Ship:setValue("npc_chatter", nil)
+end
+
+function ESCCUtil.multiplyOverallDurability(entity, multiplier)
+    local useMultiplier = multiplier
+
+    local entityShields = Shield(entity)
+    if entityShields then
+        entityShields.maxDurabilityFactor = (entityShields.maxDurabilityFactor or 1) * useMultiplier
+    else
+        useMultiplier = useMultiplier * 2
+    end
+
+    local entityDurability = Durability(entity)
+    if entityDurability then
+        entityDurability.maxDurabilityFactor = (entityDurability.maxDurabilityFactor or 1) * useMultiplier
+    end
 end
 
 --endregion

@@ -49,6 +49,9 @@ self._Data = {}
         _ShockwaveFactor        = Multiplies the size of the shockwave. Defaults to 1.
         _LimitAmmo              = Set to true / false - if true, this script will terminate when _Ammo is 0 or less.
         _Ammo                   = Amount of ammo.
+        _FireBarrage            = Set to true / false - if true, this script will fire barrages of torpedoes.
+        _BarrageCount           = # of torpedos to fire in the barrage
+        _BarrageDelay           = length of time between subsequent torpedoes in each barrage. _BarrageCount 4 / _BarrageDelay 0.5 would fire four torpedoes with a delay of 0.5s between each.
 
         Example:
 
@@ -111,7 +114,9 @@ function TorpedoSlammer.initialize(_Values)
             self._Data._TurningSpeedFactor = self._Data._TurningSpeedFactor or 1
             self._Data._LimitAmmo = self._Data._LimitAmmo or false
             self._Data._Ammo = self._Data._Ammo or -1
-            --_pindex, _PreferWarheadType, _PreferBodyType, and _TargetTag can all be nil.
+            --_pindex, _PreferWarheadType, _PreferBodyType, _TargetTag, and _FireBarrage can all be nil.
+            self._Data._BarrageCount = self._Data._BarrageCount or 0
+            self._Data._BarrageDelay = self._Data._BarrageDelay or math.huge
     
             --Fix the target priority - if the ship isn't Xsotan make it use 4 instead of 3.
             if self._Data._TargetPriority == 3 and not self_is_xsotan then
@@ -174,10 +179,18 @@ function TorpedoSlammer.updateServer(_TimeStep)
         if self._Data._CurrentTarget and valid(self._Data._CurrentTarget) then
             if self._Data._FireCycle >= self._Data._ROF then
                 self.fireAtTarget()
+                if self._Data._FireBarrage then
+                    for _ = 1, self._Data._BarrageCount do
+                        deferredCallback(self._Data._BarrageDelay, "fireAtTarget")
+                    end
+                end
                 self._Data._FireCycle = 0
 
                 if self._Data._LimitAmmo then
                     self._Data._Ammo = self._Data._Ammo - 1
+                    if self._Data._FireBarrage then
+                        self._Data._Ammo = self._Data._Ammo - self._Data._BarrageCount
+                    end
                     self.Log(_MethodName, "Reduced ammo count - new ammo count is " .. tostring(self._Data._Ammo), 1)
                 end
             end

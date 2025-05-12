@@ -20,9 +20,12 @@ function Afterburn.initialize(values)
 
         self.data = values or {}
 
-        self.data.speedFactor = self.data.speedFactor or 16
-        self.data.accelFactor = self.data.accelFactor or 1
-        self.data.velocityFactor = self.data.velocityFactor or 1
+        self.data.accelFactor = self.data.accelFactor or 16
+        self.data.velocityFactor = self.data.velocityFactor or 16
+        if self.data.incrementOnPhaseOut == nil then
+            self.data.incrementOnPhaseOut = false
+        end
+        self.data.incrementOnPhaseOutValue = self.data.incrementOnPhaseOutValue or 1
     
         self.data.timeInPhase = 0
         self.data.boostMode = false
@@ -41,12 +44,18 @@ function Afterburn.updateServer(_TimeStep)
     local _entity = Entity()
     local _ShowAnimation = false
 
-    --1 minute out, 30 seconds in.
+    --30 seconds out, 20 seconds in.
     if self.data.boostMode then
         if self.data.timeInPhase >= 20 then
             --20 seconds have passed. Flip us to being OUT of the mode
             self.data.boostMode = false
             self.data.timeInPhase = 0
+
+            --If we scale on phase out, add values accordingly:
+            if self.data.incrementOnPhaseOut then
+                self.data.accelFactor = self.data.accelFactor + self.data.incrementOnPhaseOutValue
+                self.data.velocityFactor = self.data.velocityFactor + self.data.incrementOnPhaseOutValue
+            end
 
             _entity:addKeyedMultiplier(StatsBonuses.Acceleration, 2207469437, 1)
             _entity:addKeyedMultiplier(StatsBonuses.Velocity, 2207469437, 1)
@@ -66,13 +75,10 @@ function Afterburn.updateServer(_TimeStep)
             self.data.boostMode = true
             self.data.timeInPhase = 0
 
-            local accelMultiplier = self.data.speedFactor * self.data.accelFactor
-            local velocityMultiplier = self.data.speedFactor * self.data.velocityFactor
+            self.Log(_MethodName, "Setting bonus - final velocity is " .. tostring(self.data.velocityFactor) .. " Final accel is " .. tostring(self.data.accelFactor))
 
-            self.Log(_MethodName, "Setting bonus - final velocity is " .. tostring(velocityMultiplier) .. " Final accel is " .. tostring(accelMultiplier))
-
-            _entity:addKeyedMultiplier(StatsBonuses.Acceleration, 2207469437, accelMultiplier)
-            _entity:addKeyedMultiplier(StatsBonuses.Velocity, 2207469437, velocityMultiplier)
+            _entity:addKeyedMultiplier(StatsBonuses.Acceleration, 2207469437, self.data.accelFactor)
+            _entity:addKeyedMultiplier(StatsBonuses.Velocity, 2207469437, self.data.velocityFactor)
 
             if self._Debug == 1 then
                 --Don't want to do all of this unless we're debugging.

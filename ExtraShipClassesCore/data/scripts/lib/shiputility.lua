@@ -550,9 +550,34 @@ function ShipUtility.addRevenantArtillery(_Craft)
     local weaponTypes = ArtilleryWeapons
     local torpedoTypes = NormalTorpedoes
 
-    --Only half as many turrets as usual + very long range + no torpedoes.
-    ShipUtility.addSpecializedEquipment(_Craft, weaponTypes, torpedoTypes, 0.5, 0, 5000)
+    --Only half as many turrets as usual* + very long range + no torpedoes.
+    local turretFactor = 0.5
+    local damageFactor = 1.0
+    --See if the wreckage that got reanimated is especially large relative to other ships in the sector.
+    local x, y = Sector():getCoordinates()
+    local sectorShipVolume = Balancing_GetSectorShipVolume(x, y)
 
+    local volumeRatio = _Craft.volume / sectorShipVolume
+
+    --print("sector ship volume is " .. tostring(sectorShipVolume) .. " volume is " .. tostring(_Craft.volume) .. " ratio is " .. tostring(volumeRatio))
+
+    if volumeRatio > 100 then
+        turretFactor = turretFactor * (volumeRatio / 5)
+        if turretFactor > 20 then
+            local excessFactor = turretFactor - 20
+            turretFactor = 20
+            damageFactor = 1 + (excessFactor / 10)
+        end
+    end
+
+    turretFactor = math.max(0.5, turretFactor)
+    damageFactor = math.max(1.0, damageFactor)
+
+    --print("final turret factor is " .. tostring(turretFactor) .. " final damage factor is " .. tostring(damageFactor))
+
+    ShipUtility.addSpecializedEquipment(_Craft, weaponTypes, torpedoTypes, turretFactor, 0, 6000)
+
+    _Craft.damageMultiplier = (_Craft.damageMultiplier or 1) * damageFactor
     _Craft:setValue("is_armed", true)
 end
 

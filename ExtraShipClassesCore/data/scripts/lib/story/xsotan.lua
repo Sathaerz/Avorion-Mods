@@ -205,6 +205,20 @@ function Xsotan.createWarlock(_position, _volumeFactor)
     return _XsotanShip
 end
 
+function Xsotan.createTributary(_position, _volumeFactor)
+    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+
+    local name = "Tributary"
+    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    _XsotanShip:setValue("is_tributary", true)
+    _XsotanShip:setValue("xsotan_tributary", true)
+
+    --Add Scripts
+    _XsotanShip:addScriptOnce("distributor.lua")
+
+    return _XsotanShip
+end
+
 function Xsotan.createParthenope(_position, _volumeFactor)
     local _XsotanShip = Xsotan.createCarrier(_position, _volumeFactor, 30) --default # of fighters is fine
 

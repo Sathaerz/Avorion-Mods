@@ -102,6 +102,8 @@ function initUI()
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Thorns", "onSpawnThornsButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Linker", "onSpawnLinkerButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Nemean", "onSpawnNemeanButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Rampage", "onSpawnRampageButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Distributor", "onSpawnDistributorButtonPressed")
 
     local xsotanTab = window:createTab("Entity", "data/textures/icons/xsotan.png", "ESCC Xsotan")
     numButtons = 0
@@ -112,6 +114,7 @@ function initUI()
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Longinus", "onSpawnXsotanLonginusButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Tributary", "onSpawnXsotanTributaryButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Parthenope", "onSpawnXsotanParthenopeButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Hierophant", "onSpawnXsotanHierophantButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Caduceus", "onSpawnXsotanCaduceusButtonPressed")
@@ -154,6 +157,7 @@ function initUI()
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Material Cost Factor Dump", "onMaterialCostFactorDumpButtonPressed")
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Invincibility Data Dump", "onInvincibilityDataDumpButtonPressed")
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Weapon Type Data Dump", "onWeaponTypeDataDumpPressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Material Probabilities 0-500", "onMatlProbabilities0550Pressed")
 
     local otherTab = window:createTab("Entity", "data/textures/icons/papers.png", "Other")
     numButtons = 0
@@ -176,6 +180,7 @@ function initUI()
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Run ESCC MinVec Test", "onRunESCCMinVecTestButtonPressed")
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Distance To Center", "onRunGetDistToCenterButtonPressed")
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Own Translation", "onGetTranslationButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Clear All Wreckages", "onClearAllWrecksButtonPressed")
     
     local weaponTab = tabbedWindow:createTab("Entity", "data/textures/icons/gunner.png", "ESCC Turrets")
     numButtons = 0
@@ -232,11 +237,14 @@ end
 
 --How to add a tab:
 --1 - add esccdbg.lua to your mod folder
---2 - add a local replacement of getDebugModule - i.e. lotw_getDebugModules = getDebugModules
---3 - table.insert a function building the tab into modTable, define a new tab, make buttons, etc.
---4 - define appropriate functions inside esccdbg on that file
---5 - return the defined local replacement (so in the above example, return lotw_getDebugModules(modTable))
---6 - this will chain call the function for all mods and add a campaign tab for each
+--2 - add a local replacement of getDebugModule - i.e. local lotw_getDebugModules = getDebugModules
+--3 - define a debug function - local dbgmodule = function(window) - you can call it something appropriate for your mod, like lotw_dbgmodule
+--4 - add buttons inside of the dbg function. Make sure you are adding them to the tab. So if your tab is tab12, make sure to do MakeButton(tab12, etc.
+--5 - table.insert the debug function building the tab into modTable
+--6 - define appropriate functions inside esccdbg later in the file
+--7 - return the defined local replacement (so in the example in step 2, return lotw_getDebugModules(modTable))
+--8 - this will chain call the function for all mods and add a campaign tab for each
+--9 - !!!MAKE SURE YOU DO NOT PUT function getDebugModules(modTable) ELSEWHERE IN THE FILE! THIS WILL CAUSE THE WHOLE THING TO STOP WORKING!!!
 --[[Example:
 
 local lotw_getDebugModules = getDebugModules
@@ -254,7 +262,10 @@ function getDebugModules(modTable)
     return lotw_getDebugModules(modTable)
 end
 
---Other functions are defined below.
+--Other functions are defined below:
+function onLOTWMission1Buttonpressed()
+    --Function stuff goes here
+end
 
 ]]
 function getDebugModules(modTable)
@@ -495,6 +506,22 @@ function onNemeanEnemyGenerated(generated)
     for _, ship in pairs(generated) do
         ship:addScriptOnce("phasemode.lua")
         ship:addScriptOnce("ironcurtain.lua")
+    end
+end
+
+function onRampageEnemyGenerated(generated)
+    onPiratesGenerated(generated)
+    print("adding rampage to enemy.")
+    for _, ship in pairs(generated) do
+        ship:addScriptOnce("rampage.lua")
+    end
+end
+
+function onDistributorEnemyGenerated(generated)
+    onPiratesGenerated(generated)
+    print("adding distributor to enemy.")
+    for _, ship in pairs(generated) do
+        ship:addScriptOnce("distributor.lua")
     end
 end
 
@@ -923,6 +950,36 @@ function onSpawnNemeanButtonPressed()
 end
 callable(nil, "onSpawnNemeanButtonPressed")
 
+function onSpawnRampageButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnRampageButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onRampageEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnRampageButtonPressed")
+
+function onSpawnDistributorButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnDistributorButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onDistributorEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnDistributorButtonPressed")
+
 --endregion
 
 --region #XSOTANTAB
@@ -1031,6 +1088,21 @@ function onSpawnXsotanWarlockButtonPressed()
     Xsotan.createWarlock(MatrixLookUpPosition(-dir, up, pos))
 end
 callable(nil, "onSpawnXsotanWarlockButtonPressed")
+
+function onSpawnXsotanTributaryButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanTributaryButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createTributary(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanTributaryButtonPressed")
 
 function onSpawnXsotanParthenopeButtonPressed()
     if onClient() then
@@ -1528,6 +1600,29 @@ function onWeaponTypeDataDumpPressed()
 end
 callable(nil, "onWeaponTypeDataDumpPressed")
 
+function onMatlProbabilities0550Pressed()
+    if onClient() then
+        invokeServerFunction("onMatlProbabilities0550Pressed")
+        return
+    end
+
+    for x = 0, 500 do
+        local matls = Balancing_GetMaterialProbability(x, 0)
+
+        local str = "dist is " .. tostring(x) .. " / "
+
+        for key, value in pairs(matls) do
+            local matl = Material(key)
+
+            str = str .. " matl name: " .. matl.name .. " probability: " .. tostring(value) .. " / "
+        end
+
+        print(str)
+    end
+
+end
+callable(nil, "onMatlProbabilities0550Pressed")
+
 --endregion
 
 --region #OTHERTAB
@@ -1795,6 +1890,24 @@ function onGetTranslationButtonPressed()
 
     print("Trnaslationf is " .. tostring(_entity.translationf))
 end
+
+function onClearAllWrecksButtonPressed()
+    if onClient() then
+        invokeServerFunction("onClearAllWrecksButtonPressed")
+        return
+    end
+
+    local _sector = Sector()
+    local wreckages = { _sector:getEntitiesByType(EntityType.Wreckage)}
+    local wreckageCt = #wreckages
+
+    for _, wreck in pairs(wreckages) do
+        _sector:deleteEntity(wreck)
+    end
+
+    print("Cleared " .. tostring(wreckageCt) .. " wreckages from sector.")
+end
+callable(nil, "onClearAllWrecksButtonPressed")
 
 --endregion
 

@@ -168,7 +168,7 @@ function ESCCBossUtil.spawnESCCBoss(_Faction, _BossType) --Formerly spawnIncreas
                 _ShockwaveFactor = 3
             }
 
-            _Boss:addScriptOnce("overdrive.lua", 3)
+            _Boss:addScriptOnce("overdrive.lua", { overdriveMultiplier = 3 } )
             _Boss:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
             _Boss:addScriptOnce("dialogs/encounters/scouringphoenix.lua")
             _ShipUtil.addPhoenixCannons(_Boss)

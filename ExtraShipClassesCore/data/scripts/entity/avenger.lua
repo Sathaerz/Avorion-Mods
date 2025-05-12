@@ -47,18 +47,21 @@ function Avenger.avengerBuff()
             self._Data._Invoked = true
         end
 
-        local _CurrentDamageMultiplier = Entity().damageMultiplier
-        self.Log(_MethodName, "Current damage multiplier is " .. tostring(_CurrentDamageMultiplier))
+        local _entity = Entity()
+
+        self.Log(_MethodName, "Current damage multiplier is " .. tostring(_entity.damageMultiplier))
     
-        local _DamageMultiplier = (Entity().damageMultiplier or 1) * self._Data._Multiplier
-        Entity().damageMultiplier = _DamageMultiplier
+        local _DamageMultiplier = (_entity.damageMultiplier or 1) * self._Data._Multiplier
+        _entity.damageMultiplier = _DamageMultiplier
     
         self.Log(_MethodName, "Damage multiplier is now " .. tostring(_DamageMultiplier))
     
-        local direction = random():getDirection()
-        local direction2 = random():getDirection()
-        local direction3 = random():getDirection()
-        broadcastInvokeClientFunction("animation", direction, direction2, direction3)
+        local _random = random()
+
+        local direction1 = _random:getDirection()
+        local direction2 = _random:getDirection()
+        local direction3 = _random:getDirection()
+        broadcastInvokeClientFunction("animation", direction1, direction2, direction3)
     else
         self.Log(_MethodName, "Avenger has been invoked recently - waiting 1 second to clear.")
     end

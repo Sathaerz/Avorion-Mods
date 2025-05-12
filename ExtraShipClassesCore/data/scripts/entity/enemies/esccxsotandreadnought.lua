@@ -68,6 +68,11 @@ function ESCCXsotanDreadnought.initialize(values)
         end
     end
 
+    local dreadnoughtShields = Shield(dreadnought.id)
+    if dreadnoughtShields then
+        dreadnoughtShields.impenetrable = true
+    end
+
     if self.data.sickoMode then
         self.data.shieldRecharges = self.data.shieldRecharges + 1
     end
@@ -135,7 +140,7 @@ function ESCCXsotanDreadnought.updateServer(timePassed)
         end
 	end
 	
-	if self.data.shieldDurability > (dreadnought.shieldMaxDurability * 0.1) then
+	if self.data.shieldDurability > (dreadnought.shieldMaxDurability * 0.1) and self.state == State.Charging then
 		dreadnought.invincible = true
 	else
 		dreadnought.invincible = false

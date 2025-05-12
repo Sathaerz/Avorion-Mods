@@ -23,6 +23,10 @@ function AllyBooster.initialize(_Values)
     self.data._BoostCycle = self.data._BoostCycle or 60
     self.data._MaxBoostCharges = self.data._MaxBoostCharges or 3
     self.data._ChargesMultiplier = self.data._ChargesMultiplier or 1
+    if self.data._AllowIronCurtain == nil then --Allow by default, but only if the user does not specify - use the user value otherwise.
+        --We have to do it this way because value = x or true will always become true.
+        self.data._AllowIronCurtain = true
+    end
 
     self.data._BoostTime = 0
     self.data._BoostCharges = 0
@@ -70,20 +74,23 @@ function AllyBooster.boost()
     local _Scripts = {
         "eternal.lua",
         "phasemode.lua",
-        "ironcurtain.lua",
         "adaptivedefense.lua",
         "overdrive.lua",
         "afterburn.lua",
         "avenger.lua",
         "frenzy.lua"
-    }   
+    }
+
+    if self.data._AllowIronCurtain then
+        table.insert(_Scripts, "ironcurtain.lua")
+    end
 
     local _Entity = Entity()
     local _FactionEntities = {Sector():getEntitiesByFaction(_Entity.factionIndex)}
     local _Allies = {}
 
     for _, _FEn in pairs(_FactionEntities) do
-        if _FEn.id ~= _Entity.id and _FEn.type == EntityType.Ship then
+        if _FEn.id ~= _Entity.id and _FEn.type == EntityType.Ship and not _FEn.playerOrAllianceOwned then
             table.insert(_Allies, _FEn)
         end
     end

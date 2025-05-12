@@ -21,6 +21,7 @@ function Reanimator.initialize(_Values)
     --[ADJUSTABLE VALUES]
     self.data.maxGlobalRevenants = self.data.maxGlobalRevenants or 10
     self.data.maxRevenantCharges = self.data.maxRevenantCharges or 1
+    self.data.maxReanimationVolumeFactor = self.data.maxReanimationVolumeFactor or 100
 
     --[UNADJUSTABLE VALUES]
     self.data.nextReanimationAt = 10
@@ -68,14 +69,17 @@ function Reanimator.findSuitableWreck()
     self.Log(methodName, "Running.")
 
     --Get table of candidate wreckages
-    local _Wreckages = {Sector():getEntitiesByType(EntityType.Wreckage)}
+    local _sector = Sector()
+    local x, y = _sector:getCoordinates()
+    local _Wreckages = { _sector:getEntitiesByType(EntityType.Wreckage)}
+    local maximumVolumeToRevive = Balancing_GetSectorShipVolume(x, y) * self.data.maxReanimationVolumeFactor
 
-    --Pick all candidate wrecks that are above 200 blocks.
+    --Pick all candidate wrecks that are above 200 blocks and less than or equal to the maximum volume to revive.
     shuffle(random(), _Wreckages)
     local _CandidateWrecks = {}
     for _, _Wreck in pairs(_Wreckages) do
         local _Pl = Plan(_Wreck.id)
-        if _Pl.numBlocks >= 200 then
+        if _Pl.numBlocks >= 200 and _Pl.volume <= maximumVolumeToRevive then
             table.insert(_CandidateWrecks, _Wreck)
         end
     end

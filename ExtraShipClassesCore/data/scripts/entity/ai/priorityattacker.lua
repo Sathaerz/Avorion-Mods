@@ -17,11 +17,13 @@ self._Data = {}
                             2 - target player or alliance owned ships only.
         _TargetTag      = Targets entities with this script value.
         _CurrentTarget  = The current target of this entity.
+        _UseShipAI      = If this is set to true, it gets eneeies by ship AI and not by faction index
+        _AllowNoneType  = Allows targeting of EntityType.None
 ]]
 
 function PriorityAttacker.initialize(_Values)
-    local _MethodName = "Initialize"
-    self.Log(_MethodName, "Initializing AI Priority Attacker v6 script on entity.")
+    local methodName = "Initialize"
+    self.Log(methodName, "Initializing AI Priority Attacker v16 script on entity.")
 
     self._Data = _Values or {}
 
@@ -33,46 +35,73 @@ function PriorityAttacker.getUpdateInterval()
 end
 
 function PriorityAttacker.updateServer(_TimeStep)
-    local _MethodName = "Update Server"
-    self.Log(_MethodName, "Running. Looking for tag " .. tostring(self._Data._TargetTag))
+    local methodName = "Update Server"
+
+    local _entity = Entity()
+
+    local logMsgTbl = {
+        "Running on Entity " .. _entity.name .. ". Looking for tag " .. tostring(self._Data._TargetTag),
+        "Running on Entity " .. _entity.name .. ". Looking for player or alliance owned ships."
+    }
+    self.Log(methodName, logMsgTbl[self._Data._TargetPriority])
 
     local _ShipAI = ShipAI()
     local aiState = _ShipAI.state
 
     --Pick a new target and attack that target.
     if self._Data._CurrentTarget == nil or not valid(self._Data._CurrentTarget) then
+        self.Log(methodName, "Target is nil or not valid. Picking a new target.")
         self._Data._CurrentTarget = self.pickNewTarget()
     end
 
     --If we couldn't find a new, valid target, just set the AI to aggressive.
     if self._Data._CurrentTarget == nil or not valid(self._Data._CurrentTarget) then
         if aiState ~= AIState.Attack and aiState ~= AIState.Aggressive then
-            self.Log(_MethodName, "Picked target is dead and ship AI is not aggressive state - setting to general attacking state.")
+            self.Log(methodName, "Picked target is dead and ship AI is not aggressive state - setting to general attacking state.")
             _ShipAI:setAggressive()
         end
     else
         if _ShipAI.attackedEntity ~= self._Data._CurrentTarget.index then
-            self.Log(_MethodName, "Ship not attacking picked target - attacking picked target.")
+            self.Log(methodName, "Ship not attacking picked target - attacking picked target.")
             _ShipAI:setAttack(self._Data._CurrentTarget)
         end
     end
 end
 
 function PriorityAttacker.pickNewTarget()
-    local _MethodName = "Pick New Target"
+    local methodName = "Pick New Target"
     local _Factionidx = Entity().factionIndex
     local _Sector = Sector()
     local _TargetPriority = self._Data._TargetPriority
 
     --Get the list of enemies. This is a bit of work since it includes wacky crap like turrets.
-    local _RawEnemies = {_Sector:getEnemies(_Factionidx)}
+    local rawEnemies = {}
+
+    if self._Data._UseShipAI then
+        local shipAI = ShipAI()
+        rawEnemies = { shipAI:getEnemies() }
+    else
+        rawEnemies = { _Sector:getEnemies(_Factionidx) }
+    end
+
     local _Enemies = {}
-    for _, _RawEnemy in pairs(_RawEnemies) do
-        if _RawEnemy.type == EntityType.Ship or _RawEnemy.type == EntityType.Station then
-           table.insert(_Enemies, _RawEnemy) 
+    for _, rawEnemy in pairs(rawEnemies) do
+        if self.entityTypeOK(rawEnemy.type) then
+           table.insert(_Enemies, rawEnemy) 
         end
     end
 
+    --Log # of enemies, etc.
+    local logMsg = "Raw number of enemies found : " .. tostring(#_Enemies)
+    if self._Data._UseShipAI then
+        logMsg = logMsg .. ". Using Ship AI to find enemies."
+    end
+    if self._Data._AllowNoneType then
+        logMsg = logMsg .. " Type 'None' OK."
+    end
+    self.Log(methodName, logMsg)
+    
+    --Build target candidate list.
     local _TargetCandidates = {}
 
     local _TargetPriorityFunctions = {
@@ -98,7 +127,7 @@ function PriorityAttacker.pickNewTarget()
         local chosenCandidate = nil
         local attempts = 0
 
-        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.")
+        self.Log(methodName, "Found at least one suitable target. Picking a random one.")
 
         while not chosenCandidate and attempts < 10 do
             local randomPick = randomEntry(_TargetCandidates)
@@ -109,13 +138,15 @@ function PriorityAttacker.pickNewTarget()
         end
 
         if not chosenCandidate then
-            self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random")
+            self.Log(methodName, "Could not find a non-invincible target in 10 tries - picking one at random")
             chosenCandidate = randomEntry(_TargetCandidates)
         end
+
+        self.Log(methodName, "Chosen candidate is entity " .. tostring(chosenCandidate.name))
         
         return chosenCandidate
     else
-        self.Log(_MethodName, "WARNING - Could not find any target candidates.")
+        self.Log(methodName, "WARNING - Could not find any target candidates.")
         return nil
     end
 end
@@ -128,11 +159,25 @@ function PriorityAttacker.invincibleTargetCheck(entity)
     end
 end
 
+function PriorityAttacker.entityTypeOK(entityType)
+    local entityTypeOK = false
+
+    if entityType == EntityType.Ship or entityType == EntityType.Station then
+        entityTypeOK = true --always accept ships or stations.
+    end
+
+    if self._Data._AllowNoneType and entityType == EntityType.None then
+        entityTypeOK = true --Allow EntityType.None under limited circumstances.
+    end
+
+    return entityTypeOK
+end
+
 --region #CLIENT / SERVER CALLS
 
-function PriorityAttacker.Log(_MethodName, _Msg)
+function PriorityAttacker.Log(methodName, _Msg)
     if self._Debug == 1 then
-        print("[AI Escort Attacker] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
+        print("[AI Escort Attacker] - [" .. tostring(methodName) .. "] - " .. tostring(_Msg))
     end
 end
 
@@ -141,14 +186,14 @@ end
 --region #SECURE / RESTORE
 
 function PriorityAttacker.secure()
-    local _MethodName = "Secure"
-    self.Log(_MethodName, "Securing self._Data")
+    local methodName = "Secure"
+    self.Log(methodName, "Securing self._Data")
     return self._Data
 end
 
 function PriorityAttacker.restore(_Values)
-    local _MethodName = "Restore"
-    self.Log(_MethodName, "Restoring self._Data")
+    local methodName = "Restore"
+    self.Log(methodName, "Restoring self._Data")
     self._Data = _Values
 end
 

@@ -1,7 +1,9 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 
-local Xsotan = include ("story/xsotan")
 include ("randomext")
+
+local ESCCUtil = include("esccutil")
+local Xsotan = include ("story/xsotan")
 
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace Parthenope
@@ -87,23 +89,11 @@ function Parthenope.spawnMinion()
     if minion then --Only do this if a minion is successfully spawned.
         minion:setValue("xsotan_parthenope_minion", true)
 
-        local dmgBonus = 1 + (xSpawned * 0.02)
-        local durabonus = 1 + (xSpawned * 0.02)
+        local spawnBonus = 1 + (xSpawned * 0.02)
     
-        local minionDurability = Durability(minion)
-        local minionShield = Shield(minion)
+        ESCCUtil.multiplyOverallDurability(minion, spawnBonus)
     
-        if minionShield then
-            minionShield.maxDurabilityFactor = (minionShield.maxDurabilityFactor or 1) * durabonus
-        else
-            durabonus = durabonus * 2
-        end
-    
-        if minionDurability then
-            minionDurability.maxDurabilityFactor = (minionDurability.maxDurabilityFactor or 1) * durabonus
-        end
-    
-        minion.damageMultiplier = (minion.damageMultiplier or 1) * dmgBonus
+        minion.damageMultiplier = (minion.damageMultiplier or 1) * spawnBonus
     
         local attackedId = ShipAI(master).attackedEntity
         minion:invokeFunction("xsotanbehaviour.lua", "onSetToAggressive", attackedId)
