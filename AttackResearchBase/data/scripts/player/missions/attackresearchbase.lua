@@ -178,7 +178,7 @@ mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onTargetLocationEntered = function(_X, _Y) 
     local _MethodName = "Phase 1 on Target Location Entered"
-    buildObjectiveSector(_X, _Y)
+    attackResearchBase_buildObjectiveSector(_X, _Y)
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true 
 end
@@ -252,7 +252,7 @@ mission.phases[2].triggers[1] = {
             _Galaxy:setFactionRelationStatus(_Faction, _MissionDoer, mission.data.custom.enemyRelationStatus)
         end
         
-        finishAndReward()
+        attackResearchBase_finishAndReward()
     end,
     repeating = false
 }
@@ -265,7 +265,7 @@ end
 
 --region #SERVER CALLS
 
-function buildObjectiveSector(_X, _Y)
+function attackResearchBase_buildObjectiveSector(_X, _Y)
     local _MethodName = "Build Objective Sector"
 
     mission.Log(_MethodName, "Main sector not yet built - building it now.")
@@ -290,7 +290,7 @@ function buildObjectiveSector(_X, _Y)
     end
     --add a rare upgrade to the station's loot.
     local _upgradeGenerator = UpgradeGenerator()
-    local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
+    local _upgradeRarities = attackResearchBase_getSectorRarityTables(_X, _Y, _upgradeGenerator)
     Loot(_ResearchOutpost):insert(_upgradeGenerator:generateSectorSystem(_X, _Y, nil, _upgradeRarities))
 
     table.insert(_Stations, _ResearchOutpost)
@@ -376,7 +376,7 @@ function buildObjectiveSector(_X, _Y)
     if mission.data.custom.pirates then
         local _SpawnTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _InitialDefenders, "Standard")
             
-        local generator = AsyncPirateGenerator(nil, onDefendersFinished)
+        local generator = AsyncPirateGenerator(nil, attackResearchBase_onDefendersFinished)
         generator.pirateLevel = mission.data.custom.pirateLevel
 
         generator:startBatch()
@@ -389,7 +389,7 @@ function buildObjectiveSector(_X, _Y)
     else
         local _SpawnTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _InitialDefenders, "Standard", true)
 
-        local generator = AsyncShipGenerator(nil, onDefendersFinished)
+        local generator = AsyncShipGenerator(nil, attackResearchBase_onDefendersFinished)
 
         generator:startBatch()
 
@@ -445,7 +445,7 @@ function buildObjectiveSector(_X, _Y)
     mission.data.custom.cleanUpSector = true
 end
 
-function getSectorRarityTables(_X, _Y, _upgradeGenerator)
+function attackResearchBase_getSectorRarityTables(_X, _Y, _upgradeGenerator)
     local _dangerLevel = mission.data.custom.dangerLevel
     local _rarities = _upgradeGenerator:getSectorRarityDistribution(_X, _Y)
     _rarities[-1] = 0 --no petty
@@ -472,14 +472,14 @@ function getSectorRarityTables(_X, _Y, _upgradeGenerator)
     return _rarities
 end
 
-function onDefendersFinished(_Generated)
+function attackResearchBase_onDefendersFinished(_Generated)
     for _, _Defender in pairs(_Generated) do
         _Defender:setValue("_ESCC_bypass_hazard", true)
     end
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function finishAndReward()
+function attackResearchBase_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -496,7 +496,7 @@ end
 
 --region #MAKEBULLETIN Calls
 
-function formatDescription(_Station, _DangerValue)
+function attackResearchBase_formatDescription(_Station, _DangerValue)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -552,7 +552,7 @@ mission.makeBulletin = function(_Station)
 
     local _DangerLevel = _Rgen:getInt(1, 10)
     
-    local _Description = formatDescription(_Station, _DangerLevel)
+    local _Description = attackResearchBase_formatDescription(_Station, _DangerLevel)
 
     local _Pirates = _Rgen:getInt(1, 2) == 1
     local _Faction = _Station.factionIndex

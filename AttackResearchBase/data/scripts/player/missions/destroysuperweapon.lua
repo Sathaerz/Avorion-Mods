@@ -146,7 +146,7 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     mission.Log(_MethodName, "Beginning...")
 
     if _ID == mission.data.custom.gordianKnotid then
-        finishAndReward()
+        destroySuperWeapon_finishAndReward()
     end
 end
 
@@ -154,7 +154,7 @@ end
 
 --region #SERVER CALLS
 
-function finishAndReward()
+function destroySuperWeapon_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
