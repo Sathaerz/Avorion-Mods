@@ -12,19 +12,25 @@ self._Debug = 0
 self._Data = {}
 
 function Avenger.initialize(_Values)
-    local _MethodName = "Initialize"
-    self.Log(_MethodName, "Adding v7 of avenger.lua to entity.")
+    local methodName = "Initialize"
+    self.Log(methodName, "Adding v9 of avenger.lua to entity.")
 
     self._Data = _Values or {}
 
-    self._Data._Multiplier = self._Data._Multiplier or 1.2
-    self._Data._AllowMultiProc = self._Data._AllowMultiProc or false
-    --Cannot be set by the player.
-    self._Data._Invoked = false
+    if not _restoring then
+        self._Data._Multiplier = self._Data._Multiplier or 1.2
+        self._Data._AllowMultiProc = self._Data._AllowMultiProc or false
+        self._Data._EnableUpperLimit = self._Data._EnableUpperLimit or false
+        self._Data._UpperLimit = self._Data._UpperLimit or math.huge
+        --Cannot be set by the player.
+        self._Data._Invoked = false
+    else
+        self.Log(methodName, "Data will be restored.")
+    end
 
     if onServer() then
         if Sector():registerCallback("onDestroyed", "onDestroyed") == 1 then
-            self.Log(_MethodName, "Could not register onEntityDestroyed callback.")
+            self.Log(methodName, "Could not register onEntityDestroyed callback.")
         end
     end
 end
@@ -40,7 +46,7 @@ function Avenger.updateServer(_TimeStamp)
 end
 
 function Avenger.avengerBuff()
-    local _MethodName = "AvengerBuff"
+    local methodName = "AvengerBuff"
     if not self._Data._Invoked then
         --If multiple procs in a second are allowed, don't set this to true so it can keep going off.
         if not self._Data._AllowMultiProc then
@@ -49,12 +55,26 @@ function Avenger.avengerBuff()
 
         local _entity = Entity()
 
-        self.Log(_MethodName, "Current damage multiplier is " .. tostring(_entity.damageMultiplier))
+        self.Log(methodName, "Current damage multiplier is " .. tostring(_entity.damageMultiplier))
     
         local _DamageMultiplier = (_entity.damageMultiplier or 1) * self._Data._Multiplier
+        local damageLimited = false
+
+        --If the upper limit is enabled, prevent _DamageMultiplier from going past the factor specified in upper limit.
+        if self._Data._EnableUpperLimit then
+            _DamageMultiplier = math.min(_DamageMultiplier, self._Data._UpperLimit)
+            damageLimited = true
+        end
+
         _entity.damageMultiplier = _DamageMultiplier
     
-        self.Log(_MethodName, "Damage multiplier is now " .. tostring(_DamageMultiplier))
+        self.Log(methodName, "Damage multiplier is now " .. tostring(_DamageMultiplier))
+
+        if not damageLimited and _entity:hasScript("overdrive.lua") then
+            self.Log(methodName, "Damage limit is not yet reached - invoking overdrive buff.")
+            --buff the overdrive script as well.
+            _entity:invokeFunction("data/scripts/entity/overdrive.lua", "avengerBuff", self._Data._Multiplier)
+        end
     
         local _random = random()
 
@@ -63,18 +83,18 @@ function Avenger.avengerBuff()
         local direction3 = _random:getDirection()
         broadcastInvokeClientFunction("animation", direction1, direction2, direction3)
     else
-        self.Log(_MethodName, "Avenger has been invoked recently - waiting 1 second to clear.")
+        self.Log(methodName, "Avenger has been invoked recently - waiting 1 second to clear.")
     end
 end
 
 --Called in the Sector context.
 function Avenger.onDestroyed(_Entityidx, _LastDamageInflictor)
-    local _MethodName = "OnDestroyed"
-    self.Log(_MethodName, "Calling...")
+    local methodName = "OnDestroyed"
+    self.Log(methodName, "Calling...")
 
     local _DestroyedEntity = Entity(_Entityidx)
     if _DestroyedEntity.type ~= EntityType.Ship and _DestroyedEntity.type ~= EntityType.Station then
-        self.Log(_MethodName, "Destroyed entity type was not a ship or station - returning.")
+        self.Log(methodName, "Destroyed entity type was not a ship or station - returning.")
         return
     end
     local _TargetFaction = _DestroyedEntity.factionIndex
@@ -83,10 +103,6 @@ function Avenger.onDestroyed(_Entityidx, _LastDamageInflictor)
     for _, _Ship in pairs(_Ships) do
         if _Ship:hasScript("avenger.lua") then
             _Ship:invokeFunction("data/scripts/entity/avenger.lua", "avengerBuff")
-            if _Ship:hasScript("overdrive.lua") then
-                --buff the overdrive script as well.
-                _Ship:invokeFunction("data/scripts/entity/overdrive.lua", "avengerBuff", self._Data._Multiplier)
-            end
         end
     end
 end
@@ -106,21 +122,21 @@ end
 
 --region #LOG / SECURE / RESTORE
 
-function Avenger.Log(_MethodName, _Msg)
+function Avenger.Log(methodName, _Msg)
     if self._Debug == 1 then
-        print("[Avenger] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
+        print("[Avenger] - [" .. tostring(methodName) .. "] - " .. tostring(_Msg))
     end
 end
 
 function Avenger.secure()
-    local _MethodName = "Secure"
-    self.Log(_MethodName, "Securing self._Data")
+    local methodName = "Secure"
+    self.Log(methodName, "Securing self._Data")
     return self._Data
 end
 
 function Avenger.restore(_Values)
-    local _MethodName = "Restore"
-    self.Log(_MethodName, "Restoring self._Data")
+    local methodName = "Restore"
+    self.Log(methodName, "Restoring self._Data")
     self._Data = _Values
 end
 

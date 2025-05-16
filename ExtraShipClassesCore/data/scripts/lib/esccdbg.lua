@@ -104,6 +104,7 @@ function initUI()
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Nemean", "onSpawnNemeanButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Rampage", "onSpawnRampageButtonPressed")
     MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Distributor", "onSpawnDistributorButtonPressed")
+    MakeButton(shipsTab, ButtonRect(nil, nil, nil, shipsTab.height), "Thunderstrike", "onSpawnThunderstrikeButtonPressed")
 
     local xsotanTab = window:createTab("Entity", "data/textures/icons/xsotan.png", "ESCC Xsotan")
     numButtons = 0
@@ -115,6 +116,7 @@ function initUI()
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Pulverizer", "onSpawnXsotanPulverizerButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Warlock", "onSpawnXsotanWarlockButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Tributary", "onSpawnXsotanTributaryButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Levinstriker", "onSpawnXsotanLevinstrikerButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Parthenope", "onSpawnXsotanParthenopeButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Hierophant", "onSpawnXsotanHierophantButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Caduceus", "onSpawnXsotanCaduceusButtonPressed")
@@ -522,6 +524,14 @@ function onDistributorEnemyGenerated(generated)
     print("adding distributor to enemy.")
     for _, ship in pairs(generated) do
         ship:addScriptOnce("distributor.lua")
+    end
+end
+
+function onThunderstrikeEnemyGenerated(generated)
+    onPiratesGenerated(generated)
+    print("adding thunderstrike to enemy")
+    for _, ship in pairs(generated) do
+        ship:addScriptOnce("thunderstrike.lua")
     end
 end
 
@@ -980,6 +990,21 @@ function onSpawnDistributorButtonPressed()
 end
 callable(nil, "onSpawnDistributorButtonPressed")
 
+function onSpawnThunderstrikeButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnThunderstrikeButtonPressed")
+        return
+    end
+
+    local generator = AsyncPirateGenerator(nil, onThunderstrikeEnemyGenerated)
+    generator:startBatch()
+
+    generator:createScaledDevastator(getPositionInFrontOfPlayer())
+
+    generator:endBatch()
+end
+callable(nil, "onSpawnThunderstrikeButtonPressed")
+
 --endregion
 
 --region #XSOTANTAB
@@ -1103,6 +1128,21 @@ function onSpawnXsotanTributaryButtonPressed()
     Xsotan.createTributary(MatrixLookUpPosition(-dir, up, pos))
 end
 callable(nil, "onSpawnXsotanTributaryButtonPressed")
+
+function onSpawnXsotanLevinstrikerButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanLevinstrikerButtonPressed")
+        return
+    end
+
+    local dir = Entity().look
+    local up = Entity().up
+    local position = Entity().translationf
+
+    local pos = position + dir * 100
+    Xsotan.createLevinstriker(MatrixLookUpPosition(-dir, up, pos))
+end
+callable(nil, "onSpawnXsotanLevinstrikerButtonPressed")
 
 function onSpawnXsotanParthenopeButtonPressed()
     if onClient() then

@@ -219,6 +219,30 @@ function Xsotan.createTributary(_position, _volumeFactor)
     return _XsotanShip
 end
 
+function Xsotan.createLevinstriker(_position, _volumeFactor)
+    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+
+    local name = "Levinstriker"
+    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    _XsotanShip:setValue("is_levinstriker" , true)
+    _XsotanShip:setValue("xsotan_levinstriker", true)
+
+    --Add scripts
+    local _X, _Y = Sector():getCoordinates()
+
+    local lightningDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 100
+
+    local thunderstrikeValues = { --#LEVINSTRIKER_LIGHTNING
+        damagePerStrike = lightningDamage,
+        useEntityDamageMult = true,
+        targetPriority = 2, --Random non-xsotan.
+    }
+
+    _XsotanShip:addScriptOnce("thunderstrike.lua", thunderstrikeValues)
+
+    return _XsotanShip
+end
+
 function Xsotan.createParthenope(_position, _volumeFactor)
     local _XsotanShip = Xsotan.createCarrier(_position, _volumeFactor, 30) --default # of fighters is fine
 

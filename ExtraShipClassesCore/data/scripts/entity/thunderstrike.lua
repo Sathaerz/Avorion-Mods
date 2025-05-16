@@ -5,9 +5,9 @@ include ("randomext")
 ESCCWeaponScriptUtil = include("esccweaponscriptutil")
 
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break. YES, YOU NEED THIS. MAKE SURE TO COPY IT.
--- namespace Distributor
-Distributor = {}
-local self = Distributor
+-- namespace Thunderstrike
+Thunderstrike = {}
+local self = Thunderstrike
 
 self._Debug = 0
 self._DebugLevel = 1
@@ -18,9 +18,9 @@ self.clientData = {} --Exclusively stored clientside. Does not get secured / res
 
 local mainLaser = nil
 
-function Distributor.initialize(values)
+function Thunderstrike.initialize(values)
     local methodName = "initialize"
-    self.Log(methodName, "Adding v16 of distributor.lua to entity.")
+    self.Log(methodName, "Adding v6 of thunderstrike.lua to entity.")
 
     self.data = values or {}
     self.clientData = {}
@@ -38,13 +38,12 @@ function Distributor.initialize(values)
         Boarding(_entity).boardable = false
 
         if not _restoring then
-            self.data.blastRadius = self.data.blastRadius or 2000
-            self.data.blastDamageMultiplier = self.data.blastMultiplier or 0.5
+            self.data.damageRange = self.data.damageRange or 2000
+            self.data.damagePerStrike = self.data.damagePerStrike or 10000
             self.data.targetPriority = self.data.targetPriority or defaultTargetPriority
-            self.data.damagePrimaryTarget = self.data.damagePrimaryTarget or false
-            self.data.damagePrimaryTargetMultiplier = self.data.damagePrimaryTargetMultiplier or 0.1
-            self.data.pickNewTargetCycle = self.data.pickNewTargetCycle or 20
+            self.data.pickNewTargetCycle = self.data.pickNewTargetCycle or 15
             self.data.timeToActive = self.data.timeToActive or 10
+            self.data.useEntityDamageMult = self.data.useEntityDamageMult or false
             --TARGET PRIORITIES:
             -- 1 - Random enemy - must be ship or station.
             -- 2 - Any non-Xsotan ship or station.
@@ -57,13 +56,7 @@ function Distributor.initialize(values)
                 self.data.targetPriority = 1 --Just use 1 - it is functionally equivalent.
             end
 
-            --Finally, register ondamaged / onshield damaged callbacks.
-            if _sector:registerCallback("onDamaged", "onDamagedSector") == 1 then
-                self.Log(methodName, "WARNING - Could not register onDamaged callback.")
-            end
-            if _sector:registerCallback("onShieldDamaged", "onShieldDamagedSector") == 1 then
-                self.Log(methodName, "WARNING - Could not register onShieldDamaged callback.")
-            end
+            --Finally, register sector-level callbacks.
             if _sector:registerCallback("onDestroyed", "onDestroyedSector") == 1 then
                 self.Log(methodName, "WARNING - could not register onDestroyed (Sector) callback.")
             end
@@ -77,22 +70,25 @@ function Distributor.initialize(values)
     _entity:registerCallback("onDestroyed", "onSelfDestroyed")
 end
 
-function Distributor.getUpdateInterval()
+function Thunderstrike.getUpdateInterval()
     if onClient() then
         return 0 --Update every frame.
     else --onServer()
-        return 2
+        return 1
     end
 end
 
-function Distributor.onSelfDestroyed()
+function Thunderstrike.onSelfDestroyed()
     self.deleteCurrentLasers()
 end
 
 --region #SERVER / CLIENT FUNCTIONS
 
-function Distributor.update(timeStep)
+function Thunderstrike.update(timeStep)
     local methodName = "Update"
+
+    local _entity = Entity()
+    local _random = random()
 
     if self.data.timeToActive >= 0 then
         self.data.timeToActive = self.data.timeToActive - timeStep
@@ -103,7 +99,7 @@ function Distributor.update(timeStep)
         self.updateLaser()
     else --onServer()
         --if there are no enemies, abort.
-        if Entity():getValue("is_xsotan") then
+        if _entity:getValue("is_xsotan") then
             local myAI = ShipAI()
             if not myAI:isEnemyPresent(true) then
                 return
@@ -113,16 +109,35 @@ function Distributor.update(timeStep)
         if not self.data.currentTarget or not valid(self.data.currentTarget) then
             self.Log(methodName, "Current target is nil or no longer valid - picking new target.")
             self.data.currentTarget = self.pickNewTarget()
-            broadcastInvokeClientFunction("setTargetID", self.data.currentTarget.index.string)
+            broadcastInvokeClientFunction("setTargetID", self.data.currentTarget.index.string, self.data.damageRange)
         end
 
-        if self.data.damagePool > 0 then
-            self.dischargeDamagePool()
+        if self.data.currentTarget and valid(self.data.currentTarget) then
+            --make sure the target is within range.
+            local distToTarget = _entity:getNearestDistance(self.data.currentTarget)
+            if distToTarget <= self.data.damageRange then
+                local damageAmount = self.data.damagePerStrike
+                if self.data.useEntityDamageMult then
+                    damageAmount = damageAmount * _entity.damageMultiplier
+                end
+
+                self.Log(methodName, "Dealing " .. tostring(damageAmount) .. " to Entity " .. self.data.currentTarget.name)
+                ESCCWeaponScriptUtil.inflictDamageToTarget(self.data.currentTarget, damageAmount, DamageType.Electric, _entity.index)
+                self.drawSmallLaser()
+                if _random:test(0.5) then
+                    local delay = _random:getFloat(0, 0.25)
+                    deferredCallback(delay, "drawSmallLaser")
+                end
+                if _random:test(0.25) then
+                    local delay = _random:getFloat(0, 0.25)
+                    deferredCallback(delay, "drawSmallLaser")
+                end
+            end
         end
     end
 end
 
-function Distributor.deleteCurrentLasers()
+function Thunderstrike.deleteCurrentLasers()
     local methodName = "Delete Current Lasers"
     if onServer() then
         self.Log(methodName, "Calling on Server - invoking on Client", 1)
@@ -140,11 +155,38 @@ function Distributor.deleteCurrentLasers()
     mainLaser = nil
 end
 
+function Thunderstrike.drawSmallLaser(endPoint)
+    local methodName = "Draw Small Laser"
+
+    if onServer() then
+        self.Log(methodName, "Calling on server => invoking on client.")
+        broadcastInvokeClientFunction("drawSmallLaser", self.data.currentTarget.translationf)
+        return
+    end
+
+    self.Log(methodName, "Calling on client.")
+
+    local _sector = Sector()
+    local _random = random()
+    
+    local beamLength = _random:getInt(100, 300)
+    local beamDirection = _random:getDirection()
+    local beamStart = endPoint + (beamDirection * beamLength)
+
+    local smallLaser = _sector:createLaser(beamStart, endPoint, ColorRGB(0.66, 0.66, 1.0), 2.5)
+    smallLaser.collision = true
+    smallLaser.maxAliveTime = 0.5
+    smallLaser.shape = BeamShape.Lightning
+    smallLaser.animationSpeed = 0
+    smallLaser.animationAcceleration = 0
+    smallLaser.shapeSize = 13
+end
+
 --endregion
 
 --region #SERVER FUNCTIONS
 
-function Distributor.pickNewTarget()
+function Thunderstrike.pickNewTarget()
     local methodName = "Pick New Target"
 
     local factionIdx = Entity().factionIndex
@@ -196,72 +238,13 @@ function Distributor.pickNewTarget()
     end
 end
 
-function Distributor.onDamagedSector(objectIndex, amount, inflictor, damageSource, damageType)
-    local methodName = "On Damaged"
-    self.Log(methodName, "Running on Damaged...", 3)
-
-    for _, distributor in pairs({ Sector():getEntitiesByScript("distributor.lua") }) do
-        distributor:invokeFunction("distributor.lua", "addToDamagePool", objectIndex, amount)
+function Thunderstrike.onDestroyedSector(idx, lastDamageInflictor)
+    for _, thunderstriker in pairs ({ Sector():getEntitiesByScript("thunderstrike.lua") }) do
+        thunderstriker:invokeFunction("thunderstrike.lua", "reportDestroyedTarget", idx)
     end
 end
 
-function Distributor.onShieldDamagedSector(entityId, amount, damageType, inflictorID)
-    local methodName = "On Shield Damaged"
-    self.Log(methodName, "Running on Shield Damaged...", 3)
-
-    for _, distributor in pairs ({ Sector():getEntitiesByScript("distributor.lua") }) do
-        distributor:invokeFunction("distributor.lua", "addToDamagePool", entityId, amount)
-    end
-end
-
-function Distributor.onDestroyedSector(idx, lastDamageInflictor)
-    for _, distributor in pairs ({ Sector():getEntitiesByScript("distributor.lua") }) do
-        distributor:invokeFunction("distributor.lua", "reportDestroyedTarget", idx)
-    end
-end
-
-function Distributor.addToDamagePool(targetIdx, amount)
-    local methodName = "Adding To Damage Pool"
-
-    if self.data.currentTarget and valid(self.data.currentTarget) and targetIdx == self.data.currentTarget.index then
-        self.Log(methodName, "Index match detected - adding " .. tostring(amount) .. " to damage pool.", 2)
-        self.data.damagePool = self.data.damagePool + amount
-    end
-end
-
-function Distributor.dischargeDamagePool()
-    local methodName = "Discharge Damage Pool"
-
-    if self.data.currentTarget and valid(self.data.currentTarget) then
-        local factionIdx = self.data.currentTarget.factionIndex
-        local _entity = Entity()
-
-        local alliedEntities = { Sector():getEntitiesByFaction(factionIdx) }
-
-        for _, entity in pairs(alliedEntities) do
-            if (entity.type == EntityType.Ship or entity.type == EntityType.Station) then
-                if entity.index ~= self.data.currentTarget.index then
-                    local dist = self.data.currentTarget:getNearestDistance(entity)
-                    self.Log(methodName, "Dist betweeen " .. self.data.currentTarget.name .. " and " .. entity.name .. " is " .. tostring(dist))
-                    if dist <= self.data.blastRadius then
-                        self.Log(methodName, "Dealing " .. tostring(self.data.damagePool * self.data.blastDamageMultiplier) .. " damage to " .. entity.name)
-                        ESCCWeaponScriptUtil.inflictDamageToTarget(entity, self.data.damagePool * self.data.blastDamageMultiplier, DamageType.Energy, _entity.index)
-                        broadcastInvokeClientFunction("drawSmallLaser", self.data.currentTarget.translationf, entity.translationf)
-                    end
-                else
-                    if self.data.damagePrimaryTarget then
-                        self.Log(methodName, "Damage primary target enabled. Dealing " .. tostring(self.data.damagePool * self.data.primaryTargetDamageMultiplier) .. " damage to " .. entity.name)
-                        ESCCWeaponScriptUtil.inflictDamageToTarget(entity, self.data.damagePool * self.data.primaryTargetDamageMultiplier, DamageType.Energy, _entity.index)
-                    end
-                end
-            end
-        end
-
-        self.data.damagePool = 0
-    end
-end
-
-function Distributor.reportDestroyedTarget(index)
+function Thunderstrike.reportDestroyedTarget(index)
     local methodName = "Report Destroyed Target"
 
     if self.data.currentTarget and self.data.currentTarget.index == index then
@@ -276,36 +259,47 @@ end
 
 --region #CLIENT FUNCTIONS
 
-function Distributor.setTargetID(targetID)
+function Thunderstrike.setTargetID(targetID, maximumRange)
     self.clientData.currentTargetId = targetID
+    self.clientData.laserRange = maximumRange
 end
 
-function Distributor.clearTargetID()
+function Thunderstrike.clearTargetID()
     self.clientData.currentTargetId = nil
 end
 
-function Distributor.updateLaser()
+function Thunderstrike.updateLaser()
     local _sector = Sector()
     local _entity = Entity()
 
-    local laserColor = ColorRGB(1.0, 0.33, 0.0)
+    local laserColor = ColorRGB(0.66, 0.66, 1.0)
     local removeLaser = false
 
     local sCurrentTargetId = self.clientData.currentTargetId
+    local maxDistanceToTarget = self.clientData.laserRange
 
     if sCurrentTargetId then
         local currentTargetId = Uuid(sCurrentTargetId)
         local target = Entity(currentTargetId)
-    
+
         if target and valid(target) then
-            if not mainLaser or not valid(mainLaser) then
-                mainLaser = _sector:createLaser(vec3(), vec3(), laserColor, 10)
-            end
+            local distanceToTarget = _entity:getNearestDistance(target)
+            if distanceToTarget <= maxDistanceToTarget then
+                if not mainLaser or not valid(mainLaser) then
+                    mainLaser = _sector:createLaser(vec3(), vec3(), laserColor, 10)
+                end
     
-            if mainLaser and valid(mainLaser) then
-                mainLaser.from = _entity.translationf
-                mainLaser.to = target.translationf
-                mainLaser.collision = false
+                if mainLaser and valid(mainLaser) then
+                    mainLaser.shape = BeamShape.Lightning
+                    mainLaser.animationSpeed = 0.25
+                    mainLaser.animationAcceleration = 0
+                    mainLaser.shapeSize = 26
+                    mainLaser.from = _entity.translationf
+                    mainLaser.to = target.translationf
+                    mainLaser.collision = false
+                end
+            else
+                removeLaser = true
             end
         else
             removeLaser = true
@@ -321,43 +315,32 @@ function Distributor.updateLaser()
     end
 end
 
-function Distributor.drawSmallLaser(position1, position2)
-    local methodName = "Draw Small Laser"
-    self.Log(methodName, "Drawing small laser.")
-
-    local _sector = Sector()
-
-    local smallLaser = _sector:createLaser(position1, position2, ColorRGB(1.0, 0.33, 0.0), 2.5)
-    smallLaser.collision = false
-    smallLaser.maxAliveTime = 0.5
-end
-
 --TODO
 
 --endregion
 
 --region #SECURE / LOG / RESTORE
 
-function Distributor.Log(methodName, msg, logLevel)
+function Thunderstrike.Log(methodName, msg, logLevel)
     logLevel = logLevel or 1
     if self._Debug == 1 and self._DebugLevel >= logLevel then
-        print("[Distributor] - [" .. methodName .. "] - " .. msg)
+        print("[Thunderstrike] - [" .. methodName .. "] - " .. msg)
     end
 end
 
-function Distributor.secure()
+function Thunderstrike.secure()
     local methodName = "Secure"
     self.Log(methodName, "Securing self.data")
     return self.data
 end
 
-function Distributor.restore(values)
+function Thunderstrike.restore(values)
     local methodName = "Restore"
     self.Log(methodName, "Restoring self.data")
     self.data = values
 
     if self.data.currentTarget then
-        broadcastInvokeClientFunction("setTargetID", self.data.currentTarget.index.string)
+        broadcastInvokeClientFunction("setTargetID", self.data.currentTarget.index.string, self.data.damageRange)
     end
 end
 

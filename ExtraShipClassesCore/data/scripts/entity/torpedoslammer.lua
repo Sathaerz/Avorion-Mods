@@ -180,8 +180,8 @@ function TorpedoSlammer.updateServer(_TimeStep)
             if self._Data._FireCycle >= self._Data._ROF then
                 self.fireAtTarget()
                 if self._Data._FireBarrage then
-                    for _ = 1, self._Data._BarrageCount do
-                        deferredCallback(self._Data._BarrageDelay, "fireAtTarget")
+                    for barragePosition = 1, self._Data._BarrageCount do
+                        deferredCallback(self._Data._BarrageDelay * barragePosition, "fireAtTarget")
                     end
                 end
                 self._Data._FireCycle = 0

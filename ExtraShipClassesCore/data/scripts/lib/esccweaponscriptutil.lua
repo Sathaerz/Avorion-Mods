@@ -72,7 +72,7 @@ function ESCCWeaponScriptUtil.isTargetInvincibleCheck(target, allowInvincibleTar
     end
 end
 
-function ESCCWeaponScriptUtil.inflictDamageToTarget(target, damage, inflictorID)
+function ESCCWeaponScriptUtil.inflictDamageToTarget(target, damage, damageType, inflictorID)
     local methodName = "Inflict Damage To Target"
 
     local shields = Shield(target)
@@ -86,13 +86,13 @@ function ESCCWeaponScriptUtil.inflictDamageToTarget(target, damage, inflictorID)
             hullDamage = damage - shieldDamage
         end
         self.Log(methodName, "Inflicting " .. tostring(shieldDamage) .. " damage to shield and " .. tostring(hullDamage) .. " to " .. tostring(target.name) .. " hull.")
-        shields:inflictDamage(shieldDamage, DamageSource.Weaponry, DamageType.Energy, target.translationf, inflictorID)
+        shields:inflictDamage(shieldDamage, DamageSource.Weaponry, damageType, target.translationf, inflictorID)
         if hullDamage > 0 then
-            durability:inflictDamage(hullDamage, DamageSource.Weaponry, DamageType.Energy, inflictorID)
+            durability:inflictDamage(hullDamage, DamageSource.Weaponry, damageType, inflictorID)
         end
     else
         if durability then
-            durability:inflictDamage(damage, DamageSource.Weaponry, DamageType.Energy, inflictorID)
+            durability:inflictDamage(damage, DamageSource.Weaponry, damageType, inflictorID)
         end
     end
 end

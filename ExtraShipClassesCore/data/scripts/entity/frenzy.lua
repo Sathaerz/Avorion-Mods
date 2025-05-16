@@ -46,12 +46,12 @@ function Frenzy.updateServer(_TimeStep)
         if self._Data._Timer >= self._Data._UpdateCycle then
             local _Entity = Entity()
             local _DmgFactor = (_Entity.damageMultiplier or 1) + self._Data._IncreasePerUpdate
+            local damageLimited = false
 
             --If the upper limit is enabled, prevent _DmgFactor from going past the factor specified in upper limit.
             if self._Data._EnableUpperLimit then
-                if _DmgFactor > self._Data._UpperLimit then
-                    _DmgFactor = self._Data._UpperLimit
-                end
+                _DmgFactor = math.min(_DmgFactor, self._Data._UpperLimit)
+                damageLimited = true
             end
 
             _Entity.damageMultiplier = _DmgFactor
@@ -62,7 +62,7 @@ function Frenzy.updateServer(_TimeStep)
             local direction = random():getDirection()
             broadcastInvokeClientFunction("animation", direction)
 
-            if _Entity:hasScript("frenzy.lua") then
+            if not damageLimited and _Entity:hasScript("frenzy.lua") then
                 --buff the overdrive script as well.
                 _Entity:invokeFunction("data/scripts/entity/frenzy.lua", "frenzyBuff", self._Data._IncreasePerUpdate)
             end
