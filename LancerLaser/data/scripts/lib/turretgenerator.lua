@@ -13,7 +13,6 @@ possibleSpecialties[WeaponType.LancerLaser] = {
 }
 
 function TurretGenerator.generateLancerLaserTurret(rand, dps, tech, material, rarity)
-    local _Version = GameVersion()
     local result = TurretTemplate()
 
     -- generate turret
@@ -38,24 +37,20 @@ function TurretGenerator.generateLancerLaserTurret(rand, dps, tech, material, ra
     local specialties = TurretGenerator.addSpecialties(rand, result, WeaponType.LancerLaser)
 
     --Have to set it to an armed turret, otherwise it will default to unarmed.
-    if _Version.major > 1 then
-        result.slotType = TurretSlotType.Armed
-    end
+    result.slotType = TurretSlotType.Armed
 
     result:updateStaticStats()
 
-    if _Version.major > 1 then
-        local name = "Lancer"
+    local name = "Lancer"
 
-        if result.slots == 3 or result.slots == 4 then
-            name = "Partisan"
-        elseif result.slots >= 5 then
-            name = "Halberdier"
-        end
-    
-        local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
-        result.title = Format("%1%%2%%3%%4%%5%%6%", outerAdjective, barrel, dmgAdjective, multishot, name, serial)
+    if result.slots == 3 or result.slots == 4 then
+        name = "Partisan"
+    elseif result.slots >= 5 then
+        name = "Halberdier"
     end
+
+    local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
+    result.title = Format("%1%%2%%3%%4%%5%%6%", outerAdjective, barrel, dmgAdjective, multishot, name, serial)
 
     --Final check.
     if not result.coaxial then
@@ -80,7 +75,7 @@ function TurretGenerator.scaleLancer(rand, turret, type, tech, turnSpeedFactor, 
     turret.size = scale.size
     turret.coaxial = true
     turret.slots = scale.usedSlots
-    turret.turningSpeed = lerp(turret.size, 0.5, 3, 1, 0.3) * rand:getFloat(0.8, 1.2) * turnSpeedFactor
+    turret.turningSpeed = lerp(turret.size, 0.5, 3, 1, 0.5) * rand:getFloat(0.8, 1.2) * turnSpeedFactor
 
     local coaxialDamageScale = TurretGenerator.getLancerScaleBonus(tech)
 
@@ -88,12 +83,11 @@ function TurretGenerator.scaleLancer(rand, turret, type, tech, turnSpeedFactor, 
     for _, weapon in pairs(weapons) do
         weapon.localPosition = weapon.localPosition * scale.size
 
-        -- scale damage, etc. linearly with amount of used slots. Doesn't matter how many slots it is since all of these are coaxial.
+        -- scale damage, etc. linearly with amount of used slots. Can scale any weapon since all are coaxial.
         if weapon.damage ~= 0 then
             weapon.damage = weapon.damage * scale.usedSlots * coaxialDamageScale
         end
 
-        --These should never be greater than 0, but on the off chance they are...
         if weapon.hullRepair ~= 0 then
             weapon.hullRepair = weapon.hullRepair * scale.usedSlots * coaxialDamageScale
         end
@@ -110,12 +104,16 @@ function TurretGenerator.scaleLancer(rand, turret, type, tech, turnSpeedFactor, 
             weapon.otherForce = weapon.otherForce * scale.usedSlots * coaxialDamageScale
         end
 
-        --Scale range.
-        local increase = (scale.usedSlots - 1) * 0.15
+        if weapon.holdingForce ~= 0 then
+            weapon.holdingForce = weapon.holdingForce * scale.usedSlots * coaxialDamageScale
+        end
+
+        local increase = (scale.usedSlots - 1) * 0.15 --Type is not mining / salvaging laser - so we can cut out this if/else
+
         weapon.reach = weapon.reach * (1 + increase)
-        
+
         local shotSizeFactor = scale.size * 2
-        weapon.bwidth = weapon.bwidth * shotSizeFactor
+        weapon.bwidth = weapon.bwidth * shotSizeFactor --Always a beam.
     end
 
     turret:clearWeapons()
