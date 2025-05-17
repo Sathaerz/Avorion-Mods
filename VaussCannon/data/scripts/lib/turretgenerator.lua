@@ -89,7 +89,7 @@ function TurretGenerator.scaleVauss(rand, turret, type, tech, turnSpeedFactor, c
     for _, weapon in pairs(weapons) do
         weapon.localPosition = weapon.localPosition * scale.size
 
-        -- scale damage, etc. linearly with amount of used slots
+        -- scale damage, etc. linearly with amount of used slots. Can scale any weapon since all are coaxial.
         if weapon.damage ~= 0 then
             weapon.damage = weapon.damage * scale.usedSlots * coaxialDamageScale
         end
@@ -110,27 +110,19 @@ function TurretGenerator.scaleVauss(rand, turret, type, tech, turnSpeedFactor, c
             weapon.otherForce = weapon.otherForce * scale.usedSlots * coaxialDamageScale
         end
 
-        local increase = 0
-        if type == WeaponType.MiningLaser or type == WeaponType.SalvagingLaser then
-            -- mining and salvaging laser reach is scaled more
-            increase = (scale.size + 0.5) - 1
-        else
-            -- scale reach a little
-            increase = (scale.usedSlots - 1) * 0.15
+        if weapon.holdingForce ~= 0 then
+            weapon.holdingForce = weapon.holdingForce * scale.usedSlots * coaxialDamageScale
         end
+
+        local increase = (scale.usedSlots - 1) * 0.15 --Type is not mining / salvaging laser - so we can cut out this if/else
 
         weapon.reach = weapon.reach * (1 + increase)
 
         local shotSizeFactor = scale.size * 2
-        if weapon.isProjectile then
-            local velocityIncrease = (scale.usedSlots - 1) * 0.25
-
-            weapon.psize = weapon.psize * shotSizeFactor
-            weapon.pvelocity = weapon.pvelocity * (1 + velocityIncrease)
-        end
-        if weapon.isBeam then
-            weapon.bwidth = weapon.bwidth * shotSizeFactor
-        end
+        local velocityIncrease = (scale.usedSlots - 1) * 0.25 --Weapon is always projectile.
+            
+        weapon.psize = weapon.psize * shotSizeFactor
+        weapon.pvelocity = weapon.pvelocity * (1 + velocityIncrease)
     end
 
     turret:clearWeapons()
