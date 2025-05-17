@@ -1,0 +1,1 @@
+weaponProbabilities[WeaponType.ElectroGrenade] =            {d = 0.5, p = 0.5}

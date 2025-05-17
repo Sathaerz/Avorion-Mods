@@ -1,0 +1,1 @@
+table.insert(WeaponTypes, {type = WeaponType.ElectroGrenade, name = "Electrostatic Grenade Launcher"})

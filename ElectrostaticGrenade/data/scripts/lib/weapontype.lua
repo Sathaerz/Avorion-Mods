@@ -1,0 +1,1 @@
+WeaponTypes.addType("ElectroGrenade", "Electrostatic Grenade Launcher", armed)

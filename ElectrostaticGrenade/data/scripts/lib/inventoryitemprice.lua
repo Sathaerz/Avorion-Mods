@@ -1,0 +1,1 @@
+valueWeights[WeaponType.ElectroGrenade] = 2 --Electric + aoe is a terrifying combination
