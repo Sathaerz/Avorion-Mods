@@ -234,7 +234,7 @@ mission.phases[1].onEntityDestroyed = function(id, lastDamageInflictor)
                 end
             end
     
-            finishAndReward()
+            llteSide4_finishAndReward()
         end
         
         mission.Log(_MethodName, tostring(mission.data.custom.xsotanKilled) .. " Xsotan killed so far.")
@@ -391,7 +391,7 @@ function spawnXsotanInfestor()
     _XsotanInfestor.damageMultiplier = (_XsotanInfestor.damageMultiplier or 1 ) * 1.6
 end
 
-function finishAndReward()
+function llteSide4_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 

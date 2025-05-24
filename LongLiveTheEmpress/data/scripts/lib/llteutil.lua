@@ -1442,8 +1442,10 @@ function LLTEUtil.spawnBladeOfEmpress(_DeleteOnLeft)
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
-    local _EmpressBlade = Sector():createShip(_Faction, "Blade of the Empress", _Plan, PirateGenerator.getGenericPosition())
+    local shipName = "Blade of the Empress"
+    local _EmpressBlade = Sector():createShip(_Faction, shipName, _Plan, PirateGenerator.getGenericPosition())
     _EmpressBlade.title = "Adriana's Flagship"
+    _EmpressBlade.name = shipName
 
     ShipUtility.addBossAntiTorpedoEquipment(_EmpressBlade)
     ShipUtility.addScalableArtilleryEquipment(_EmpressBlade, 5, 1, false)
@@ -1500,8 +1502,10 @@ function LLTEUtil.spawnCavalierSupercap(_DeleteOnLeft)
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
-    local _SuperCap = Sector():createShip(_Faction, self.getCapitalShipName(), _Plan, PirateGenerator.getGenericPosition())
+    local shipName = self.getCapitalShipName()
+    local _SuperCap = Sector():createShip(_Faction, shipName, _Plan, PirateGenerator.getGenericPosition())
     _SuperCap.title = "Cavaliers Battleship"
+    _SuperCap.name = shipName --Spawning the ship with the name pre-generated doesn't seem to work anymore, for some reason.
 
     ShipUtility.addBossAntiTorpedoEquipment(_SuperCap)
     ShipUtility.addScalableArtilleryEquipment(_SuperCap, 2, 1, false)
@@ -1550,8 +1554,10 @@ function LLTEUtil.spawnAnimosity(_PirateLevel, _AddLoot)
 
     _Plan:scale(vec3(_Scale, _Scale, _Scale))
 
-    local _Animosity = Sector():createShip(_Faction, "Animosity", _Plan, PirateGenerator.getGenericPosition())
+    local shipName = "Animosity"
+    local _Animosity = Sector():createShip(_Faction, shipName, _Plan, PirateGenerator.getGenericPosition())
     _Animosity.title = "Animosity"
+    _Animosity.name = shipName
 
     ShipUtility.addScalableArtilleryEquipment(_Animosity, 5, 1, false)
     ShipUtility.addScalableArtilleryEquipment(_Animosity, 5, 1, false)
@@ -1567,10 +1573,11 @@ function LLTEUtil.spawnAnimosity(_PirateLevel, _AddLoot)
 
     _Animosity.crew = _Animosity.idealCrew
     _Animosity:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
+    _Animosity:addScript("secondaryweapons.lua")
     _Animosity:addScript("megablocker.lua", 1)
     _Animosity:setValue("is_animosity", true)
     _Animosity:setValue("is_pirate", true)
-    _Animosity.damageMultiplier = (_Animosity.damageMultiplier or 1) * 4 * _Amp
+    _Animosity.damageMultiplier = (_Animosity.damageMultiplier or 1) * 6 * _Amp
 
     Boarding(_Animosity).boardable = false
     _Animosity.dockable = false
@@ -1721,7 +1728,7 @@ function LLTEUtil.getSpecialRailguns()
     local _ReachFactor = _Rgen:getFloat(1.5, 1.75)
     local _PenFactor = _Rgen:getInt(22, 28)
 
-    local _OverallFactor = _PenFactor + math.floor(((_DamageFactor + _ROFFactor + _ReachFactor) * 10))
+    local _OverallFactor = _PenFactor + math.floor(((_DamageFactor + _ROFFactor + _ReachFactor) * 5))
 
     _Turret:clearWeapons()
     for _, _W in pairs(_Weapons) do

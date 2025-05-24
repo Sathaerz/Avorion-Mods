@@ -133,7 +133,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.onSectorEntered = function(_X, _Y)
     local _MethodName = "Global Phase On Target Location Entered"
@@ -437,7 +436,7 @@ function onSecondWaveFinished(_Generated)
         "Kill them all! Hahahaha!"
     }
 
-    Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, randomEntry(_Lines))
+    Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(_Lines))
 end
 
 function addShipmentScript()
@@ -587,12 +586,12 @@ function finishMission()
         for _, _S in pairs(_Ships) do
             _S:addScriptOnce("entity/utility/delayeddelete.lua", _Rgen:getFloat(4, 8))
         end
-        finishAndReward()
+        llteSide6_finishAndReward()
     end
 end
 callable(nil, "finishMission")
 
-function finishAndReward()
+function llteSide6_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 

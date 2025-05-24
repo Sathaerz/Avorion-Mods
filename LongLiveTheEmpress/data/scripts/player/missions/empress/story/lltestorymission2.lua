@@ -53,14 +53,15 @@ mission._Name = "The Unforgiving Blade"
 
 local llte_storymission_init = initialize
 function initialize()
-    local _MethodName = "initialize"
-    mission.Log(_MethodName, "The Unforgiving Blade Begin...")
+    local methodName = "initialize"
+    mission.Log(methodName, "The Unforgiving Blade Begin...")
 
     if onServer()then
         if not _restoring then
             --Standard mission data.
-            mission.data.brief = "The Unforgiving Blade"
-            mission.data.title = "The Unforgiving Blade"
+            mission.data.brief = mission._Name
+            mission.data.title = mission._Name
+            mission.data.autoTrackMission = true
 			mission.data.icon = "data/textures/icons/cavaliers.png"
 			mission.data.priority = 9
             mission.data.description = { 
@@ -104,7 +105,7 @@ function initialize()
                 end
             end
 
-            mission.Log(_MethodName, "Max destroyed cavaliers is " .. tostring(mission.data.custom.maxDestroyedCavaliers))
+            mission.Log(methodName, "Max destroyed cavaliers is " .. tostring(mission.data.custom.maxDestroyedCavaliers))
 
             local missionReward = 600000
 
@@ -133,7 +134,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     local _X, _Y = Sector():getCoordinates()
     Player():unregisterCallback("onPreRenderHud", "onMarkShips")
@@ -151,8 +151,8 @@ end
 
 mission.globalPhase.onFail = function()
     --If there are any Cavaliers ships, they warp out.
-    local _MethodName = "On Fail"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "On Fail"
+    mission.Log(methodName, "Beginning...")
     
     local _Rgen = ESCCUtil.getRand()
     LLTEUtil.allCavaliersDepart()
@@ -197,9 +197,9 @@ mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBeginServer = function()
-    local _MethodName = "Phase 1 On Begin Server"
-    mission.Log(_MethodName, "Beginning...")
-    mission.data.custom.scoutSector =  getNextLocation(true)
+    local methodName = "Phase 1 On Begin Server"
+    mission.Log(methodName, "Beginning...")
+    mission.data.custom.scoutSector =  llteStory2_getNextLocation(true)
     local _X, _Y = mission.data.custom.scoutSector.x, mission.data.custom.scoutSector.y
     mission.data.custom.pirateLevel = Balancing_GetPirateLevel(_X, _Y)
     local _Player = Player()
@@ -233,7 +233,7 @@ mission.phases[2].timers = {}
 mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBeginServer = function()
-    local _MethodName = "Phase 2 On Begin Server"
+    local methodName = "Phase 2 On Begin Server"
     mission.data.location = mission.data.custom.scoutSector
     mission.data.description[2].fulfilled = true
     mission.data.description[3].arguments = { _X = mission.data.location.x, _Y = mission.data.location.y }
@@ -241,32 +241,32 @@ mission.phases[2].onBeginServer = function()
 end
 
 mission.phases[2].onTargetLocationEntered = function(_X, _Y)
-    local _MethodName = "Phase 2 on Target Location Entered"
+    local methodName = "Phase 2 on Target Location Entered"
     --get the next location
-    mission.data.custom.pirateSector = getNextLocation(false)
+    mission.data.custom.pirateSector = llteStory2_getNextLocation(false)
     --spawn 3 scouts
-    spawnCavalierScouts(3)
+    llteStory2_spawnCavalierScouts(3)
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(_X, _Y)
-    local _MethodName = "Phase 2 on Target Location Arrival Confirmed"
+    local methodName = "Phase 2 on Target Location Arrival Confirmed"
     --Start a 5 second timer to jump in The Cavaliers Fleet.
-    mission.Log(_MethodName, "Beginning...")
+    mission.Log(methodName, "Beginning...")
     mission.phases[2].timers[1] = { time = 5, callback = function()
-        spawnEmpressBlade(true)
-        spawnCavalierShips(2, 2, false)
+        llteStory2_spawnEmpressBlade(true, true)
+        llteStory2_spawnCavalierShips(2, 2, false)
     end, repeating = false}
     mission.phases[2].timers[2] = { time = 7, callback = function()
-        spawnCavalierShips(2, 1, false)
+        llteStory2_spawnCavalierShips(2, 1, false)
     end, repeating = false}
     mission.phases[2].timers[3] = { time = 9, callback = function()
-        spawnCavalierShips(2, 1, false)
+        llteStory2_spawnCavalierShips(2, 1, false)
     end, repeating = false}
     mission.phases[2].timers[4] = { time = 11, callback = function()
-        spawnCavalierShips(2, 0, false)
+        llteStory2_spawnCavalierShips(2, 0, false)
     end, repeating = false}
     mission.phases[2].timers[5] = { time = 13, callback = function()
-        spawnCavalierShips(1, 1, false)
+        llteStory2_spawnCavalierShips(1, 1, false)
     end, repeating = false}
 end
 
@@ -275,7 +275,7 @@ mission.phases[3].timers = {}
 mission.phases[3].showUpdateOnEnd = true
 mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBeginServer = function()
-    local _MethodName = "Phase 3 On Begin Server"
+    local methodName = "Phase 3 On Begin Server"
     mission.data.location = mission.data.custom.pirateSector
     mission.data.description[3].fulfilled = true
     mission.data.description[4].arguments = { _X = mission.data.location.x, _Y = mission.data.location.y }
@@ -285,30 +285,30 @@ mission.phases[3].onBeginServer = function()
 end
 
 mission.phases[3].onTargetLocationEntered = function(_X, _Y)
-    local _MethodName = "Phase 3 on Enter Target Location"
+    local methodName = "Phase 3 on Enter Target Location"
     --Build main sector
-    buildPirateSector(_X, _Y)
+    llteStory2_buildPirateSector(_X, _Y)
     registerMarkShips()
     mission.phases[3].timers[5] = nil
 end
 
 mission.phases[3].onTargetLocationArrivalConfirmed = function(_X, _Y)
-    local _MethodName = "Phase 3 on Target Location Arrival Confirmed"
+    local methodName = "Phase 3 on Target Location Arrival Confirmed"
     --Spawn Cavaliers - they will always despawn on exit so we need to respawn them each time.
     --Add DCD for Cavaliers.
-    mission.Log(_MethodName, "Beginning...")
+    mission.Log(methodName, "Beginning...")
     if not mission.data.custom.missionStarted then
         mission.phases[3].timers[1] = { time = 2, callback = function()
-            local _MethodName = "Phase 3 Timer 1 Callback"
-            mission.Log(_MethodName, "Beginning...")
-            spawnEmpressBlade(false)
-            spawnCavalierShips(3, 1, true)
+            local methodName = "Phase 3 Timer 1 Callback"
+            mission.Log(methodName, "Beginning...")
+            llteStory2_spawnEmpressBlade(false, false)
+            llteStory2_spawnCavalierShips(3, 1, true)
             Entity(mission.data.custom.militaryStationid):addScript("player/missions/empress/story/story2/lltestory2piratesector.lua")
 
             local _Faction = Galaxy():findFaction("The Cavaliers")
             local _EmpressBlade = {Sector():getEntitiesByScriptValue("_llte_empressblade")}
 
-            addCavaliersDefenseController(_Faction, _EmpressBlade[1])
+            llteStory2_addCavaliersDefenseController(_Faction, _EmpressBlade[1])
             mission.data.custom.firstEmpressSpawnDone = true
         end, repeating = false}
         mission.data.custom.missionStarted = true
@@ -316,7 +316,7 @@ mission.phases[3].onTargetLocationArrivalConfirmed = function(_X, _Y)
 end
 
 mission.phases[3].updateTargetLocationServer = function(_TimeStep)
-    local _MethodName = "Phase 3 Update Server"
+    local methodName = "Phase 3 Update Server"
     --Need this to check if all 4 stations are dead.
     if mission.data.custom.builtMainSector then
         local _EmpressBladeCt = ESCCUtil.countEntitiesByValue("_llte_empressblade")
@@ -327,14 +327,14 @@ mission.phases[3].updateTargetLocationServer = function(_TimeStep)
             mission.phases[3].timers[2] = {
                 time = 120, 
                 callback = function()
-                    local _MethodName = "Phase 3 Timer 2 Callback"
-                    mission.Log(_MethodName, "Beginning...")
+                    local methodName = "Phase 3 Timer 2 Callback"
+                    mission.Log(methodName, "Beginning...")
                     --It comes back in 2 minutes.
-                    spawnEmpressBlade(false)
+                    llteStory2_spawnEmpressBlade(false, false)
                     local _Faction = Galaxy():findFaction("The Cavaliers")
                     local _EmpressBlade = {Sector():getEntitiesByScriptValue("_llte_empressblade")}
 
-                    addCavaliersDefenseController(_Faction, _EmpressBlade[1])
+                    llteStory2_addCavaliersDefenseController(_Faction, _EmpressBlade[1])
                     mission.data.custom.empressBladeRespawning = false
                 end, 
                 repeating = false}
@@ -345,13 +345,13 @@ mission.phases[3].updateTargetLocationServer = function(_TimeStep)
         if _Stations == 0 then
             ESCCUtil.allPiratesDepart()
             LLTEUtil.allCavaliersDepart()
-            finishAndReward()
+            llteStory2_finishAndReward()
         end
     end
 end
 
 mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
-    local _MethodName = "Phase 3 On Entity Destroyed"
+    local methodName = "Phase 3 On Entity Destroyed"
     if Entity(_ID):getValue("is_cavaliers") then
         mission.data.custom.destroyedCavaliers = mission.data.custom.destroyedCavaliers + 1
         mission.data.description[5].arguments = { _LOST = mission.data.custom.destroyedCavaliers, _MAXLOST = mission.data.custom.maxDestroyedCavaliers }
@@ -359,7 +359,7 @@ mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     end
     if Entity(_ID):getValue("_llte_story2_mainobjective") then
         local _ExtraReinforcements = 1
-        mission.Log(_MethodName, "Adding extra casualty allowance.")
+        mission.Log(methodName, "Adding extra casualty allowance.")
 
         if mission.data.custom.sendExtraCavaliers then
             _ExtraReinforcements = 3
@@ -397,7 +397,7 @@ mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
             Sector():broadcastChatMessage(_BroadcastStation, ChatMessageType.Chatter, "Did you think we would just lay down and die for you? This place will be your grave!")
             
             mission.phases[3].timers[2] = {time = 10, callback = function()
-                local _Generator = AsyncPirateGenerator(nil, onExecutionersFinished)
+                local _Generator = AsyncPirateGenerator(nil, llteStory2_onExecutionersFinished)
                 _Generator.pirateLevel = mission.data.custom.pirateLevel
 
                 _Generator:startBatch()
@@ -417,7 +417,7 @@ mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
 end
 
 mission.phases[3].onTargetLocationLeft = function(_X, _Y)
-    local _MethodName = "Phase 3 on Leave Target Location"
+    local methodName = "Phase 3 on Leave Target Location"
     --Start a soft failure timer.
     --Timer 1 is for when the Cavaliers first jump in.
     --Timer 2 happens after the 1st station gets destroyed.
@@ -437,16 +437,16 @@ end
 
 --region #SPAWN OBJECTS
 
-function buildPirateSector(_X, _Y)
-    local _MethodName = "Build Main Sector"
+function llteStory2_buildPirateSector(_X, _Y)
+    local methodName = "Build Main Sector"
     
     if not mission.data.custom.builtMainSector then
-        mission.Log(_MethodName, "Main sector not yet built - building it now.")
+        mission.Log(methodName, "Main sector not yet built - building it now.")
         local _Generator = SectorGenerator(_X, _Y)
         local _Rgen = ESCCUtil.getRand()
         --Add: Miltiary Outpost, Research Station, Shipyard and Repair Dock.
         local _Faction = Galaxy():getPirateFaction(mission.data.custom.pirateLevel)
-        mission.Log(_MethodName, "Building sector for pirate level faction: " .. tostring(_Faction.name) .. " level " .. tostring(mission.data.custom.pirateLevel) .. " pirates")
+        mission.Log(methodName, "Building sector for pirate level faction: " .. tostring(_Faction.name) .. " level " .. tostring(mission.data.custom.pirateLevel) .. " pirates")
         local _MilitaryOutpost = _Generator:createMilitaryBase(_Faction)
         mission.data.custom.militaryStationid = _MilitaryOutpost.index
         _MilitaryOutpost:setValue("_llte_story2_militaryoutpost", true)
@@ -458,6 +458,7 @@ function buildPirateSector(_X, _Y)
             _Station:removeScript("consumer.lua")
             _Station:removeScript("backup.lua") --The delayed callback on this is dumb. I do like the idea of ships responding when an object is destroyed though.
             _Station:setValue("is_pirate", true)
+            _Station:setValue("no_chatter", true) --Finally, a way to get rid of those stupid messages that toally ruin the vibe.
             _Station:setValue("_llte_story2_mainobjective", true)
             local _StationBay = CargoBay(_Station)
             _StationBay:clear()
@@ -512,19 +513,22 @@ function buildPirateSector(_X, _Y)
     end
 end
 
-function spawnEmpressBlade(_AddScript)
-    local _MethodName = "Spawn Blade of the Empress"
-    mission.Log(_MethodName, "Beginning...")
+function llteStory2_spawnEmpressBlade(_AddScript, deleteOnLeft)
+    local methodName = "Spawn Blade of the Empress"
+    mission.Log(methodName, "Beginning...")
     local _EmpressBlade = LLTEUtil.spawnBladeOfEmpress()
 
     if _AddScript then
         invokeClientFunction(Player(), "onPhase2SectorEnteredDialog", _EmpressBlade.id, mission.data.custom.pirateSector.x, mission.data.custom.pirateSector.y)
     end
+    if deleteOnLeft then
+        MissionUT.deleteOnPlayersLeft(_EmpressBlade)
+    end
 end
 
-function spawnCavalierScouts(_Scouts)
+function llteStory2_spawnCavalierScouts(_Scouts)
     local _Faction =  Galaxy():findFaction("The Cavaliers")
-    local _Generator = AsyncShipGenerator(nil, onCavalierScoutsFinished)
+    local _Generator = AsyncShipGenerator(nil, llteStory2_onCavalierScoutsFinished)
     _Generator:startBatch()
 
     for _ = 1, _Scouts do
@@ -534,10 +538,10 @@ function spawnCavalierScouts(_Scouts)
     _Generator:endBatch()
 end
 
-function spawnCavalierShips(_Defenders, _HeavyDefenders, _StartPassive)
+function llteStory2_spawnCavalierShips(_Defenders, _HeavyDefenders, _StartPassive)
     _StartPassive = _StartPassive or false
     local _Faction =  Galaxy():findFaction("The Cavaliers")
-    local _Generator = AsyncShipGenerator(nil, onCavaliersFinished, _StartPassive)
+    local _Generator = AsyncShipGenerator(nil, llteStory2_onCavaliersFinished, _StartPassive)
     _Generator:startBatch()
 
     for _ = 1, _Defenders do
@@ -568,8 +572,8 @@ end
 
 --endregion
 
-function addCavaliersDefenseController(_CavFaction, _EmpressBlade)
-    local _MethodName = "Add Cavaliers Defense Controller"
+function llteStory2_addCavaliersDefenseController(_CavFaction, _EmpressBlade)
+    local methodName = "Add Cavaliers Defense Controller"
     local _CavFactor = 0
     local _CavTimeFactor = 0
     local _CavEvacFactor = 0
@@ -582,7 +586,7 @@ function addCavaliersDefenseController(_CavFaction, _EmpressBlade)
         _CavTimeFactor = _CavTimeFactor + 20
     end
     
-    mission.Log(_MethodName, "Send extra cavaliers value is " .. tostring(mission.data.custom.sendExtraCavaliers))
+    mission.Log(methodName, "Send extra cavaliers value is " .. tostring(mission.data.custom.sendExtraCavaliers))
     if mission.data.custom.sendExtraCavaliers then
         _CavFactor = _CavFactor + 3
         _CavTimeFactor = _CavTimeFactor + 20
@@ -601,7 +605,7 @@ function addCavaliersDefenseController(_CavFaction, _EmpressBlade)
     local _CavMaxDefenders = 6 + _CavExtraWaveShips
     local _CavMaxSpawn = 5 + _CavExtraWaveShips
 
-    mission.Log(_MethodName, "Cavalier DCD sending " .. tostring(_CavMaxSpawn) .. " defenders at " .. tostring(_CavDangerLevel) .. " danger level every " .. tostring(_CavCycleTime) .. " seconds to a maximum of " .. tostring(_CavMaxDefenders) .. " - withdrawing at " .. tostring(_CavWithdrawHealth))
+    mission.Log(methodName, "Cavalier DCD sending " .. tostring(_CavMaxSpawn) .. " defenders at " .. tostring(_CavDangerLevel) .. " danger level every " .. tostring(_CavCycleTime) .. " seconds to a maximum of " .. tostring(_CavMaxDefenders) .. " - withdrawing at " .. tostring(_CavWithdrawHealth))
 
     local _CavDCD = {}
     _CavDCD._DefenseLeader = _EmpressBlade.index
@@ -629,8 +633,8 @@ function addCavaliersDefenseController(_CavFaction, _EmpressBlade)
     Sector():addScript("sector/background/defensecontroller.lua", _CavDCD)
 end
 
-function onCavalierScoutsFinished(_Generated)
-    local _MethodName = "On Cavaliers Scouts Finished"
+function llteStory2_onCavalierScoutsFinished(_Generated)
+    local methodName = "On Cavaliers Scouts Finished"
     for _, _S in pairs(_Generated) do
         _S.title = "Cavaliers " .. _S.title
         _S:setValue("is_cavaliers", true)
@@ -639,8 +643,8 @@ function onCavalierScoutsFinished(_Generated)
     end
 end
 
-function onCavaliersFinished(_Generated, _StartPassive)
-    local _MethodName = "On Cavaliers Finished"
+function llteStory2_onCavaliersFinished(_Generated, _StartPassive)
+    local methodName = "On Cavaliers Finished"
     for _, _S in pairs(_Generated) do
         _S.title = "Cavaliers " .. _S.title
         _S:setValue("npc_chatter", nil)
@@ -676,7 +680,7 @@ function onCavaliersFinished(_Generated, _StartPassive)
     end
 end
 
-function onExecutionersFinished(_Generated)
+function llteStory2_onExecutionersFinished(_Generated)
     for _, _S in pairs(_Generated) do
         _S:removeScript("blocker.lua")
         _S:removeScript("megablocker.lua")
@@ -692,13 +696,13 @@ function onExecutionersFinished(_Generated)
         "Time to cut the head from the beast."
     }
 
-    Sector():broadcastChatMessage(_Generated[_Rgen:getInt(1, #_Generated)], ChatMessageType.Chatter, randomEntry(_ExecutionerLines))
+    Sector():broadcastChatMessage(_Generated[_Rgen:getInt(1, #_Generated)], ChatMessageType.Chatter, getRandomEntry(_ExecutionerLines))
 end
 
-function getNextLocation(_FirstLocation)
-    local _MethodName = "Get Next Location"
+function llteStory2_getNextLocation(_FirstLocation)
+    local methodName = "Get Next Location"
     
-    mission.Log(_MethodName, "Getting a location.")
+    mission.Log(methodName, "Getting a location.")
     local x, y = Sector():getCoordinates()
     local target = {}
 
@@ -711,7 +715,7 @@ function getNextLocation(_FirstLocation)
     end
 
     if not target or not target.x or not target.y then
-        mission.Log(_MethodName, "Could not find a suitable mission location. Terminating script.")
+        mission.Log(methodName, "Could not find a suitable mission location. Terminating script.")
         terminate()
         return
     end
@@ -719,9 +723,9 @@ function getNextLocation(_FirstLocation)
     return target
 end
 
-function finishAndReward()
-    local _MethodName = "Finish and Reward"
-    mission.Log(_MethodName, "Running win condition.")
+function llteStory2_finishAndReward()
+    local methodName = "Finish and Reward"
+    mission.Log(methodName, "Running win condition.")
 
     local _Player = Player()
     local _Rank = _Player:getValue("_llte_cavaliers_rank")
@@ -744,7 +748,7 @@ end
 --region #CLIENT CALLS
 
 function onMarkShips()
-    local _MethodName = "On Mark Ships"
+    local methodName = "On Mark Ships"
 
     local player = Player()
     if not player then return end
@@ -782,8 +786,8 @@ end
 
 function onPhase2SectorEnteredDialog(_ID, _X, _Y)
     --Can't do this with Boxel's Single NPC interaction script because that script doesn't sync values correctly, so we just do it here.
-    local _MethodName = "On Phase 2 Sector Entered Dialog"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "On Phase 2 Sector Entered Dialog"
+    mission.Log(methodName, "Beginning...")
 
     local d0 = {}
     local d1 = {}
@@ -797,7 +801,7 @@ function onPhase2SectorEnteredDialog(_ID, _X, _Y)
     local _PlayerRank = _Player:getValue("_llte_cavaliers_rank")
     local _PlayerName = _Player.name
     local _PlayerFailedStory2 = _Player:getValue("_llte_failedstory2")
-    mission.Log(_MethodName, "Player failed story 2 value is " .. tostring(_PlayerFailedStory2))
+    mission.Log(methodName, "Player failed story 2 value is " .. tostring(_PlayerFailedStory2))
 
     local _Talker = "Adriana Stahl"
     local _TalkerColor = MissionUT.getDialogTalkerColor1()
@@ -829,7 +833,7 @@ function onPhase2SectorEnteredDialog(_ID, _X, _Y)
     d1.answers = {}
     table.insert(d1.answers, { answer = "I'm ready.", followUp = d2 })
     if _PlayerFailedStory2 then
-        mission.Log(_MethodName, "Adding extra dialog option.")
+        mission.Log(methodName, "Adding extra dialog option.")
         table.insert(d1.answers, { answer = "I'm ready... but can you send additional reinforcements this time?", followUp = d6 })
     end
     table.insert(d1.answers, { answer = "I need more time.", followUp = d3 })
@@ -860,33 +864,33 @@ end
 --region #CLIENT / SERVER CALLS
 
 function registerMarkShips()
-    local _MethodName = "Register Mark Ships"
+    local methodName = "Register Mark Ships"
     if onClient() then
-        _MethodName = _MethodName .. " [CLIENT]"
-        mission.Log(_MethodName, "Reigstering onPreRenderHud callback.")
+        methodName = methodName .. " [CLIENT]"
+        mission.Log(methodName, "Reigstering onPreRenderHud callback.")
 
         local _Player = Player()
         if _Player:registerCallback("onPreRenderHud", "onMarkShips") == 1 then
-            mission.Log(_MethodName, "WARNING - Could not attach prerender callback to script.")
+            mission.Log(methodName, "WARNING - Could not attach prerender callback to script.")
         end
     else
-        _MethodName = _MethodName .. " [SERVER]"
-        mission.Log(_MethodName, "Invoking on Client")
+        methodName = methodName .. " [SERVER]"
+        mission.Log(methodName, "Invoking on Client")
         
         invokeClientFunction(Player(), "registerMarkShips")
     end
 end
 
 function saidReady()
-    local _MethodName = "Said Ready"
+    local methodName = "Said Ready"
     
     if onClient() then
-        mission.Log(_MethodName, "Calling on Client")
-        mission.Log(_MethodName, "Invoking on server.")
+        mission.Log(methodName, "Calling on Client")
+        mission.Log(methodName, "Invoking on server.")
 
         invokeServerFunction("saidReady")
     else
-        mission.Log(_MethodName, "Calling on Server")
+        mission.Log(methodName, "Calling on Server")
 
         LLTEUtil.allCavaliersDepart()
 
@@ -896,15 +900,15 @@ end
 callable(nil, "saidReady")
 
 function saidReadyHelp()
-    local _MethodName = "Said Ready (Help)"
+    local methodName = "Said Ready (Help)"
     
     if onClient() then
-        mission.Log(_MethodName, "Calling on Client")
-        mission.Log(_MethodName, "Invoking on server.")
+        mission.Log(methodName, "Calling on Client")
+        mission.Log(methodName, "Invoking on server.")
 
         invokeServerFunction("saidReadyHelp")
     else
-        mission.Log(_MethodName, "Calling on Server")
+        mission.Log(methodName, "Calling on Server")
 
         LLTEUtil.allCavaliersDepart()
         mission.data.custom.sendExtraCavaliers = true
@@ -915,15 +919,15 @@ end
 callable(nil, "saidReadyHelp")
 
 function saidNotReady()
-    local _MethodName = "Said Not Ready"
+    local methodName = "Said Not Ready"
 
     if onClient() then
-        mission.Log(_MethodName, "Calling on Client")
-        mission.Log(_MethodName, "Invoking on server.")
+        mission.Log(methodName, "Calling on Client")
+        mission.Log(methodName, "Invoking on server.")
 
         invokeServerFunction("saidNotReady")
     else
-        mission.Log(_MethodName, "Calling on Server")
+        mission.Log(methodName, "Calling on Server")
 
         local _Blade = {Sector():getEntitiesByScriptValue("_llte_empressblade")}
         _Blade[1]:addScript("player/missions/empress/story/story2/lltestory2dialogue1.lua", mission.data.custom.pirateSector.x, mission.data.custom.pirateSector.y)
@@ -932,15 +936,15 @@ end
 callable(nil, "saidNotReady")
 
 function startTheBattle()
-    local _MethodName = "Start The Battle"
+    local methodName = "Start The Battle"
 
     if onClient() then
-        mission.Log(_MethodName, "Calling on Client")
-        mission.Log(_MethodName, "Invoking on server.")
+        mission.Log(methodName, "Calling on Client")
+        mission.Log(methodName, "Invoking on server.")
 
         invokeServerFunction("startTheBattle")
     else
-        mission.Log(_MethodName, "Calling on Server")
+        mission.Log(methodName, "Calling on Server")
 
         local _Cavaliers = {Sector():getEntitiesByScriptValue("is_cavaliers")}
         for _, _Cav in pairs(_Cavaliers) do
@@ -955,8 +959,8 @@ function startTheBattle()
         --Timer to increase danger level over time. +1 every 3.5 minutes.
         mission.phases[3].timers[4] = {time = 210, callback = function() 
             if mission.data.custom.dangerLevel < 10 then
-                local _MethodName = "Phase 3 Timer 4 Tick"
-                mission.Log(_MethodName, "3 minutes have passed. Increasing the danger level.")
+                local methodName = "Phase 3 Timer 4 Tick"
+                mission.Log(methodName, "3 minutes have passed. Increasing the danger level.")
                 mission.data.custom.dangerLevel = mission.data.custom.dangerLevel + 1
                 Sector():invokeFunction("sector/background/defensecontroller.lua", "setDangerLevel", mission.data.custom.dangerLevel)
             end

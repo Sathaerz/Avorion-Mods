@@ -47,11 +47,12 @@ function initialize()
     local _MethodName = "initialize"
     mission.Log(_MethodName, "Long Live The Empress Begin...")
 
-    if onServer()then
+    if onServer() then
         if not _restoring then
             --Standard mission data.
-            mission.data.brief = "Long Live the Empress!"
-            mission.data.title = "Long Live the Empress!"
+            mission.data.brief = mission._Name
+            mission.data.title = mission._Name
+            mission.data.autoTrackMission = true
 			mission.data.icon = "data/textures/icons/cavaliers.png"
 			mission.data.priority = 9
             mission.data.description = { 
@@ -97,8 +98,10 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.triggers = {}
+
+--Normally we like doing .globalPhase.noBossEncounters - but we don't want to do that here.
+
 mission.globalPhase.triggers[1] = {
     condition = function()
         local _Sector = Sector()
@@ -130,7 +133,7 @@ mission.globalPhase.onEntityDestroyed = function(_Index)
     if onServer() then
         local entity = Entity(_Index)
         if entity:hasScript("data/scripts/entity/story/wormholeguardian.lua") then
-            finishAndReward()
+            llteStory5_finishAndReward()
         end
     end
 end
@@ -156,7 +159,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
@@ -453,7 +455,7 @@ function runFullSectorCleanup_llte()
     end
 end
 
-function finishAndReward()
+function llteStory5_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 

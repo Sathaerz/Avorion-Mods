@@ -310,7 +310,7 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
         callback = function()
             local _MethodName = "Phase 1 Trigger 1 Callback"
             mission.Log(_MethodName, "Finished mission - rewarding player.")
-            finishAndReward()
+            llteSide3_finishAndReward()
         end,
         repeating = false
     }
@@ -446,10 +446,10 @@ function onHunterWaveFinished(_Generated)
         }
     end
 
-    Sector():broadcastChatMessage(_Generated[_Rgen:getInt(1, #_Generated)], ChatMessageType.Chatter, randomEntry(_HunterLines))
+    Sector():broadcastChatMessage(_Generated[_Rgen:getInt(1, #_Generated)], ChatMessageType.Chatter, getRandomEntry(_HunterLines))
 end
 
-function finishAndReward()
+function llteSide3_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 

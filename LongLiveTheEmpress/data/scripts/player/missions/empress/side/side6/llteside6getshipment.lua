@@ -2,6 +2,8 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 
 include("stringutility")
 include("callable")
+include("player")
+
 MissionUT = include("missionutility")
 
 --namespace LLTESide6GetShipment
@@ -112,7 +114,7 @@ function LLTESide6GetShipment.onRetrieve(_EntityIndex)
     end
 
     self.Log(_MethodName, "Getting docked dialog selector.")
-    MissionUT.dockedDialogSelector(Entity().index, _Condition, _FailedMaker, _UndockedMaker, _DockedMaker)    
+    MissionUT.dockedDialogSelector(Entity().index, _Condition(), _FailedMaker, _UndockedMaker, _DockedMaker)    
 end
 
 function LLTESide6GetShipment.onDockedEnd()

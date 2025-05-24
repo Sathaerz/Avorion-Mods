@@ -54,6 +54,7 @@ function initialize()
             --Standard mission data.
             mission.data.brief = mission._Name
             mission.data.title = mission._Name
+			mission.data.autoTrackMission = true
 			mission.data.icon = "data/textures/icons/cavaliers.png"
 			mission.data.priority = 9
             mission.data.description = { 
@@ -131,9 +132,11 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.triggers = {}
+
+mission.globalPhase.noBossEncountersTargetSector = true
+
 mission.globalPhase.timers[1] = {
 	time = 60,
 	callback = function()
@@ -163,6 +166,7 @@ mission.globalPhase.timers[1] = {
 	end,
 	repeating = true
 }
+
 mission.globalPhase.onAbandon = function()
 	Player():unregisterCallback("onPreRenderHud", "onMarkArtifact")
     runFullSectorCleanup_llte()
@@ -239,7 +243,6 @@ end
 
 mission.phases[1] = {}
 mission.phases[1].showUpdateOnEnd = true
-mission.phases[1].noBossEncountersTargetSector = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
@@ -275,7 +278,6 @@ mission.phases[1].playerCallbacks =
 mission.phases[2] = {}
 mission.phases[2].timers = {}
 mission.phases[2].showUpdateOnEnd = false
-mission.phases[2].noBossEncountersTargetSector = true
 mission.phases[2].onBeginServer = function()
 	local _MethodName = "Phase 2 On Begin Server"
 	mission.Log(_MethodName, "Beginning...")
@@ -319,7 +321,6 @@ mission.phases[3] = {}
 mission.phases[3].timers = {}
 mission.phases[3].triggers = {}
 mission.phases[3].showUpdateOnEnd = false
-mission.phases[3].noBossEncountersTargetSector = true
 mission.phases[3].onBeginServer = function()
 	local _MethodName = "Phase 3 On Begin Server"
 	mission.Log(_MethodName, "Beginning...")
@@ -382,7 +383,6 @@ mission.phases[4].timers = {}
 mission.phases[4].showUpdateOnEnd = false
 mission.phases[4].noBossEncountersTargetSector = true
 mission.phases[4].noPlayerEventsTargetSector = true
-mission.phases[4].noLocalPlayerEventsTargetSector = true
 mission.phases[4].onBeginServer = function()
 	local _MethodName = "Phase 4 On Begin Server"
 	mission.Log(_MethodName, "Beginning...")
@@ -448,7 +448,6 @@ mission.phases[5].triggers[1] = {
 	repeating = false
 }
 mission.phases[5].showUpdateOnEnd = false
-mission.phases[5].noBossEncountersTargetSector = true
 mission.phases[5].onBeginServer = function()
 	local _MethodName = "Phase 5 On Begin Server"
 	mission.Log(_MethodName, "Beginning...")
@@ -507,7 +506,6 @@ mission.phases[6].triggers[1] = {
 	repeating = false
 }
 mission.phases[6].showUpdateOnEnd = false
-mission.phases[6].noBossEncountersTargetSector = true
 mission.phases[6].onBeginServer = function()
 	local _MethodName = "Phase 6 On Begin Server"
 	mission.Log(_MethodName, "Beginning...")
@@ -537,7 +535,6 @@ mission.phases[7] = {}
 mission.phases[7].timers = {}
 mission.phases[7].triggers = {}
 mission.phases[7].showUpdateOnStart = true
-mission.phases[7].noBossEncountersTargetSector = true
 mission.phases[7].onBeginServer = function()
 	local _MethodName = "Phase 7 On Begin Server"
 	mission.Log(_MethodName, "Beginning...")
@@ -673,7 +670,6 @@ mission.phases[8].triggers[1] = {
 	repeating = false
 }
 mission.phases[8].showUpdateOnEnd = false
-mission.phases[8].noBossEncountersTargetSector = true
 mission.phases[8].onBeginServer = function()
 	local _MissionName = "Phase 8 On Begin Server"
 	mission.data.description[14].arguments = { _X = mission.data.custom.sector5.x, _Y = mission.data.custom.sector5.y }
@@ -957,7 +953,7 @@ function getBeaconLocation()
 	return _Target
 end
 
-function finishAndReward()
+function llteStory4_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -1550,7 +1546,7 @@ function onPhase8DialogEnd()
 		mission.Log(_MethodName, "Calling on Server")
 		--We are finally, FINALLY done with this mission. Holy shit.
 		runFullSectorCleanup_llte()
-		finishAndReward()
+		llteStory4_finishAndReward()
 	end
 end
 callable(nil, "onPhase8DialogEnd")

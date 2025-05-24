@@ -127,7 +127,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.onTargetLocationEntered = function(x, y)
     local _MethodName = "Global Phase On Target Location Entered"
@@ -215,7 +214,7 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(x, y)
         }
 
         local _Freighter = Entity(mission.data.custom.freighterid)
-        Sector():broadcastChatMessage(_Freighter, ChatMessageType.Chatter, randomEntry(lines))
+        Sector():broadcastChatMessage(_Freighter, ChatMessageType.Chatter, getRandomEntry(lines))
 
         --Start two timers. One to spawn the first wave of pirates, and one for the freighter to warn the player of the pirates.
         mission.Log(_MethodName, "Starting first wave countdown + warning timer")
@@ -231,7 +230,7 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(x, y)
             }
 
             local _Freighter = Entity(mission.data.custom.freighterid)
-            Sector():broadcastChatMessage(_Freighter, ChatMessageType.Chatter, randomEntry(lines))
+            Sector():broadcastChatMessage(_Freighter, ChatMessageType.Chatter, getRandomEntry(lines))
         end, repeating = false}
     else
         mission.Log(_MethodName, "ERROR - Could not find escorting freighter. Mission will not function properly.")
@@ -394,9 +393,9 @@ function onReliefFinished(generated)
         "Contact with freighter confirmed. Thanks for your help!"
     }
 
-    Sector():broadcastChatMessage(generated[1], ChatMessageType.Chatter, randomEntry(lines))
+    Sector():broadcastChatMessage(generated[1], ChatMessageType.Chatter, getRandomEntry(lines))
 
-    finishAndReward()
+    llteSide2_finishAndReward()
 end
 
 function onPiratesFinished(generated)
@@ -478,7 +477,7 @@ function freighterReadyToJump()
     }
 
     local _Freighter = Entity(mission.data.custom.freighterid)
-    Sector():broadcastChatMessage(_Freighter, ChatMessageType.Chatter, randomEntry(lines))
+    Sector():broadcastChatMessage(_Freighter, ChatMessageType.Chatter, getRandomEntry(lines))
 end
 
 function prepForPhaseAdvance(jumpidx)
@@ -604,7 +603,7 @@ function failMission(remoteDelete)
     fail()
 end
 
-function finishAndReward()
+function llteSide2_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 

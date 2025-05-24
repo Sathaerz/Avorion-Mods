@@ -54,8 +54,9 @@ function initialize()
     if onServer()then
         if not _restoring then
             --Standard mission data.
-            mission.data.brief = "Steel in the Twilight"
-            mission.data.title = "Steel in the Twilight"
+            mission.data.brief = mission._Name
+            mission.data.title = mission._Name
+            mission.data.autoTrackMission = true
 			mission.data.icon = "data/textures/icons/cavaliers.png"
 			mission.data.priority = 9
             mission.data.description = { 
@@ -122,7 +123,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.updateServer = function(_TimeStep)
     local _MethodName = "Global Phase On Update Server"
     if (mission.currentPhase == mission.phases[5] or mission.currentPhase == mission.phases[6]) and mission.data.custom.shipmentJumps > 5 then
@@ -506,7 +506,7 @@ mission.phases[9].onTargetLocationEntered = function(_X, _Y)
             mission.data.description[9].fulfilled = false
             mission.data.description[10].visible = false
             setPhase(8)
-            showMissionUpdated(mission.data.title)
+            showMissionUpdated(mission._Name)
          end, repeating = false}
     end
     
@@ -688,7 +688,7 @@ function onAmbush2PiratesGenerated(_Generated)
             "Kill them all! Hahahaha!"
         }
 
-        Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, randomEntry(_Lines))
+        Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(_Lines))
         mission.data.custom.ambushWave2Taunted = true
     end
 
@@ -762,7 +762,7 @@ function jumpFreighters()
 
     sync()
     Player():sendChatMessage("Nav Computer", 0, "The freighters have jumped to \\s(%1%,%2%).", _JumpTo.x, _JumpTo.y)
-    showMissionUpdated("Steel in the Twilight")
+    showMissionUpdated(mission._Name)
 end
 
 function spawnFreighterEscort()
@@ -797,7 +797,7 @@ function onCavaliersFinished(_Generated)
     end
 end
 
-function finishAndReward()
+function llteStory1_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -932,7 +932,7 @@ function contactedAdriana()
         --Delete everything on the player leaving.
         local _EntityTypes = { EntityType.None, EntityType.Container, EntityType.Ship, EntityType.Station, EntityType.Torpedo, EntityType.Fighter, EntityType.Asteroid, EntityType.Wreckage, EntityType.Unknown, EntityType.Other, EntityType.Loot }
         Sector():addScript("sector/deleteentitiesonplayersleft.lua", _EntityTypes)
-        finishAndReward()
+        llteStory1_finishAndReward()
     end
 end
 callable(nil, "contactedAdriana")

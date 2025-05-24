@@ -18,6 +18,7 @@ self._SpawnTimer = 0
 
 function WeakWormholeGuardian.initialize()
     if onClient() then
+        Music():fadeOut(1.5)
         registerBoss(Entity().index, nil, nil, "data/music/special/guardian.ogg")
     end
 

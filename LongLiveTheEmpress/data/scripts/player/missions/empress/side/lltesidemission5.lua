@@ -121,7 +121,7 @@ function initialize()
                 { text = "Search the wreckages for anything interesting", bulletPoint = true, fulfilled = false, visible = false }
             }
 
-            local _RewardBase = 180000
+            local _RewardBase = 190000
             local _InitialMessage = "The outpost is located at \\s(%1%:%2%)."
             --[[=====================================================
                 CUSTOM MISSION DATA:
@@ -218,7 +218,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.timers = {}
 mission.globalPhase.onSectorEntered = function(_X, _Y)
     local _MethodName = "Global Phase On Location Entered"
@@ -275,7 +274,7 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     mission.Log(_MethodName, "Beginning...")
 
     --Build the sector, then start the reinforcement and shipment scripts.
-    buildObjectiveSector(_X, _Y)
+    llteSide5_buildObjectiveSector(_X, _Y)
     mission.Log(_MethodName, "Starting scripts.")
 
     local _Sector = Sector()
@@ -410,7 +409,7 @@ mission.phases[1].updateTargetLocationServer = function(timeStep)
             MissionUT.deleteOnPlayersLeft(_P)
         end
 
-        finishAndReward()
+        llteSide5_finishAndReward()
     end
 end
 
@@ -455,7 +454,7 @@ mission.phases[1].onOptionalLocationArrivalConfirmed = function(_X, _Y)
                 "What's this? We'll kill you!"
             }
 
-            Sector():broadcastChatMessage(_Pirates[1], ChatMessageType.Chatter, randomEntry(_Lines))
+            Sector():broadcastChatMessage(_Pirates[1], ChatMessageType.Chatter, getRandomEntry(_Lines))
         end
 
         mission.data.custom.optionalPiratesTaunted = true
@@ -547,7 +546,7 @@ end
 
 --region #SPAWN INITIAL OBJECTS
 
-function buildObjectiveSector(_X, _Y)
+function llteSide5_buildObjectiveSector(_X, _Y)
     local _MethodName = "Build Sector"
 
     if not mission.data.custom.builtMainSector then
@@ -682,7 +681,7 @@ function getSectorRarityTables(_X, _Y, _upgradeGenerator)
     return _rarities
 end
 
-function finishAndReward()
+function llteSide5_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 

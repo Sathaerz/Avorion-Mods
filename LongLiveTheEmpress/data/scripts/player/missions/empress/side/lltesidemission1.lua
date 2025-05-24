@@ -177,12 +177,12 @@ mission.phases[1].updateTargetLocationServer = function(timeStep)
     if count <= 1 and mission.data.custom.waves < mission.data.custom.maxwaves and mission.data.custom.startSpawningPirates then
         mission.Log(_MethodName, "Spawning Pirate Wave.")
         mission.data.custom.waves = mission.data.custom.waves + 1
-        spawnPirateWave()
+        llteSide1_spawnPirateWave()
     end
 
     --If there are no pirates left and the players found the pirates, we win.
     if mission.data.custom.piratesFound and count == 0 then
-        finishAndReward()
+        llteSide1_finishAndReward()
     end
 end
 
@@ -205,7 +205,7 @@ end
 
 --region #SERVER CALLS
 
-function spawnPirateWave() 
+function llteSide1_spawnPirateWave() 
     local _MethodName = "Spawn Pirate Wave"
     mission.Log(_MethodName, "Beginning...")
 
@@ -259,12 +259,12 @@ function onPiratesFinished(_Generated)
             "Looks like we found a stray one."
         }
 
-        Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, randomEntry(_Lines))
+        Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(_Lines))
         mission.data.custom.firstWaveTaunt = true
     end
 end
 
-function finishAndReward()
+function llteSide1_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 

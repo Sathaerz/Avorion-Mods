@@ -7,6 +7,7 @@ local self = LLTEStory4AnimosityBehavior
 
 function LLTEStory4AnimosityBehavior.initialize()
     if onClient() then
+        Music():fadeOut(1.5)
         registerBoss(Entity().index, nil, nil, "data/music/special/maverick.ogg")
     end
 

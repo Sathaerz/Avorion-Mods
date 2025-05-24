@@ -56,8 +56,9 @@ function initialize()
     if onServer()then
         if not _restoring then
             --Standard mission data.
-            mission.data.brief = "Order from Chaos"
-            mission.data.title = "Order from Chaos"
+            mission.data.brief = mission._Name
+            mission.data.title = mission._Name
+            mission.data.autoTrackMission = true
 			mission.data.icon = "data/textures/icons/cavaliers.png"
 			mission.data.priority = 9
             mission.data.description = { 
@@ -106,7 +107,6 @@ end
 
 --region #PHASE CALLS
 
-mission.globalPhase = {}
 mission.globalPhase.onAbandon = function()
     local _X, _Y = Sector():getCoordinates()
     if mission.data.location then
@@ -427,15 +427,15 @@ function getNextLocation(_FirstLocation)
     if _FirstLocation then
         --Get a somewhat nearby sector. No need to go terribly to the barrier for this one in particular.
         local _Nx, _Ny = ESCCUtil.getPosOnRing(x, y, 165)
-        target.x, target.y = MissionUT.getSector(_Nx, _Ny, 5, 10, false, false, false, false, false)
+        target.x, target.y = MissionUT.getEmptySector(_Nx, _Ny, 5, 10, false)
     else
-        target.x, target.y = MissionUT.getSector(x, y, 3, 5, false, false, false, false, false)
+        target.x, target.y = MissionUT.getEmptySector(x, y, 3, 5, false)
     end
 
     return target
 end
 
-function finishAndReward(_GoodEnd)
+function llteStory3_finishAndReward(_GoodEnd)
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -481,7 +481,7 @@ function goodEnd()
 
         LLTEUtil.allCavaliersDepart()
 
-        finishAndReward(true)
+        llteStory3_finishAndReward(true)
     end
 end
 callable(nil, "goodEnd")
@@ -499,7 +499,7 @@ function normalEnd()
 
         LLTEUtil.allCavaliersDepart()
 
-        finishAndReward(false)
+        llteStory3_finishAndReward(false)
     end
 end
 callable(nil, "normalEnd")
