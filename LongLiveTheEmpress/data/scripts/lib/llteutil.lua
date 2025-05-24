@@ -1577,7 +1577,7 @@ function LLTEUtil.spawnAnimosity(_PirateLevel, _AddLoot)
     _Animosity:addScript("megablocker.lua", 1)
     _Animosity:setValue("is_animosity", true)
     _Animosity:setValue("is_pirate", true)
-    _Animosity.damageMultiplier = (_Animosity.damageMultiplier or 1) * 6 * _Amp
+    _Animosity.damageMultiplier = (_Animosity.damageMultiplier or 1) * 4 * _Amp
 
     Boarding(_Animosity).boardable = false
     _Animosity.dockable = false
