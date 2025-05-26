@@ -98,7 +98,13 @@ end
 mission.phases[1] = {}
 mission.phases[1].timers = {}
 mission.phases[1].triggers = {}
-mission.phases[1].updateInterval = analyzeXsotanSpecimen_getUpdateInterval()
+mission.phases[1].updateInterval = function()
+    if mission.data.custom.currentAnalysisXsotan then
+        return 0
+    else
+        return 1
+    end
+end
 
 mission.phases[1].onBegin = function()
     local methodName = "Phase 1 On Begin"
@@ -429,14 +435,6 @@ function analyzeXsotanSpecimen_modTableOK(idx)
     }
 
     return funcTable[idx]()
-end
-
-function analyzeXsotanSpecimen_getUpdateInterval()
-    if mission.data.custom.currentAnalysisXsotan then
-        return 0
-    else
-        return 1
-    end
 end
 
 function analyzeXsotanSpecimen_getAnalysisDistance(craft)
