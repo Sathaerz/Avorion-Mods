@@ -360,14 +360,24 @@ function ESCCUtil.setDeadshot(_Ship)
 end
 
 function ESCCUtil.setMarksman(_Ship)
-    --Faction ships have less elaborate titles.
-    _Ship.title = "Marksman " .. _Ship.title
+    --Faction ships usually have less elaborate titles.
+    local titleArgs = _Ship:getTitleArguments()
+
+    local newTitle = "Marksman " .. _Ship.title
+    
+    _Ship:setTitle(newTitle, titleArgs)
+
     self.replaceIcon(_Ship, "data/textures/icons/pixel/laserboat.png")
 end
 
 function ESCCUtil.setFusilier(_Ship)
-    --Faction ships have less elaborate titles.
-    _Ship.title = "Fusilier " .. _Ship.title
+    --Faction ships usually have less elaborate titles.
+    local titleArgs = _Ship:getTitleArguments()
+
+    local newTitle = "Fusilier " .. _Ship.title
+    
+    _Ship:setTitle(newTitle, titleArgs)
+
     self.replaceIcon(_Ship, "data/textures/icons/pixel/torpedoboatex.png")
 end
 

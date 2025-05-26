@@ -2132,6 +2132,7 @@ function onAddBulletinButtonPressed(_Button)
             print("Adding " .. tostring(_Button) .. " bulletin.")
             local _MissionPath = "data/scripts/player/missions/" .. _Button .. ".lua"
             local ok, bulletin=run(_MissionPath, "getBulletin", _station)
+            _station:invokeFunction("bulletinboard", "removeBulletin", bulletin.brief)
             _station:invokeFunction("bulletinboard", "postBulletin", bulletin)
         end
     end
