@@ -63,12 +63,12 @@ mission.data.custom.defendPrototypeTracks = {
 
 local DefendPrototype_init = initialize
 function initialize(_Data_in)
-    local _MethodName = "initialize"
-    mission.Log(_MethodName, "Beginning...")
+    local methodName = "initialize"
+    mission.Log(methodName, "Beginning...")
 
     if onServer()then
         if not _restoring then
-            mission.Log(_MethodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
+            mission.Log(methodName, "Calling on server - dangerLevel : " .. tostring(_Data_in.dangerLevel))
 
             local _X, _Y = _Data_in.location.x, _Data_in.location.y
 
@@ -94,6 +94,7 @@ function initialize(_Data_in)
             mission.data.custom.rewardBonus = true
             mission.data.custom.defendPrototypeTrack = getRandomEntry(mission.data.custom.defendPrototypeTracks)
             mission.data.custom.inBarrier = _Data_in.inbarrier
+            mission.data.custom.noLootModulusFactor = 3
 
             if not mission.data.custom.friendlyFaction then
                 print("ERROR: Friendly faction is nil - aborting.")
@@ -142,14 +143,14 @@ mission.globalPhase.getRewardedItems = function()
     if _random:test(0.25) then
         local _X, _Y = mission.data.location.x, mission.data.location.y
         local _upgradeGenerator = UpgradeGenerator()
-        local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
+        local _upgradeRarities = defendPrototype_getSectorRarityTables(_X, _Y, _upgradeGenerator)
         local _seedInt = _random:getInt(1, 20000)
         return SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(getValueFromDistribution(_upgradeRarities)), Seed(_seedInt))
     end
 end
 
 mission.globalPhase.onAbandon = function()
-    failAndPunish() --Will run globalPhase.onFail and clean up the sector.
+    defendPrototype_failAndPunish() --Will run globalPhase.onFail and clean up the sector.
 end
 
 mission.globalPhase.onFail = function()
@@ -182,7 +183,7 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
 
-    spawnDefenseSector(_X, _Y)
+    defendPrototype_spawnDefenseSector(_X, _Y)
 end
 
 mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
@@ -216,16 +217,16 @@ mission.phases[2].updateTargetLocationServer = function(timeStep)
 end
 
 mission.phases[2].onTargetLocationEntered = function(_X, _Y)
-    onDefendPrototypeLocationEntered(_X, _Y)
+    defendPrototype_onDefendPrototypeLocationEntered(_X, _Y)
 end
 
 mission.phases[2].onTargetLocationLeft = function(_X, _Y)
-    onDefendPrototypeLocationLeft(_X, _Y)
+    defendPrototype_onDefendPrototypeLocationLeft(_X, _Y)
 end
 
 mission.phases[2].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     --It's unlikely that we hit this, unless the player has a massive xsotan attack event on them and they manage to overwhelm the defenders.
-    onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
+    defendPrototype_onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
 end
 
 
@@ -243,7 +244,7 @@ mission.phases[3].onBeginServer = function()
 end
 
 mission.phases[3].onTargetLocationEntered = function(_X, _Y)
-    onDefendPrototypeLocationEntered(_X, _Y)
+    defendPrototype_onDefendPrototypeLocationEntered(_X, _Y)
 end
 
 mission.phases[3].onTargetLocationArrivalConfirmed = function(x, y)
@@ -251,7 +252,7 @@ mission.phases[3].onTargetLocationArrivalConfirmed = function(x, y)
 end
 
 mission.phases[3].onTargetLocationLeft = function(_X, _Y)
-    onDefendPrototypeLocationLeft(_X, _Y)
+    defendPrototype_onDefendPrototypeLocationLeft(_X, _Y)
 
     if onServer() then
         setGameMusic()
@@ -259,7 +260,7 @@ mission.phases[3].onTargetLocationLeft = function(_X, _Y)
 end
 
 mission.phases[3].onEntityDestroyed = function(_ID, _LastDamageInflictor)
-    onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
+    defendPrototype_onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
 end
 
 --region #PHASE 3 TIMERS
@@ -271,7 +272,7 @@ mission.phases[3].timers[1] = {
     time = 5,
     callback = function()
         if atTargetLocation() then
-            spawnBackgroundPirates()
+            defendPrototype_spawnBackgroundPirates()
         end
     end,
     repeating = false
@@ -282,7 +283,7 @@ mission.phases[3].timers[2] = {
     time = 60,
     callback = function()
         if atTargetLocation() then
-            spawnBackgroundPirates()
+            defendPrototype_spawnBackgroundPirates()
         end
     end,
     repeating = true
@@ -292,22 +293,22 @@ mission.phases[3].timers[2] = {
 mission.phases[3].timers[3] = {
     time = 10,
     callback = function()
-        local _MethodName = "Phase 3 Timer 3 Callback"
-        mission.Log(_MethodName, "Beginning...")
-        mission.Log(_MethodName, "Number of pirates destroyed " .. tostring(mission.data.custom.piratesKilled))
+        local methodName = "Phase 3 Timer 3 Callback"
+        mission.Log(methodName, "Beginning...")
+        mission.Log(methodName, "Number of pirates destroyed " .. tostring(mission.data.custom.piratesKilled))
 
         local _Sector = Sector()
         local _OnLocation = atTargetLocation()
         local _Prototypes = {_Sector:getEntitiesByScriptValue(mission.data.custom.prototypeScriptValue)}
 
         if _OnLocation and mission.data.custom.piratesKilled >= mission.data.custom.piratesToKill then
-            finishAndReward()
+            defendPrototype_finishAndReward()
         end
 
         if _OnLocation and #_Prototypes == 0 then
             --Happens if the prototype gets destroyed while we're out of sector 
             -- it's possible for this to happen in the 5 minute window between the player leaving and returning before failing the mission.
-            failAndPunish()
+            defendPrototype_failAndPunish()
         end
     end,
     repeating = true
@@ -317,7 +318,7 @@ mission.phases[3].timers[3] = {
 mission.phases[3].timers[4] = {
     time = 30,
     callback = function()
-        local _MethodName = "Phase 3 Timer 4 Callback"
+        local methodName = "Phase 3 Timer 4 Callback"
         --If the shipyard is up, it will repair the prototype. Repairs 5% by default, and +1% for each other station in the area.
 
         local _Sector = Sector()
@@ -331,7 +332,7 @@ mission.phases[3].timers[4] = {
         local _Prototype = _Prototypes[1]
 
         if atTargetLocation() and _Shipyard and valid(_Shipyard) and _Prototype and valid(_Prototype) then
-            mission.Log(_MethodName, "On location and a shipyard is present. Repairing the prototype.")
+            mission.Log(methodName, "On location and a shipyard is present. Repairing the prototype.")
             --Get the # of other stations
             local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
             local _StationCt = #_Stations
@@ -353,11 +354,11 @@ mission.phases[3].timers[4] = {
             end
     
             if _ProtoHull < _ProtoMaxHull then
-                mission.Log(_MethodName, "Prototype hull BEFORE: " .. tostring(_Prototype.durability))
+                mission.Log(methodName, "Prototype hull BEFORE: " .. tostring(_Prototype.durability))
                 _Prototype.durability = math.min(_Prototype.durability + _RepairAmt, _ProtoMaxHull)
-                mission.Log(_MethodName, "Prototype hull AFTER: " .. tostring(_Prototype.durability))
+                mission.Log(methodName, "Prototype hull AFTER: " .. tostring(_Prototype.durability))
                 
-                invokeClientFunction(Player(), "playHealAnimations", _Shipyard, _Prototype)
+                invokeClientFunction(Player(), "defendPrototype_playHealAnimations", _Shipyard, _Prototype)
             end
         end
     end,
@@ -372,13 +373,13 @@ end
 
 --region #SERVER CALLS
 
-function spawnDefenseSector(_X, _Y)
-    local _MethodName = "Spawn Defense Sector"
+function defendPrototype_spawnDefenseSector(_X, _Y)
+    local methodName = "Spawn Defense Sector"
 
     local _Generator = SectorGenerator(_X, _Y)
     local _Faction = Faction(mission.data.custom.friendlyFaction)
 
-    mission.Log(_MethodName, "Building sector for friendly faction: " .. tostring(_Faction.name))
+    mission.Log(methodName, "Building sector for friendly faction: " .. tostring(_Faction.name))
 
     local _SpawnOutpost = true
     local _SpawnDocks = true
@@ -442,7 +443,7 @@ function spawnDefenseSector(_X, _Y)
     end
 
     --Make prototype.
-    spawnPrototype(_Shipyard.position)
+    defendPrototype_spawnPrototype(_Shipyard.position)
 
     --Prototype should be near the shipyard, but not intersect with it.
     Placer.resolveIntersections()
@@ -450,37 +451,38 @@ function spawnDefenseSector(_X, _Y)
     mission.data.custom.cleanUpSector = true
 end
 
-function spawnPrototype(_position)
-    local _MethodName = "Spawn Prototype"
+function defendPrototype_spawnPrototype(_position)
+    local methodName = "Spawn Prototype"
     local _DuraFactor = 2
     local _DamageFactor = 1.4
 
     local _Danger = mission.data.custom.dangerLevel
     local _Faction = Faction(mission.data.custom.friendlyFaction)
     local _BattleShip = PrototypeGenerator.create(_position, _Faction, _Danger, nil)
+    _BattleShip:setValue("no_chatter", true)
 
     --Add durability.
     local durability = Durability(_BattleShip)
     if durability then 
         local _Factor = (durability.maxDurabilityFactor or 1) * _DuraFactor
-        mission.Log(_MethodName, "Setting durability factor of the prototype to : " .. tostring(_Factor))
+        mission.Log(methodName, "Setting durability factor of the prototype to : " .. tostring(_Factor))
         durability.maxDurabilityFactor = _Factor
     end
 
     --Add damage.
     local _FinalDamageFactor = (_BattleShip.damageMultiplier or 1) * _DamageFactor
-    mission.Log(_MethodName, "Setting final damage factor to : " .. tostring(_FinalDamageFactor))
+    mission.Log(methodName, "Setting final damage factor to : " .. tostring(_FinalDamageFactor))
     _BattleShip.damageMultiplier = _FinalDamageFactor
 
     --Attach "boss" script to the prototype so the player can track HP
     _BattleShip:addScriptOnce(mission.data.custom.prototypeScriptPath)
 end
 
-function onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
+function defendPrototype_onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
     local _DestroyedEntity = Entity(_ID)
     if atTargetLocation() then
         if _DestroyedEntity:getValue(mission.data.custom.prototypeScriptValue) then
-            failAndPunish()
+            defendPrototype_failAndPunish()
         end
 
         if _DestroyedEntity:getValue("is_pirate") then
@@ -489,19 +491,19 @@ function onDefendPrototypeEntityDestroyed(_ID, _LastDamageInflictor)
     end
 end
 
-function onDefendPrototypeLocationLeft(x, y)
+function defendPrototype_onDefendPrototypeLocationLeft(x, y)
     mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to head back to the sector.
     mission.data.timeLimitInDescription = true --Show the player how much time is left.
 end
 
-function onDefendPrototypeLocationEntered(x, y)
+function defendPrototype_onDefendPrototypeLocationEntered(x, y)
     mission.data.timeLimit = nil 
     mission.data.timeLimitInDescription = false
 end
 
-function getWingSpawnTables(_WingScriptValue)
-    local _MethodName = "Get Wing Spawn Table"
-    mission.Log(_MethodName, "Getting table for " .. tostring(_WingScriptValue))
+function defendPrototype_getWingSpawnTables(_WingScriptValue)
+    local methodName = "Get Wing Spawn Table"
+    mission.Log(methodName, "Getting table for " .. tostring(_WingScriptValue))
 
     local _Danger = mission.data.custom.dangerLevel
 
@@ -533,34 +535,32 @@ function getWingSpawnTables(_WingScriptValue)
     return _SpawnTable
 end
 
-function spawnBackgroundPirates()
-    local _MethodName = "Spawn Background Pirates"
-    mission.Log(_MethodName, "Beginning...")
+function defendPrototype_spawnBackgroundPirates()
+    local methodName = "Spawn Background Pirates"
+    mission.Log(methodName, "Beginning...")
 
     local distance = 250 --_#DistAdj
 
     local _spawnFunc = function(wingScriptValue, wingOnSpawnFunc)
-        local _WingSpawnTable = getWingSpawnTables(wingScriptValue)
+        local _WingSpawnTable = defendPrototype_getWingSpawnTables(wingScriptValue)
         local wingGenerator = AsyncPirateGenerator(nil, wingOnSpawnFunc)
 
-        local posCounter = 1
         local wingPositions = wingGenerator:getStandardPositions(#_WingSpawnTable, distance)
         
         wingGenerator:startBatch()
 
-        for _, p in pairs(_WingSpawnTable) do
-            wingGenerator:createScaledPirateByName(p, wingPositions[posCounter])
-            posCounter = posCounter + 1
+        for posCtr, p in pairs(_WingSpawnTable) do
+            wingGenerator:createScaledPirateByName(p, wingPositions[posCtr])
         end
 
         wingGenerator:endBatch()
     end
 
     --spawn alpha
-    _spawnFunc("_defendprototype_alpha_wing", onAlphaBackgroundPiratesFinished)
+    _spawnFunc("_defendprototype_alpha_wing", defendPrototype_onAlphaBackgroundPiratesFinished)
 
     --spawn beta
-    _spawnFunc("_defendprototype_beta_wing", onBetaBackgroundPiratesFinished)
+    _spawnFunc("_defendprototype_beta_wing", defendPrototype_onBetaBackgroundPiratesFinished)
 
     --spawn gamma if conditions are met
     if mission.data.custom.dangerLevel >= 6 then
@@ -572,39 +572,41 @@ function spawnBackgroundPirates()
         local modWaveCounter = mission.data.custom.waveCounter % _mod
         if modWaveCounter == 0 then
             if random():test(0.5) then
-                mission.Log(_MethodName, "Mod is " .. tostring(_mod) .. " wave counter is " .. tostring(mission.data.custom.waveCounter) .. " and 50% test passed.")
-                _spawnFunc("_defendprototype_gamma_wing", onGammaBackgroundPiratesFinished)
+                mission.Log(methodName, "Mod is " .. tostring(_mod) .. " wave counter is " .. tostring(mission.data.custom.waveCounter) .. " and 50% test passed.")
+                _spawnFunc("_defendprototype_gamma_wing", defendPrototype_onGammaBackgroundPiratesFinished)
             else
-                mission.Log(_MethodName, "50% test failed")
+                mission.Log(methodName, "50% test failed")
             end
         else
-            mission.Log(_MethodName, "Mod Wave Counter is " .. tostring(modWaveCounter))
+            mission.Log(methodName, "Mod Wave Counter is " .. tostring(modWaveCounter))
         end
     end
 
     mission.data.custom.waveCounter = mission.data.custom.waveCounter + 1 --Regardless of how many pirates we actually spawn, increment the wave counter.
 end
 
-function onAlphaBackgroundPiratesFinished(_Generated)
-    for _, _Pirate in pairs(_Generated) do
-        _Pirate:setValue("_defendprototype_alpha_wing", true)
+function defendPrototype_onAlphaBackgroundPiratesFinished(_Generated)
+    local methodName = "On Alpha Background Pirates Finished"
 
-        --This is for performance reasons, so there aren't dozens and dozens of items scattered around the sector.
-        local _PiratesSpawned = mission.data.custom.piratesSpawned + 1
-        local _Factor = 2
-        if _PiratesSpawned >= 20 then
-            _Factor = 3
-        end
-        if _PiratesSpawned % _Factor ~= 0 then
-            _Pirate:setDropsLoot(false)
-        end
-        mission.data.custom.piratesSpawned = _PiratesSpawned
+    mission.Log(methodName, "Finishing alpha wing pirates.")
+
+    local wingScriptValue = "_defendprototype_alpha_wing"
+
+    for _, _Pirate in pairs(_Generated) do
+        _Pirate:setValue(wingScriptValue, true)
+
+        defendPrototype_setNoLootIfApplicable(_Pirate)
     end
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function onBetaBackgroundPiratesFinished(_Generated)
-    local _MethodName = "On Beta Background Pirates Finished"
+function defendPrototype_onBetaBackgroundPiratesFinished(_Generated)
+    local methodName = "On Beta Background Pirates Finished"
+
+    mission.Log(methodName, "Finishing beta wing pirates.")
+
+    local wingScriptValue = "_defendprototype_beta_wing"
+
     local _Sector = Sector()
     local _random = random()
     local _X, _Y = _Sector:getCoordinates()
@@ -626,10 +628,9 @@ function onBetaBackgroundPiratesFinished(_Generated)
     if mission.data.custom.waveCounter % 2 == 0 and _random:test(_DeadshotChance) then
         _DeadshotCtMax = _DeadshotCtMax + 1
     end
-    mission.Log(_MethodName, "_DeadshotCtMax = " .. tostring(_DeadshotCtMax))
+    mission.Log(methodName, "_DeadshotCtMax = " .. tostring(_DeadshotCtMax))
 
-    local _Slammers = {_Sector:getEntitiesByScript("torpedoslammer.lua")}
-    local _SlamCt = #_Slammers
+    local _SlamCt = defendPrototype_countSlammers(wingScriptValue)
     local _SlamAdded = 0
 
     local _Deadshots = {_Sector:getEntitiesByScript("lasersniper.lua")}
@@ -637,18 +638,21 @@ function onBetaBackgroundPiratesFinished(_Generated)
     local _DeadshotAdded = 0
 
     --Torpedo ships need to be more dangerous @ lower levels due to the much less dangerous pirate ships that spawn. Otherwise the player could just enter the sector and let the mission run itself.
-    --At higher levels, the scorchers and devastators will more than make up for the weaker torpedo multipliers. The devastators can even go toe to toe with the battleship.
+    --At higher levels, the scorchers and devastators will more than make up for the weaker torpedo multipliers. The devastators can even go toe to toe with the battleship itself.
     local _DmgFactor = 4
     local _tta = 20
     local _PrefType = TorpedoUtility.WarheadType.Tandem
+    local rangeFactor = 4
     if mission.data.custom.dangerLevel >= 6 then
         _PrefType = TorpedoUtility.WarheadType.Nuclear
         _DmgFactor = 2
         _tta = 25
+        rangeFactor = 1
     elseif mission.data.custom.dangerLevel == 10 then
         _PrefType = TorpedoUtility.WarheadType.Nuclear
         _DmgFactor = 1
         _tta = 30
+        rangeFactor = 1
     end
 
     local _TorpSlammerValues = {
@@ -660,39 +664,40 @@ function onBetaBackgroundPiratesFinished(_Generated)
         _ForwardAdjustFactor = 2,
         _PreferWarheadType = _PrefType,
         _TargetPriority = 2, --Target tag.
-        _TargetTag = mission.data.custom.prototypeScriptValue
+        _TargetTag = mission.data.custom.prototypeScriptValue,
+        _RangeFactor = rangeFactor
     }
 
     for _, _Pirate in pairs(_Generated) do
-        _Pirate:setValue("_defendprototype_beta_wing", true)
+        _Pirate:setValue(wingScriptValue, true)
         _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = mission.data.custom.prototypeScriptValue })
 
         --This is for performance reasons, so there aren't dozens and dozens of items scattered around the sector.
-        local _PiratesSpawned = mission.data.custom.piratesSpawned + 1
-        local _Factor = 2
-        if _PiratesSpawned >= 20 then
-            _Factor = 3
-        end
-        if _PiratesSpawned % _Factor ~= 0 then
-            _Pirate:setDropsLoot(false)
-        end
-        mission.data.custom.piratesSpawned = _PiratesSpawned
+        defendPrototype_setNoLootIfApplicable(_Pirate)
 
         --Add torpedo slammer scripts if necessary.
         if _SlamCt + _SlamAdded < _SlamCtMax then
             ESCCUtil.setBombardier(_Pirate)
+
+            local slammerDurability = Durability(_Pirate)
+            if slammerDurability then
+                slammerDurability:addFactionImmunity(mission.data.custom.friendlyFaction)
+            end
+
             _Pirate:addScript("torpedoslammer.lua", _TorpSlammerValues)
             _SlamAdded = _SlamAdded + 1
         end
     end
 
     if _DeadshotCtMax > 0 then
+        mission.Log(methodName, "Adding deadshots.")
+
         for _, _Pirate in pairs(_Generated) do
             if _DeadshotCt + _DeadshotAdded < _DeadshotCtMax and not _Pirate:hasScript("torpedoslammer.lua") then
                 --Don't add lasersniper to torpslammer
                 local _dpf = Balancing_GetSectorWeaponDPS(_X, _Y) * 125 --Same as a Xsotan Longinus.
             
-                mission.Log(_MethodName,"Setting dpf to " .. tostring(_dpf))
+                mission.Log(methodName,"Setting dpf to " .. tostring(_dpf))
 
                 local _LaserSniperValues = { --#LONGINUS_SNIPER
                     _DamagePerFrame = _dpf,
@@ -704,6 +709,12 @@ function onBetaBackgroundPiratesFinished(_Generated)
                 }
 
                 ESCCUtil.setDeadshot(_Pirate)
+
+                local sniperDurability = Durability(_Pirate)
+                if sniperDurability then
+                    sniperDurability:addFactionImmunity(mission.data.custom.friendlyFaction)
+                end
+
                 _Pirate:addScriptOnce("lasersniper.lua", _LaserSniperValues)
 
                 _DeadshotAdded = _DeadshotAdded + 1 --Only add one deadshot per wave.
@@ -714,26 +725,78 @@ function onBetaBackgroundPiratesFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function onGammaBackgroundPiratesFinished(_Generated)
+function defendPrototype_onGammaBackgroundPiratesFinished(_Generated)
+    local methodName = "On Gamma Background Pirates Generated"
+
+    mission.Log(methodName, "Finishing gamma wing pirates.")
+
+    local wingScriptValue = "_defendprototype_gamma_wing"
+    local targetScriptValue = "_defendprototype_station"
+
+    local _random = random()
+
+    local _SlamCtMax = 0
+    local slamChance = 0.1 * mission.data.custom.dangerLevel
+    slamChance = math.min(slamChance, 1) --Caps out at 100% @ danger level 10
+    if _random:test(slamChance) then
+        _SlamCtMax = 1
+    end
+
+    local _SlamCt = defendPrototype_countSlammers(wingScriptValue)
+    local slammersAdded = 0
+
+    local _DmgFactor = math.max(1, mission.data.custom.dangerLevel / 2)
+    local _tta = 20 - mission.data.custom.dangerLevel
+
+    local _TorpSlammerValues = {
+        _TimeToActive = _tta,
+        _ROF = 8,
+        _UpAdjust = false,
+        _DamageFactor = _DmgFactor,
+        _DurabilityFactor = 8,
+        _ForwardAdjustFactor = 2,
+        _PreferWarheadType = TorpedoUtility.WarheadType.Tandem,
+        _TargetPriority = 2, --Target tag.
+        _TargetTag = targetScriptValue
+    }
+
     for _, _Pirate in pairs(_Generated) do
-        _Pirate:setValue("_defendprototype_gamma_wing", true)
-        _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = "_defendprototype_station" })
+        _Pirate:setValue(wingScriptValue, true)
+        _Pirate:addScript("ai/priorityattacker.lua", { _TargetPriority = 1, _TargetTag = targetScriptValue })
 
         --This is for performance reasons, so there aren't dozens and dozens of items scattered around the sector.
-        local _PiratesSpawned = mission.data.custom.piratesSpawned + 1
-        local _Factor = 2
-        if _PiratesSpawned >= 20 then
-            _Factor = 3
+        defendPrototype_setNoLootIfApplicable(_Pirate)
+
+        --Add torpedo slammer scripts if necessary.
+        if _SlamCt + slammersAdded < _SlamCtMax then
+            ESCCUtil.setBombardier(_Pirate)
+
+            local slammerDurability = Durability(_Pirate)
+            if slammerDurability then
+                slammerDurability:addFactionImmunity(mission.data.custom.friendlyFaction)
+            end
+
+            _Pirate:addScript("torpedoslammer.lua", _TorpSlammerValues)
+            slammersAdded = slammersAdded + 1
         end
-        if _PiratesSpawned % _Factor ~= 0 then
-            _Pirate:setDropsLoot(false)
-        end
-        mission.data.custom.piratesSpawned = _PiratesSpawned
     end
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function getSectorRarityTables(_X, _Y, _upgradeGenerator)
+function defendPrototype_setNoLootIfApplicable(enemy)
+        --This is for performance reasons, so there aren't dozens and dozens of items scattered around the sector.
+    local _PiratesSpawned = mission.data.custom.piratesSpawned + 1
+    local _Factor = 2
+    if _PiratesSpawned >= 20 then
+        _Factor = mission.data.custom.noLootModulusFactor
+    end
+    if _PiratesSpawned % _Factor ~= 0 then
+        enemy:setDropsLoot(false)
+    end
+    mission.data.custom.piratesSpawned = _PiratesSpawned
+end
+
+function defendPrototype_getSectorRarityTables(_X, _Y, _upgradeGenerator)
     local _dangerLevel = mission.data.custom.dangerLevel
     local _rarities = _upgradeGenerator:getSectorRarityDistribution(_X, _Y)
     _rarities[-1] = 0 --no petty
@@ -760,9 +823,22 @@ function getSectorRarityTables(_X, _Y, _upgradeGenerator)
     return _rarities
 end
 
-function finishAndReward()
-    local _MethodName = "Finish and Reward"
-    mission.Log(_MethodName, "Running win condition.")
+function defendPrototype_countSlammers(scriptValue)
+    local slamCt = 0
+
+    local slammers = {Sector():getEntitiesByScript("torpedoslammer.lua")}
+    for _, slammer in pairs(slammers) do
+        if slammer:hasValue(scriptValue) then
+            slamCt = slamCt + 1
+        end
+    end
+
+    return slamCt
+end
+
+function defendPrototype_finishAndReward()
+    local methodName = "Finish and Reward"
+    mission.Log(methodName, "Running win condition.")
 
     if mission.data.custom.rewardBonus then
         mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus for excellent work."
@@ -773,9 +849,9 @@ function finishAndReward()
     accomplish()
 end
 
-function failAndPunish()
-    local _MethodName = "Fail and Punish"
-    mission.Log(_MethodName, "Running lose condition.")
+function defendPrototype_failAndPunish()
+    local methodName = "Fail and Punish"
+    mission.Log(methodName, "Running lose condition.")
 
     punish()
     fail()
@@ -785,9 +861,10 @@ end
 
 --region #CLIENT CALLS
 
-function playHealAnimations(_Shipyard, _Prototype)
-    local _MethodName = "Play Heal Animations"
-    mission.Log(_MethodName, "On location and a shipyard is present. Playing animations.")
+--This is invoked - ignore the 0 usage annotation.
+function defendPrototype_playHealAnimations(_Shipyard, _Prototype)
+    local methodName = "Play Heal Animations"
+    mission.Log(methodName, "On location and a shipyard is present. Playing animations.")
     --Draw a laser beam to indicate the prototype has been healed.
     local _Sector = Sector()
     local _ProtoHull = _Prototype.durability
@@ -806,13 +883,13 @@ function playHealAnimations(_Shipyard, _Prototype)
         _Sector:createHyperspaceJumpAnimation(_Prototype, direction, ColorRGB(0.0, 1.0, 0.6), 0.2)
     end
 end
-callable(nil, "playHealAnimations")
+callable(nil, "defendPrototype_playHealAnimations")
 
 --endregion
 
 --region #MAKEBULLETIN CALLS
 
-function formatWinMessage(_Station)
+function defendPrototype_formatWinMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
@@ -833,7 +910,7 @@ function formatWinMessage(_Station)
     return _Msgs[_MsgType]
 end
 
-function formatLoseMessage(_Station)
+function defendPrototype_formatLoseMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
@@ -853,7 +930,7 @@ function formatLoseMessage(_Station)
     return _Msgs[_MsgType]
 end
 
-function formatDescription(_Station)
+function defendPrototype_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
     local _Aggressive = _Faction:getTrait("aggressive")
 
@@ -874,7 +951,7 @@ function formatDescription(_Station)
 end
 
 mission.makeBulletin = function(_Station)
-    local _MethodName = "Make Bulletin"
+    local methodName = "Make Bulletin"
     --We don't need a specific type of sector here. Just an empty one that's on the same side of the barrier as the questgiver.
     local _Sector = Sector()
     local _Rgen = ESCCUtil.getRand()
@@ -884,7 +961,7 @@ mission.makeBulletin = function(_Station)
     target.x, target.y = MissionUT.getSector(x, y, 7, 20, false, false, false, false, insideBarrier)
 
     if not target.x or not target.y then
-        mission.Log(_MethodName, "Target.x or Target.y not set - returning nil.")
+        mission.Log(methodName, "Target.x or Target.y not set - returning nil.")
         return 
     end
 
@@ -899,9 +976,9 @@ mission.makeBulletin = function(_Station)
         _Difficulty = "Extreme"
     end
     
-    local _Description = formatDescription(_Station)
-    local _WinMsg = formatWinMessage(_Station)
-    local _LoseMsg = formatLoseMessage(_Station)
+    local _Description = defendPrototype_formatDescription(_Station)
+    local _WinMsg = defendPrototype_formatWinMessage(_Station)
+    local _LoseMsg = defendPrototype_formatLoseMessage(_Station)
 
     local _BaseReward = 400000
     if _DangerLevel >= 5 then

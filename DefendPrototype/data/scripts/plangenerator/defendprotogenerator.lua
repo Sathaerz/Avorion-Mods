@@ -56,6 +56,8 @@ function DefendProtoGenerator.create(position, giverFaction, dangerValue, scaleO
 
     DefendProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 
+	ship:setDropsAttachedTurrets(false) --We futz with the turrets, so we don't necessarily want to attach them.
+
     ship.crew = ship.idealCrew
     ship.shieldDurability = ship.shieldMaxDurability
 
