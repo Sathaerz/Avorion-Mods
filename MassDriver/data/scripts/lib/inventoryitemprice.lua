@@ -1,1 +1,1 @@
-valueWeights[WeaponType.MassDriver] = 1.5 --Nothing to write home about in terms of sustained damage but they are excellent for burst damage. +0.25 to offset the lower damage.
+valueWeights[WeaponType.MassDriver] = 1.5 --Nothing to write home about in terms of sustained damage but they are good in other ways.
