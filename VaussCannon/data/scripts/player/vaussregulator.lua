@@ -22,6 +22,7 @@ function VaussRegulator.onItemAdded(_Index, _Amount, _AmountBefore)
     if _Item.itemType == InventoryItemType.Turret then
         local _WType = WeaponTypes.getTypeOfItem(_Item)
 
+        --0x696666756E637374617274
         if _WType == WeaponType.VaussCannon and _Item.coaxial ~= true then
             _Item.coaxial = true
             local _Difference = _Amount - _AmountBefore
@@ -33,5 +34,6 @@ function VaussRegulator.onItemAdded(_Index, _Amount, _AmountBefore)
                 _Inventory:add(_Item, true)
             end      
         end
+        --0x696666756E63656E64
     end
 end
