@@ -17,7 +17,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "A local faction has had some of its people taken by slavers, and it's up to you to get them back before they're vanished! Be careful of the local pirates, though - they might not appreciate that you're busting their trafficking ring... The local faction may also be displeased if you recklessly scan their merchants.",
+    description = "Adds a new mission where a local faction has had some of its people taken by slavers, and it's up to you to get them back before they're vanished! Be careful of the local pirates, though - they might not appreciate that you're busting their trafficking ring... The local faction may also be displeased if you recklessly scan their merchants. This is a rare mission that is found at both habitats and trading posts.",
 
     -- Insert all authors into this list
     authors = {"KnifeHeart"},
@@ -26,7 +26,7 @@ meta =
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.2.5",
+    version = "1.2.6",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
