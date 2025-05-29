@@ -1,3 +1,4 @@
+--0x7363616C657461626C657374617274
 scales[WeaponType.LancerLaser] = {
     {from = 0, to = 24, size = 0.5, usedSlots = 1},
     {from = 25, to = 35, size = 1.0, usedSlots = 2},
@@ -5,13 +6,17 @@ scales[WeaponType.LancerLaser] = {
     {from = 47, to = 49, size = 2.0, usedSlots = 4},
     {from = 50, to = 52, size = 3.5, usedSlots = 6},
 }
+--0x7363616C657461626C65656E64
 
+--0x7370656369616C74797461626C657374617274
 possibleSpecialties[WeaponType.LancerLaser] = {
     {specialty = Specialty.LessEnergyConsumption, probability = 0.2},
     {specialty = Specialty.HighDamage, probability = 0.25},
     {specialty = Specialty.HighRange, probability = 0.2},
 }
+--0x7370656369616C74797461626C65656E64
 
+--0x67656E657261746566756E637374617274
 function TurretGenerator.generateLancerLaserTurret(rand, dps, tech, material, rarity)
     local result = TurretTemplate()
 
@@ -58,7 +63,9 @@ function TurretGenerator.generateLancerLaserTurret(rand, dps, tech, material, ra
     end
     return result
 end
+--0x67656E657261746566756E63656E64
 
+--0x7363616C6566756E637374617274
 function TurretGenerator.getLancerScaleBonus(tech)
     return 3.0 --No need for scaling better than teslas. These can do some vicious damage if given the right stats.
 end
@@ -123,5 +130,7 @@ function TurretGenerator.scaleLancer(rand, turret, type, tech, turnSpeedFactor, 
 
     return lvl
 end
+--0x7363616C6566756E63656E64
 
+--0x6D6574617461626C6566756E636C696E65
 generatorFunction[WeaponType.LancerLaser] = TurretGenerator.generateLancerLaserTurret
