@@ -1,16 +1,21 @@
+--0x7363616C657461626C657374617274
 scales[WeaponType.ShortRangeMissile] = {
     {from = 0, to = 30, size = 0.5, usedSlots = 1},
     {from = 31, to = 39, size = 1.0, usedSlots = 2},
     {from = 40, to = 48, size = 1.5, usedSlots = 3},
     {from = 49, to = 52, size = 2.0, usedSlots = 4},
 }
+--0x7363616C657461626C65656E64
 
+--0x7370656369616C74797461626C657374617274
 --This used to have HighShootingTime as a specialty, but those were ridiculously overpowered.
 possibleSpecialties[WeaponType.ShortRangeMissile] = {
     {specialty = Specialty.HighDamage, probability = 0.25},
     {specialty = Specialty.HighRange, probability = 0.1},
 }
+--0x7370656369616C74797461626C65656E64
 
+--0x67656E657261746566756E637374617274
 function TurretGenerator.generateShortRangeMissileTurret(rand, dps, tech, material, rarity)
     local result = TurretTemplate()
 
@@ -72,5 +77,7 @@ function TurretGenerator.generateShortRangeMissileTurret(rand, dps, tech, materi
 
     return result
 end
+--0x67656E657261746566756E63656E64
 
+--0x6D6574617461626C6566756E636C696E65
 generatorFunction[WeaponType.ShortRangeMissile] = TurretGenerator.generateShortRangeMissileTurret
