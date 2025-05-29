@@ -1,3 +1,4 @@
+--0x7363616C657461626C657374617274
 scales[WeaponType.SlugGun] = {
     {from = 0, to = 28, size = 1.0, usedSlots = 2},
     {from = 29, to = 35, size = 1.5, usedSlots = 3},
@@ -6,19 +7,17 @@ scales[WeaponType.SlugGun] = {
     --dummy for cooaxial, add 1 to size and level
     {from = 50, to = 52, size = 3.5, usedSlots = 6},
 }
+--0x7363616C657461626C65656E64
 
+--0x7370656369616C74797461626C657374617274
 possibleSpecialties[WeaponType.SlugGun] = {
     {specialty = Specialty.HighDamage, probability = 0.1},
     {specialty = Specialty.HighRange, probability = 0.1}
 }
+--0x7370656369616C74797461626C65656E64
 
-local _Version = GameVersion()
-if _Version.major <= 1 then
-    table.insert(possibleSpecialties[WeaponType.SlugGun], {specialty = Specialty.AutomaticFire, probability = 0.05})
-end
-
+--0x67656E657261746566756E637374617274
 function TurretGenerator.generateSlugGunTurret(rand, dps, tech, material, rarity)
-    local _Version = GameVersion()
     local result = TurretTemplate()
 
     -- generate turret
@@ -43,32 +42,30 @@ function TurretGenerator.generateSlugGunTurret(rand, dps, tech, material, rarity
     TurretGenerator.scale(rand, result, WeaponType.SlugGun, tech, 0.35)
     local specialties = TurretGenerator.addSpecialties(rand, result, WeaponType.SlugGun)
 
-    if _Version.major > 1 then
-        result.slotType = TurretSlotType.Armed
-    end
+    result.slotType = TurretSlotType.Armed
 
     result:updateStaticStats()
 
-    if _Version.major > 1 then
-        local name = "Slug Gun"
+    local name = "Slug Gun"
 
-        if specialties[Specialty.HighDamage] and specialties[Specialty.HighRange] then
-            name = "Flayer"
-            specialties[Specialty.HighDamage] = nil
-            specialties[Specialty.HighRange] = nil
-        elseif specialties[Specialty.HighDamage] then
-            name = "Magnum Slug Gun"
-            specialties[Specialty.HighDamage] = nil
-        elseif specialties[Specialty.HighRange] then
-            name = "Velocity Slug Gun"
-            specialties[Specialty.HighRange] = nil
-        end
-
-        local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Physical)
-        result.title = Format("%1%%2%%3%%4%%5%%6%", outerAdjective, barrel, coax, dmgAdjective, name, serial)
+    if specialties[Specialty.HighDamage] and specialties[Specialty.HighRange] then
+        name = "Flayer"
+        specialties[Specialty.HighDamage] = nil
+        specialties[Specialty.HighRange] = nil
+    elseif specialties[Specialty.HighDamage] then
+        name = "Magnum Slug Gun"
+        specialties[Specialty.HighDamage] = nil
+    elseif specialties[Specialty.HighRange] then
+        name = "Velocity Slug Gun"
+        specialties[Specialty.HighRange] = nil
     end
+
+    local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Physical)
+    result.title = Format("%1%%2%%3%%4%%5%%6%", outerAdjective, barrel, coax, dmgAdjective, name, serial)
 
     return result
 end
+--0x67656E657261746566756E63656E64
 
+--0x6D6574617461626C6566756E636C696E65
 generatorFunction[WeaponType.SlugGun] = TurretGenerator.generateSlugGunTurret
