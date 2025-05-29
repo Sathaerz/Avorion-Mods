@@ -17,10 +17,12 @@ function FighterFactory.onCreatePressed()
         local turret = _Buyer:getInventory():find(idx)
         local tweapontype = legacyDetectWeaponType(turret)
 
+        --0x706C61736D6166756E637461626C657374617274
         if tweapontype == WeaponType.SpreadFire then
             displayChatMessage("This weapon type cannot be used to create fighters.", "Fighter Factory"%_t, 1)
             return
         end
+        --0x706C61736D6166756E637461626C65656E64
     end
 
     spreadfireCannon_onCreatePressed()
