@@ -1,3 +1,4 @@
+--0x7363616C657461626C657374617274
 scales[WeaponType.HelixCannon] = {
     {from = 0, to = 30, size = 0.5, usedSlots = 1},
     {from = 31, to = 36, size = 1.0, usedSlots = 2},
@@ -5,14 +6,18 @@ scales[WeaponType.HelixCannon] = {
     {from = 44, to = 47, size = 2.0, usedSlots = 4},
     {from = 48, to = 52, size = 3.0, usedSlots = 5}
 }
+--0x7363616C657461626C65656E64
 
+--0x7370656369616C74797461626C657374617274
 possibleSpecialties[WeaponType.HelixCannon] = {
     {specialty = Specialty.HighDamage, probability = 0.12},
     {specialty = Specialty.HighRange, probability = 0.12},
     {specialty = Specialty.LessEnergyConsumption, probability = 0.2},
     {specialty = Specialty.HighFireRate, probability = 0.1}
 }
+--0x7370656369616C74797461626C65656E64
 
+--0x67656E657261746566756E637374617274
 function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, rarity)
     local result = TurretTemplate()
 
@@ -71,7 +76,9 @@ function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, ra
 
     return result
 end
+--0x67656E657261746566756E63656E64
 
+--0x61747461636866756E637374617274
 function TurretGenerator.attachHelixWeapons(rand, turret, weapons)
     turret:clearWeapons()
 
@@ -87,7 +94,9 @@ function TurretGenerator.attachHelixWeapons(rand, turret, weapons)
         _widx = _widx+1
     end
 end
+--0x61747461636866756E63656E64
 
+--0x636F6F6C66756E637374617274
 function TurretGenerator.createHelixCannonCooling(turret, rechargeTime, shootingTime)
     turret:updateStaticStats()
 
@@ -109,5 +118,7 @@ function TurretGenerator.createHelixCannonCooling(turret, rechargeTime, shooting
     turret.heatPerShot = consumptionPerShot or 0
     turret.coolingRate = rechargeRate or 0
 end
+--0x636F6F6C66756E63656E64
 
+--0x6D6574617461626C6566756E636C696E65
 generatorFunction[WeaponType.HelixCannon] = TurretGenerator.generateHelixCannonTurret
