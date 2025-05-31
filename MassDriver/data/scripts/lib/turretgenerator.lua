@@ -12,6 +12,7 @@ possibleSpecialties[WeaponType.MassDriver] = {
     {specialty = Specialty.HighShootingTime, probability = 0.1},
     {specialty = Specialty.HighFireRate, probability = 0.15},
     {specialty = Specialty.HighDamage, probability = 0.1},
+    {specialty = Specialty.HighAccuracy, probability = 0.025 } --Relevant now with the accuracy reduction.
 }
 --0x7370656369616C74797461626C65656E64
 
