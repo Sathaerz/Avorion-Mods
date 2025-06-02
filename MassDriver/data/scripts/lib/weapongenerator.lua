@@ -42,7 +42,7 @@ function WeaponGenerator.generateMassDriver(rand, dps, tech, material, rarity)
     if rarity.value > 3 then --exotic (4) / legendary (5)
         rarityAccuracyReduction = 0
     end
-    if tech > 32 then --tech 33+
+    if tech > 32 and rarity.value >= 2 then --tech 33+ and rare or better
         rarityAccuracyReduction = rarityAccuracyReduction * 0.5 --Make the accuracy better towards midgame. Seeking rockets exist and these are hilariously bad comparitively.
     end
     weapon.accuracy = 0.99 - rand:getFloat(0, rarityAccuracyReduction)
