@@ -25,7 +25,7 @@ function WeaponGenerator.generateMassDriver(rand, dps, tech, material, rarity)
         weapon.appearance = WeaponAppearance.Bolter
     else
         --tech 33+
-        damage = dps * fireDelay * 0.7 --These need to scale a bit better towards mid-game, otherwise they're just not worth using over cannons / seekers.
+        damage = dps * fireDelay * 0.7 --These need to scale a bit better towards midgame, otherwise they're just not worth using over cannons / seekers.
         weapon.appearance = WeaponAppearance.Cannon
     end
     weapon.name = "Mass Driver"
@@ -41,6 +41,9 @@ function WeaponGenerator.generateMassDriver(rand, dps, tech, material, rarity)
     end
     if rarity.value > 3 then --exotic (4) / legendary (5)
         rarityAccuracyReduction = 0
+    end
+    if tech > 32 then --tech 33+
+        rarityAccuracyReduction = rarityAccuracyReduction * 0.5 --Make the accuracy better towards midgame. Seeking rockets exist and these are hilariously bad comparitively.
     end
     weapon.accuracy = 0.99 - rand:getFloat(0, rarityAccuracyReduction)
 
