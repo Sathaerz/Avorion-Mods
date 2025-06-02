@@ -1,17 +1,22 @@
+--0x7363616C657461626C657374617274
 scales[WeaponType.ElectroGrenade] = {
     {from = 0, to = 18, size = 0.5, usedSlots = 1},
     {from = 19, to = 33, size = 1.0, usedSlots = 2},
     {from = 34, to = 45, size = 1.5, usedSlots = 3},
     {from = 46, to = 52, size = 2.0, usedSlots = 4},
 }
+--0x7363616C657461626C65656E64
 
+--0x7370656369616C74797461626C657374617274
 possibleSpecialties[WeaponType.ElectroGrenade] = {
     {specialty = Specialty.HighShootingTime, probability = 0.15},
     {specialty = Specialty.HighDamage, probability = 0.1},
     {specialty = Specialty.HighRange, probability = 0.2},
     {specialty = Specialty.HighAccuracy, probability = 0.05}
 }
+--0x7370656369616C74797461626C65656E64
 
+--0x67656E657261746566756E637374617274
 function TurretGenerator.generateElectrostaticGrenadeTurret(rand, dps, tech, material, rarity)
     local result = TurretTemplate()
 
@@ -56,5 +61,7 @@ function TurretGenerator.generateElectrostaticGrenadeTurret(rand, dps, tech, mat
 
     return result
 end
+--0x67656E657261746566756E63656E64
 
+--0x6D6574617461626C6566756E636C696E65
 generatorFunction[WeaponType.ElectroGrenade] = TurretGenerator.generateElectrostaticGrenadeTurret
