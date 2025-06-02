@@ -641,7 +641,15 @@ function expandOperations_onConstructionShipFinished(generated)
 
     local endPoint = outpost.translationf + (random():getDirection() * 100000)
 
-    ESCCUtil.multiplyOverallDurability(constructionShip, 4)
+    local constructionShipDurabilityFactor = 4
+    local x, y = Sector():getCoordinates()
+
+    local distToCenter = math.sqrt(x*x + y*y)
+    if distToCenter > 360 then
+        constructionShipDurabilityFactor = constructionShipDurabilityFactor + 2 --Increase it a bit becasue ships are much less tough, relatively speaking, in the outer regions.
+    end
+
+    ESCCUtil.multiplyOverallDurability(constructionShip, constructionShipDurabilityFactor)
     ESCCUtil.replaceIcon(constructionShip, "data/textures/icons/pixel/shipyard-repair.png")
 
     local constructionShipAI = ShipAI(constructionShip)
@@ -832,7 +840,7 @@ function expandOperations_spawnHeadhunterWave(largeWave)
     local _random = random()
     local hunterVolume = Balancing_GetSectorShipVolume(Sector():getCoordinates())
 
-    print("Hunter volume is " .. tostring(hunterVolume))
+    mission.Log(methodName, "Hunter volume is " .. tostring(hunterVolume))
 
     local spawnFunc = function(wingScriptValue, wingOnSpawnFunc)
         local maxCt = 4
