@@ -1,21 +1,21 @@
+--0x7363616C657461626C657374617274
 scales[WeaponType.FusionCannon] = {
     {from = 0, to = 28, size = 1.5, usedSlots = 3},
     {from = 29, to = 38, size = 2.0, usedSlots = 4},
     {from = 39, to = 49, size = 3.0, usedSlots = 5},
     {from = 50, to = 52, size = 3.5, usedSlots = 6},
 }
+--0x7363616C657461626C65656E64
 
+--0x7370656369616C74797461626C657374617274
 possibleSpecialties[WeaponType.FusionCannon] = {
     {specialty = Specialty.HighDamage, probability = 0.125},
     {specialty = Specialty.HighRange, probability = 0.125},
     {specialty = Specialty.LessEnergyConsumption, probability = 0.2}
 }
+--0x7370656369616C74797461626C65656E64
 
-local _Version = GameVersion()
-if _Version.major <= 1 then
-    table.insert(possibleSpecialties[WeaponType.FusionCannon], {specialty = Specialty.AutomaticFire, probability = 0.05})
-end
-
+--0x67656E657261746566756E637374617274
 function TurretGenerator.generateFusionCannonTurret(rand, dps, tech, material, rarity)
     local _Version = GameVersion()
     local result = TurretTemplate()
@@ -43,23 +43,21 @@ function TurretGenerator.generateFusionCannonTurret(rand, dps, tech, material, r
     TurretGenerator.scale(rand, result, WeaponType.FusionCannon, tech, 0.5)
     local specialties = TurretGenerator.addSpecialties(rand, result, WeaponType.FusionCannon)
 
-    if _Version.major > 1 then
-        result.slotType = TurretSlotType.Armed
-    end
+    result.slotType = TurretSlotType.Armed
 
     result:updateStaticStats()
 
-    if _Version.major > 1 then
-        local name = "Fusion Cannon"
+    local name = "Fusion Cannon"
 
-        local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
-        --/* [outer-adjective][coax][dmg-adjective][name][serial], e.g. Enduring Dual Coaxial E-Tri-Plasma Cannon T-F */
-        result.title = Format("%1%%2%%3%%4%%5%", outerAdjective, coax, dmgAdjective, name, serial)
-    end
+    local dmgAdjective, outerAdjective, barrel, multishot, coax, serial = makeTitleParts(rand, specialties, result, DamageType.Energy)
+    --/* [outer-adjective][coax][dmg-adjective][name][serial], e.g. Enduring Dual Coaxial E-Tri-Plasma Cannon T-F */
+    result.title = Format("%1%%2%%3%%4%%5%", outerAdjective, coax, dmgAdjective, name, serial)
 
     return result
 end
+--0x67656E657261746566756E63656E64
 
+--0x636F6F6C66756E637374617274
 function TurretGenerator.createFusionCannonCooling(turret, rechargeTime, shootingTime)
     turret:updateStaticStats()
 
@@ -81,5 +79,7 @@ function TurretGenerator.createFusionCannonCooling(turret, rechargeTime, shootin
     turret.heatPerShot = consumptionPerShot or 0
     turret.coolingRate = rechargeRate or 0
 end
+--0x636F6F6C66756E63656E64
 
-generatorFunction[WeaponType.FusionCannon              ] = TurretGenerator.generateFusionCannonTurret
+--0x6D6574617461626C6566756E636C696E65
+generatorFunction[WeaponType.FusionCannon] = TurretGenerator.generateFusionCannonTurret
