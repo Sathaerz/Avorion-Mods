@@ -40,7 +40,7 @@ function Overdrive.getUpdateInterval()
 end
 
 function Overdrive.updateServer(_TimeStep)
-    local _MethodName = "Update Server"
+    local methodName = "Update Server"
     self.data.timeInPhase = self.data.timeInPhase + _TimeStep
     local _Entity = Entity()
     local _ShowAnimation = false
@@ -48,7 +48,7 @@ function Overdrive.updateServer(_TimeStep)
     if not self.data.lowDamageMultiplier then
         --Get the multiplier on the first update of the server.
         local _Multiplier = (_Entity.damageMultiplier or 1)
-        self.Log(_MethodName, "Entity damage multplier is " .. tostring(_Entity.damageMultiplier))
+        self.Log(methodName, "Entity damage multplier is " .. tostring(_Entity.damageMultiplier))
         self.data.lowDamageMultiplier = _Multiplier
         self.data.highDamageMultiplier = _Multiplier * self.data.overdriveMultiplier
     end
@@ -60,7 +60,7 @@ function Overdrive.updateServer(_TimeStep)
             self.data.attackMode = false
             self.data.timeInPhase = 0
 
-            if self.data.incrementOnPhaseOutValue then
+            if self.data.incrementOnPhaseOut and self.data.incrementOnPhaseOutValue then --Need both to work.
                 self.data.overdriveMultiplier = self.data.overdriveMultiplier + self.data.incrementOnPhaseOutValue
                 local newHighMultiplier = self.data.lowDamageMultiplier * self.data.overdriveMultiplier
                 self.data.highDamageMultiplier = math.max(newHighMultiplier, self.data.highDamageMultiplier)
@@ -69,7 +69,7 @@ function Overdrive.updateServer(_TimeStep)
             end
 
             _Entity.damageMultiplier = self.data.lowDamageMultiplier
-            self.Log(_MethodName, "Swapping modes. Entity damage multiplier is now " .. tostring(_Entity.damageMultiplier))
+            self.Log(methodName, "Swapping modes. Entity damage multiplier is now " .. tostring(_Entity.damageMultiplier))
         else
             --blink to give a visual indication of the ship being in MAXIMUM OVERDRIVE
             _ShowAnimation = true
@@ -82,7 +82,7 @@ function Overdrive.updateServer(_TimeStep)
 
             _Entity.damageMultiplier = self.data.highDamageMultiplier
             _ShowAnimation = true
-            self.Log(_MethodName, "Swapping modes. Entity damage multiplier is now " .. tostring(_Entity.damageMultiplier))
+            self.Log(methodName, "Swapping modes. Entity damage multiplier is now " .. tostring(_Entity.damageMultiplier))
         end
     end
 
@@ -108,9 +108,9 @@ end
 
 --region #CLIENT / SERVER functions
 
-function Overdrive.Log(_MethodName, _Msg)
+function Overdrive.Log(methodName, _Msg)
     if self._Debug == 1 then
-        print("[Overdrive] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
+        print("[Overdrive] - [" .. tostring(methodName) .. "] - " .. tostring(_Msg))
     end
 end
 
@@ -119,14 +119,14 @@ end
 --region #SECURE / RESTORE
 
 function Overdrive.secure()
-    local _MethodName = "Secure"
-    self.Log(_MethodName, "Securing self.data")
+    local methodName = "Secure"
+    self.Log(methodName, "Securing self.data")
     return self.data
 end
 
 function Overdrive.restore(values)
-    local _MethodName = "Restore"
-    self.Log(_MethodName, "Restoring self.data")
+    local methodName = "Restore"
+    self.Log(methodName, "Restoring self.data")
     self.data = values
 end
 

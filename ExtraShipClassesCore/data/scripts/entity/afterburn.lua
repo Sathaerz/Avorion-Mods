@@ -52,7 +52,7 @@ function Afterburn.updateServer(_TimeStep)
             self.data.timeInPhase = 0
 
             --If we scale on phase out, add values accordingly:
-            if self.data.incrementOnPhaseOut then
+            if self.data.incrementOnPhaseOut and self.data.incrementOnPhaseOutValue then --Need both to work.
                 self.data.accelFactor = self.data.accelFactor + self.data.incrementOnPhaseOutValue
                 self.data.velocityFactor = self.data.velocityFactor + self.data.incrementOnPhaseOutValue
             end
