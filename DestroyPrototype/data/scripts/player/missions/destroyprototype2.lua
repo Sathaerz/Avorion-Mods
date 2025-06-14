@@ -395,7 +395,7 @@ function destroyPrototype_spawnPrototype()
             mission.Log(methodName, "Torpedo type chosen.")
             --Torpedo
             local _TorpValues = {
-                _ROF = 4,
+                _ROF = 6,
                 _DurabilityFactor = 10,
                 _TimeToActive = 30,
                 _DamageFactor = 4,
@@ -403,8 +403,11 @@ function destroyPrototype_spawnPrototype()
                 _UseStaticDamageMult = _StaticMult,
                 _AccelFactor = 2,
                 _VelocityFactor = 2,
-                _TurningSpeedFactor = 2,
-                _ShockwaveFactor = 2
+                _TurningSpeedFactor = 2.5,
+                _ShockwaveFactor = 2,
+                _FireBarrage = true,
+                _BarrageCount = 3,
+                _BarrageDelay = 0.75
             }
             _BattleShip:addScriptOnce("torpedoslammer.lua", _TorpValues)
             _BattleShip:setValue("_prototype_superweapon_script", "torpedoslammer.lua")
@@ -505,15 +508,13 @@ function destroyPrototype_spawnSecondWave()
 
     generator:startBatch()
 
-    local posCounter = 1
     local distance = 250 --_#DistAdj
     if mission.data.custom.dangerLevel == 10 then
         distance = 350
     end
     local pirate_positions = generator:getStandardPositions(#waveTable, distance)
-    for _, p in pairs(waveTable) do
-        generator:createScaledPirateByName(p, pirate_positions[posCounter])
-        posCounter = posCounter + 1
+    for posCtr, p in pairs(waveTable) do
+        generator:createScaledPirateByName(p, pirate_positions[posCtr])
     end
 
     generator:endBatch()
@@ -634,7 +635,6 @@ mission.makeBulletin = function(_Station)
     end
 
     local _DangerLevel = _Rgen:getInt(1, 10)
-    --local _DangerLevel = 10
 
     local _IconIn = nil
     local _Difficulty = "Difficult"
@@ -661,10 +661,12 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * Balancing.GetSectorRewardFactor(_sector:getCoordinates()) --SET REWARD HERE
-    reputation = 8000
+    local rewardFactor = Balancing.GetSectorRewardFactor(_sector:getCoordinates())
+    reward = _BaseReward * rewardFactor --SET REWARD HERE
+    reputation = 8000 + (8000 * (0.0175 * _DangerLevel) * rewardFactor) --Anywhere from 8000 to 64500
+    punishRep = reputation / 2
     if _DangerLevel == 10 then
-        reputation = 12000
+        reputation = reputation * 1.5
     end
 
     local bulletin =
@@ -691,7 +693,7 @@ mission.makeBulletin = function(_Station)
             giver = _Station.index,
             location = target,
             reward = { credits = reward, relations = reputation, paymentMessage = "Earned %1% for destroying the prototype."},
-            punishment = { relations = 8000 },
+            punishment = { relations = punishRep },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
             winMsg = _WinMsg,
