@@ -67,6 +67,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
 
     local _AmpTable = {
         ["2017677089"] = 0.0,     --Weapon Engineering is _Amp + 3 - Just want to note that it is on the list here. We have a special set of detection triggers for this later in the file.
+        ["3487893402"] = 0.0,     --Upgradable Player Turret Blueprints is same as above.
         ["2849203442"] = 4,       --Overpowerinator. I mean, it's deliberately designed to be overpowered.
         ["3229979623"] = 4,       --Same comment as above.
         ["3452526124"] = 2,       --Nuclear Warhead Item Wheel. Can auto-damage the boss.
@@ -90,6 +91,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         ["2668246868"] = 1.33,    --Capital weapon foundry
         ["2745345613"] = 1.33,    --Xsotan Civil War
         ["2108001003"] = 1.33,    --SDK mainframes
+        ["3490328541"] = 1,       --XSTN-Keys Overhauled
         ["1905374778"] = 1,       --Nanobot System Upgrade
         ["2021277562"] = 1,       --Nanobot updated and reworked
         ["2656616473"] = 0.66,    --The large AI
@@ -140,7 +142,7 @@ function PariahUtil.spawnSuperWeapon(_MainWeapon, _AuxWeapon)
         --There are way too many mods to go through them manually anymore. Sad but we take the easy way out here.
         genericModMultiplier = genericModMultiplier + 0.1 
 
-        if _Xmod.id == "2017677089" or _Xmod.name == "DccWeaponEngineering" or _Xmod.title == "Weapon Engineering" then
+        if _Xmod.id == "2017677089" or _Xmod.id == "3487893402" or _Xmod.title == "Upgradable Player Turret Blueprints" or _Xmod.name == "DccWeaponEngineering" or _Xmod.title == "Weapon Engineering" then
             _Amp = _Amp + 3
             _ic2 = true
         end
