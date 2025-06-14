@@ -1,3 +1,4 @@
+--0x7767656E657261746566756E637374617274
 function WeaponGenerator.generateArsPulseLaser(rand, dps, tech, material, rarity, _WSCALE)
     local weapon = Weapon()
     weapon:setProjectile()
@@ -78,5 +79,7 @@ function WeaponGenerator.generateArsPulseLaser(rand, dps, tech, material, rarity
 
     return weapon
 end
+--0x7767656E657261746566756E63656E64
 
+--0x776D6574617461626C6566756E636C696E65
 generatorFunction[WeaponType.ArsPulseLaser] = WeaponGenerator.generateArsPulseLaser
