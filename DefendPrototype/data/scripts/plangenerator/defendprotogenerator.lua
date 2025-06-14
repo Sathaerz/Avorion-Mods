@@ -85,13 +85,17 @@ function DefendProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	end
 
 	turretFactor = math.floor(turretFactor)
+
+	local x, y = Sector():getCoordinates()
+	local distFromCenter = length(vec2(x, y))
 	
+	local validWepaonTable = DefendProtoGenerator.getValidWeaponTypes(distFromCenter)
 	--Add two different types of military weapons + disruptor weapons -- also add artillery so the player can't just stand off and hammer it to death.
 	--Well, they still _can_, but at least it's a little more difficult this way.
 	--Update 2/18/2025 - I've learned a little bit more about how the AI works. This should make things spicier :)
-	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
-	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
-	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 1, turretRange)
+	ShipUtility.addSpecializedEquipment(ship, validWepaonTable, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
+	ShipUtility.addSpecializedEquipment(ship, validWepaonTable, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
+	ShipUtility.addSpecializedEquipment(ship, validWepaonTable, ShipUtility.NormalTorpedoes, turretFactor, 1, turretRange)
 
 	--Finally, increase the ship's damage multiplier by a random amount depending on the danger level of the mission.
 	local forceMultiplier = 1 + (random():getInt(0, dangerValue) / 50)
@@ -107,6 +111,50 @@ function DefendProtoGenerator.addBattleshipEquipment(ship, dangerValue)
     ship.shieldDurability = ship.shieldMaxDurability
 
 	ship:setValue("is_prototype", true)
+end
+
+function DefendProtoGenerator.getValidWeaponTypes(dist)
+	if dist > 360 then
+		--We are in titanium / iron region - just return long range weapons.
+		return ShipUtility.LongRangeWeapons
+	else
+		local weaponTbl = {}
+
+		--Copy long range weapons
+		for k, v in pairs(ShipUtility.LongRangeWeapons) do
+			weaponTbl[k] = v
+		end
+
+		--Remove chaingun.
+		local chaingunKey = nil
+		for k, v in pairs(weaponTbl) do
+			if v == WeaponType.ChainGun then
+				chaingunKey = k
+				break
+			end
+		end
+		if chaingunKey then
+			table.remove(weaponTbl, chaingunKey)
+		end
+
+		local mods = Mods()
+		for _, mod in pairs(mods) do
+			if mod.id == "2532733728" then --Vauss Cannon is active - we potentially need to remove the Vauss Cannon.
+				local vaussKey = nil
+				for k, v in pairs(weaponTbl) do
+					if v == WeaponType.VaussCannon then
+						vaussKey = k
+						break
+					end
+				end
+				if vaussKey then
+					table.remove(weaponTbl, vaussKey)
+				end
+			end
+		end
+
+		return weaponTbl
+	end
 end
 
 function DefendProtoGenerator.getPlayerScaleFactor()

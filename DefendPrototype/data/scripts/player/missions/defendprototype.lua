@@ -828,7 +828,7 @@ function defendPrototype_countSlammers(scriptValue)
 
     local slammers = {Sector():getEntitiesByScript("torpedoslammer.lua")}
     for _, slammer in pairs(slammers) do
-        if slammer:hasValue(scriptValue) then
+        if slammer:getValue(scriptValue) then
             slamCt = slamCt + 1
         end
     end
