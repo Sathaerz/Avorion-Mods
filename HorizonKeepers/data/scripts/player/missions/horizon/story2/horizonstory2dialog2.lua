@@ -106,7 +106,7 @@ function HoirzonStory2Dialog2.getDialog()
     d6.text = "Idiot! I don't want to talk to you! Go to hell!"
     d6.onEnd = "onEndBad"
 
-    d7.text = "First, I need one of the crates moved from the field to this station. I don't want to be seen accessing it in a ship."
+    d7.text = "First, I need one of the crates moved from the container field to this station. I'll use the station's transporter software to grab the contents - I don't want to be seen accessing it."
     d7.followUp = d8
 
     d8.text = "Next, I need a satellite deployed to monitor some subspace disturbances I picked up yesterday. It needs to be at least 50 km away from this station."
@@ -148,14 +148,14 @@ function HoirzonStory2Dialog2.onEndBad()
     local _MethodName = "On End"
     self.Log(_MethodName, "Beginning.")
 
-    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "contactedHacker2", false)
+    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "kothStory2_contactedHacker2", false)
 end
 
 function HoirzonStory2Dialog2.onEndGood()
     local _MethodName = "On End"
     self.Log(_MethodName, "Beginning.")
 
-    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "contactedHacker2", true)
+    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "kothStory2_contactedHacker2", true)
 end
 
 --endregion

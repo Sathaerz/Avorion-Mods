@@ -58,7 +58,7 @@ mission.globalPhase.noBossEncountersTargetSector = true
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         if atTargetLocation() then
-            frostbiteDeparts()
+            kothStory5_frostbiteDeparts()
         end
         runFullSectorCleanup(true)
     end
@@ -67,7 +67,7 @@ end
 mission.globalPhase.onFail = function()
     if mission.data.location then
         if atTargetLocation() then
-            frostbiteDeparts()
+            kothStory5_frostbiteDeparts()
         end
         runFullSectorCleanup(true)
     end
@@ -101,7 +101,7 @@ mission.globalPhase.timers[1] = {
         if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
-            spawnVarlance()
+            kothStory5_spawnVarlance()
         end
     end,
     repeating = true
@@ -118,7 +118,7 @@ mission.phases[1].onBeginServer = function()
     --Get a sector that's very close to the outer edge of the barrier.
     mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
 
-    mission.data.custom.firstLocation = getNextLocation(true)
+    mission.data.custom.firstLocation = kothStory5_getNextLocation(true)
 
     local _X = mission.data.custom.firstLocation.x
     local _Y = mission.data.custom.firstLocation.y
@@ -166,7 +166,7 @@ end
 
 mission.phases[2].onTargetLocationEntered = function(_x, _y)
     if onServer() then
-        buildObjectiveSector(_x, _y)
+        kothStory5_buildObjectiveSector(_x, _y)
     end
 end
 
@@ -235,7 +235,7 @@ mission.phases[3].updateTargetLocationServer = function(timeStep)
     if defenderCt == 0 then
         defenderObjectiveDone = true
         mission.data.description[5].fulfilled = true
-        setVarlancePhase3Orders()
+        kothStory5_setVarlancePhase3Orders()
     end
 
     local stationHPThreshold = station.durability / station.maxDurability
@@ -248,13 +248,13 @@ mission.phases[3].updateTargetLocationServer = function(timeStep)
         mission.Log(methodName, "Defender and station objectives are both done - starting dialog and moving to next phase.")
 
         mission.data.custom.phase3DialogAllowed = false 
-        invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.horizonStationID)
+        invokeClientFunction(Player(), "kothStory5_onPhase3Dialog", mission.data.custom.horizonStationID)
     end
 
     sync()
 end
 
-local onPhase3DialogFireTorp = makeDialogServerCallback("onPhase3DialogFireTorp", 3, function()
+local kothStory5_onPhase3DialogFireTorp = makeDialogServerCallback("kothStory5_onPhase3DialogFireTorp", 3, function()
     local _MethodName = "Oh Phase 3 Dialog Fire Torp"
     mission.Log(_MethodName, "Starting.")
 
@@ -262,8 +262,8 @@ local onPhase3DialogFireTorp = makeDialogServerCallback("onPhase3DialogFireTorp"
     _Varlance:invokeFunction("torpedoslammer.lua", "resetTimeToActive", 0)
 end)
 
-local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, function()
-    awacsDeparts()
+local kothStory5_onPhase3DialogEnd = makeDialogServerCallback("kothStory5_onPhase3DialogEnd", 3, function()
+    kothStory5_awacsDeparts()
     nextPhase()
 end)
 
@@ -276,7 +276,7 @@ end
 
 mission.phases[4].onBeginServer = function()
     HorizonUtil.varlanceChatter("And now we wait...")
-    setVarlancePhase4Orders()
+    kothStory5_setVarlancePhase4Orders()
 end
 
 --region #PHASE 4 TIMERS
@@ -301,7 +301,7 @@ mission.phases[4].timers[1] = {
             --Spawn the next wave if needed.
             local horizonCt = ESCCUtil.countEntitiesByValue("is_horizon_ship")
             if horizonCt == 0 and mission.data.custom.waveNumber <= 3 then
-                spawnHorizonWave()
+                kothStory5_spawnHorizonWave()
     
                 mission.data.custom.waveNumber = mission.data.custom.waveNumber + 1
             end
@@ -346,23 +346,23 @@ end
 
 mission.phases[5] = {}
 mission.phases[5].onBeginServer = function()
-    spawnVarlance()
+    kothStory5_spawnVarlance()
 
-    invokeClientFunction(Player(), "onPhase5Dialog", mission.data.custom.varlanceID)
+    invokeClientFunction(Player(), "kothStory5_onPhase5Dialog", mission.data.custom.varlanceID)
 end
 
-local onPhase5DialogEnd = makeDialogServerCallback("onPhase5DialogEnd", 5, function()
+local kothStory5_onPhase5DialogEnd = makeDialogServerCallback("kothStory5_onPhase5DialogEnd", 5, function()
     local _Varlance = Entity(mission.data.custom.varlanceID)
     _Varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
 
-    finishAndReward()
+    kothStory5_finishAndReward()
 end)
 
 --endregion
 
 --region #SERVER CALLS
 
-function getNextLocation(_onBlockRing)
+function kothStory5_getNextLocation(_onBlockRing)
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -393,7 +393,7 @@ function getNextLocation(_onBlockRing)
     return target
 end
 
-function buildObjectiveSector(x, y)
+function kothStory5_buildObjectiveSector(x, y)
     local _MethodName = "Build Objective Sector"
     mission.Log(_MethodName, "Beginning.")
 
@@ -427,7 +427,7 @@ function buildObjectiveSector(x, y)
     mission.data.custom.horizonStationID = _Station.index
 
     --Spawn Ice Nova
-    spawnVarlance()
+    kothStory5_spawnVarlance()
 
     --Spawn AWACS
     HorizonUtil.spawnFrostbiteAWACS(false)
@@ -463,7 +463,7 @@ function buildObjectiveSector(x, y)
     mission.data.custom.cleanUpSector = true
 end
 
-function spawnVarlance()
+function kothStory5_spawnVarlance()
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -506,7 +506,7 @@ function spawnVarlance()
     end
 end
 
-function awacsDeparts()
+function kothStory5_awacsDeparts()
     local _awacsPlural = { Sector():getEntitiesByScriptValue("is_frostbite_awacs") }
     if #_awacsPlural > 0 then
         local _awacs = _awacsPlural[1]
@@ -515,14 +515,14 @@ function awacsDeparts()
     end
 end
 
-function frostbiteDeparts()
+function kothStory5_frostbiteDeparts()
     local _frostbiteShips = { Sector():getEntitiesByScriptValue("is_frostbite") }
     for _, _ship in pairs(_frostbiteShips) do
         _ship:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(3, 6))
     end
 end
 
-function setVarlancePhase3Orders()
+function kothStory5_setVarlancePhase3Orders()
     local _Varlance = Entity(mission.data.custom.varlanceID)
     local _VarlanceAI = ShipAI(_Varlance)
 
@@ -534,7 +534,7 @@ function setVarlancePhase3Orders()
     _VarlanceAI:setFlyLinear(horizonStation.translationf, 800, false)
 end
 
-function setVarlancePhase4Orders()
+function kothStory5_setVarlancePhase4Orders()
     local _Varlance = Entity(mission.data.custom.varlanceID)
     local _VarlanceAI = ShipAI(_Varlance)
 
@@ -542,7 +542,7 @@ function setVarlancePhase4Orders()
     _VarlanceAI:setAggressive()
 end
 
-function spawnHorizonWave()
+function kothStory5_spawnHorizonWave()
     local shipsSpawned = {}
 
     local shipPositions = PirateGenerator.getStandardPositions(5, 500, nil)
@@ -678,7 +678,7 @@ function spawnHorizonWave()
     Placer.resolveIntersections()
 end
 
-function finishAndReward()
+function kothStory5_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -708,7 +708,7 @@ end
 
 --region #CLIENT CALLS
 
-function onPhase3Dialog(_StationID)
+function kothStory5_onPhase3Dialog(_StationID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -721,7 +721,7 @@ function onPhase3Dialog(_StationID)
 
     d1.text = "There's the distress call. Let's turn that off. Gunnery, fire the modified EMP torpedo."
     d1.followUp = d2
-    d1.onStart = onPhase3DialogFireTorp
+    d1.onStart = kothStory5_onPhase3DialogFireTorp
 
     d2.text = "Excellent. That will silence our bait."
     d2.followUp = d3
@@ -734,14 +734,14 @@ function onPhase3Dialog(_StationID)
 
     d5.text = "Understood! Good luck, Captain Varlance! And to you as well, Captain. Activating hyperdrive now."
     d5.talker = "Frostbite AWACS"
-    d5.onEnd = onPhase3DialogEnd
+    d5.onEnd = kothStory5_onPhase3DialogEnd
 
     ESCCUtil.setTalkerTextColors({d1, d2, d3, d4}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ScriptUI(_StationID):interactShowDialog(d0, false)
 end
 
-function onPhase5Dialog(varlanceID)
+function kothStory5_onPhase5Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -757,7 +757,7 @@ function onPhase5Dialog(varlanceID)
     d2.followUp = d3
 
     d3.text = "Good work today, buddy. I'll contact you once I've figured out where they're hiding. Won't take too long - it's likely they made a crash jump to escape."
-    d3.onEnd = onPhase5DialogEnd
+    d3.onEnd = kothStory5_onPhase5DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 

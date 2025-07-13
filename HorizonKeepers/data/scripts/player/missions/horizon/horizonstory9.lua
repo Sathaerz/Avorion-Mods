@@ -80,7 +80,7 @@ mission.phases[1].onBeginServer = function()
     --Get a sector that's very close to the outer edge of the barrier.
     mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
 
-    mission.data.custom.firstLocation = getNextLocation(true)
+    mission.data.custom.firstLocation = kothStory9_getNextLocation(true)
     local firstX = mission.data.custom.firstLocation.x
     local firstY = mission.data.custom.firstLocation.y
 
@@ -129,7 +129,7 @@ mission.phases[2].onBeginServer = function()
 
     mission.data.location = mission.data.custom.firstLocation
 
-    mission.data.custom.secondLocation = getNextLocation(false)
+    mission.data.custom.secondLocation = kothStory9_getNextLocation(false)
     local secondX = mission.data.custom.secondLocation.x
     local secondY = mission.data.custom.secondLocation.y
 
@@ -140,8 +140,8 @@ mission.phases[2].onTargetLocationEntered = function(_X, _Y)
     local _MethodName = "Phase 2 on Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
     if onServer() then
-        buildObjectiveSector(_X, _Y)
-        spawnVarlance()
+        kothStory9_buildObjectiveSector(_X, _Y)
+        kothStory9_spawnVarlance()
     end
 end
 
@@ -192,7 +192,7 @@ mission.phases[3].onBeginServer = function()
     end
 end
 
-local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, function()
+local kothStory9_onPhase3DialogEnd = makeDialogServerCallback("kothStory9_onPhase3DialogEnd", 3, function()
     nextPhase()
 end)
 
@@ -318,7 +318,7 @@ mission.phases[3].triggers[3] = {
     callback = function()
         local _MethodName = "Phase 3 Trigger 3 Callback"
         mission.Log(_MethodName, "Beginning...")
-        invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.varlanceID)
+        invokeClientFunction(Player(), "kothStory9_onPhase3Dialog", mission.data.custom.varlanceID)
     end,
     repeating = false
 }
@@ -349,7 +349,7 @@ mission.phases[4].onTargetLocationEntered = function(_X, _Y)
     local _MethodName = "Phase 4 on Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
     if onServer() then
-        buildBossSector()
+        kothStory9_buildBossSector()
         nextPhase()
     end
 end
@@ -369,13 +369,13 @@ mission.phases[5].onBegin = function()
     mission.data.description[7].visible = true
 end
 
-local onPhase5Dialog1End = makeDialogServerCallback("onPhase5Dialog1End", 5, function()
+local kothStory9_onPhase5Dialog1End = makeDialogServerCallback("kothStory9_onPhase5Dialog1End", 5, function()
     local xsologize = Entity(mission.data.custom.xsologizeID)
 
     xsologize:addScriptOnce("player/missions/horizon/story9/xsologizebosslaser.lua", { _pindex = Player().index })
 end)
 
-local onPhase5Dialog2End = makeDialogServerCallback("onPhase5Dialog2End", 5, function()
+local kothStory9_onPhase5Dialog2End = makeDialogServerCallback("kothStory9_onPhase5Dialog2End", 5, function()
     local xsologize = Entity(mission.data.custom.xsologizeID)
 
     local xsoloShield = Shield(mission.data.custom.xsologizeID)
@@ -402,7 +402,7 @@ mission.phases[5].timers[1] = {
         local xsoloShield = Shield(mission.data.custom.xsologizeID)
         xsoloShield.invincible = true
 
-        invokeClientFunction(Player(), "onPhase5Dialog", mission.data.custom.xsologizeID)
+        invokeClientFunction(Player(), "kothStory9_onPhase5Dialog", mission.data.custom.xsologizeID)
     end,
     repeating = false
 }
@@ -444,7 +444,7 @@ mission.phases[5].triggers[1] = {
         return false
     end,
     callback = function()
-        invokeClientFunction(Player(), "onPhase5Dialog2", mission.data.custom.xsologizeID)
+        invokeClientFunction(Player(), "kothStory9_onPhase5Dialog2", mission.data.custom.xsologizeID)
     end,
     repeating = false
 }
@@ -468,7 +468,7 @@ mission.phases[6].timers[1] = {
     callback = function()
         if atTargetLocation() then
             if ESCCUtil.countEntitiesByValue("is_project_xsologize") == 0 then
-                finishAndReward()
+                kothStory9_finishAndReward()
             end
         end
     end,
@@ -483,7 +483,7 @@ end
 
 --region #SERVER CALLS
 
-function getNextLocation(_onBlockRing)
+function kothStory9_getNextLocation(_onBlockRing)
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -514,7 +514,7 @@ function getNextLocation(_onBlockRing)
     return target
 end
 
-function spawnVarlance()
+function kothStory9_spawnVarlance()
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -540,7 +540,7 @@ function spawnVarlance()
     end
 end
 
-function buildObjectiveSector(x, y)
+function kothStory9_buildObjectiveSector(x, y)
     local _MethodName = "Build Objective Sector"
     mission.Log(_MethodName, "Beginning.")
 
@@ -560,6 +560,7 @@ function buildObjectiveSector(x, y)
     local xsolopos = ESCCUtil.getVectorAtDistance(pos, 6000, true)
     local xsoloMatrix = MatrixLookUpPosition(look, up, xsolopos)
     local xsologize = HorizonUtil.spawnProjectXsologize(true, xsoloMatrix)
+    mission.Log(_MethodName, "Setting mission.data.custom.xsologizeID to" .. tostring(xsologize.index))    
     mission.data.custom.xsologizeID = xsologize.index    
 
     --next, start @ xsologize, and move away from player, then make shipyard.
@@ -588,7 +589,7 @@ function buildObjectiveSector(x, y)
     mission.data.custom.cleanUpSector = true
 end
 
-function buildBossSector()
+function kothStory9_buildBossSector()
     local _MethodName = "Build Boss Sector"
     mission.Log(_MethodName, "Beginning.")
 
@@ -614,7 +615,7 @@ function buildBossSector()
     mission.data.custom.xsologizeID = xsologize.index
 end
 
-function finishAndReward()
+function kothStory9_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -665,7 +666,7 @@ end
 
 --region #CLIENT DIALOG CALLS
 
-function onPhase3Dialog(varlanceID)
+function kothStory9_onPhase3Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -677,14 +678,14 @@ function onPhase3Dialog(varlanceID)
     d1.followUp = d2
 
     d2.text = "Please, stop it ${_PLAYERNAME}! Only you can fly high enough!" % {_PLAYERNAME = Player().name}
-    d2.onEnd = onPhase3DialogEnd
+    d2.onEnd = kothStory9_onPhase3DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ScriptUI(varlanceID):interactShowDialog(d0, false)
 end
 
-function onPhase5Dialog(xsologizeID)
+function kothStory9_onPhase5Dialog(xsologizeID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -704,12 +705,12 @@ function onPhase5Dialog(xsologizeID)
     d3.followUp = d4
 
     d4.text = "This is the end, Captain."
-    d4.onEnd = onPhase5Dialog1End
+    d4.onEnd = kothStory9_onPhase5Dialog1End
 
     ScriptUI(xsologizeID):interactShowDialog(d0, false)
 end
 
-function onPhase5Dialog2(xsologizeID)
+function kothStory9_onPhase5Dialog2(xsologizeID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -725,7 +726,7 @@ function onPhase5Dialog2(xsologizeID)
     d2.followUp = d3
 
     d3.text = "Helm, turn us to engage that warship!"
-    d3.onEnd = onPhase5Dialog2End
+    d3.onEnd = kothStory9_onPhase5Dialog2End
 
     ScriptUI(xsologizeID):interactShowDialog(d0, false)
 end

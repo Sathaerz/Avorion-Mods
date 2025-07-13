@@ -15,18 +15,20 @@ mission.globalPhase.updateInterval = 30 --Update every 30 seconds. As long as we
 mission.globalPhase.updateServer = function()
     local _player = Player()
 
-    if not _player:getValue("_horizonkeepers_last_side1") then
-        _player:setValue("_horizonkeepers_last_side1", 0)
-    end
-    if not _player:getValue("_horizonkeepers_last_side2") then
-        _player:setValue("_horizonkeepers_last_side2", 0)
-    end
-
+    --Set mission phase
     if not _player:getValue(mission._StoryStageValue) then
         _player:setValue(mission._StoryStageValue, 1)
     else
         local phaseID = _player:getValue(mission._StoryStageValue)
         setPhase(phaseID)
+    end
+
+    --Set side mission values
+    if not _player:getValue("_horizonkeepers_last_side1") then
+        _player:setValue("_horizonkeepers_last_side1", 0)
+    end
+    if not _player:getValue("_horizonkeepers_last_side2") then
+        _player:setValue("_horizonkeepers_last_side2", 0)
     end
 end
 
@@ -47,7 +49,7 @@ mission.phases[1].onSectorEntered = function(x, y)
         return
     end
 
-    addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonstory1.lua")
+    kothQuestUtil_addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonstory1.lua")
 end
 
 mission.phases[2] = {}
@@ -58,7 +60,7 @@ mission.phases[2].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
+    if horizonStage and horizonStage == stageReq and kothQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -73,7 +75,7 @@ mission.phases[3].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
+    if horizonStage and horizonStage == stageReq and kothQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -88,7 +90,7 @@ mission.phases[4].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
+    if horizonStage and horizonStage == stageReq and kothQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -103,7 +105,7 @@ mission.phases[5].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
+    if horizonStage and horizonStage == stageReq and kothQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -118,7 +120,7 @@ mission.phases[6].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
+    if horizonStage and horizonStage == stageReq and kothQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -133,7 +135,7 @@ mission.phases[7].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
+    if horizonStage and horizonStage == stageReq and kothQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -148,7 +150,7 @@ mission.phases[8].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
+    if horizonStage and horizonStage == stageReq and kothQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -163,7 +165,7 @@ mission.phases[9].updateServer = function()
     local x, y = Sector():getCoordinates()
 
     local horizonStage = _player:getValue(mission._StoryStageValue)
-    if horizonStage and horizonStage == stageReq and checkDistanceOK(x, y) then
+    if horizonStage and horizonStage == stageReq and kothQuestUtil_checkDistanceOK(x, y) then
         if not _player:hasScript(scriptPath) then
             _player:addScriptOnce(scriptPath)
         end
@@ -191,17 +193,17 @@ mission.phases[10].onSectorEntered = function(x, y)
     --These already check if the distance is OK, so no need to check distance in here.
     if currentTime >= nextValidSide1Time and _random:test(0.10) then
         mission.Log(methodName, "Adding side 1 to board.")
-        addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonside1.lua")
+        kothQuestUtil_addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonside1.lua")
     end
     if currentTime >= nextValidSide2Time and _random:test(0.10) then
         mission.Log(methodName, "Adding side 2 to board.")
-        addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonside2.lua")
+        kothQuestUtil_addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonside2.lua")
     end
 end
 
 --region #SERVER CALLS
 
-function checkDistanceOK(x, y)
+function kothQuestUtil_checkDistanceOK(x, y)
     local methodName = "Check Distance OK"
 
     local dist = math.sqrt(x*x + y*y)
@@ -219,10 +221,10 @@ function checkDistanceOK(x, y)
     end
 end
 
-function addMissionToStation(x, y, missionScript)
+function kothQuestUtil_addMissionToStation(x, y, missionScript)
     local methodName = "Add Mission To Station"
 
-    if checkDistanceOK(x, y) then
+    if kothQuestUtil_checkDistanceOK(x, y) then
         local stationCandidates = {Sector():getEntitiesByType(EntityType.Station)}
         local stations = {}
         for _, _Station in pairs(stationCandidates) do

@@ -114,7 +114,7 @@ mission.globalPhase.timers[2] = {
         if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
-            spawnVarlance()
+            kothStory1_spawnVarlance()
         end
     end,
     repeating = true
@@ -129,7 +129,7 @@ mission.phases[1].onBegin = function()
     local _Giver = Entity(mission.data.giver.id)
 
     mission.data.description[1].arguments = { sectorName = Sector().name, giverTitle = _Giver.translatedTitle }
-    mission.data.description[2].text = formatDescription()
+    mission.data.description[2].text = kothStory1_formatDescription()
     mission.data.description[3].arguments = { _X = mission.data.location.x, _Y = mission.data.location.y }
 end
 
@@ -139,7 +139,7 @@ mission.phases[1].updateServer = function(_timestep)
 
         if _pirateCt == 1 and not mission.data.custom.sentDistress then
             mission.data.custom.sentDistress = true
-            sendDistressCall()
+            kothStory1_sendDistressCall()
         end
     end
 end
@@ -151,9 +151,9 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.description[4].visible = true
 
     if onServer() then
-        createAsteroidFields(x, y)
-        spawnVarlance()
-        spawnPirateRemnants()
+        kothStory1_createAsteroidFields(x, y)
+        kothStory1_spawnVarlance()
+        kothStory1_spawnPirateRemnants()
 
         showMissionUpdated(mission._Name)
     end
@@ -169,7 +169,7 @@ end
 mission.phases[2].onBeginServer = function()
     local _MethodName = "Phase 2 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
-    spawnPirateWave(1)
+    kothStory1_spawnPirateWave(1)
 end
 
 mission.phases[3] = {}
@@ -183,7 +183,7 @@ end
 mission.phases[3].onBeginServer = function()
     local _MethodName = "Phase 3 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
-    spawnPirateWave(2)
+    kothStory1_spawnPirateWave(2)
 end
 
 --region #PHASE 3 TIMERS
@@ -194,7 +194,7 @@ mission.phases[3].timers[1] = {
     time = 15,
     callback = function()
         if atTargetLocation() then
-            spawnTorpedoStrike()
+            kothStory1_spawnTorpedoStrike()
         end
     end,
     repeating = false
@@ -214,13 +214,13 @@ end
 mission.phases[4].onBeginServer = function()
     local _MethodName = "Phase 4 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
-    spawnPirateWave(3)
+    kothStory1_spawnPirateWave(3)
 end
 
 mission.phases[4].updateServer = function(_timeStep)
     --If the chip has not been given yet...
     if atTargetLocation() and mission.data.custom.advancePhase then
-        givePlayerChip()
+        kothStory1_givePlayerChip()
     end
 end
 
@@ -231,29 +231,29 @@ end
 
 mission.phases[5].onBeginServer = function()
     --Spawn Varlance if he doesn't already exist.
-    spawnVarlance()
+    kothStory1_spawnVarlance()
 
     --Give the player the chip if somehow phase 4 hasn't given them the chip yet.
-    givePlayerChip()
+    kothStory1_givePlayerChip()
 
     --Get varlance and his ID.
     local _Varlance = Entity(mission.data.custom.varlanceID)
 
-    invokeClientFunction(Player(), "onPhase5Dialog", _Varlance.id)
+    invokeClientFunction(Player(), "kothStory1_onPhase5Dialog", _Varlance.id)
 end
 
-local onPhase5DialogEnd = makeDialogServerCallback("onPhase5DialogEnd", 5, function()
+local kothStory1_onPhase5DialogEnd = makeDialogServerCallback("kothStory1_onPhase5DialogEnd", 5, function()
     local _Varlance = Entity(mission.data.custom.varlanceID)
     _Varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
 
-    finishAndReward()
+    kothStory1_finishAndReward()
 end)
 
 --endregion
 
 --region #SERVER CALLS
 
-function createAsteroidFields(x, y)
+function kothStory1_createAsteroidFields(x, y)
     local methodName = "Create Asteroid Fields"
 
     if not mission.data.custom.spawnedAsteroids then
@@ -273,7 +273,7 @@ function createAsteroidFields(x, y)
     end
 end
 
-function spawnVarlance()
+function kothStory1_spawnVarlance()
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -296,12 +296,12 @@ function spawnVarlance()
     end
 end
 
-function spawnPirateRemnants()
+function kothStory1_spawnPirateRemnants()
     local _MethodName = "Create Pirate Remnants"
     mission.Log(_MethodName, "Running.")
 
     if not mission.data.custom.spawnedRemnants then
-        local generator = AsyncPirateGenerator(nil, onPirateRemnantsFinished)
+        local generator = AsyncPirateGenerator(nil, kothStory1_onPirateRemnantsFinished)
 
         generator:startBatch()
     
@@ -320,7 +320,7 @@ function spawnPirateRemnants()
     end
 end
 
-function onPirateRemnantsFinished(_Generated)
+function kothStory1_onPirateRemnantsFinished(_Generated)
     mission.data.custom.advancePhase = true
 
     local xrand = random()
@@ -334,7 +334,7 @@ function onPirateRemnantsFinished(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function sendDistressCall()
+function kothStory1_sendDistressCall()
 	--print("sending distress call")
     local _sector = Sector()
     local x, y = _sector:getCoordinates()
@@ -357,15 +357,15 @@ function sendDistressCall()
 	Player():sendChatMessage("", 3, "The pirate ship is broadcasting a distress signal!")
 end
 
-function spawnPirateWave(_waveNo)
+function kothStory1_spawnPirateWave(_waveNo)
     local _MethodName = "Spawn Pirate Wave"
     mission.Log(_MethodName, "Spawning wave " .. tostring(_waveNo))
 
     --Get a pirate table to spawn based on the wave #
     local _WaveData = {
-        { ct = 4, tbl = "Standard", lvl = math.ceil(mission.data.custom.dangerLevel * 0.5), func = onPirateWaveFinished },
-        { ct = 4, tbl = "Standard", lvl = math.ceil(mission.data.custom.dangerLevel * 0.75), func = onPirateWaveFinished },
-        { ct = 5, tbl = "High", lvl = mission.data.custom.dangerLevel, func = onFinalPirateWaveGenerated }
+        { ct = 4, tbl = "Standard", lvl = math.ceil(mission.data.custom.dangerLevel * 0.5), func = kothStory1_onPirateWaveFinished },
+        { ct = 4, tbl = "Standard", lvl = math.ceil(mission.data.custom.dangerLevel * 0.75), func = kothStory1_onPirateWaveFinished },
+        { ct = 5, tbl = "High", lvl = mission.data.custom.dangerLevel, func = kothStory1_onFinalPirateWaveGenerated }
     }
 
     local _WaveTable = ESCCUtil.getStandardWave(_WaveData[_waveNo].lvl, _WaveData[_waveNo].ct, _WaveData[_waveNo].tbl, false)
@@ -387,13 +387,13 @@ function spawnPirateWave(_waveNo)
     _WaveGenerator:endBatch()
 end
 
-function onPirateWaveFinished(_Generated)
+function kothStory1_onPirateWaveFinished(_Generated)
     mission.data.custom.advancePhase = true
 
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function onFinalPirateWaveGenerated(_Generated)
+function kothStory1_onFinalPirateWaveGenerated(_Generated)
     mission.data.custom.advancePhase = true
 
     --Add a deadshot script to the first pirate. Make it as powerful as a stock longinus.
@@ -405,7 +405,7 @@ function onFinalPirateWaveGenerated(_Generated)
     
     local _LaserSniperValues = { --#LONGINUS_SNIPER
         _DamagePerFrame = _dpf,
-        _TimeToActive = 10,
+        _TimeToActive = 5,
         _TargetCycle = 15,
         _TargetingTime = 2.25, --Take longer than normal to target.
         _TargetPriority = 4,
@@ -425,12 +425,12 @@ function onFinalPirateWaveGenerated(_Generated)
 end
 
 --Torp strike
-function spawnTorpedoStrike()
+function kothStory1_spawnTorpedoStrike()
     local _MethodName = "Spawning Torpedo Strike"
 
     local waveTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 3, "High", false) --They're only in for 8-9 seconds. Make them the larger ships.
 
-    local generator = AsyncPirateGenerator(nil, onTorpStrikePirateSpawned)
+    local generator = AsyncPirateGenerator(nil, kothStory1_onTorpStrikePirateSpawned)
 
     generator:startBatch()
 
@@ -442,7 +442,7 @@ function spawnTorpedoStrike()
     generator:endBatch()
 end
 
-function givePlayerChip()
+function kothStory1_givePlayerChip()
     if not mission.data.custom.givenChip then
         local _Player = Player()
         local items = _Player:getInventory():getItemsByType(InventoryItemType.VanillaItem)
@@ -468,7 +468,7 @@ function givePlayerChip()
     end
 end
 
-function onTorpStrikePirateSpawned(_Generated)
+function kothStory1_onTorpStrikePirateSpawned(_Generated)
     for _, _Ship in pairs(_Generated) do
         local _TorpSlamValues = {
             _ROF = 2,
@@ -490,7 +490,7 @@ function onTorpStrikePirateSpawned(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function finishAndReward()
+function kothStory1_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -509,7 +509,7 @@ end
 
 --region #CLIENT DIALOG CALLS
 
-function onPhase5Dialog(_VarlanceID)
+function kothStory1_onPhase5Dialog(_VarlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -531,12 +531,12 @@ function onPhase5Dialog(_VarlanceID)
 
     d4.text = "I'll be in touch. Try not to die out there."
     d4.answers = {
-        { answer = "I'll do my best.", onSelect = onPhase5DialogEnd },
+        { answer = "I'll do my best.", onSelect = kothStory1_onPhase5DialogEnd },
         { answer = "Thank you.", followUp = d5 }
     }
 
     d5.text = "Don't mention it. With luck, we'll meet again."
-    d5.onEnd = onPhase5DialogEnd
+    d5.onEnd = kothStory1_onPhase5DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4, d5}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -547,7 +547,7 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatDescription()
+function kothStory1_formatDescription()
     return "To any independent captains out there, this is captain Varlance with the mercenary group Frostbite Company. Our fleet repelled a fierce pirate attack on a local faction, but a number of their damaged ships managed to retreat before we could finish them off. I'm going after them, but I'd like some backup - the fact of the matter is that we don't know how well equipped they are and most of my group's ships are in need of repair. Help me hunt down the remnants of thie pirate fleet. I'll make sure you're compensated for your work."
 end
 
@@ -573,7 +573,7 @@ mission.makeBulletin = function(_Station)
         brief = mission.data.brief,
         title = mission.data.title,
         icon = mission.data.icon,
-        description = formatDescription(),
+        description = kothStory1_formatDescription(),
         difficulty = "Medium",
         reward = "¢${reward}",
         script = "missions/horizon/horizonstory1.lua",

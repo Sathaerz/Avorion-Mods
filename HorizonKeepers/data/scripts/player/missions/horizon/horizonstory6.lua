@@ -61,7 +61,7 @@ mission.globalPhase.noLocalPlayerEventsTargetSector = true
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
         if atTargetLocation() then
-            frostbiteDeparts()
+            kothStory6_frostbiteDeparts()
         end
         runFullSectorCleanup(true)
     end
@@ -70,7 +70,7 @@ end
 mission.globalPhase.onFail = function()
     if mission.data.location then
         if atTargetLocation() then
-            frostbiteDeparts()
+            kothStory6_frostbiteDeparts()
         end
         runFullSectorCleanup(true)
     end
@@ -84,7 +84,7 @@ end
 
 mission.globalPhase.onTargetLocationEntered = function(_X, _Y)
     --Reset gretel 'death laser' if needed.
-    if mission.data.custom.gretelID and Sector():exists(mission.data.custom.gretelID) then
+    if onServer() and mission.data.custom.gretelID and Sector():exists(mission.data.custom.gretelID) then
         local gretel = Entity(mission.data.custom.gretelID)
         gretel:invokeFunction("lasersniper.lua", "resetTimeToActive", 15)
     end
@@ -110,7 +110,7 @@ mission.globalPhase.timers[1] = {
         if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
-            spawnVarlance()
+            kothStory6_spawnVarlance()
         end
     end,
     repeating = true
@@ -127,7 +127,7 @@ mission.phases[1].onBeginServer = function()
     --Get a sector that's very close to the outer edge of the barrier.
     mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
 
-    mission.data.custom.firstLocation = getNextLocation(true)
+    mission.data.custom.firstLocation = kothStory6_getNextLocation(true)
 
     local _X = mission.data.custom.firstLocation.x
     local _Y = mission.data.custom.firstLocation.y
@@ -177,16 +177,16 @@ mission.phases[2].onTargetLocationEntered = function(_x, _y)
     mission.data.description[4].visible = true
 
     if onServer() then
-        buildObjectiveSector(_x, _y)
+        kothStory6_buildObjectiveSector(_x, _y)
     end
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(_x, _y)
     --Start varlance dialog, then go to phase 3.
-    invokeClientFunction(Player(), "onPhase2Dialog", mission.data.custom.battleshipID)
+    invokeClientFunction(Player(), "kothStory6_onPhase2Dialog", mission.data.custom.battleshipID)
 end
 
-local onPhase2DialogEnd = makeDialogServerCallback("onPhase2DialogEnd", 2, function()
+local kothStory6_onPhase2DialogEnd = makeDialogServerCallback("kothStory6_onPhase2DialogEnd", 2, function()
     nextPhase()
 end)
 
@@ -226,8 +226,8 @@ mission.phases[3].onBeginServer = function()
     mission.Log(_MethodName, "Beginning...")
 
     --Start fight.
-    runPhase3Orders()
-    setbShipStage1Orders()
+    kothStory6_runPhase3Orders()
+    kothStory6_setbShipStage1Orders()
 end
 
 mission.phases[3].updateTargetLocationServer = function(timeStep)
@@ -258,7 +258,7 @@ mission.phases[3].timers[1] = {
 
                 HorizonUtil.varlanceChatter("Their defensive screen is gone. The battleships will have to engage us directly now.")
 
-                setbShipStage2Orders()
+                kothStory6_setbShipStage2Orders()
 
                 sync()
                 mission.phases[3].timers[1].repeating = false --We don't need this one again.
@@ -307,16 +307,16 @@ mission.phases[4].onBeginServer = function()
     local _MethodName = "Phase 4 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
 
-    spawnVarlance()
+    kothStory6_spawnVarlance()
 
     --Set varlance to idle.
     local varlanceAI = ShipAI(mission.data.custom.varlanceID)
     varlanceAI:stop()
 
     --Hansel / Gretel jump in and confront you.
-    spawnBosses()
+    kothStory6_spawnBosses()
 
-    invokeClientFunction(Player(), "onPhase4CutScene", mission.data.custom.hanselID)
+    invokeClientFunction(Player(), "kothStory6_onPhase4CutScene", mission.data.custom.hanselID)
 end
 
 mission.phases[4].updateTargetLocationServer = function(timeStep)
@@ -327,11 +327,11 @@ mission.phases[4].updateTargetLocationServer = function(timeStep)
     --Give the cinematic enough time to play out.
     if mission.data.custom.phase4Timer >= 8 and not mission.data.custom.phase4DialogStarted then
         mission.data.custom.phase4DialogStarted = true
-        invokeClientFunction(Player(), "onPhase4Dialog", mission.data.custom.hanselID)
+        invokeClientFunction(Player(), "kothStory6_onPhase4Dialog", mission.data.custom.hanselID)
     end
 end
 
-local onPhase4DialogEnd = makeDialogServerCallback("onPhase4DialogEnd", 4, function()
+local kothStory6_onPhase4DialogEnd = makeDialogServerCallback("kothStory6_onPhase4DialogEnd", 4, function()
     --set varlance to aggressive.
     local varlanceAI = ShipAI(mission.data.custom.varlanceID)
     varlanceAI:setAggressive()
@@ -419,7 +419,7 @@ mission.phases[4].timers[2] = {
                     local _sector = Sector()
                     local gretel = { _sector:getEntitiesByScriptValue("is_beta_gretel") }
                     _sector:broadcastChatMessage(gretel[1], ChatMessageType.Chatter, "NO!!! Overload the reactor NOW! We'll drag them to the depths of hell with us!")
-                    gretel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 60, _IncreasePerUpdate = 0.15, _DamageThreshold = 1.01 })
+                    gretel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 30, _IncreasePerUpdate = 0.15, _DamageThreshold = 1.01 })
                 end
             end
 
@@ -434,7 +434,7 @@ mission.phases[4].timers[2] = {
                     local _sector = Sector()
                     local hansel = { _sector:getEntitiesByScriptValue("is_alpha_hansel") }
                     _sector:broadcastChatMessage(hansel[1], ChatMessageType.Chatter, "How... how is this possible?! Kill them! KILL THEM NOW!!!")
-                    hansel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 60, _IncreasePerUpdate = 0.25, _DamageThreshold = 1.01 })
+                    hansel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 30, _IncreasePerUpdate = 0.25, _DamageThreshold = 1.01 })
                 end
             end
             
@@ -482,28 +482,28 @@ mission.phases[5].onBeginServer = function()
     local _MethodName = "Phase 5 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
 
-    spawnVarlance()
+    kothStory6_spawnVarlance()
 
     --Set varlance to idle.
     local varlanceAI = ShipAI(mission.data.custom.varlanceID)
     varlanceAI:stop()
 
     --Send varlance dialog.
-    invokeClientFunction(Player(), "onPhase5Dialog", mission.data.custom.varlanceID)
+    invokeClientFunction(Player(), "kothStory6_onPhase5Dialog", mission.data.custom.varlanceID)
 end
 
-local onPhase5DialogEnd = makeDialogServerCallback("onPhase5DialogEnd", 5, function()
+local kothStory6_onPhase5DialogEnd = makeDialogServerCallback("kothStory6_onPhase5DialogEnd", 5, function()
     local varlance = Entity(mission.data.custom.varlanceID)
     MissionUT.deleteOnPlayersLeft(varlance)
 
-    finishAndReward()
+    kothStory6_finishAndReward()
 end)
 
 --endregion
 
 --region #SERVER CALLS
 
-function getNextLocation(_onBlockRing)
+function kothStory6_getNextLocation(_onBlockRing)
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -534,7 +534,7 @@ function getNextLocation(_onBlockRing)
     return target
 end
 
-function buildObjectiveSector(x, y)
+function kothStory6_buildObjectiveSector(x, y)
     local methodName = "Build Objective Sector"
 
     local _random = random()
@@ -585,7 +585,7 @@ function buildObjectiveSector(x, y)
     end
 
     --spawn varlance
-    spawnVarlance()
+    kothStory6_spawnVarlance()
 
     --add buffs
     SpawnUtility.addEnemyBuffs(createdShipTable)
@@ -606,7 +606,7 @@ function buildObjectiveSector(x, y)
     mission.data.custom.cleanUpSector = true
 end
 
-function spawnVarlance()
+function kothStory6_spawnVarlance()
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -632,14 +632,14 @@ function spawnVarlance()
     end
 end
 
-function frostbiteDeparts()
+function kothStory6_frostbiteDeparts()
     local _frostbiteShips = { Sector():getEntitiesByScriptValue("is_frostbite") }
     for _, _ship in pairs(_frostbiteShips) do
         _ship:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(3, 6))
     end
 end
 
-function setbShipStage1Orders()
+function kothStory6_setbShipStage1Orders()
     --Get all turrets on the ship and set them to range 8000
 
     --Add torpedo slammer script.
@@ -683,7 +683,7 @@ function setbShipStage1Orders()
     end
 end
 
-function setbShipStage2Orders()
+function kothStory6_setbShipStage2Orders()
     --remove torpedo slammer script.
     local _Sector = Sector()
     
@@ -711,7 +711,7 @@ function setbShipStage2Orders()
     end
 end
 
-function runPhase3Orders()
+function kothStory6_runPhase3Orders()
     local _MethodName = "Run Phase 3 Orders"
 
     local _Sector = Sector()
@@ -743,7 +743,7 @@ function runPhase3Orders()
     end
 end
 
-function spawnBosses()
+function kothStory6_spawnBosses()
     local _random = random()
 
     --Get player position first.
@@ -790,7 +790,7 @@ function spawnBosses()
     mission.data.custom.gretelID = gretel.index
 end
 
-function finishAndReward()
+function kothStory6_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -816,7 +816,7 @@ end
 
 --region #CLIENT CALLS
 
-function onPhase2Dialog(battleshipID)
+function kothStory6_onPhase2Dialog(battleshipID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -834,18 +834,18 @@ function onPhase2Dialog(battleshipID)
     d2.followUp = d3
 
     d3.text = "Let's get moving. We'll show them how high we can soar."
-    d3.onEnd = onPhase2DialogEnd
+    d3.onEnd = kothStory6_onPhase2DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ScriptUI(battleshipID):interactShowDialog(d0, false)
 end
 
-function onPhase4CutScene(weaponID)
+function kothStory6_onPhase4CutScene(weaponID)
     startBossCameraAnimation(weaponID)
 end
 
-function onPhase4Dialog(weaponID)
+function kothStory6_onPhase4Dialog(weaponID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -885,14 +885,14 @@ function onPhase4Dialog(weaponID)
     d8.followUp = d9
 
     d9.text = "There's a trick I learned from The Cavaliers that'll work here. Let's finish this."
-    d9.onEnd = onPhase4DialogEnd
+    d9.onEnd = kothStory6_onPhase4DialogEnd
 
     ESCCUtil.setTalkerTextColors({d2, d5, d6, d7, d8, d9}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ScriptUI(weaponID):interactShowDialog(d0, false)
 end
 
-function onPhase5Dialog(varlanceID)
+function kothStory6_onPhase5Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -912,7 +912,7 @@ function onPhase5Dialog(varlanceID)
     d3.followUp = d4
 
     d4.text = "I'll contact you when it's time, buddy."
-    d4.onEnd = onPhase5DialogEnd
+    d4.onEnd = kothStory6_onPhase5DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 

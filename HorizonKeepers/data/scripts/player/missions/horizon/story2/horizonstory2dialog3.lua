@@ -263,14 +263,14 @@ function HorizonStory2Dialog3.onEnd()
     local _MethodName = "On End"
     self.Log(_MethodName, "Beginning.")
 
-    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "contactedHacker3")
+    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "kothStory2_contactedHacker3")
 end
 
 function HorizonStory2Dialog3.onEndGiveSat()
     local _MethodName = "On End Give Sat"
     self.Log(_MethodName, "Beginning.")
 
-    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "contactedHackerGiveSat")
+    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "kothStory2_contactedHackerGiveSat")
 end
 
 --endregion

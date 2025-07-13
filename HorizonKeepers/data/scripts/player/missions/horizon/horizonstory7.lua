@@ -78,7 +78,7 @@ mission.globalPhase.noPlayerEventsTargetSector = true
 mission.globalPhase.noLocalPlayerEventsTargetSector = true
 
 mission.globalPhase.onAbandon = function()
-    clearShipyardCargo()
+    kothStory7_clearShipyardCargo()
     
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -86,8 +86,8 @@ mission.globalPhase.onAbandon = function()
 end
 
 mission.globalPhase.onFail = function()
-    sendFailureMail()
-    clearShipyardCargo()
+    kothStory7_sendFailureMail()
+    kothStory7_clearShipyardCargo()
 
     if mission.data.location then
         runFullSectorCleanup(true)
@@ -111,7 +111,7 @@ mission.globalPhase.onTargetLocationLeft = function(_X, _Y)
     if phIndex == 4 or phIndex == 5 then
         fail()
     elseif phIndex == 7 and mission.data.custom.phase7FinishEventDone then
-        finishAndReward()
+        kothStory7_finishAndReward()
     else
         mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to head back to the sector.
         mission.data.timeLimitInDescription = true --Show the player how much time is left.
@@ -125,7 +125,7 @@ mission.phases[1].onBeginServer = function()
     --Get a sector that's very close to the outer edge of the barrier.
     mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
 
-    mission.data.custom.firstLocation = getNextLocation(true)
+    mission.data.custom.firstLocation = kothStory7_getNextLocation(true)
 
     local _X = mission.data.custom.firstLocation.x
     local _Y = mission.data.custom.firstLocation.y
@@ -171,17 +171,17 @@ end
 
 mission.phases[2].onTargetLocationEntered = function(_x, _y)
     if onServer() then
-        spawnVarlance()
+        kothStory7_spawnVarlance()
     end
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(_x, _y)
     --Start varlance dialog, then go to phase 3.
-    invokeClientFunction(Player(), "onPhase2Dialog", mission.data.custom.varlanceID)
+    invokeClientFunction(Player(), "kothStory7_onPhase2Dialog", mission.data.custom.varlanceID)
 end
 
-local onPhase2DialogEnd = makeDialogServerCallback("onPhase2DialogEnd", 2, function()
-    mission.data.custom.secondLocation = getNextLocation(false)
+local kothStory7_onPhase2DialogEnd = makeDialogServerCallback("kothStory7_onPhase2DialogEnd", 2, function()
+    mission.data.custom.secondLocation = kothStory7_getNextLocation(false)
 
     mission.data.description[4].arguments = { _X = mission.data.custom.secondLocation.x, _Y = mission.data.custom.secondLocation.y }
 
@@ -207,7 +207,7 @@ end
 
 mission.phases[3].onTargetLocationEntered = function(x, y)
     if onServer() then
-        buildObjectiveSector(x, y)
+        kothStory7_buildObjectiveSector(x, y)
     end
 end
 
@@ -252,25 +252,25 @@ mission.phases[4].updateTargetLocationServer = function(timeStep)
     if mission.data.custom.phase4Timer >= 30 and not mission.data.custom.phase4DialogSent then
         mission.data.custom.phase4DialogSent = true
 
-        invokeClientFunction(Player(), "onPhase4Dialog", mission.data.custom.militaryOutpostID)
+        invokeClientFunction(Player(), "kothStory7_onPhase4Dialog", mission.data.custom.militaryOutpostID)
     end
 end
 
 mission.phases[4].onEntityDestroyed = function(id, lastDamageInflictor)
     --No idea how it gets nuked in p4 but y'know just in case.
     if id == mission.data.custom.freighterID then
-        onFreighterDestroyed()
+        kothStory7_onFreighterDestroyed()
     end
 end
 
-local onPhase4DialogEndGood = makeDialogServerCallback("onPhase4DialogEndGood", 4, function()
+local kothStory7_onPhase4DialogEndGood = makeDialogServerCallback("kothStory7_onPhase4DialogEndGood", 4, function()
     nextPhase()
 end)
 
-local onPhase4DialogEndBad = makeDialogServerCallback("oonPhase4DialogEndBad", 4, function()
+local kothStory7_onPhase4DialogEndBad = makeDialogServerCallback("kothStory7_oonPhase4DialogEndBad", 4, function()
     --next, every horizon ship becomes hostile
     --add a powerful defense controller to the sector.
-    onStealthBroken(true)
+    kothStory7_onStealthBroken(true)
 
     --next, fail the mission.
     fail()
@@ -296,7 +296,7 @@ end
 
 mission.phases[5].onPreRenderHud = function()
     if atTargetLocation() then
-        onMarkCloseShips()
+        kothStory7_onMarkCloseShips()
     end
 end
 
@@ -312,7 +312,7 @@ mission.phases[5].updateTargetLocationServer = function(timeStep)
     if freighter then 
         dist = shipyard:getNearestDistance(freighter)
     else
-        onFreighterDestroyed()
+        kothStory7_onFreighterDestroyed()
     end
 
     if dist <= 500 then
@@ -409,19 +409,19 @@ mission.phases[5].onEntityDestroyed = function(id, lastDamageInflictor)
     local destroyer = Entity(lastDamageInflictor)
 
     if id == mission.data.custom.freighterID then
-        onFreighterDestroyed()
+        kothStory7_onFreighterDestroyed()
     end
 
     if destroyer and valid(destroyer) then
         local _player = Player()
         
         if destroyer.factionIndex == _player.index then
-            onStealthBroken(true)
+            kothStory7_onStealthBroken(true)
             fail()
         end
 
         if _player.allianceIndex and destroyer.factionIndex == _player.allianceIndex then
-            onStealthBroken(true)
+            kothStory7_onStealthBroken(true)
             fail()
         end
     end
@@ -477,7 +477,7 @@ mission.phases[5].sectorCallbacks[1] = {
                                         end
 
                                         if dist <= adjDist then
-                                            onStealthBroken(true)
+                                            kothStory7_onStealthBroken(true)
                                             fail()
                                         end
                                     end
@@ -551,7 +551,7 @@ mission.phases[5].timers[1] = {
                                 for _, pShip in pairs(playerShips) do
                                     local dist = militaryOutpost:getNearestDistance(pShip)
                                     if dist <= mission.data.custom.phase5MiloutpostMinDist then
-                                        onStealthBroken(true)
+                                        kothStory7_onStealthBroken(true)
                                         fail()
                                     end
                                 end
@@ -565,7 +565,7 @@ mission.phases[5].timers[1] = {
             --Also, check to see if the outpost's shields are damaged.
             local shieldPct = militaryOutpost.shieldDurability / militaryOutpost.shieldMaxDurability
             if shieldPct <= 0.95 then
-                onStealthBroken(true)
+                kothStory7_onStealthBroken(true)
                 fail()
             end
         end
@@ -613,7 +613,7 @@ mission.phases[5].timers[3] = {
                 if freighter then
                     dist = freighter:getNearestDistance(pShip)
                 else
-                    onFreighterDestroyed()
+                    kothStory7_onFreighterDestroyed()
                 end
                 if dist <= 2000 then
                     escortOK = true
@@ -651,7 +651,7 @@ mission.phases[5].timers[3] = {
                             end
 
                             if not escortOK then
-                                onStealthBroken(true)
+                                kothStory7_onStealthBroken(true)
                                 fail()
                             end
                         end
@@ -688,7 +688,7 @@ mission.phases[6].onBeginServer = function()
     local _MethodName = "Phase 6 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
 
-    onStealthBroken(false)
+    kothStory7_onStealthBroken(false)
 
     local frostbiteFaction = HorizonUtil.getFriendlyFaction()
     local shipyard = Entity(mission.data.custom.shipyardID)
@@ -701,7 +701,7 @@ mission.phases[6].onBeginServer = function()
 
     HorizonUtil.varlanceChatter("We need to buy time for the boarding team! Make sure Horizon doesn't wipe out the shipyard.")
 
-    invokeClientFunction(Player(), "changeOutpostTrack", mission.data.custom.militaryOutpostID)
+    invokeClientFunction(Player(), "kothStory7_changeOutpostTrack", mission.data.custom.militaryOutpostID)
 end
 
 mission.phases[6].updateTargetLocationServer = function()
@@ -744,11 +744,11 @@ end
 
 mission.phases[6].onEntityDestroyed = function(id, lastDamageInflictor)
     if id == mission.data.custom.freighterID then
-        onFreighterDestroyed()
+        kothStory7_onFreighterDestroyed()
     end
 
     if id == mission.data.custom.shipyardID then
-        onShipyardDestroyed()
+        kothStory7_onShipyardDestroyed()
     end
 end
 
@@ -766,9 +766,9 @@ mission.phases[6].timers[1] = {
         if atTargetLocation() then
             if mission.data.custom.waveState == 1 and mission.data.custom.waveNumber < 4 then
                 mission.Log(_MethodName, "Spawning pirate wave " .. tostring(mission.data.custom.waveNumber))
-                spawnPirateWave(mission.data.custom.waveNumber == 3)
+                kothStory7_spawnPirateWave(mission.data.custom.waveNumber == 3)
                 if mission.data.custom.waveNumber == 3 then
-                    spawnHorizonWave()
+                    kothStory7_spawnHorizonWave()
                 end
 
                 mission.data.custom.waveNumber = mission.data.custom.waveNumber + 1
@@ -836,7 +836,7 @@ mission.phases[7].updateTargetLocationServer = function(timeStep)
         freighter:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
         sophie:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
 
-        addDefenseController(Sector())
+        kothStory7_addDefenseController(Sector())
 
         mission.data.description[8].fulfilled = true
         mission.data.description[11].visible = true
@@ -849,7 +849,7 @@ end
 
 --region #SERVER CALLS
 
-function getNextLocation(_onBlockRing)
+function kothStory7_getNextLocation(_onBlockRing)
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -880,7 +880,7 @@ function getNextLocation(_onBlockRing)
     return target
 end
 
-function spawnVarlance()
+function kothStory7_spawnVarlance()
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -904,17 +904,17 @@ function spawnVarlance()
     end
 end
 
-function spawnSophie()
+function kothStory7_spawnSophie()
     local _MethodName = "Spawn Sophie"
     
-    spawnVarlance()
+    kothStory7_spawnVarlance()
 
     local varlance = Entity(mission.data.custom.varlanceID)
     varlance.title = "Sophie's Ship"
     varlance.name = "Day In Hell"
 end
 
-function buildObjectiveSector(x, y)
+function kothStory7_buildObjectiveSector(x, y)
     local _MethodName = "Build Objective Sector"
     mission.Log(_MethodName, "Beginning.")
 
@@ -965,7 +965,7 @@ function buildObjectiveSector(x, y)
     local frostbiteFaction = HorizonUtil.getFriendlyFaction()
     local _HorizonFaction = HorizonUtil.getEnemyFaction()
 
-    spawnSophie()
+    kothStory7_spawnSophie()
     --spawn horizon freighter, then turn it over to frostbite control.
     local sophie = Entity(mission.data.custom.varlanceID)
 
@@ -1025,7 +1025,7 @@ function buildObjectiveSector(x, y)
     mission.data.custom.cleanUpSector = true
 end
 
-function onStealthBroken(runMissionFailed)
+function kothStory7_onStealthBroken(runMissionFailed)
     local _sector = Sector()
 
     local horizonUnits = {_sector:getEntitiesByScriptValue("is_horizon")}
@@ -1047,13 +1047,13 @@ function onStealthBroken(runMissionFailed)
             ship:addScript("utility/delayeddelete.lua", random():getFloat(2, 3))
         end
 
-        invokeClientFunction(Player(), "changeOutpostTrack", mission.data.custom.militaryOutpostID)
+        invokeClientFunction(Player(), "kothStory7_changeOutpostTrack", mission.data.custom.militaryOutpostID)
 
-        addDefenseController(_sector)
+        kothStory7_addDefenseController(_sector)
     end
 end
 
-function spawnPirateWave(lastWave)
+function kothStory7_spawnPirateWave(lastWave)
     --common vals
     local _WaveDanger = 5 + mission.data.custom.waveNumber
     local _Distance = 250 --_#DistAdj
@@ -1090,13 +1090,13 @@ function spawnPirateWave(lastWave)
     end
 
     --spawn alpha wing
-    _spawnFunc(onSpawnAlphaWingFinished, true, lastWave)
+    _spawnFunc(kothStory7_onSpawnAlphaWingFinished, true, lastWave)
 
     --spawn beta wing
-    _spawnFunc(onSpawnBetaWingFinished, false, lastWave)
+    _spawnFunc(kothStory7_onSpawnBetaWingFinished, false, lastWave)
 end
 
-function spawnHorizonWave()
+function kothStory7_spawnHorizonWave()
     local _MethodName = "Spawn Horizon Wave"
     mission.Log(_MethodName, "Beginning.")
 
@@ -1190,7 +1190,7 @@ function spawnHorizonWave()
     sync()
 end
 
-function onSpawnAlphaWingFinished(generated)
+function kothStory7_onSpawnAlphaWingFinished(generated)
     mission.data.custom.waveState = 2
 
     --Attacks Varlance
@@ -1213,7 +1213,7 @@ function onSpawnAlphaWingFinished(generated)
     Placer.resolveIntersections()
 end
 
-function onSpawnBetaWingFinished(generated)
+function kothStory7_onSpawnBetaWingFinished(generated)
     mission.data.custom.waveState = 2
 
     --Attacks the player
@@ -1236,7 +1236,7 @@ function onSpawnBetaWingFinished(generated)
     Placer.resolveIntersections()
 end
 
-function onFreighterDestroyed()
+function kothStory7_onFreighterDestroyed()
     local sophie = Entity(mission.data.custom.varlanceID)
 
     if sophie then
@@ -1245,12 +1245,12 @@ function onFreighterDestroyed()
         sophie:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
     end
 
-    invokeClientFunction(Player(), "changeOutpostTrack", mission.data.custom.militaryOutpostID)
+    invokeClientFunction(Player(), "kothStory7_changeOutpostTrack", mission.data.custom.militaryOutpostID)
 
     fail()
 end
 
-function onShipyardDestroyed()
+function kothStory7_onShipyardDestroyed()
     local sophie = Entity(mission.data.custom.varlanceID)
 
     if sophie then
@@ -1265,12 +1265,12 @@ function onShipyardDestroyed()
         freighter:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
     end
 
-    invokeClientFunction(Player(), "changeOutpostTrack", mission.data.custom.militaryOutpostID)
+    invokeClientFunction(Player(), "kothStory7_changeOutpostTrack", mission.data.custom.militaryOutpostID)
 
     fail()
 end
 
-function addDefenseController(_sector)
+function kothStory7_addDefenseController(_sector)
     local horizonFaction = HorizonUtil.getEnemyFaction()
     local defControlValues = {
         _DefenseLeader = mission.data.custom.militaryOutpostID,
@@ -1291,7 +1291,7 @@ function addDefenseController(_sector)
     _sector:addScriptOnce("sector/background/defensecontroller.lua", defControlValues)
 end
 
-function sendFailureMail()
+function kothStory7_sendFailureMail()
     if not mission.data.custom.sentFailMail then
         local _player = Player()
         local _Mail = Mail()
@@ -1305,7 +1305,7 @@ function sendFailureMail()
     end
 end
 
-function clearShipyardCargo()
+function kothStory7_clearShipyardCargo()
     if atTargetLocation() then
         local horizonShipyard = Entity(mission.data.custom.shipyardID)
         if horizonShipyard and valid(horizonShipyard) then
@@ -1315,7 +1315,7 @@ function clearShipyardCargo()
     end
 end
 
-function finishAndReward()
+function kothStory7_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -1348,7 +1348,7 @@ end
 
 --region #CLIENT CALLS
 
-function onMarkCloseShips()
+function kothStory7_onMarkCloseShips()
     local _MethodName = "On Mark Ships"
 
     local player = Player()
@@ -1392,11 +1392,11 @@ end
 
 --region #CLIENT DIALOG CALLS
 
-function changeOutpostTrack(outpostID)
+function kothStory7_changeOutpostTrack(outpostID)
     Entity(outpostID):invokeFunction("horizonstory7miloutpost.lua", "switchTracks")
 end
 
-function onPhase2Dialog(varlanceID)
+function kothStory7_onPhase2Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -1415,7 +1415,7 @@ function onPhase2Dialog(varlanceID)
     d1.text = "Here's the plan. We'll have your ship and the Ice Nova escort our captured freighter into the sector. Unfortunately, they have plenty of footage of us trashing their ships. I expect them to recognize our ship profiles instantly."
     if playerHeardPlan then
         d8.text = "Understood. I'm sending you the coordinates of the shipyard now. Sophie will meet you there with the captured freighter."
-        d8.onEnd = onPhase2DialogEnd
+        d8.onEnd = kothStory7_onPhase2DialogEnd
 
         d1.answers = {
             { answer = "Go on.", followUp = d2 },
@@ -1444,7 +1444,7 @@ function onPhase2Dialog(varlanceID)
     d6.followUp = d7
 
     d7.text = "I'm sending you the coordinates of the shipyard now. Sophie will meet you there with the captured freighter."
-    d7.onEnd = onPhase2DialogEnd
+    d7.onEnd = kothStory7_onPhase2DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d4, d5, d6, d7 }, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -1453,7 +1453,7 @@ function onPhase2Dialog(varlanceID)
     ScriptUI(varlanceID):interactShowDialog(d0, false)
 end
 
-function onPhase4Dialog(outpostID)
+function kothStory7_onPhase4Dialog(outpostID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -1512,7 +1512,7 @@ function onPhase4Dialog(outpostID)
     }
     
     d10.text = "We weren't giving you the option."
-    d10.onEnd = onPhase4DialogEndBad
+    d10.onEnd = kothStory7_onPhase4DialogEndBad
     
     d11.text = "Your ships destroyed our fleet - destroyed billions of credits worth of technology. Thousands of our comrades are dead."
     d11.answers = {
@@ -1521,7 +1521,7 @@ function onPhase4Dialog(outpostID)
     }
     
     d12.text = "I see. We've changed our mind. All ships, engage and destroy the unknown ships."
-    d12.onEnd = onPhase4DialogEndBad
+    d12.onEnd = kothStory7_onPhase4DialogEndBad
     
     d13.text = "I see. I find that hard to believe. We'll be sending a team to inspect your ship. Keep your weapons powered down."
     d13.answers = {
@@ -1530,7 +1530,7 @@ function onPhase4Dialog(outpostID)
     }
     
     d14.text = "This is our space. You aren't \"done\" with us. All ships, subdue the two unknown vessels."
-    d14.onEnd = onPhase4DialogEndBad
+    d14.onEnd = kothStory7_onPhase4DialogEndBad
     
     d15.text = "<Overheard> We've got to stop hiring such aggressive pirate captains to guard our shipments."
     d15.followUp = d16
@@ -1542,7 +1542,7 @@ function onPhase4Dialog(outpostID)
     d17.followUp = d18
 
     d18.text = "<Secure Channel> Phew! I was afraid they would press. We'll send in the freighter now. Take care to stay away from the defenders, and watch that installation!"
-    d18.onEnd = onPhase4DialogEndGood
+    d18.onEnd = kothStory7_onPhase4DialogEndGood
     
     ESCCUtil.setTalkerTextColors({d2, d4, d5, d7, d18}, "Sophie", HorizonUtil.getDialogSophieTalkerColor(), HorizonUtil.getDialogSophieTextColor())
 

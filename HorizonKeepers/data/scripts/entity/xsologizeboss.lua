@@ -46,6 +46,7 @@ function XsologizeBossHierophant.initialize(_Values)
     self._Data._PirateInterval = 55
     self._Data._SinnerInterval = 65
     self._Data._RevenantInterval = 30
+    self._Data._MaximumVolumeFactorToRevive = 150
 
     if onServer() then
         Entity():registerCallback("onDamaged", "onDamaged")
@@ -234,14 +235,17 @@ end
 
 function XsologizeBossHierophant.findSuitableWreck()
     --Get table of candidate wreckages
-    local _Wreckages = {Sector():getEntitiesByType(EntityType.Wreckage)}
+    local _sector = Sector()
+    local x, y = _sector:getCoordinates()
+    local _Wreckages = { _sector:getEntitiesByType(EntityType.Wreckage)}
+    local maximumVolumeToRevive = Balancing_GetSectorShipVolume(x, y) * self._Data._MaximumVolumeFactorToRevive
 
     --Pick all candidate wrecks that are above 200 blocks.
     shuffle(random(), _Wreckages)
     local _CandidateWrecks = {}
     for _, _Wreck in pairs(_Wreckages) do
         local _Pl = Plan(_Wreck.id)
-        if _Pl.numBlocks >= 200 then
+        if _Pl.numBlocks >= 200 and _Pl.volume <= maximumVolumeToRevive then
             table.insert(_CandidateWrecks, _Wreck)
         end
     end

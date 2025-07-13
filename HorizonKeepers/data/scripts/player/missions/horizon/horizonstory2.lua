@@ -63,7 +63,6 @@ mission.data.custom.ambushPiratesSpawned = false
 mission.globalPhase.noBossEncountersTargetSector = true
 
 mission.globalPhase.onAbandon = function()
-    unregisterMarkContainer()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
@@ -73,7 +72,6 @@ mission.globalPhase.onAbandon = function()
 end
 
 mission.globalPhase.onFail = function()
-    unregisterMarkContainer()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
@@ -83,7 +81,6 @@ mission.globalPhase.onFail = function()
 end
 
 mission.globalPhase.onAccomplish = function()
-    unregisterMarkContainer()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
@@ -99,7 +96,7 @@ mission.phases[1].onBeginServer = function()
     --Get a sector that's very close to the outer edge of the barrier.
     mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
 
-    mission.data.custom.hackerSector = getNextLocation(true)
+    mission.data.custom.hackerSector = kothStory2_getNextLocation(true)
 
     local _X = mission.data.custom.hackerSector.x
     local _Y = mission.data.custom.hackerSector.y
@@ -110,7 +107,7 @@ mission.phases[1].onBeginServer = function()
     --Send mail to player.
     local _player = Player()
     local _Mail = Mail()
-	_Mail.text = Format("Hey, captain.\n\nIt's me, Varlance - your old buddy from smashing the pirate fleet. I'd love to catch up, but I'll cut to the chase. Found the hacker I mentioned the other day.\nThey've been spending time at a local smuggler's outpost recently. You'll find it at (%1%:%2%). I'll meet you there.\n\nVarlance", _X, _Y)
+	_Mail.text = Format("Hey, Captain.\n\nIt's me, Varlance - your old buddy from smashing the pirate fleet. I'd love to catch up, but I'll cut to the chase. Found the hacker I mentioned the other day.\nThey've been spending time at a local smuggler's outpost recently. You'll find it at (%1%:%2%). I'll meet you there.\n\nVarlance", _X, _Y)
 	_Mail.header = "Found the Hacker"
 	_Mail.sender = "Varlance @FrostbiteCompany"
 	_Mail.id = "_horizon_story2_mail1"
@@ -150,10 +147,10 @@ mission.phases[2].onTargetLocationEntered = function(_X, _Y)
     mission.Log(_MethodName, "Beginning...")
     if onServer() then
         --Simulate a smuggler outpost. We can delete all of this once the player leaves the 2nd time.
-        mission.data.custom.deliverToSector = getNextLocation(false)
+        mission.data.custom.deliverToSector = kothStory2_getNextLocation(false)
         mission.data.description[11].arguments = { _X = mission.data.custom.deliverToSector.x, _Y = mission.data.custom.deliverToSector.y }
-        buildSmugglerSector(_X, _Y)
-        spawnVarlance()
+        kothStory2_buildSmugglerSector(_X, _Y)
+        kothStory2_spawnVarlance()
         sync()
     end
 end
@@ -186,7 +183,7 @@ mission.phases[3].onBeginServer = function()
     mission.data.custom.targetContainer = _Containers[1].id
 end
 
-local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, function()
+local kothStory2_onPhase3DialogEnd = makeDialogServerCallback("kothStory2_onPhase3DialogEnd", 3, function()
     nextPhase()
 end)
 
@@ -232,8 +229,32 @@ mission.phases[5].onBeginServer = function()
     --Give the player the satellite package.
     local item = UsableInventoryItem("horizon2satellitepkg.lua", Rarity(RarityType.Exceptional))
     Player():getInventory():add(item, true)
+end
 
-    registerMarkContainer()
+mission.phases[5].onPreRenderHud = function()
+    if not mission.data.custom.doneContainerJob and mission.data.custom.targetContainer then
+        
+        local player = Player()
+        if not player then return end
+        if player.state == PlayerStateType.BuildCraft or player.state == PlayerStateType.BuildTurret then return end
+
+        local renderer = UIRenderer()
+
+        local _TargetContainer = Entity(mission.data.custom.targetContainer)
+
+        if not _TargetContainer or not valid(_TargetContainer) then
+            --Be careful about enabling this - it will spam like crazy.
+            --mission.Log(_MethodName, "WARNING - Target container not valid entity.")
+            return 
+        else
+            local _ContainerMarkOrange = ESCCUtil.getSaneColor(255, 173, 0)
+
+            renderer:renderEntityTargeter(_TargetContainer, _ContainerMarkOrange)
+            renderer:renderEntityArrow(_TargetContainer, 30, 10, 250, _ContainerMarkOrange)
+        end
+
+        renderer:display()
+    end
 end
 
 --region #PHASE 5 TIMER CALLS
@@ -260,7 +281,7 @@ mission.phases[5].timers[1] = { --Check asteroid job.
                 mission.data.custom.destroyAsteroidJob = true
                 sync()
 
-                spawnLocalTransport()
+                kothStory2_spawnLocalTransport()
             end
         end
     end,
@@ -293,7 +314,7 @@ mission.phases[5].timers[2] = { --Check satellite job
                     mission.data.custom.doneSatelliteJob = true
                     sync()
 
-                    invokeClientFunction(Player(), "onPhase5StationDialog", mission.data.custom.smugglerOutpostid)
+                    invokeClientFunction(Player(), "kothStory2_onPhase5StationDialog", mission.data.custom.smugglerOutpostid)
                 end
             end
         end
@@ -334,8 +355,6 @@ mission.phases[5].timers[3] = { --Check container job
                     _SmugglerOutpost:setValue("horizon2_containerjob_done", true)
                     _SmugglerOutpost:setValue("horizon2_job_done", true)
 
-                    unregisterMarkContainer()
-
                     mission.data.description[6].fulfilled = true
                     mission.data.custom.doneContainerJob = true
                     sync()
@@ -343,9 +362,9 @@ mission.phases[5].timers[3] = { --Check container job
                     local _SmugglerDefenders = { _Sector:getEntitiesByScriptValue("horizon2_smuggler_defender") }
                     if #_SmugglerDefenders > 0 then
                         shuffle(random(), _SmugglerDefenders)
-                        invokeClientFunction(Player(), "onPhase5DefenderDialog",  _SmugglerDefenders[1].id)
+                        invokeClientFunction(Player(), "kothStory2_onPhase5DefenderDialog",  _SmugglerDefenders[1].id)
                     else
-                        spawnContainerJobDefender()
+                        kothStory2_spawnContainerJobDefender()
                     end
                 end
             end
@@ -390,8 +409,6 @@ end
 mission.phases[6].onBeginServer = function()
     local _MethodName = "Phase 6 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
-
-    unregisterMarkContainer()
 
     local _SmugglerOutpost = Entity(mission.data.custom.smugglerOutpostid)
     _SmugglerOutpost:removeScript("player/missions/horizon/story2/horizonstory2dialog3.lua")
@@ -439,7 +456,7 @@ mission.phases[7].onTargetLocationEntered = function(_X, _Y)
     mission.data.description[11].fulfilled = true
 
     if onServer() then
-        buildPirateAmbushSector()
+        kothStory2_buildPirateAmbushSector()
     end
 end
 
@@ -466,9 +483,9 @@ mission.phases[7].onTargetLocationArrivalConfirmed = function(_X, _Y)
     end
 
     if _HasArtifact then
-        invokeClientFunction(_player, "onPhase7PirateDialog", _Pirates[1].id)
+        invokeClientFunction(_player, "kothStory2_onPhase7PirateDialog", _Pirates[1].id)
     else
-        invokeClientFunction(_player, "onPhase7PirateNoArtifactDialog", _Pirates[1].id)
+        invokeClientFunction(_player, "kothStory2_onPhase7PirateNoArtifactDialog", _Pirates[1].id)
     end
 end
 
@@ -512,7 +529,7 @@ mission.phases[7].timers[1] = {
         local _PirateCt = ESCCUtil.countEntitiesByValue("is_pirate")
 
         if atTargetLocation() and _PirateCt <= 5 and not mission.data.custom.ambushPiratesSpawned then
-            spawnPirateAmbush()
+            kothStory2_spawnPirateAmbush()
         end
     end,
     repeating = true
@@ -564,15 +581,15 @@ mission.phases[8].onSectorArrivalConfirmed = function(_X, _Y)
     end
 end
 
-local onPhase8DialogFinish = makeDialogServerCallback("onPhase8DialogFinish", 8, function()
-    finishAndReward()
+local kothStory2_onPhase8DialogFinish = makeDialogServerCallback("kothStory2_onPhase8DialogFinish", 8, function()
+    kothStory2_finishAndReward()
 end)
 
 --endregion
 
 --region #SERVER CALLS
 
-function getNextLocation(_onBlockRing)
+function kothStory2_getNextLocation(_onBlockRing)
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -603,7 +620,7 @@ function getNextLocation(_onBlockRing)
     return target
 end
 
-function buildSmugglerSector(_X, _Y)
+function kothStory2_buildSmugglerSector(_X, _Y)
     local _MethodName = "Build Main Sector"
     
     mission.Log(_MethodName, "Sector not built yet. Beginning...")
@@ -648,7 +665,7 @@ function buildSmugglerSector(_X, _Y)
     sync()
 end
 
-function spawnContainerJobDefender()
+function kothStory2_spawnContainerJobDefender()
     local xrand = random()
 
     local dir = xrand:getDirection()
@@ -660,7 +677,7 @@ function spawnContainerJobDefender()
         _Defender:setValue("horizon2_smuggler_defender", true)
         _Defender:removeScript("antismuggle.lua")
 
-        invokeClientFunction(Player(), "onPhase5DefenderDialog",  _Defender.id)
+        invokeClientFunction(Player(), "kothStory2_onPhase5DefenderDialog",  _Defender.id)
     end
 
     local _Faction = ESCCUtil.getNeutralSmugglerFaction()
@@ -676,7 +693,7 @@ function spawnContainerJobDefender()
     generator:endBatch()
 end
 
-function spawnVarlance()
+function kothStory2_spawnVarlance()
     local _MethodName = "Spawn Varlance"
 
     local _spawnVarlance = true
@@ -722,7 +739,7 @@ function spawnVarlance()
     end
 end
 
-function spawnLocalTransport()
+function kothStory2_spawnLocalTransport()
     local _MethodName = "Spawn Local Transport"
 
     mission.Log(_MethodName, "Running.")
@@ -748,7 +765,7 @@ function spawnLocalTransport()
 
         Placer.resolveIntersections(ships)
 
-        invokeClientFunction(Player(), "onPhase5FreighterDialog", _Transport.id, _Transport.translatedTitle)
+        invokeClientFunction(Player(), "kothStory2_onPhase5FreighterDialog", _Transport.id, _Transport.translatedTitle)
     end
 
     local _Faction = ESCCUtil.getNeutralSmugglerFaction()
@@ -764,7 +781,7 @@ function spawnLocalTransport()
     generator:endBatch()
 end
 
-function buildPirateAmbushSector()
+function kothStory2_buildPirateAmbushSector()
     local _PirateTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 8, "Standard")
     local _CreatedPirateTable = {}
 
@@ -786,9 +803,9 @@ function buildPirateAmbushSector()
     SpawnUtility.addEnemyBuffs(_CreatedPirateTable)
 end
 
-function spawnPirateAmbush()
+function kothStory2_spawnPirateAmbush()
     local _MethodName = "Spawning ambush."
-    local _Generator = AsyncPirateGenerator(nil, onPirateAmbushFinished)
+    local _Generator = AsyncPirateGenerator(nil, kothStory2_onPirateAmbushFinished)
     local _WaveTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 5, "High")
 
     mission.Log(_MethodName, "Spawning first group.")
@@ -806,7 +823,7 @@ function spawnPirateAmbush()
     _Generator:endBatch()
 
     --Spawn a torpedo strike team.
-    local _Generator2 = AsyncPirateGenerator(nil, onTorpStrikePirateSpawned)
+    local _Generator2 = AsyncPirateGenerator(nil, kothStory2_onTorpStrikePirateSpawned)
     local _WaveTable2 = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 2, "High")
 
     mission.Log(_MethodName, "Spawning torp strike group.")
@@ -821,7 +838,7 @@ function spawnPirateAmbush()
     mission.data.custom.ambushPiratesSpawned = true
 end
 
-function onPirateAmbushFinished(_Generated)
+function kothStory2_onPirateAmbushFinished(_Generated)
     local _MethodName = "On Pirate Ambush Finished"
     SpawnUtility.addEnemyBuffs(_Generated)
 
@@ -837,7 +854,7 @@ function onPirateAmbushFinished(_Generated)
     Sector():broadcastChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(_Lines))  
 end
 
-function onTorpStrikePirateSpawned(_Generated)
+function kothStory2_onTorpStrikePirateSpawned(_Generated)
     for _, _Ship in pairs(_Generated) do
         local _TorpSlamValues = {
             _ROF = 2,
@@ -858,7 +875,7 @@ function onTorpStrikePirateSpawned(_Generated)
     SpawnUtility.addEnemyBuffs(_Generated)
 end
 
-function finishAndReward()
+function kothStory2_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -897,99 +914,29 @@ end
 
 --endregion
 
---region #CLIENT CALLS
-
-function onMarkContainer()
-    local _MethodName = "On Mark Container"
-
-    local player = Player()
-    if not player then return end
-    if player.state == PlayerStateType.BuildCraft or player.state == PlayerStateType.BuildTurret then return end
-
-    local renderer = UIRenderer()
-
-    --Be careful about enabling both of these. They can cause a stupid amount of spam if something goes wrong with the callback(s)
-    if not mission.data.custom.targetContainer then 
-        --mission.Log(_MethodName, "WARNING - Could not find target container ID.")
-        return 
-    end
-
-    local _TargetContainer = Entity(mission.data.custom.targetContainer)
-
-    if not _TargetContainer or not valid(_TargetContainer) then
-        --mission.Log(_MethodName, "WARNING - Target container not valid entity.")
-        return 
-    else
-        local _ContainerMarkOrange = ESCCUtil.getSaneColor(255, 173, 0)
-
-        renderer:renderEntityTargeter(_TargetContainer, _ContainerMarkOrange)
-        renderer:renderEntityArrow(_TargetContainer, 30, 10, 250, _ContainerMarkOrange)
-    end
-
-    renderer:display()
-end
-
---endregion
-
---region #CLIENT / SERVER UTILITY CALLS
-
-function registerMarkContainer()
-    local _MethodName = "Register Mark Containers"
-
-    if onClient() then
-        mission.Log(_MethodName, "Invoked on Client - Reigstering onPreRenderHud callback.")
-
-        if Player():registerCallback("onPreRenderHud", "onMarkContainer") == 1 then
-            mission.Log(_MethodName, "WARNING - Could not attach prerender callback to script.")
-        end
-    else
-        mission.Log(_MethodName, "Calling on Server => Invoking on Client")
-        
-        invokeClientFunction(Player(), "registerMarkContainer")
-    end
-end
-
-function unregisterMarkContainer()
-    local _MethodName = "Unregister Mark Containers"
-    
-    if onClient() then
-        mission.Log(_MethodName, "Invoking on Client - Unregistering callback.")
-
-        if Player():unregisterCallback("onPreRenderHud", "onMarkContainer") == 1 then
-            mission.Log(_MethodName, "WARNING - Could not detach prerender callback to script.")
-        end
-    else
-        mission.Log(_MethodName, "Calling on Server => Invoking on Client")
-        
-        invokeClientFunction(Player(), "unregisterMarkContainer")
-    end
-end
-
---endregion
-
 --region #CLIENT / SERVER / DIALOG CALLS
 
-function contactedHacker()
+function kothStory2_contactedHacker()
     local _MethodName = "Contacted Hacker"
     if onClient() then
         mission.Log(_MethodName, "Calling on Client => Invoking on Server.")
 
-        invokeServerFunction("contactedHacker")
+        invokeServerFunction("kothStory2_contactedHacker")
         return
     end
 
     mission.Log(_MethodName, "Calling on Server")
 
-    invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.varlanceID)
+    invokeClientFunction(Player(), "kothStory2_onPhase3Dialog", mission.data.custom.varlanceID)
 end
-callable(nil, "contactedHacker")
+callable(nil, "kothStory2_contactedHacker")
 
-function contactedHacker2(_proceed)
+function kothStory2_contactedHacker2(_proceed)
     local _MethodName = "Contacted Hacker 2"
     if onClient() then
         mission.Log(_MethodName, "Calling on Client => Invoking on Server.")
 
-        invokeServerFunction("contactedHacker2", _proceed)
+        invokeServerFunction("kothStory2_contactedHacker2", _proceed)
         return
     end
 
@@ -1015,14 +962,14 @@ function contactedHacker2(_proceed)
         end
     end
 end
-callable(nil, "contactedHacker2")
+callable(nil, "kothStory2_contactedHacker2")
 
-function contactedHackerGiveSat()
+function kothStory2_contactedHackerGiveSat()
     local _MethodName = "Contacted Hacker Give Sat"
     if onClient() then
         mission.Log(_MethodName, "Calling on Client => Invoking on Server.")
 
-        invokeServerFunction("contactedHackerGiveSat")
+        invokeServerFunction("kothStory2_contactedHackerGiveSat")
         return
     end
 
@@ -1031,14 +978,14 @@ function contactedHackerGiveSat()
     local item = UsableInventoryItem("horizon2satellitepkg.lua", Rarity(RarityType.Exceptional))
     Player():getInventory():add(item, true)
 end
-callable(nil, "contactedHackerGiveSat")
+callable(nil, "kothStory2_contactedHackerGiveSat")
 
-function contactedHacker3()
+function kothStory2_contactedHacker3()
     local _MethodName = "Contacted Hacker 3"
     if onClient() then
         mission.Log(_MethodName, "Calling on Client => Invoking on Server.")
 
-        invokeServerFunction("contactedHacker3", _proceed)
+        invokeServerFunction("kothStory2_contactedHacker3")
         return
     end
 
@@ -1048,26 +995,26 @@ function contactedHacker3()
         nextPhase() --Takes us into phase 6 - where we grab the satellite.
     end
 end
-callable(nil, "contactedHacker3")
+callable(nil, "kothStory2_contactedHacker3")
 
-function contactedHacker4()
+function kothStory2_contactedHacker4()
     local _MethodName = "Contacted Hacker 4"
     if onClient() then
         mission.Log(_MethodName, "Calling on Client => Invoking on Server.")
 
-        invokeServerFunction("contactedHacker4", _proceed)
+        invokeServerFunction("kothStory2_contactedHacker4")
         return
     end
 
     mission.Log(_MethodName, "Calling on Server - advancing phase.")
 
     if mission.internals.phaseIndex == 8 then
-        invokeClientFunction(Player(), "onPhase8Dialog", mission.data.custom.varlanceID)
+        invokeClientFunction(Player(), "kothStory2_onPhase8Dialog", mission.data.custom.varlanceID)
     end
 end
-callable(nil, "contactedHacker4")
+callable(nil, "kothStory2_contactedHacker4")
 
-function onPhase3Dialog(varlanceID)
+function kothStory2_onPhase3Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -1087,20 +1034,20 @@ function onPhase3Dialog(varlanceID)
     }
 
     d2.text = "I'll hold down the fort while you get to work, buddy. Don't worry about any pirates or Xsotan."
-    d2.onEnd = onPhase3DialogEnd
+    d2.onEnd = kothStory2_onPhase3DialogEnd
 
     d3.text = "Won't work. They'll just go to ground again, and none of the other hackers in the area will work with us afterwards."
     d3.followUp = d4
 
     d4.text = "I understand your frustration. Unfortunately, we need to play nice. I'll hold down the fort while you get to work, buddy. Don't worry about any pirates or Xsotan."
-    d4.onEnd = onPhase3DialogEnd
+    d4.onEnd = kothStory2_onPhase3DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ScriptUI(varlanceID):interactShowDialog(d0, false)
 end
 
-function onPhase5FreighterDialog(freighterID, freighterTitle)
+function kothStory2_onPhase5FreighterDialog(freighterID, freighterTitle)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -1125,7 +1072,7 @@ function onPhase5FreighterDialog(freighterID, freighterTitle)
     ScriptUI(freighterID):interactShowDialog(d0, false)
 end
 
-function onPhase5DefenderDialog(defenderID)
+function kothStory2_onPhase5DefenderDialog(defenderID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -1147,7 +1094,7 @@ function onPhase5DefenderDialog(defenderID)
     ScriptUI(defenderID):interactShowDialog(d0, false)
 end
 
-function onPhase5StationDialog(stationID)
+function kothStory2_onPhase5StationDialog(stationID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -1168,7 +1115,7 @@ function onPhase5StationDialog(stationID)
     ScriptUI(stationID):interactShowDialog(d0, false)
 end
 
-function onPhase7PirateDialog(pirateID)
+function kothStory2_onPhase7PirateDialog(pirateID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -1201,7 +1148,7 @@ function onPhase7PirateDialog(pirateID)
     ScriptUI(pirateID):interactShowDialog(d0, false)
 end
 
-function onPhase7PirateNoArtifactDialog(pirateID)
+function kothStory2_onPhase7PirateNoArtifactDialog(pirateID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -1226,7 +1173,7 @@ function onPhase7PirateNoArtifactDialog(pirateID)
     ScriptUI(pirateID):interactShowDialog(d0, false)
 end
 
-function onPhase8Dialog(varlanceID)
+function kothStory2_onPhase8Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
 
@@ -1234,7 +1181,7 @@ function onPhase8Dialog(varlanceID)
     d0.followUp = d1
 
     d1.text = "It's going to take some time to go through this and come up with a plan of action. I'll be in touch. Stay sharp in the meantime, buddy."
-    d1.onEnd = onPhase8DialogFinish
+    d1.onEnd = kothStory2_onPhase8DialogFinish
 
     ESCCUtil.setTalkerTextColors({d0, d1}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 

@@ -59,15 +59,15 @@ mission.data.custom.hyperspaceCounter = 0
 mission.globalPhase.noBossEncountersTargetSector = true
 
 mission.globalPhase.onAbandon = function()
-    handleSectorCleanup(true)
+    kothStory3_handleSectorCleanup(true)
 end
 
 mission.globalPhase.onFail = function()
-    handleSectorCleanup(true)
+    kothStory3_handleSectorCleanup(true)
 end
 
 mission.globalPhase.onAccomplish = function()
-    handleSectorCleanup(false)
+    kothStory3_handleSectorCleanup(false)
 end
 
 mission.globalPhase.onTargetLocationEntered = function(_X, _Y)
@@ -87,7 +87,7 @@ mission.phases[1].onBeginServer = function()
     --Get a sector that's very close to the outer edge of the barrier.
     mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
 
-    mission.data.custom.firstLocation = getNextLocation(true)
+    mission.data.custom.firstLocation = kothStory3_getNextLocation(true)
 
     local _X = mission.data.custom.firstLocation.x
     local _Y = mission.data.custom.firstLocation.y
@@ -136,7 +136,7 @@ end
 
 mission.phases[2].onTargetLocationEntered = function(_x, _y)
     if onServer() then
-        mission.data.custom.secondLocation = getNextLocation(false)
+        mission.data.custom.secondLocation = kothStory3_getNextLocation(false)
 
         mission.data.description[5].arguments = { _X = mission.data.custom.secondLocation.x, _Y = mission.data.custom.secondLocation.y }
         sync()
@@ -165,8 +165,8 @@ mission.phases[2].timers[1] = {
             mission.data.description[3].fulfilled = true
             mission.data.description[4].visible = true
 
-            spawnTransports()
-            spawnEscorts(6, true)
+            kothStory3_spawnTransports()
+            kothStory3_spawnEscorts(6, true)
             
             mission.data.custom.hyperspaceCounter = 0
             mission.data.custom.transportsSpawned = true
@@ -180,7 +180,7 @@ mission.phases[2].timers[2] = {
     time = 5,
     callback = function()
         if atTargetLocation() and mission.data.custom.transportsSpawned and mission.data.custom.hyperspaceCounter >= 180 then
-            jumpTransports()
+            kothStory3_jumpTransports()
             
             mission.data.custom.hyperspaceCounter = 0
 
@@ -211,7 +211,7 @@ end
 mission.phases[3].onTargetLocationEntered = function(_x, _y)
     if onServer() then
         if not mission.data.custom.phase3PirateGroupSpawned then
-            spawnEscorts(8, false)
+            kothStory3_spawnEscorts(8, false)
             mission.data.custom.phase3PirateGroupSpawned = true
         end
         local _Freighters = { Sector():getEntitiesByScriptValue("_horizon3_freighter") }
@@ -243,7 +243,7 @@ mission.phases[3].timers[2] = {
     time = 5,
     callback = function()
         if atTargetLocation() and mission.data.custom.transportsSpawned and mission.data.custom.hyperspaceCounter >= 180 then
-            jumpTransports2() --This fails the mission so no need to worry about anything else here.
+            kothStory3_jumpTransports2() --This fails the mission so no need to worry about anything else here.
         end
     end,
     repeating = true
@@ -272,7 +272,7 @@ mission.phases[4].onBeginServer = function()
     local _MethodName = "Phase 4 On Begin Server"
     mission.Log(_MethodName, "Beginning...")
 
-    mission.data.custom.thirdLocation = getNextLocation(false)
+    mission.data.custom.thirdLocation = kothStory3_getNextLocation(false)
     
     local _X = mission.data.custom.thirdLocation.x
     local _Y = mission.data.custom.thirdLocation.y
@@ -331,9 +331,11 @@ mission.phases[5].onTargetLocationEntered = function(_x, _y)
     mission.data.custom.phase5MiniBossTimer = 0
     mission.data.custom.phase5PirateKOd = false
 
+    mission.data.custom.cleanUpSector = true
+
     if onServer() then
-        spawnPirateGroup()
-        spawnVarlance()
+        kothStory3_spawnPirateGroup()
+        kothStory3_spawnVarlance()
     end
 end
 
@@ -371,7 +373,7 @@ mission.phases[5].timers[1] = {
             mission.Log(_MethodName, "Player is on location and minibosses not yet spawned - there are " .. tostring(_pirateCt) .. " pirates.")
 
             if _pirateCt <= 6 then
-                spawnPirateBosses()
+                kothStory3_spawnPirateBosses()
 
                 HorizonUtil.varlanceChatter("Another Deadshot... The energy readings from that Bombardier are concerning, though. Stay frosty.")
             end
@@ -388,7 +390,7 @@ mission.phases[5].timers[2] = {
         if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
-            spawnVarlance()
+            kothStory3_spawnVarlance()
         end
     end,
     repeating = true
@@ -422,9 +424,9 @@ mission.phases[6].onBegin = function()
 end
 
 mission.phases[6].onBeginServer = function()
-    spawnVarlance()
+    kothStory3_spawnVarlance()
     local _Pirates = { Sector():getEntitiesByScriptValue("is_pirate") }
-    invokeClientFunction(Player(), "onPhase6PirateDialog", _Pirates[1].id, _Pirates[1].translatedTitle)
+    invokeClientFunction(Player(), "kothStory3_onPhase6PirateDialog", _Pirates[1].id, _Pirates[1].translatedTitle)
 end
 
 mission.phases[6].updateTargetLocationServer = function(_timeStep)
@@ -436,12 +438,12 @@ mission.phases[6].updateTargetLocationServer = function(_timeStep)
             --we're already in the dialog so no need to allow it again. It WILL keep invoking if we don't do this.
             mission.data.custom.phase6VarlanceDialogAllowed = false 
 
-            invokeClientFunction(Player(), "onPhase6VarlanceDialog", mission.data.custom.varlanceID)
+            invokeClientFunction(Player(), "kothStory3_onPhase6VarlanceDialog", mission.data.custom.varlanceID)
         end
     end
 end
 
-local onPhase6PirateDialogEnd = makeDialogServerCallback("onPhase6PirateDialogEnd", 6, function()
+local kothStory3_onPhase6PirateDialogEnd = makeDialogServerCallback("kothStory3_onPhase6PirateDialogEnd", 6, function()
     local _Pirates = { Sector():getEntitiesByScriptValue("is_pirate") }
     local _Pirate = _Pirates[1]
 
@@ -455,18 +457,18 @@ local onPhase6PirateDialogEnd = makeDialogServerCallback("onPhase6PirateDialogEn
     mission.data.custom.phase6VarlanceDialogAllowed = true
 end)
 
-local onPhase6VarlanceDialogEnd = makeDialogServerCallback("onPhase6VarlanceDialogEnd", 6, function()
+local kothStory3_onPhase6VarlanceDialogEnd = makeDialogServerCallback("kothStory3_onPhase6VarlanceDialogEnd", 6, function()
     local _Varlance = Entity(mission.data.custom.varlanceID)
     _Varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
 
-    finishAndReward()
+    kothStory3_finishAndReward()
 end)
 
 --endregion
 
 --region #SERVER CALLS
 
-function getNextLocation(_onBlockRing)
+function kothStory3_getNextLocation(_onBlockRing)
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -497,7 +499,7 @@ function getNextLocation(_onBlockRing)
     return target
 end
 
-function spawnTransports()
+function kothStory3_spawnTransports()
     local _Sector = Sector()
     local _X, _Y = _Sector:getCoordinates()
     local _random = random()
@@ -560,7 +562,7 @@ function spawnTransports()
     _Sector:broadcastChatMessage(_Freighters[1], ChatMessageType.Chatter, "Enemies, here?! How did they find us? Charge the hyperdrives now!")
 end
 
-function jumpTransports()
+function kothStory3_jumpTransports()
     local _Sector = Sector()
     local _Freighters = {_Sector:getEntitiesByScriptValue("_horizon3_freighter")}
     --This isn't timed for failure because of the amount of work the player has to do to get here. Imagine failing after going through phase 1-4.
@@ -577,7 +579,7 @@ function jumpTransports()
     Player():sendChatMessage("Nav Computer", 0, "The freighters have jumped to \\s(%1%,%2%).", _JumpTo.x, _JumpTo.y)
 end
 
-function jumpTransports2()
+function kothStory3_jumpTransports2()
     local _Sector = Sector()
     local _Freighters = {_Sector:getEntitiesByScriptValue("_horizon3_freighter")}
 
@@ -589,7 +591,7 @@ function jumpTransports2()
     fail()
 end
 
-function spawnEscorts(_EscortCt, _SpawnNearTransports)
+function kothStory3_spawnEscorts(_EscortCt, _SpawnNearTransports)
     local _MethodName = "Spawn Shipment Escort"
     mission.Log(_MethodName, "Spawning escorts at danger level " .. tostring(mission.data.custom.dangerLevel))
 
@@ -598,7 +600,7 @@ function spawnEscorts(_EscortCt, _SpawnNearTransports)
     shuffle(random(), _Freighters)
     local _Centerpos = _Freighters[1].translationf
 
-    local _PirateGenerator = AsyncPirateGenerator(nil, onEscortsFinished)
+    local _PirateGenerator = AsyncPirateGenerator(nil, kothStory3_onEscortsFinished)
     local _PirateTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _EscortCt, "Standard")
 
     _PirateGenerator:startBatch()
@@ -624,15 +626,15 @@ function spawnEscorts(_EscortCt, _SpawnNearTransports)
     _PirateGenerator:endBatch()
 end
 
-function onEscortsFinished(_Generated)
+function kothStory3_onEscortsFinished(_Generated)
     local _MethodName = "On Freighter Escorts Generated"
     SpawnUtility.addEnemyBuffs(_Generated)
 
     Placer.resolveIntersections()
 end
 
-function spawnPirateGroup()
-    local _PirateGenerator = AsyncPirateGenerator(nil, onPirateGroupFinished)
+function kothStory3_spawnPirateGroup()
+    local _PirateGenerator = AsyncPirateGenerator(nil, kothStory3_onPirateGroupFinished)
     local _PirateTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 8, "Standard")
 
     _PirateGenerator:startBatch()
@@ -645,7 +647,7 @@ function spawnPirateGroup()
     _PirateGenerator:endBatch()
 end
 
-function onPirateGroupFinished(_Generated)
+function kothStory3_onPirateGroupFinished(_Generated)
     local _MethodName = "On Pirate Ambush Group Finished"
     _Generated[1]:addScriptOnce("entity/utility/kobehavior.lua")
 
@@ -658,10 +660,10 @@ function onPirateGroupFinished(_Generated)
     Placer.resolveIntersections()
 end
 
-function spawnPirateBosses()
+function kothStory3_spawnPirateBosses()
     local _MethodName = "Spawn Shipment Escort"
     mission.Log(_MethodName, "Spawning escorts at danger level " .. tostring(mission.data.custom.dangerLevel))
-    local _PirateGenerator = AsyncPirateGenerator(nil, onPirateBossesSpawned)
+    local _PirateGenerator = AsyncPirateGenerator(nil, kothStory3_onPirateBossesSpawned)
     local _PirateTable = { "Devastator", "Devastator" }
 
     _PirateGenerator:startBatch()
@@ -674,7 +676,7 @@ function spawnPirateBosses()
     _PirateGenerator:endBatch()
 end
 
-function spawnVarlance()
+function kothStory3_spawnVarlance()
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -697,7 +699,7 @@ function spawnVarlance()
     end
 end
 
-function onPirateBossesSpawned(_Generated)
+function kothStory3_onPirateBossesSpawned(_Generated)
 
     local _Deadshot = _Generated[1]
     local _Sector = Sector()
@@ -742,17 +744,16 @@ function onPirateBossesSpawned(_Generated)
     mission.data.custom.phase5MiniBossesSpawned = true
 end
 
-function handleSectorCleanup(cleanAll)
+function kothStory3_handleSectorCleanup(cleanAll)
     if atTargetLocation() then
         ESCCUtil.allPiratesDepart()
-        runFullSectorCleanup(cleanAll)
     end
     if mission.internals.phaseIndex >= 5 and mission.data.location then
         runFullSectorCleanup(cleanAll)
     end
 end
 
-function finishAndReward()
+function kothStory3_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -776,7 +777,7 @@ end
 
 --region #CLIENT / SERVER / DIALOG CALLS
 
-function onPhase6PirateDialog(_PirateID, _PirateTitle)
+function kothStory3_onPhase6PirateDialog(_PirateID, _PirateTitle)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -874,7 +875,7 @@ function onPhase6PirateDialog(_PirateID, _PirateTitle)
     d15.followUp = d16
 
     d16.text = "I should have known. See you in hell, you piece of s-"
-    d16.onEnd = onPhase6PirateDialogEnd
+    d16.onEnd = kothStory3_onPhase6PirateDialogEnd
 
     ESCCUtil.setTalkerTextColors({d1, d3, d15}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -884,7 +885,7 @@ function onPhase6PirateDialog(_PirateID, _PirateTitle)
     ScriptUI(_PirateID):interactShowDialog(d0, false)
 end
 
-function onPhase6VarlanceDialog(_VarlanceID)
+function kothStory3_onPhase6VarlanceDialog(_VarlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -906,20 +907,20 @@ function onPhase6VarlanceDialog(_VarlanceID)
 
     d2.text = "Stay sharp in the meantime. I'll be in touch."
     d2.answers = {
-        { answer = "You got it.", onSelect = onPhase6VarlanceDialogEnd },
+        { answer = "You got it.", onSelect = kothStory3_onPhase6VarlanceDialogEnd },
         { answer = "Wait.", followUp = d3 }
     }
 
     d3.text = "... Hmmm? What's on your mind?"
     d3.answers = {
         { answer = "Why did you kill those pirates?", followUp = d4 },
-        { answer = "Never mind.", onSelect = onPhase6VarlanceDialogEnd }
+        { answer = "Never mind.", onSelect = kothStory3_onPhase6VarlanceDialogEnd }
     }
 
     d4.text = "They're trash. You can make whatever socioeconomic argument you want - the galaxy is better off without their like."
     d4.answers = {
         { answer = "They were defenseless.", followUp = d5 },
-        { answer = "You're right.", onSelect = onPhase6VarlanceDialogEnd }
+        { answer = "You're right.", onSelect = kothStory3_onPhase6VarlanceDialogEnd }
     }
 
     d5.text = "Hmph. Don't go soft on me now, buddy. You ever hear the story of Swoks? Not the copycat out in the iron wastes... the first one."
@@ -941,7 +942,7 @@ function onPhase6VarlanceDialog(_VarlanceID)
     d10.followUp = d11
 
     d11.text = "I'll be in touch."
-    d11.onEnd = onPhase6VarlanceDialogEnd
+    d11.onEnd = kothStory3_onPhase6VarlanceDialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 

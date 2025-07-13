@@ -98,7 +98,7 @@ mission.phases[1].onBeginServer = function()
     --Get a sector that's very close to the outer edge of the barrier.
     mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
 
-    mission.data.custom.hackerSector = getNextLocation(true)
+    mission.data.custom.hackerSector = kothStory8_getNextLocation(true)
 
     local _X = mission.data.custom.hackerSector.x
     local _Y = mission.data.custom.hackerSector.y
@@ -150,8 +150,8 @@ mission.phases[2].onTargetLocationEntered = function(_X, _Y)
     local _MethodName = "Phase 2 on Target Location Entered"
     mission.Log(_MethodName, "Beginning...")
     if onServer() then
-        buildSmugglerSector(_X, _Y)
-        spawnVarlance()
+        kothStory8_buildSmugglerSector(_X, _Y)
+        kothStory8_spawnVarlance()
     end
 end
 
@@ -181,7 +181,7 @@ mission.phases[3].onBegin = function()
     mission.data.description[4].visible = true
 end
 
-local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, function()
+local kothStory8_onPhase3DialogEnd = makeDialogServerCallback("kothStory8_onPhase3DialogEnd", 3, function()
     nextPhase()
 end)
 
@@ -191,7 +191,7 @@ mission.phases[3].timers[1] = {
         if onServer() and atTargetLocation() and not mission.data.custom.phase3DialogStarted then
             mission.data.custom.phase3DialogStarted = true
 
-            invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.varlanceID)
+            invokeClientFunction(Player(), "kothStory8_onPhase3Dialog", mission.data.custom.varlanceID)
         end
     end,
     repeating = true --have to repeat since the player might leave the sector.
@@ -222,7 +222,7 @@ mission.phases[4].onBeginServer = function()
     _VarlanceAI:setFlyLinear(_SmugglerHideout.translationf, _Radius, false)
 end
 
-local onPhase4DialogEnd = makeDialogServerCallback("onPhase4DialogEnd", 4, function()
+local kothStory8_onPhase4DialogEnd = makeDialogServerCallback("kothStory8_onPhase4DialogEnd", 4, function()
     nextPhase()
 end)
 
@@ -245,7 +245,7 @@ mission.phases[4].triggers[1] = {
         return false
     end,
     callback = function()
-        invokeClientFunction(Player(), "onPhase4Dialog", mission.data.custom.smugglerOutpostID)
+        invokeClientFunction(Player(), "kothStory8_onPhase4Dialog", mission.data.custom.smugglerOutpostID)
     end,
     repeating = false
 }
@@ -303,7 +303,7 @@ mission.phases[5].updateTargetLocationServer = function()
     end
 end
 
-local onPhase5DialogEnd = makeDialogServerCallback("onPhase5DialogEnd", 5, function()
+local kothStory8_onPhase5DialogEnd = makeDialogServerCallback("kothStory8_onPhase5DialogEnd", 5, function()
     nextPhase()
 end)
 
@@ -315,7 +315,7 @@ mission.phases[5].timers[1] = {
         if onServer() and atTargetLocation() and not mission.data.custom.phase5DialogStarted then
             mission.data.custom.phase5DialogStarted = true
 
-            invokeClientFunction(Player(), "onPhase5Dialog", mission.data.custom.smugglerOutpostID)
+            invokeClientFunction(Player(), "kothStory8_onPhase5Dialog", mission.data.custom.smugglerOutpostID)
         end
     end,
     repeating = true --have to repeat since the player might leave the sector.
@@ -354,7 +354,6 @@ end
 --endregion
 
 mission.phases[6] = {}
-mission.phases[6].timers = {}
 mission.phases[6].playerCallbacks = {}
 mission.phases[6].showUpdateOnEnd = true
 mission.phases[6].noBossEncountersTargetSector = true
@@ -367,11 +366,11 @@ mission.phases[6].onBegin = function()
     mission.data.description[6].fulfilled = true
     mission.data.description[7].visible = true
 
-    updateDescription()
+    kothStory8_updateDescription()
 
     local ship = Player().craft
     if not ship then return end
-    ship:registerCallback("onCargoChanged", "updateDescription")
+    ship:registerCallback("onCargoChanged", "kothStory8_updateDescription")
 end
 
 mission.phases[6].onBeginServer = function()
@@ -383,7 +382,7 @@ end
 mission.phases[6].onRestore = function()
     local ship = Player().craft
     if not ship then return end
-    ship:registerCallback("onCargoChanged", "updateDescription")
+    ship:registerCallback("onCargoChanged", "kothStory8_updateDescription")
 end
 
 mission.phases[6].playerCallbacks[1] = {
@@ -391,8 +390,8 @@ mission.phases[6].playerCallbacks[1] = {
     func = function()
         local ship = Player().craft
         if not ship then return end
-        ship:registerCallback("onCargoChanged", "updateDescription")
-        updateDescription() -- update immediately as well
+        ship:registerCallback("onCargoChanged", "kothStory8_updateDescription")
+        kothStory8_updateDescription() -- update immediately as well
     end
 }
 
@@ -435,7 +434,7 @@ mission.phases[7].onBeginServer = function()
     end
 end
 
-local onPhase7DialogEnd = makeDialogServerCallback("onPhase7DialogEnd", 7, function()
+local kothStory8_onPhase7DialogEnd = makeDialogServerCallback("kothStory8_onPhase7DialogEnd", 7, function()
     nextPhase()
 end)
 
@@ -447,7 +446,7 @@ mission.phases[7].timers[1] = {
         if onServer() and atTargetLocation() and not mission.data.custom.phase7DialogStarted then
             mission.data.custom.phase7DialogStarted = true
 
-            invokeClientFunction(Player(), "onPhase7Dialog", mission.data.custom.smugglerOutpostID)
+            invokeClientFunction(Player(), "kothStory8_onPhase7Dialog", mission.data.custom.smugglerOutpostID)
         end
     end,
     repeating = true --have to repeat since the player might leave the sector.
@@ -468,8 +467,8 @@ mission.phases[8].onBegin = function()
     mission.data.description[14].visible = true
 end
 
-local onPhase8DialogEnd = makeDialogServerCallback("onPhase8DialogEnd", 8, function()
-    finishAndReward()
+local kothStory8_onPhase8DialogEnd = makeDialogServerCallback("kothStory8_onPhase8DialogEnd", 8, function()
+    kothStory8_finishAndReward()
 end)
 
 --region #PHASE 8 TIMER CALLS
@@ -480,7 +479,7 @@ mission.phases[8].timers[1] = {
         if onServer() and atTargetLocation() and not mission.data.custom.phase8DialogStarted then
             mission.data.custom.phase8DialogStarted = true
 
-            invokeClientFunction(Player(), "onPhase8Dialog", mission.data.custom.varlanceID)
+            invokeClientFunction(Player(), "kothStory8_onPhase8Dialog", mission.data.custom.varlanceID)
         end
     end,
     repeating = true --have to repeat since the player might leave the sector.
@@ -492,7 +491,7 @@ mission.phases[8].timers[1] = {
 
 --region #SERVER CALLS
 
-function getNextLocation(_onBlockRing)
+function kothStory8_getNextLocation(_onBlockRing)
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -523,7 +522,7 @@ function getNextLocation(_onBlockRing)
     return target
 end
 
-function buildSmugglerSector(_X, _Y)
+function kothStory8_buildSmugglerSector(_X, _Y)
     local _MethodName = "Build Main Sector"
     
     mission.Log(_MethodName, "Sector not built yet. Beginning...")
@@ -537,6 +536,7 @@ function buildSmugglerSector(_X, _Y)
 
     local smugglerHideout = _Generator:createStation(_SmugglerFaction, "merchants/smugglersmarket.lua")
     smugglerHideout.title = "Smuggler Hideout"%_t
+    smugglerHideout:setValue("no_chatter", true)
     smugglerHideout:addScript("merchants/tradingpost.lua")
     smugglerHideout.shieldDurability = 0
     smugglerHideout.durability = smugglerHideout.maxDurability * 0.08
@@ -585,7 +585,7 @@ function buildSmugglerSector(_X, _Y)
     sync()
 end
 
-function spawnVarlance()
+function kothStory8_spawnVarlance()
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -612,7 +612,7 @@ function spawnVarlance()
     end
 end
 
-function updateDescription()
+function kothStory8_updateDescription()
     local methodName = "Update Description"
     --Shamelessly copied from Boxelware. If it works, why not?
     if mission.internals.phaseIndex ~= 6 then 
@@ -653,7 +653,7 @@ function updateDescription()
     sync()
 end
 
-function finishAndReward()
+function kothStory8_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -677,7 +677,7 @@ end
 
 --region #CLIENT DIALOG CALLS
 
-function onPhase3Dialog(varlanceID)
+function kothStory8_onPhase3Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -693,14 +693,14 @@ function onPhase3Dialog(varlanceID)
     d2.followUp = d3
 
     d3.text = "Let's make contact with the hideout. Maybe Mace survived the attack."
-    d3.onEnd = onPhase3DialogEnd
+    d3.onEnd = kothStory8_onPhase3DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ScriptUI(varlanceID):interactShowDialog(d0, false)
 end
 
-function onPhase4Dialog(outpostID)
+function kothStory8_onPhase4Dialog(outpostID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -751,14 +751,14 @@ function onPhase4Dialog(outpostID)
     d10.followUp = d11
 
     d11.text = "I'll get Sophie to put together a boarding team. Maybe she can find something."
-    d11.onEnd = onPhase4DialogEnd
+    d11.onEnd = kothStory8_onPhase4DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d2, d4, d6, d8, d10, d11}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ScriptUI(outpostID):interactShowDialog(d0, false)
 end
 
-function onPhase5Dialog(outpostID)
+function kothStory8_onPhase5Dialog(outpostID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -822,7 +822,7 @@ function onPhase5Dialog(outpostID)
 	d14.followUp = d15
 	
 	d15.text = "... Alright. I'll stay here and provide overwatch. You're going shopping, buddy."
-	d15.onEnd = onPhase5DialogEnd
+	d15.onEnd = kothStory8_onPhase5DialogEnd
 
     ESCCUtil.setTalkerTextColors({ d1, d3, d7, d9, d11, d13, d15 }, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -831,7 +831,7 @@ function onPhase5Dialog(outpostID)
     ScriptUI(outpostID):interactShowDialog(d0, false)
 end
 
-function onPhase7Dialog(outpostID)
+function kothStory8_onPhase7Dialog(outpostID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -855,7 +855,7 @@ function onPhase7Dialog(outpostID)
     d4.followUp = d5
 
     d5.text = "Yes sir! On my way."
-    d5.onEnd = onPhase7DialogEnd
+    d5.onEnd = kothStory8_onPhase7DialogEnd
 
     ESCCUtil.setTalkerTextColors({ d4 }, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -864,7 +864,7 @@ function onPhase7Dialog(outpostID)
     ScriptUI(outpostID):interactShowDialog(d0, false)
 end
 
-function onPhase8Dialog(varlanceID)
+function kothStory8_onPhase8Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -884,19 +884,19 @@ function onPhase8Dialog(varlanceID)
     d3.followUp = d4
 
     d4.text = "... If I never see encrypted data again it will be too soon."
-    d4.onEnd = onPhase8DialogEnd
+    d4.onEnd = kothStory8_onPhase8DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ScriptUI(varlanceID):interactShowDialog(d0, false)
 end
 
-function onDeliveredIngredients()
+function kothStory8_onDeliveredIngredients()
     local _MethodName = "Provided Ingredients"
     if onClient() then
         mission.Log(_MethodName, "Calling on Client => Invoking on Server.")
 
-        invokeServerFunction("onDeliveredIngredients")
+        invokeServerFunction("kothStory8_onDeliveredIngredients")
         return
     end
 
@@ -906,6 +906,6 @@ function onDeliveredIngredients()
         nextPhase() --Takes us into phase 7.
     end
 end
-callable(nil, "onDeliveredIngredients")
+callable(nil, "kothStory8_onDeliveredIngredients")
 
 --endregion

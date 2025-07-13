@@ -65,7 +65,7 @@ mission.globalPhase.onAbandon = function()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
-            awacsDeparts()
+            kothStory4_awacsDeparts()
         end
         runFullSectorCleanup(true)
     end
@@ -75,7 +75,7 @@ mission.globalPhase.onFail = function()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
-            awacsDeparts()
+            kothStory4_awacsDeparts()
         end
         runFullSectorCleanup(true)
     end
@@ -85,7 +85,7 @@ mission.globalPhase.onAccomplish = function()
     if mission.data.location then
         if atTargetLocation() then
             ESCCUtil.allPiratesDepart()
-            awacsDeparts()
+            kothStory4_awacsDeparts()
         end
         runFullSectorCleanup(false)
     end
@@ -121,7 +121,7 @@ mission.phases[1].onBeginServer = function()
     --Get a sector that's very close to the outer edge of the barrier.
     mission.Log(_MethodName, "BlockRingMax is " .. tostring(Balancing.BlockRingMax))
 
-    mission.data.custom.firstLocation = getNextLocation(true)
+    mission.data.custom.firstLocation = kothStory4_getNextLocation(true)
 
     local _X = mission.data.custom.firstLocation.x
     local _Y = mission.data.custom.firstLocation.y
@@ -174,7 +174,7 @@ mission.phases[2].onTargetLocationEntered = function(_x, _y)
     mission.data.description[6].visible = true
 
     if onServer() then
-        buildObjectiveSector(_x, _y)
+        kothStory4_buildObjectiveSector(_x, _y)
     end
 end
 
@@ -302,7 +302,7 @@ mission.phases[4].updateTargetLocationServer = function(_timeStep)
             }
 
             HorizonUtil.varlanceChatter(_varlanceLines[_lineidx])
-            explodeBShip()
+            kothStory4_explodeBShip()
 
             mission.data.custom.waveState = 3
         elseif mission.data.custom.waveState == 3 then
@@ -366,9 +366,9 @@ mission.phases[4].timers[1] = {
         if atTargetLocation() then
             if mission.data.custom.waveState == 1 and mission.data.custom.waveNumber < 7 then
                 mission.Log(_MethodName, "Spawning pirate wave " .. tostring(mission.data.custom.waveNumber))
-                spawnPirateWave()
+                kothStory4_spawnPirateWave()
                 if mission.data.custom.waveNumber == 6 then
-                    spawnHorizonWave()
+                    kothStory4_spawnHorizonWave()
                 end
     
                 if not mission.data.custom.varlanceP4ChatterSent then
@@ -390,7 +390,7 @@ mission.phases[4].timers[2] = {
         --The AWACS leaves when the artillery cruisers are blown up, regardless of how many pirates are left.
         local _artyCt = ESCCUtil.countEntitiesByValue("is_horizon_artycruiser")
         if _artyCt == 0 then
-            awacsDeparts()
+            kothStory4_awacsDeparts()
         end
     end,
     repeating = true
@@ -410,11 +410,11 @@ mission.phases[5].onBeginServer = function()
     _hBattleship:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(3, 6))
 end
 
-local onPhase5VarlanceDialogEnd = makeDialogServerCallback("onPhase5VarlanceDialogEnd", 5, function()
+local kothStory4_onPhase5VarlanceDialogEnd = makeDialogServerCallback("kothStory4_onPhase5VarlanceDialogEnd", 5, function()
     local _Varlance = Entity(mission.data.custom.varlanceID)
     _Varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
 
-    finishAndReward()
+    kothStory4_finishAndReward()
 end)
 
 --region #PHASE 5 TIMER CALLS
@@ -424,7 +424,7 @@ if onServer() then
 mission.phases[5].timers[1] = {
     time = 5,
     callback = function()
-        invokeClientFunction(Player(), "onPhase5Dialog", mission.data.custom.varlanceID)
+        invokeClientFunction(Player(), "kothStory4_onPhase5Dialog", mission.data.custom.varlanceID)
     end,
     repeating = false
 }
@@ -437,7 +437,7 @@ end
 
 --region #SERVER CALLS
 
-function getNextLocation(_onBlockRing)
+function kothStory4_getNextLocation(_onBlockRing)
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -468,7 +468,7 @@ function getNextLocation(_onBlockRing)
     return target
 end
 
-function buildObjectiveSector(_x, _y)
+function kothStory4_buildObjectiveSector(_x, _y)
     local _MethodName = "Build Objective Sector"
     mission.Log(_MethodName, "Beginning.")
 
@@ -488,7 +488,7 @@ function buildObjectiveSector(_x, _y)
     local _basepos = ESCCUtil.getVectorAtDistance(pos, 4000, true)
     local matrix = MatrixLookUpPosition(look, up, _basepos)
     --Create tow ship
-    local generator = AsyncShipGenerator(nil, onTowingShipFinished)
+    local generator = AsyncShipGenerator(nil, kothStory4_onTowingShipFinished)
     generator:createTradingShip(_Faction, matrix)
 
     local _towLook = matrix.look
@@ -503,7 +503,7 @@ function buildObjectiveSector(_x, _y)
     mission.data.custom.horizonBattleshipid = hbattleship.index
     
     --Create group of 6 pirates @ threat level 4
-    local pirateGenerator = AsyncPirateGenerator(nil, onPirateEscortsFinished)
+    local pirateGenerator = AsyncPirateGenerator(nil, kothStory4_onPirateEscortsFinished)
     pirateGenerator.pirateLevel = mission.data.custom.pirateLevel
 
     local _PirateTable = ESCCUtil.getStandardWave(4, 6, "Standard")
@@ -524,14 +524,14 @@ function buildObjectiveSector(_x, _y)
 
     pirateGenerator:endBatch()
 
-    spawnVarlance()
+    kothStory4_spawnVarlance()
 
     Placer.resolveIntersections()
 
     mission.data.custom.cleanUpSector = true
 end
 
-function onTowingShipFinished(_Generated)
+function kothStory4_onTowingShipFinished(_Generated)
     local _MethodName = "On Towing Ship Finished"
     mission.Log(_MethodName, "Beginning.")
     
@@ -549,13 +549,13 @@ function onTowingShipFinished(_Generated)
 
     local durability = Durability(_Generated)
 	if durability then 
-        durability.maxDurabilityFactor = (durability.maxDurabilityFactor or 0) * 2
+        durability.maxDurabilityFactor = (durability.maxDurabilityFactor or 0) * 2.5
     end
     
     mission.data.custom.towSpawned = true
 end
 
-function onPirateEscortsFinished(_Generated)
+function kothStory4_onPirateEscortsFinished(_Generated)
     mission.data.custom.checkEscortCount = true
 
     for _, _Escort in pairs(_Generated) do
@@ -567,7 +567,7 @@ function onPirateEscortsFinished(_Generated)
     Placer.resolveIntersections()
 end
 
-function spawnVarlance()
+function kothStory4_spawnVarlance()
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -590,7 +590,7 @@ function spawnVarlance()
     end
 end
 
-function explodeBShip()
+function kothStory4_explodeBShip()
     local _MethodName = "Explode Battleship"
     local _hBattleship = Entity(mission.data.custom.horizonBattleshipid)
     local _Pos = _hBattleship.translationf
@@ -605,7 +605,7 @@ function explodeBShip()
     local _MaxOffset = math.abs(_MinOffset) * 2
 
     mission.Log(_MethodName, "Spawning main explosion")
-    spawnExplosion(_Pos, _Rad)
+    kothStory4_spawnExplosion(_Pos, _Rad)
 
     local xRand = random()
     local secondaryCt = xRand:getInt(2, 4)
@@ -619,11 +619,11 @@ function explodeBShip()
 
         mission.Log(_MethodName, "Deferring secondary explosions. Vec is " .. tostring(_XPosition) .. " and rad is " .. tostring(_XRad))
 
-        deferredCallback(xRand:getFloat(0.8, 2.2), "spawnExplosion", _XPosition, _XRad)
+        deferredCallback(xRand:getFloat(0.8, 2.2), "kothStory4_spawnExplosion", _XPosition, _XRad)
     end
 end
 
-function spawnPirateWave()
+function kothStory4_spawnPirateWave()
     --common vals
     local _WaveDanger = 4 + mission.data.custom.waveNumber
     local _Distance = 250 --_#DistAdj
@@ -648,13 +648,13 @@ function spawnPirateWave()
     end
 
     --spawn alpha wing
-    _spawnFunc(onSpawnAlphaWingFinished)
+    _spawnFunc(kothStory4_onSpawnAlphaWingFinished)
 
     --spawn beta wing
-    _spawnFunc(onSpawnBetaWingFinished)
+    _spawnFunc(kothStory4_onSpawnBetaWingFinished)
 end
 
-function onSpawnAlphaWingFinished(_Generated)
+function kothStory4_onSpawnAlphaWingFinished(_Generated)
     mission.data.custom.waveState = 2
 
     --Attacks Varlance
@@ -672,7 +672,7 @@ function onSpawnAlphaWingFinished(_Generated)
     Placer.resolveIntersections()
 end
 
-function onSpawnBetaWingFinished(_Generated)
+function kothStory4_onSpawnBetaWingFinished(_Generated)
     mission.data.custom.waveState = 2
 
     --Attacks the player
@@ -689,7 +689,7 @@ function onSpawnBetaWingFinished(_Generated)
     Placer.resolveIntersections()
 end
 
-function spawnHorizonWave()
+function kothStory4_spawnHorizonWave()
     local _MethodName = "Spawn Horizon Wave"
     mission.Log(_MethodName, "Beginning.")
 
@@ -785,7 +785,7 @@ function spawnHorizonWave()
     sync()
 end
 
-function awacsDeparts()
+function kothStory4_awacsDeparts()
     local _awacsPlural = { Sector():getEntitiesByScriptValue("is_horizon_awacs") }
     if #_awacsPlural > 0 then
         local _awacs = _awacsPlural[1]
@@ -794,7 +794,7 @@ function awacsDeparts()
     end
 end
 
-function finishAndReward()
+function kothStory4_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -819,13 +819,13 @@ end
 
 --region #SERVER / CLIENT CALLS
 
-function spawnExplosion(_Pos, _Rad)
+function kothStory4_spawnExplosion(_Pos, _Rad)
     local _MethodName = "Spawn Explosion"
     if not _Pos  or not _Rad then return end
 
     if onServer() then
         mission.Log(_MethodName, "Calling on server => Invoking on client")
-        invokeClientFunction(Player(), "spawnExplosion", _Pos, _Rad)
+        invokeClientFunction(Player(), "kothStory4_spawnExplosion", _Pos, _Rad)
         return
     end
 
@@ -839,7 +839,7 @@ end
 
 --region #CLIENT CALLS
 
-function onPhase5Dialog(_VarlanceID)
+function kothStory4_onPhase5Dialog(_VarlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -855,7 +855,7 @@ function onPhase5Dialog(_VarlanceID)
     d2.followUp = d3
 
     d3.text = "Good job today. I'll be in touch when I have some more information."
-    d3.onEnd = onPhase5VarlanceDialogEnd
+    d3.onEnd = kothStory4_onPhase5VarlanceDialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 

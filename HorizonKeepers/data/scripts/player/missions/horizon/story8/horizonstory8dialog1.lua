@@ -111,7 +111,7 @@ function HorizonStory8Dialog1.onEnd()
     --remove the goods from the player, then invoke func to go on to next phase.
     self.onRemoveGoods()
 
-    Player():invokeFunction("player/missions/horizon/horizonstory8.lua", "onDeliveredIngredients")
+    Player():invokeFunction("player/missions/horizon/horizonstory8.lua", "kothStory8_onDeliveredIngredients")
 end
 
 function HorizonStory8Dialog1.onRemoveGoods()

@@ -124,7 +124,7 @@ function HorizonStory2Dialog5.onEnd()
     local _MethodName = "On End"
     self.Log(_MethodName, "Beginning.")
 
-    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "contactedHacker4")
+    Player():invokeFunction("player/missions/horizon/horizonstory2.lua", "kothStory2_contactedHacker4")
 end
 
 --endregion

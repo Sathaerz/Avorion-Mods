@@ -75,6 +75,20 @@ _horizonkeepers_campaign_script_values = {
     "encyclopedia_koth_01macedon"
 }
 
+_horizonkeepers_campaign_mission_scripts = {
+    "missions/horizon/horizonstory1.lua",
+    "missions/horizon/horizonstory2.lua",
+    "missions/horizon/horizonstory3.lua",
+    "missions/horizon/horizonstory4.lua",
+    "missions/horizon/horizonstory5.lua",
+    "missions/horizon/horizonstory6.lua",
+    "missions/horizon/horizonstory7.lua",
+    "missions/horizon/horizonstory8.lua",
+    "missions/horizon/horizonstory9.lua",
+    "missions/horizon/horizonside1.lua",
+    "missions/horizon/horizonside2.lua"
+}
+
 function onHKTabMission1ButtonPressed()
     if onClient() then
         invokeServerFunction("onHKTabMission1ButtonPressed")
@@ -525,22 +539,8 @@ function onHKClearValuesPressed()
 
     local _player = Player(callingPlayer)
 
-    local _Scripts = {
-        "missions/horizon/horizonstory1.lua",
-        "missions/horizon/horizonstory2.lua",
-        "missions/horizon/horizonstory3.lua",
-        "missions/horizon/horizonstory4.lua",
-        "missions/horizon/horizonstory5.lua",
-        "missions/horizon/horizonstory6.lua",
-        "missions/horizon/horizonstory7.lua",
-        "missions/horizon/horizonstory8.lua",
-        "missions/horizon/horizonstory9.lua",
-        "missions/horizon/horizonside1.lua",
-        "missions/horizon/horizonside2.lua"
-    }
-
-    for _k, _v in pairs(_Scripts) do
-        _player:removeScript(_v)
+    for k, v in pairs(_horizonkeepers_campaign_mission_scripts) do
+        _player:removeScript(v)
     end
 
     for k, v in pairs(_horizonkeepers_campaign_script_values) do

@@ -10,7 +10,6 @@ include("structuredmission")
 ESCCUtil = include("esccutil")
 HorizonUtil = include("horizonutil")
 
-local Balancing = include ("galaxy")
 local Placer = include("placer")
 
 mission._Debug = 0
@@ -43,21 +42,21 @@ mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
 mission.globalPhase.noBossEncountersTargetSector = true
 
 mission.globalPhase.onAbandon = function()
-    setLastMissionTime()
+    kothSide1_setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
-    setLastMissionTime()
+    kothSide1_setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onAccomplish = function()
-    setLastMissionTime()
+    kothSide1_setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(false)
     end
@@ -79,7 +78,7 @@ mission.phases[1].onBegin = function()
     local _Giver = Entity(mission.data.giver.id)
 
     mission.data.description[1].arguments = { sectorName = Sector().name, giverTitle = _Giver.translatedTitle }
-    mission.data.description[2].text = formatDescription()
+    mission.data.description[2].text = kothSide1_formatDescription()
     mission.data.description[3].arguments = { _X = mission.data.location.x, _Y = mission.data.location.y }
 end
 
@@ -89,12 +88,12 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.description[3].fulfilled = true
 
     if onServer() then
-        spawnVarlance(true)
+        kothSide1_spawnVarlance(true)
     end
 end
 
 mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
-    mission.data.custom.secondLocation = getNextLocation()
+    mission.data.custom.secondLocation = kothSide1_getNextLocation()
 
     local sX = mission.data.custom.secondLocation.x
     local sY = mission.data.custom.secondLocation.y
@@ -102,10 +101,10 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
     mission.data.description[4].arguments = { _X = sX, _Y = sY }
 
     sync()
-    invokeClientFunction(Player(), "onPhase1Dialog", mission.data.custom.varlanceID, sX, sY)
+    invokeClientFunction(Player(), "kothSide1_onPhase1Dialog", mission.data.custom.varlanceID, sX, sY)
 end
 
-local onPhase1DialogEnd = makeDialogServerCallback("onPhase1DialogEnd", 1, function()
+local kothSide1_onPhase1DialogEnd = makeDialogServerCallback("kothSide1_onPhase1DialogEnd", 1, function()
     local _Varlance = Entity(mission.data.custom.varlanceID)
     _Varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
 
@@ -127,16 +126,14 @@ mission.phases[2].onTargetLocationEntered = function(x, y)
     mission.data.description[5].visible = true
 
     if onServer() then
-        spawnVarlance(false)
-        spawnBoss()
+        kothSide1_spawnVarlance(false)
+        kothSide1_spawnBoss()
     end
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(_X, _Y)
-    invokeClientFunction(Player(), "onBossAnimation")
+    invokeClientFunction(Player(), "kothSide1_onBossAnimation")
 end
-
---endregion
 
 --region #PHASE 2 TIMER CALLS
 
@@ -150,7 +147,7 @@ mission.phases[2].timers[1] = {
         if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
-            spawnVarlance(false)
+            kothSide1_spawnVarlance(false)
         end
     end,
     repeating = true
@@ -170,7 +167,7 @@ mission.phases[2].timers[2] = {
                     local _sector = Sector()
                     local gretel = { _sector:getEntitiesByScriptValue("is_beta_gretel") }
                     _sector:broadcastChatMessage(gretel[1], ChatMessageType.Chatter, "NO!!! Overload the reactor NOW! We'll drag them to the depths of hell with us!")
-                    gretel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 30, _IncreasePerUpdate = 0.1, _DamageThreshold = 1.01 })
+                    gretel[1]:addScriptOnce("frenzy.lua", { _IncreasePerUpdate = 0.1, _DamageThreshold = 1.01 })
                 end
             end
 
@@ -182,7 +179,7 @@ mission.phases[2].timers[2] = {
                     local _sector = Sector()
                     local hansel = { _sector:getEntitiesByScriptValue("is_alpha_hansel") }
                     _sector:broadcastChatMessage(hansel[1], ChatMessageType.Chatter, "How... how is this possible?! Kill them! KILL THEM NOW!!!")
-                    hansel[1]:addScriptOnce("frenzy.lua", { _UpdateCycle = 30, _IncreasePerUpdate = 0.25, _DamageThreshold = 1.01 })
+                    hansel[1]:addScriptOnce("frenzy.lua", { _IncreasePerUpdate = 0.25, _DamageThreshold = 1.01 })
                 end
             end
     
@@ -243,12 +240,12 @@ mission.phases[3].onBegin = function()
 end
 
 mission.phases[3].onBeginServer = function()
-    spawnVarlance()
+    kothSide1_spawnVarlance()
 
-    invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.varlanceID)
+    invokeClientFunction(Player(), "kothSide1_onPhase3Dialog", mission.data.custom.varlanceID)
 end
 
-local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, function()
+local kothSide1_onPhase3DialogEnd = makeDialogServerCallback("kothSide1_onPhase3DialogEnd", 3, function()
     local methodName = "On Phase 3 Dialog End"
 
     local _Varlance = Entity(mission.data.custom.varlanceID)
@@ -256,16 +253,18 @@ local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, funct
 
     if mission.data.custom.allowPayment then
         mission.Log(methodName, "Rewarding and accomplishing.")
-        finishAndReward()
+        kothSide1_finishAndReward()
     else
         mission.Log(methodName, "accomplishing only.")
         accomplish()
     end
 end)
 
+--endregion
+
 --region #SERVER CALLS
 
-function getNextLocation()
+function kothSide1_getNextLocation()
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -284,7 +283,7 @@ function getNextLocation()
     return target
 end
 
-function spawnVarlance(_DeleteOnLeft)
+function kothSide1_spawnVarlance(_DeleteOnLeft)
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -307,7 +306,7 @@ function spawnVarlance(_DeleteOnLeft)
     end
 end
 
-function spawnBoss()
+function kothSide1_spawnBoss()
     local methodName = "Spawn Boss"
     
     local _random = random()
@@ -335,17 +334,19 @@ function spawnBoss()
     mission.data.custom.hanselID = hansel.index
     mission.data.custom.gretelID = gretel.index
 
+    Placer.resolveIntersections()
+
     mission.data.custom.cleanUpSector = true
 end
 
-function setLastMissionTime()
+function kothSide1_setLastMissionTime()
     local _player = Player()
     local runTime = Server().unpausedRuntime
 
     _player:setValue("_horizonkeepers_last_side1", runTime)
 end
 
-function finishAndReward()
+function kothSide1_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -359,7 +360,7 @@ end
 
 --region #CLIENT CALLS
 
-function onBossAnimation()
+function kothSide1_onBossAnimation()
     startBossCameraAnimation(mission.data.custom.hanselID)
 end
 
@@ -367,7 +368,7 @@ end
 
 --region #CLIENT DIALOG CALLS
 
-function onPhase1Dialog(varlanceID, sX, sY)
+function kothSide1_onPhase1Dialog(varlanceID, sX, sY)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -391,7 +392,7 @@ function onPhase1Dialog(varlanceID, sX, sY)
     d4.followUp = d5
 
     d5.text = "The Ice Nova is ready to go! Looking forward to fighting with you again, Captain!"
-    d5.onEnd = onPhase1DialogEnd
+    d5.onEnd = kothSide1_onPhase1DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -400,7 +401,7 @@ function onPhase1Dialog(varlanceID, sX, sY)
     ScriptUI(varlanceID):interactShowDialog(d0, false)
 end
 
-function onPhase3Dialog(varlanceID)
+function kothSide1_onPhase3Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -416,7 +417,7 @@ function onPhase3Dialog(varlanceID)
     d2.followUp = d3
 
     d3.text = "It was a pleasure as always! Until next time, Captain!"
-    d3.onEnd = onPhase3DialogEnd
+    d3.onEnd = kothSide1_onPhase3DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -429,7 +430,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription()
+function kothSide1_formatDescription()
     return "To any independent captains out there, this is captain Varlance with the mercenary group Frostbite Company. Some time ago, a company named Horizon Keepers, LTD. attempted to unleash a pair of prototype weapons on the galaxy. Had they been allowed to rampage unchecked, they could have caused an incalculable amount of damage. I've received word that they've assembled a new set of similar weapons - I'm looking for someone to help me hunt them down and eliminate them before they can be set loose."
 end
 
@@ -455,7 +456,7 @@ mission.makeBulletin = function(_Station)
         brief = mission.data.brief,
         title = mission.data.title,
         icon = mission.data.icon,
-        description = formatDescription(),
+        description = kothSide1_formatDescription(),
         difficulty = "Extreme",
         reward = "¢${reward}",
         script = "missions/horizon/horizonside1.lua",

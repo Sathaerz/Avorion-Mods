@@ -432,7 +432,8 @@ function HorizonUtil.spawnHorizonBattleship(_DeleteOnLeft, _Position, _Faction)
         _ArmamentFunction = function(_ship)
             ShipUtility.addSpecificScalableWeapon(_ship, { WeaponType.Cannon }, 4, 1, nil)
             ShipUtility.addBossAntiTorpedoEquipment(_ship)
-        end
+        end,
+        _NuclearModifier = 0.5
     }
 
     return HorizonUtil.spawnHorizonShip(_ShipData)
@@ -490,7 +491,8 @@ function HorizonUtil.spawnAlphaHansel(_DeleteOnLeft, _Position, addGoodLoot, _Sp
 
             _ship:addScriptOnce("avenger.lua", { _Multiplier = 2 })
         end,
-        _LootFunction = HorizonUtil.getPWXLootFunc(addGoodLoot)
+        _LootFunction = HorizonUtil.getPWXLootFunc(addGoodLoot),
+        _NuclearModifier = 0.125
     }
 
     if _Spawnv2 then
@@ -539,7 +541,8 @@ function HorizonUtil.spawnBetaGretel(_DeleteOnLeft, _Position, addGoodLoot, _Spa
 
             _ship:addScriptOnce("shieldrecharger.lua")
         end,
-        _LootFunction = HorizonUtil.getPWXLootFunc(addGoodLoot)
+        _LootFunction = HorizonUtil.getPWXLootFunc(addGoodLoot),
+        _NuclearModifier = 0.125
     }
 
     if _Spawnv2 then
@@ -606,7 +609,7 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
 
             _ship:addScriptOnce("entity/xsologizeboss.lua")
             _ship:addScriptOnce("lasersniper.lua", _LaserSniperValues)
-            _ship:addScriptOnce("shieldrecharger.lua", { _MaxRecharges = 1, _AddChargeIfActivatedUnder = 120, _FastDamageCharges = 3 })
+            _ship:addScriptOnce("shieldrecharger.lua", { _MaxRecharges = 1, _AddChargeIfActivatedUnder = 90, _FastDamageCharges = 3 })
         end,
         _LootFunction = function(_ship)
             local _Loot = Loot(_ship)
@@ -665,7 +668,8 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
 
             local ai = ShipAI(ship)
             ai:setAggressive()
-        end
+        end,
+        _NuclearModifier = 0.125
     }
 
     return HorizonUtil.spawnHorizonShip(_ShipData)
@@ -689,7 +693,7 @@ function HorizonUtil.spawnProjectXsologize(_DeleteOnLeft, _Position)
             ShipUtility.addHorizonPrototypePlasmaGuns(_ship, 4)
             ShipUtility.addBossAntiTorpedoEquipment(_ship)
 
-            _ship:addScriptOnce("shieldrecharger.lua", { _MaxRecharges = 1, _AddChargeIfActivatedUnder = 120, _FastDamageCharges = 2 })
+            _ship:addScriptOnce("shieldrecharger.lua", { _MaxRecharges = 1, _AddChargeIfActivatedUnder = 90, _FastDamageCharges = 2 })
         end,
         _LootFunction = function(_ship)
             local _Loot = Loot(_ship)
@@ -728,7 +732,8 @@ function HorizonUtil.spawnProjectXsologize(_DeleteOnLeft, _Position)
             end
 
             _ship:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
-        end
+        end,
+        _NuclearModifier = 0.125
     }
 
     return HorizonUtil.spawnHorizonShip(_ShipData)
@@ -780,6 +785,9 @@ function HorizonUtil.spawnHorizonShip(_Data)
         for _, _val in pairs(_Data._ShipClassValue) do
             _HorizonShip:setValue(_val, true)
         end
+    end
+    if _Data._NuclearModifier then
+        _HorizonShip:setValue("IW_nuclear_m", _Data._NuclearModifier)
     end
     local _dmgMultiplier = _Data._ShipDamageMultiplier or 2
     _HorizonShip.damageMultiplier = (_HorizonShip.damageMultiplier or 1 ) * _dmgMultiplier
@@ -917,6 +925,7 @@ function HorizonUtil.spawnHorizonStation(_Data)
     _Station.crew = _Station.idealCrew
     _Station.shieldDurability = _Station.shieldMaxDurability
 
+    _Station:setValue("no_chatter", true) --Finally, a way to shut these stupid things up. Some of the random messages completely ruin the vibe.
     _Station:setValue("is_horizon", true)
     _Station:setValue("is_horizon_station", true)
     _Station:setValue("_ESCC_bypass_hazard", true)

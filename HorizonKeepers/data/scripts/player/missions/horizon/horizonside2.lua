@@ -10,7 +10,6 @@ include("structuredmission")
 ESCCUtil = include("esccutil")
 HorizonUtil = include("horizonutil")
 
-local Balancing = include ("galaxy")
 local Placer = include("placer")
 
 mission._Debug = 0
@@ -44,21 +43,21 @@ mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
 mission.globalPhase.noBossEncountersTargetSector = true
 
 mission.globalPhase.onAbandon = function()
-    setLastMissionTime()
+    kothSide2_setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onFail = function()
-    setLastMissionTime()
+    kothSide2_setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(true)
     end
 end
 
 mission.globalPhase.onAccomplish = function()
-    setLastMissionTime()
+    kothSide2_setLastMissionTime()
     if mission.data.location then
         runFullSectorCleanup(false)
     end
@@ -80,7 +79,7 @@ mission.phases[1].onBegin = function()
     local _Giver = Entity(mission.data.giver.id)
 
     mission.data.description[1].arguments = { sectorName = Sector().name, giverTitle = _Giver.translatedTitle }
-    mission.data.description[2].text = formatDescription()
+    mission.data.description[2].text = kothSide2_formatDescription()
     mission.data.description[3].arguments = { _X = mission.data.location.x, _Y = mission.data.location.y }
 end
 
@@ -90,12 +89,12 @@ mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.description[3].fulfilled = true
 
     if onServer() then
-        spawnVarlance(true)
+        kothSide2_spawnVarlance(true)
     end
 end
 
 mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
-    mission.data.custom.secondLocation = getNextLocation()
+    mission.data.custom.secondLocation = kothSide2_getNextLocation()
 
     local sX = mission.data.custom.secondLocation.x
     local sY = mission.data.custom.secondLocation.y
@@ -103,10 +102,10 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
     mission.data.description[4].arguments = { _X = sX, _Y = sY }
 
     sync()
-    invokeClientFunction(Player(), "onPhase1Dialog", mission.data.custom.varlanceID, sX, sY)
+    invokeClientFunction(Player(), "kothSide2_onPhase1Dialog", mission.data.custom.varlanceID, sX, sY)
 end
 
-local onPhase1DialogEnd = makeDialogServerCallback("onPhase1DialogEnd", 1, function()
+local kothSide2_onPhase1DialogEnd = makeDialogServerCallback("kothSide2_onPhase1DialogEnd", 1, function()
     local _Varlance = Entity(mission.data.custom.varlanceID)
     _Varlance:addScriptOnce("entity/utility/delayeddelete.lua", random():getFloat(4, 7))
 
@@ -128,13 +127,13 @@ mission.phases[2].onTargetLocationEntered = function(x, y)
     mission.data.description[5].visible = true
 
     if onServer() then
-        spawnVarlance(false)
-        spawnBoss()
+        kothSide2_spawnVarlance(false)
+        kothSide2_spawnBoss()
     end
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(_X, _Y)
-    invokeClientFunction(Player(), "onBossAnimation")
+    invokeClientFunction(Player(), "kothSide2_onBossAnimation")
 end
 
 --region #PHASE 2 TIMER CALLS
@@ -149,7 +148,7 @@ mission.phases[2].timers[1] = {
         if atTargetLocation() then
             mission.Log(_MethodName, "On Location - respawning Varlance if needed.")
 
-            spawnVarlance(false)
+            kothSide2_spawnVarlance(false)
         end
     end,
     repeating = true
@@ -194,12 +193,12 @@ mission.phases[3].onBegin = function()
 end
 
 mission.phases[3].onBeginServer = function()
-    spawnVarlance()
+    kothSide2_spawnVarlance()
 
-    invokeClientFunction(Player(), "onPhase3Dialog", mission.data.custom.varlanceID)
+    invokeClientFunction(Player(), "kothSide2_onPhase3Dialog", mission.data.custom.varlanceID)
 end
 
-local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, function()
+local kothSide2_onPhase3DialogEnd = makeDialogServerCallback("kothSide2_onPhase3DialogEnd", 3, function()
     local methodName = "On Phase 3 Dialog End"
 
     local _Varlance = Entity(mission.data.custom.varlanceID)
@@ -207,7 +206,7 @@ local onPhase3DialogEnd = makeDialogServerCallback("onPhase3DialogEnd", 3, funct
 
     if mission.data.custom.allowPayment then
         mission.Log(methodName, "Rewarding and accomplishing.")
-        finishAndReward()
+        kothSide2_finishAndReward()
     else
         mission.Log(methodName, "accomplishing only.")
         accomplish()
@@ -218,7 +217,7 @@ end)
 
 --region #SERVER CALLS
 
-function getNextLocation()
+function kothSide2_getNextLocation()
     local _MethodName = "Get Next Location"
     
     mission.Log(_MethodName, "Getting a location.")
@@ -237,7 +236,7 @@ function getNextLocation()
     return target
 end
 
-function spawnVarlance(_DeleteOnLeft)
+function kothSide2_spawnVarlance(_DeleteOnLeft)
     local _MethodName = "Spawn Varlance"
     
     local _spawnVarlance = true
@@ -260,7 +259,7 @@ function spawnVarlance(_DeleteOnLeft)
     end
 end
 
-function spawnBoss()
+function kothSide2_spawnBoss()
     local _MethodName = "Build Boss Sector"
     mission.Log(_MethodName, "Beginning.")
 
@@ -283,17 +282,19 @@ function spawnBoss()
 
     mission.data.custom.xsologizeID = xsologize.index
 
+    Placer.resolveIntersections()
+
     mission.data.custom.cleanUpSector = true
 end
 
-function setLastMissionTime()
+function kothSide2_setLastMissionTime()
     local _player = Player()
     local runTime = Server().unpausedRuntime
 
     _player:setValue("_horizonkeepers_last_side2", runTime)
 end
 
-function finishAndReward()
+function kothSide2_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -307,7 +308,7 @@ end
 
 --region #CLIENT CALLS
 
-function onBossAnimation()
+function kothSide2_onBossAnimation()
     startBossCameraAnimation(mission.data.custom.xsologizeID)
 end
 
@@ -315,7 +316,7 @@ end
 
 --region #CLIENT DIALOG CALLS
 
-function onPhase1Dialog(varlanceID, sX, sY)
+function kothSide2_onPhase1Dialog(varlanceID, sX, sY)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -339,7 +340,7 @@ function onPhase1Dialog(varlanceID, sX, sY)
     d4.followUp = d5
 
     d5.text = "The Ice Nova is ready to go! Looking forward to fighting with you again, Captain!"
-    d5.onEnd = onPhase1DialogEnd
+    d5.onEnd = kothSide2_onPhase1DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2, d3, d4}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -348,7 +349,7 @@ function onPhase1Dialog(varlanceID, sX, sY)
     ScriptUI(varlanceID):interactShowDialog(d0, false)
 end
 
-function onPhase3Dialog(varlanceID)
+function kothSide2_onPhase3Dialog(varlanceID)
     local d0 = {}
     local d1 = {}
     local d2 = {}
@@ -364,7 +365,7 @@ function onPhase3Dialog(varlanceID)
     d2.followUp = d3
 
     d3.text = "It was a pleasure as always! Until next time, Captain!"
-    d3.onEnd = onPhase3DialogEnd
+    d3.onEnd = kothSide2_onPhase3DialogEnd
 
     ESCCUtil.setTalkerTextColors({d0, d1, d2}, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
@@ -377,7 +378,7 @@ end
 
 --region #MAKEBULLETIN CALLS
 
-function formatDescription()
+function kothSide2_formatDescription()
     return "To any independent captains out there, this is captain Varlance with the mercenary group Frostbite Company. Some time ago, a company named Horizon Keepers, LTD. successfully constructed an abomination cobbled together from experimental Xsotan technology. With this weapon, they could have brought a level of suffering and death to the galaxy not seen since the great war. I've received word that they've completed an improved version of this weapon, and plan to employ it to revive their dreams of conquest. They must be stopped. I'm looking for someone to help me eliminate it before it can serve its purpose."
 end
 
@@ -403,7 +404,7 @@ mission.makeBulletin = function(_Station)
         brief = mission.data.brief,
         title = mission.data.title,
         icon = mission.data.icon,
-        description = formatDescription(),
+        description = kothSide2_formatDescription(),
         difficulty = "Extreme",
         reward = "¢${reward}",
         script = "missions/horizon/horizonside2.lua",
