@@ -612,6 +612,8 @@ function kothStory9_buildBossSector()
     local ai = ShipAI(xsologize)
     ai:registerFriendFaction(Player().index)
 
+    mission.Log(_MethodName, "xsologize is " .. tostring(xsologize) .. " setting xsologize id to " .. tostring(xsologize.index))
+
     mission.data.custom.xsologizeID = xsologize.index
 end
 
