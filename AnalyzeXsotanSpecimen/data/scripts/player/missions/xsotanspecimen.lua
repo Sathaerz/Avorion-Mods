@@ -238,9 +238,9 @@ mission.phases[1].timers[1] = {
                 if dist <= analyzeXsotanSpecimen_getAnalysisDistance(craft) then
                     local _random = random()
                     local dir = _random:getDirection()
-                    local magnitude = _random:getInt(10, 25)
+                    local magnitude = targetXsotan.radius
 
-                    local lsr = Sector():createLaser(craft.translationf, targetXsotan.translationf + (dir * magnitude), ColorRGB(0, 0.1, 1.0), 1)
+                    local lsr = Sector():createLaser(craft.translationf, targetXsotan.translationf + (dir * magnitude), ColorRGB(0, 0.6, 1.0), 0.5)
                     lsr.collision = false
                     lsr.maxAliveTime = 0.025
                 end
@@ -531,25 +531,34 @@ function analyzeXsotanSpecimen_onMarkAnalyzableXsotan()
 
         if xsotan and valid(xsotan) and craft then
             local dist = craft:getNearestDistance(xsotan)
+            local analysisDist = analyzeXsotanSpecimen_getAnalysisDistance(craft)
 
-            local str = "ANALYSIS HALTED"
-            if dist <= analyzeXsotanSpecimen_getAnalysisDistance(craft) and craft.type == EntityType.Ship then
-                str = "ANALYSIS IN PROGRESS"
+            local str = "Analysis Halted"
+            if dist <= analysisDist and craft.type == EntityType.Ship then
+                str = "Analysis in Progress"
+            else
+                if craft.type ~= EntityType.Ship then
+                    str = str .. " - Not in a Ship!"
+                elseif dist > analysisDist then
+                    str = str .. " - Out of Range!"
+                end
             end
     
             local v2, size = renderer:calculateEntityTargeter(xsotan)
     
             local rect = Rect(v2.x - size, v2.y - (size * 2.5), v2.x + size, v2.y + size)
-            drawTextRect(str, rect, 0, 0, ColorRGB(1.0, 1.0, 1.0), 10, 0, 0, 0)
+            drawTextRect(str, rect, 0, 0, ColorRGB(1.0, 1.0, 1.0), 10, false, false, 2)
     
             local timeLeft = math.max(120 - mission.data.custom.currentAnalysisTime, 0)
+            local mins = math.floor(timeLeft / 60)
+            local secs = timeLeft - (mins * 60)
     
             --Careful about enabling this - spam.
             --mission.Log(methodName, "Analysis time is : " .. tostring(mission.data.custom.currentAnalysisTime) .. " time left is : " .. tostring(timeLeft)) 
             --mission.Log(methodName, "Minutes : " .. tostring(minutes) .. " Seconds : " .. tostring(seconds))
     
             local rect2 = Rect(v2.x - size, v2.y + (size * 0.5), v2.x + size, v2.y + size)
-            drawTextRect("${_TIME} REMAINING" % { _TIME = createDigitalTimeString(timeLeft)}, rect2, 0, 0, ColorRGB(1.0, 1.0, 1.0), 10, 0, 0, 0)
+            drawTextRect(string.format("Time Remaining: %02d:%05.2f", math.max(0, mins), math.max(0.01, secs)), rect2, 0, 0, ColorRGB(1.0, 1.0, 1.0), 10, false, false, 2)
         end
     end
 
