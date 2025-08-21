@@ -108,7 +108,7 @@ mission.phases[1].onBeginServer = function()
     mission.data.custom.wreckagesDropped = 0
 
     mission.data.description[1] = "You recieved the following request from the " .. _Sector.name .. " " .. _Giver.translatedTitle .. ":"
-    mission.data.description[2] = formatDescription(_Giver)
+    mission.data.description[2] = wreckingHavoc_formatDescription(_Giver)
     mission.data.description[4].arguments = { dropped = mission.data.custom.wreckagesDropped }
     mission.data.accomplishMessage = mission.data.custom.failMessage
     --Tag all wrecks already in the sector that aren't docked to the player ship. We actually do need to do this here in case the player doesn't have the other mod.
