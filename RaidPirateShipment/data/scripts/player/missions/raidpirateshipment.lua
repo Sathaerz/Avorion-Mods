@@ -591,7 +591,7 @@ function raidPirateShipment_formatDescription(station)
     end
 
     local descriptionOptions = {
-        "Greetings, Captain. We've received credible intelligence that some local pirate are developing a new type of ${_WEAPONTYPE}. If they succeed, it would adversely impact ouf combat operations in the area. We need you to disrupt their shipping operation in (${_X}:${_Y}). Don't worry - you'll be well compensated.", --Netural
+        "Greetings, Captain. We've received credible intelligence that some local pirate are developing a new type of ${_WEAPONTYPE}. If they succeed, it would adversely impact our combat operations in the area. We need you to disrupt their shipping operation in (${_X}:${_Y}). Don't worry - you'll be well compensated.", --Netural
         "We've heard some rumors of pirate scum developing a new type of ${_WEAPONTYPE}. We will not allow this to happen. They're moving a large caravan through sector (${_X}:${_Y}). Intercept and eliminate it. We'd prefer if you left no survivors, but destroying a single group of their freighters should suffice.", --Aggressive
         "Peace be with you, Captain. We've discovered that some nearby pirates intend to build a new type of ${_WEAPONTYPE}. We cannot allow this. Their ships are already threatening enough, even without this addition to their aresnal. Their convoy is moving through (${_X}:${_Y}). Any disruption will be a welcome reprive." --Peaceful
     }
