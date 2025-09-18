@@ -315,8 +315,6 @@ function Thunderstrike.updateLaser()
     end
 end
 
---TODO
-
 --endregion
 
 --region #SECURE / LOG / RESTORE

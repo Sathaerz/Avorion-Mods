@@ -14,6 +14,7 @@ function Xsotan.createInfestor(_position, _volumeFactor, _extraLoot)
     local name = "Infestor"
     _XsotanInfestor:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
     _XsotanInfestor:setValue("is_infestor", true)
+    _XsotanInfestor:setValue("is_special_xsotan", true)
     _XsotanInfestor:setValue("xsotan_infestor", true)
 
     --Add extra loot. Guarantee rare+ with less likely rares.
@@ -92,6 +93,7 @@ function Xsotan.createOppressor(_position, _volumeFactor)
     ship:addScriptOnce("avenger.lua")
     ship:setValue("is_xsotan", true)
     ship:setValue("is_oppressor", true)
+    ship:setValue("is_special_xsotan", true)
     ship:setValue("xsotan_oppressor", true)
 
     Boarding(ship).boardable = false
@@ -101,12 +103,13 @@ function Xsotan.createOppressor(_position, _volumeFactor)
 end
 
 function Xsotan.createSunmaker(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
     local name = "Sunmaker"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_sunmaker", true)
-    _XsotanShip:setValue("xsotan_sunmaker", true)
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_sunmaker", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_sunmaker", true)
 
     --Add Scripts
     local _X, _Y = Sector():getCoordinates()
@@ -123,18 +126,19 @@ function Xsotan.createSunmaker(_position, _volumeFactor)
     _SunGData._UseEntityDamageMult = true
     _SunGData._BaseDamagePerShot = Balancing_GetSectorWeaponDPS(_X, _Y) * 1500
 
-    _XsotanShip:addScriptOnce("entity/stationsiegegun.lua", _SunGData)
+    xsotanShip:addScriptOnce("entity/stationsiegegun.lua", _SunGData)
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createBallistyx(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
     local name = "Ballistyx"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_ballistyx", true)
-    _XsotanShip:setValue("xsotan_ballistyx", true)
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_ballistyx", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_ballistyx", true)
 
     --Add Scripts
     local _TorpSlammerValues = {
@@ -147,18 +151,19 @@ function Xsotan.createBallistyx(_position, _volumeFactor)
         _TargetPriority = 3 --Random non-xsotan.
     }
 
-    _XsotanShip:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
+    xsotanShip:addScriptOnce("torpedoslammer.lua", _TorpSlammerValues)
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createLonginus(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
     local name = "Longinus"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_longinus", true)
-    _XsotanShip:setValue("xsotan_longinus", true)
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_longinus", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_longinus", true)
 
     --Add Scripts
     local _X, _Y = Sector():getCoordinates()
@@ -173,64 +178,68 @@ function Xsotan.createLonginus(_position, _volumeFactor)
         _TargetingTime = 2.25 --Take longer than normal to target.
     }
 
-    _XsotanShip:addScriptOnce("lasersniper.lua", _LaserSniperValues)
+    xsotanShip:addScriptOnce("lasersniper.lua", _LaserSniperValues)
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createPulverizer(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createGenericShip(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createGenericShip(_position, _volumeFactor)
 
-    local name, type = ShipUtility.getMilitaryNameByVolume(_XsotanShip.volume)
-    _XsotanShip:setTitle("${toughness}Xsotan Pulverizer ${ship}"%_T, {toughness = "", ship = name})
-    _XsotanShip:setValue("is_pulverizer", true)
-    _XsotanShip:setValue("xsotan_pulverizer", true)
+    local name, type = ShipUtility.getMilitaryNameByVolume(xsotanShip.volume)
+    xsotanShip:setTitle("${toughness}Xsotan Pulverizer ${ship}"%_T, {toughness = "", ship = name})
+    xsotanShip:setValue("is_pulverizer", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_pulverizer", true)
 
-    ShipUtility.addPulverizerCannons(_XsotanShip)
+    ShipUtility.addPulverizerCannons(xsotanShip)
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createWarlock(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
     local name = "Warlock"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_warlock", true)
-    _XsotanShip:setValue("xsotan_warlock", true)
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_warlock", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_warlock", true)
 
     --Add Scripts
-    _XsotanShip:addScriptOnce("enemies/reanimator.lua")
+    xsotanShip:addScriptOnce("enemies/reanimator.lua")
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createTributary(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
     local name = "Tributary"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_tributary", true)
-    _XsotanShip:setValue("xsotan_tributary", true)
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_tributary", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_tributary", true)
 
     --Add Scripts
-    _XsotanShip:addScriptOnce("distributor.lua")
+    xsotanShip:addScriptOnce("distributor.lua")
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createLevinstriker(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createShip(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
     local name = "Levinstriker"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_levinstriker" , true)
-    _XsotanShip:setValue("xsotan_levinstriker", true)
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_levinstriker" , true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_levinstriker", true)
 
     --Add scripts
     local _X, _Y = Sector():getCoordinates()
 
-    local lightningDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 100
+    local lightningDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 150
 
     local thunderstrikeValues = { --#LEVINSTRIKER_LIGHTNING
         damagePerStrike = lightningDamage,
@@ -238,38 +247,40 @@ function Xsotan.createLevinstriker(_position, _volumeFactor)
         targetPriority = 2, --Random non-xsotan.
     }
 
-    _XsotanShip:addScriptOnce("thunderstrike.lua", thunderstrikeValues)
+    xsotanShip:addScriptOnce("thunderstrike.lua", thunderstrikeValues)
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createParthenope(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createCarrier(_position, _volumeFactor, 30) --default # of fighters is fine
+    local xsotanShip = Xsotan.createCarrier(_position, _volumeFactor, 30) --default # of fighters is fine
 
     local name = "Parthenope"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_parthenope", true)
-    _XsotanShip:setValue("xsotan_parthenope", true)
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_parthenope", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_parthenope", true)
 
     --Add Scripts
-    _XsotanShip:addScriptOnce("enemies/parthenope.lua")
-    _XsotanShip:addScriptOnce("avenger.lua")
+    xsotanShip:addScriptOnce("enemies/parthenope.lua")
+    xsotanShip:addScriptOnce("avenger.lua")
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createHierophant(_position, _volumeFactor)
-    local _XsotanShip = Xsotan.createSummoner(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createSummoner(_position, _volumeFactor)
 
     local name = "Hierophant"
-    _XsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    _XsotanShip:setValue("is_hierophant", true)
-    _XsotanShip:setValue("xsotan_hierophant", true)
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_hierophant", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_hierophant", true)
 
     --Add Scripts
-    _XsotanShip:addScriptOnce("enemies/reanimator.lua")
+    xsotanShip:addScriptOnce("enemies/reanimator.lua")
 
-    return _XsotanShip
+    return xsotanShip
 end
 
 function Xsotan.createCaduceus(position, volumeFactor)
@@ -278,6 +289,7 @@ function Xsotan.createCaduceus(position, volumeFactor)
     local name = "Caduceus"
     xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
     xsotanShip:setValue("is_caduceus", true)
+    xsotanShip:setValue("is_special_xsotan", true)
     xsotanShip:setValue("xsotan_caduceus", true)
 
     local linkerValues = {
@@ -492,6 +504,7 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     ship:addScriptOnce("utility/aiundockable.lua")
     ship:addScript("enemies/esccxsotandreadnought.lua", esccDreadnoughtValues)
     ship:setValue("is_xsotan", true)
+    ship:setValue("is_special_xsotan", true)
     ship:setValue("xsotan_dreadnought", true)
     ship:setValue("SDKEDSDisabled", true) --Need to disable SDK extended docking shields.
     ship:setValue("IW_nuclear_m", 0.2)
@@ -587,11 +600,14 @@ end
 
 function Xsotan.getSpecialXsotanFunctions()
     local funcTable = {
-        Xsotan.createSunmaker,
-        Xsotan.createLonginus,
-        Xsotan.createBallistyx,
-        Xsotan.createWarlock,
-        Xsotan.createOppressor
+        Xsotan.createSunmaker,      --Seige gun Xsotan
+        Xsotan.createLonginus,      --Lasersniper Xsotan
+        Xsotan.createBallistyx,     --Torpedo Xsotan
+        Xsotan.createWarlock,       --Reanimator Xsotan
+        Xsotan.createOppressor,     --Beefy Xsotan that eats other Xsotan (and wreckages)
+        Xsotan.createCaduceus,      --Healer Xsotan
+        Xsotan.createTributary,     --AOE damage specialist Xsotan
+        Xsotan.createLevinstriker   --Lightning damage Xsotan
     }
     
     return funcTable

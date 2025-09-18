@@ -18,6 +18,9 @@ self.clientData = {} --Exclusively stored clientside. Does not get secured / res
 
 local mainLaser = nil
 
+--This one is a bit confusing. What does it do, exactly? Basically, the ship with this script will tether itself to a chosen target. When the chosen target takes damage,
+--the ship will inflict (damagePool * blastDamageMultiplier) damage on all of the target's allies within (blastRadius / 100) km. The target does *not* take less damage, so
+--any damage dealt by this script is in addition to the damage the target is already taking.
 function Distributor.initialize(values)
     local methodName = "initialize"
     self.Log(methodName, "Adding v16 of distributor.lua to entity.")
@@ -39,7 +42,7 @@ function Distributor.initialize(values)
 
         if not _restoring then
             self.data.blastRadius = self.data.blastRadius or 2000
-            self.data.blastDamageMultiplier = self.data.blastMultiplier or 0.5
+            self.data.blastDamageMultiplier = self.data.blastMultiplier or 0.5 --The multiplier for the amount of damage that is passed on to the target's allies.
             self.data.targetPriority = self.data.targetPriority or defaultTargetPriority
             self.data.damagePrimaryTarget = self.data.damagePrimaryTarget or false
             self.data.damagePrimaryTargetMultiplier = self.data.damagePrimaryTargetMultiplier or 0.1
@@ -50,7 +53,7 @@ function Distributor.initialize(values)
             -- 2 - Any non-Xsotan ship or station.
             -- 3 - Any entity with a specified scriptvalue - chosen by self.data.targetTag - for example, is_pirate would target any enemies with is_pirate set.
             self.data.currentTarget = nil
-            self.data.damagePool = 0
+            self.data.damagePool = 0 --The base amount of damage that is passed on to the target's allies.
 
             --Adjust target priority as needed.
             if self.data.targetPriority == 2 and not self_is_xsotan then
