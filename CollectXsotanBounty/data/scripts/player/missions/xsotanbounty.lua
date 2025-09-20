@@ -25,7 +25,8 @@ mission.data.description = {
     {text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     {text = "..." },
     { text = "${killedTargets} / ${targets} targets killed", bulletPoint = true, fulfilled = false },
-    { text = "${barrierHint}", bulletPoint = true, fulfilled = false }
+    { text = "${barrierHint}", bulletPoint = true, fulfilled = false },
+    { text = "Kill Xsotan inside a rift for a bonus", visible = false, bulletPoint = true, fulfilled = false }
 }
 
 mission.data.accomplishMessage = "Thank you for fulfilling the bounty contract. We transferred the reward to your account."
@@ -58,15 +59,20 @@ function initialize(_Data_in)
                 mission.data.custom.killedGuardian = true
             end
         end
+        mission.data.custom.awardRiftBonus = _Data_in.eligibleForRiftBonus
+        mission.data.custom.xsotanTimer = 0
 
         mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
         mission.data.description[2].text = _Data_in.initialDesc
         mission.data.description[2].arguments = { targets = tostring(mission.data.custom.targets) }
         mission.data.description[3].arguments = { targets = tostring(mission.data.custom.targets), killedTargets = "0" }
         if mission.data.custom.inBarrier then
-            mission.data.description[4].arguments = { barrierHint = "Only Xsotan killed inside the barrier count." }
+            mission.data.description[4].arguments = { barrierHint = "Only Xsotan killed inside the barrier count" }
         else
-            mission.data.description[4].arguments = { barrierHint = "Only Xsotan killed outside the barrier count." }
+            mission.data.description[4].arguments = { barrierHint = "Only Xsotan killed outside the barrier count" }
+        end
+        if mission.data.custom.awardRiftBonus then
+            mission.data.description[5].visible = true
         end
     end
 
@@ -89,50 +95,22 @@ end
 if onServer() then
 
 mission.phases[1].timers[1] = {
-    time = 300, --every 5 minutes.
+    time = 60, --every minute.
     callback = function()
         local methodName = "Phase 1 Timer 1 Callback"
 
-        if mission.data.custom.dangerLevel >= 8 and mission.data.custom.canSpawnSpecialXsotan then
-            mission.Log(methodName, "Checking to see if a Xsotan should spawn")
-            local xsotanCt = ESCCUtil.countEntitiesByValue("is_xsotan")
+        mission.Log(methodName, "Calling timer.")
 
-            if xsotanCt > 0 then
-                local odds = 0.25
-                local vol = 1.0
-                if mission.data.custom.dangerLevel == 10 then
-                    odds = 0.5
-                    vol = 1.5
-                end
-                if mission.data.custom.killedGuardian then
-                    --First, check to see what sector we're in.
-                    local x, y = Sector():getCoordinates()
-                    if MissionUT.checkSectorInsideBarrier(x, y) then
-                        --If we're inside the barrier and killed the guardian, the Xsotan are twice as likely to spawn and twice as big.
-                        odds = odds * 2
-                        vol = vol * 2
-                    end
-                end
+        local x, y = Sector():getCoordinates()
+        local sectorInRift = Galaxy():sectorInRift(x, y)
 
-                local _random = random()
-    
-                if _random:test(odds) then
-                    mission.Log(methodName, "Spawning Xostan")
-                    local generator = AsyncShipGenerator(nil, nil)
-                    local xsotanFunction = getRandomEntry(Xsotan.getSpecialXsotanFunctions(generator:getGenericPosition(), vol))
-
-                    local xsotan = xsotanFunction()
-                    SpawnUtility.addEnemyBuffs({xsotan})
-
-                    mission.data.custom.canSpawnSpecialXsotan = false --Don't make multiple special Xsotan per sector. Unless...
-                    if mission.data.custom.killedGuardian and _random:test(0.25) then
-                        missin.data.custom.canSpawnSpecialXsotan = true
-                    end
-                else
-                    mission.Log(methodName, "Random test failed - not spawning.")
-                end
-            else
-                mission.Log(methodName, "No Xsotan present - not spawning.")
+        if sectorInRift then
+            collectXsotanBounty_trySpawnSpecialXsotan(x, y, sectorInRift)
+        else
+            mission.data.custom.xsotanTimer = mission.data.custom.xsotanTimer + 1
+            if mission.data.custom.xsotanTimer == 5 then
+                collectXsotanBounty_trySpawnSpecialXsotan(x, y, sectorInRift)
+                mission.data.custom.xsotanTimer = 0
             end
         end
     end,
@@ -171,6 +149,7 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
     local x, y = Sector():getCoordinates()
     local insideBarrierOK = false
     if mission.data.custom.inBarrier == MissionUT.checkSectorInsideBarrier(x, y) then
+        mission.Log(methodName, "Barrier check OK")
         insideBarrierOK = true
     end
 
@@ -187,6 +166,12 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
         local _pindex = _player.index
 
         if _DestroyedEntity.factionIndex == _xfindex and (_dfindex == _pindex or (_player.allianceIndex and _dfindex == _player.allianceIndex)) then
+            if not Galaxy():sectorInRift(x, y) then
+                mission.Log(methodName, "Player destroyed Xsotan outside of rift - no longer eligible for rift bonus.")
+                mission.data.custom.awardRiftBonus = false
+                mission.data.description[5].fulfilled = true
+            end
+
             mission.data.custom.killedTargets = mission.data.custom.killedTargets + 1
             mission.data.description[3].arguments.killedTargets = mission.data.custom.killedTargets
             sync()
@@ -197,6 +182,79 @@ end
 --endregion
 
 --region #SERVER CALLS
+
+function collectXsotanBounty_trySpawnSpecialXsotan(x, y, inRift)
+    local methodName = "Try Spawn Special Xsotan"
+
+    mission.Log(methodName, "Checking to see if a Xsotan should spawn")
+    if mission.data.custom.dangerLevel < 8 then
+        mission.Log(methodName, "Danger level too low.")
+    end
+
+    if not mission.data.custom.canSpawnSpecialXsotan then
+        mission.Log(methodName, "Can't spawn special Xsotan.")
+    end
+
+    if mission.data.custom.dangerLevel >= 8 and mission.data.custom.canSpawnSpecialXsotan then
+        local xsotanCt = ESCCUtil.countEntitiesByValue("is_xsotan")
+        local specialXsotanCt = ESCCUtil.countEntitiesByValue("is_special_xsotan")
+
+        local maxSpecialXsotan = 1
+        if mission.data.custom.dangerLevel == 10 then --Only allow 1 special xsotan on danger 8/9 - allow up to 3 on danger 10.
+            maxSpecialXsotan = 3
+        end
+
+        if xsotanCt > 0 and specialXsotanCt < maxSpecialXsotan then
+            local odds = 0.25
+            local vol = 1.0
+            if mission.data.custom.dangerLevel == 10 then
+                odds = 0.5
+                vol = 1.5
+            end
+
+            if mission.data.custom.killedGuardian then
+                --First, check to see what sector we're in.
+                if MissionUT.checkSectorInsideBarrier(x, y) then
+                    --If we're inside the barrier and killed the guardian, the Xsotan are twice as likely to spawn and twice as big.
+                    odds = odds * 2
+                    vol = vol * 2
+                end
+            end
+
+            --If we're in a rift, odds double no matter what
+            if inRift then
+                odds = odds * 2
+            end
+
+            local _random = random()
+
+            if _random:test(odds) then
+                mission.Log(methodName, "Spawning Xostan")
+                local generator = AsyncShipGenerator(nil, nil)
+                local xsotanFunction = getRandomEntry(Xsotan.getSpecialXsotanFunctions(generator:getGenericPosition(), vol))
+                local xsotan = xsotanFunction()
+
+                --xsotan don't get savage, hardcore, etc. in rifts
+                if not inRift then
+                    SpawnUtility.addEnemyBuffs({xsotan})
+                end
+
+                mission.data.custom.canSpawnSpecialXsotan = false --Don't make multiple special Xsotan per sector. Unless...
+                if mission.data.custom.killedGuardian and _random:test(0.25) then
+                    mission.data.custom.canSpawnSpecialXsotan = true
+                end
+                --... Or we're in a rift.
+                if inRift then
+                    mission.data.custom.canSpawnSpecialXsotan = true
+                end
+            else
+                mission.Log(methodName, "Random test failed - not spawning.")
+            end
+        else
+            mission.Log(methodName, "No Xsotan present - not spawning.")
+        end
+    end
+end
 
 function collectXsotanBounty_finishAndReward()
     local methodName = "Finish and Reward"
@@ -209,8 +267,18 @@ function collectXsotanBounty_finishAndReward()
             mission.data.reward.credits = mission.data.reward.credits * 3
         end
 
+        if mission.data.custom.awardRiftBonus then
+            mission.data.reward.credits = mission.data.reward.credits * 2
+        end
+
         mission.data.reward.relations = mission.data.reward.relations + 2000
         mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus."
+    else
+        if mission.data.custom.awardRiftBonus then
+            mission.data.reward.credits = mission.data.reward.credits * 1.2
+
+            mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus."
+        end
     end
 
     reward()
@@ -265,6 +333,19 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
+    local eligibleForRiftBonus = false
+    local otherStations = {Sector():getEntitiesByType(EntityType.Station)}
+	for _, otherStation in pairs(otherStations) do
+		if otherStation.factionIndex == _Station.factionIndex and otherStation:hasScript("riftresearchcenter.lua") then
+            mission.Log(methodName, "Eligible for rift bonus!")
+			eligibleForRiftBonus = true
+		end
+	end
+
+    if eligibleForRiftBonus then
+        _Targets = _Targets + _random:getInt(0, 5)
+    end
+
     reward = _BaseReward * _Targets * Balancing.GetSectorRewardFactor(_sector:getCoordinates())
 
     local bulletin =
@@ -300,7 +381,8 @@ mission.makeBulletin = function(_Station)
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
             targets = _Targets,
-            insideBarrier = insideBarrier
+            insideBarrier = insideBarrier,
+            eligibleForRiftBonus = eligibleForRiftBonus
         }},
     }
 
