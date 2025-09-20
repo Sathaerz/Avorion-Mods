@@ -31,7 +31,10 @@ mission.data.custom.xsotanTypes = {
     { idx = 4, name = "Sunmaker", longName = "Xsotan Sunmaker", difficulty = "Medium", rewardFactor = 1.5 },
     { idx = 5, name = "Ballistyx", longName = "Xsotan Ballistyx", difficulty = "Medium", rewardFactor = 1.5 },
     { idx = 6, name = "Warlock", longName = "Xsotan Warlock", difficulty = "Difficult", rewardFactor = 2 },
-    { idx = 7, name = "Oppressor", longName = "Xsotan Oppressor", difficulty = "Extreme", rewardFactor = 3 }
+    { idx = 7, name = "Oppressor", longName = "Xsotan Oppressor", difficulty = "Extreme", rewardFactor = 3 },
+    { idx = 8, name = "Tributary", longName = "Xsotan Tributary", difficulty = "Easy", rewardFactor = 1.0 },
+    { idx = 9, name = "Caduceus", longName = "Xsotan Caduceus", difficulty = "Medium", rewardFactor = 1.5 },
+    { idx = 10, name = "Levinstriker", longName = "Xsotan Levinstriker", difficulty = "Difficult", rewardFactor = 2.0 }
 }
 
 local XsotanSpecimen_init = initialize
@@ -52,8 +55,11 @@ function initialize(_Data_in)
         mission.data.custom.targetXsotanType = _Data_in.targetType
         mission.data.custom.targets = 1 --always 1.
         mission.data.custom.analyzed = 0
+        
 
         local xsotanType = mission.data.custom.xsotanTypes[mission.data.custom.targetXsotanType]
+
+        mission.data.custom.riftMultiplier = xsotanType.rewardFactor
 
         --[[=====================================================
             MISSION DESCRIPTION SETUP:
@@ -431,6 +437,36 @@ function analyzeXsotanSpecimen_modTableOK(idx)
                 end
             end
             return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
+        end,
+        function() -- tributary
+            for idx, mod in pairs(xMods) do
+                for idx2, id in pairs(SpecialXsotanModTable) do
+                    if mod.id == id then
+                        return true
+                    end
+                end
+            end
+            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
+        end,
+        function() --caduceus
+            for idx, mod in pairs(xMods) do
+                for idx2, id in pairs(SpecialXsotanModTable) do
+                    if mod.id == id then
+                        return true
+                    end
+                end
+            end
+            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
+        end,
+        function() --levinstriker
+            for idx, mod in pairs(xMods) do
+                for idx2, id in pairs(SpecialXsotanModTable) do
+                    if mod.id == id then
+                        return true
+                    end
+                end
+            end
+            return false --Need any of the following mods: The Dig, Xsotan Dreadnought, Scan Xsotan Group, Eradicate Xsotan Infestation, Collect Xsotan Bounty
         end
     }
 
@@ -485,6 +521,25 @@ end
 function analyzeXsotanSpecimen_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
+
+    --If the player somehow manages to do this in a rift, give them up to x9 the payout and a juicy amount of rift research data.
+    local x, y = Sector():getCoordinates()
+    if Galaxy():sectorInRift(x, y) then
+        local _player = Player()
+        local ship = _player.craft
+
+        local researchAmount = 100 * mission.data.custom.riftMultiplier
+        local researchGood = goods["Rift Research Data"]:good()
+        if ship then
+            Sector():dropCargo(ship.translationf, _player, nil, researchGood, 0, researchAmount)
+        else
+            Sector():dropCargo(nil, _player, nil, researchGood, 0, researchAmount)
+        end
+
+        mission.data.reward.credits = mission.data.reward.credits * 3 * mission.data.custom.riftMultiplier
+        mission.data.reward.relations = mission.data.reward.relations + 2000
+        mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus."
+    end
 
     reward()
     accomplish()
