@@ -492,7 +492,6 @@ end
 mission.phases[9].onTargetLocationEntered = function(_X, _Y)
     local _MethodName = "Phase 9 On Enter Target Location"
     --Start a timer to spawn the Cavaliers if the player has both containers. If they don't, just move back to phase 8.
-    --Looks like I'm less lazy than Boxelware :D
     mission.Log(_MethodName, "Starting timer.")
     if ESCCUtil.countEntitiesByValue("_llte_story1_markcontainer") >= 2 then
         mission.phases[9].timers[1] = { time = 5, callback = function() 

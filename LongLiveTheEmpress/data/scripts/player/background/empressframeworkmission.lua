@@ -247,6 +247,8 @@ function EmpressFrameworkMission.getSectorSafe(_Player, _X, _Y)
     self.Log(_MethodName, "Calculating if sector is safe.")
     local _SectorSafe = true
 
+    local _galaxy = Galaxy()
+
     --If this is the location of another mission, don't have the cavaliers contact the player.
     local otherMissionLocations = MissionUT.getMissionLocations()
     if otherMissionLocations:contains(_X, _Y) then
@@ -265,8 +267,13 @@ function EmpressFrameworkMission.getSectorSafe(_Player, _X, _Y)
         _SectorSafe = false
     end
 
+    if _galaxy:sectorInRift(_X, _Y) then
+        self.Log(_MethodName, "Sector not safe - is in rift.")
+        _SectorSafe = false
+    end
+
     --If this is the location of a faction that hates the player, don't have the cavaliers contact the player.
-    local controllingFaction = Galaxy():getControllingFaction(_X, _Y)
+    local controllingFaction = _galaxy:getControllingFaction(_X, _Y)
     if controllingFaction then
         local relation = _Player:getRelations(controllingFaction.index)
         if relation < -80000 then
