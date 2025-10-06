@@ -641,12 +641,12 @@ function expandOperations_onConstructionShipFinished(generated)
 
     local endPoint = outpost.translationf + (random():getDirection() * 100000)
 
-    local constructionShipDurabilityFactor = 4
+    local constructionShipDurabilityFactor = 6
     local x, y = Sector():getCoordinates()
 
     local distToCenter = math.sqrt(x*x + y*y)
     if distToCenter > 360 then
-        constructionShipDurabilityFactor = constructionShipDurabilityFactor + 2 --Increase it a bit becasue ships are much less tough, relatively speaking, in the outer regions.
+        constructionShipDurabilityFactor = constructionShipDurabilityFactor * 1.5 --Increase it a bit becasue ships are much less tough, relatively speaking, in the outer regions.
     end
 
     ESCCUtil.multiplyOverallDurability(constructionShip, constructionShipDurabilityFactor)
@@ -699,7 +699,66 @@ function expandOperations_createStationFrame(framePosition)
        ComponentType.EnergySystem
        )
 
-    local stationFramePlan = PlanGenerator.makeStationPlan(_Faction)
+    local stationFramePlan, stationFrameSeed, stationFrameVolume, stationFrameMaterial = PlanGenerator.makeStationPlan(_Faction)
+
+    local planSize = stationFramePlan:getBoundingBox().size * 0.25
+    local indices = {stationFramePlan:getBlockIndices()}
+    local color = ColorRGB(0.4, 0.4, 0.4)
+    for i, index in pairs(indices) do
+        local blockPosition = stationFramePlan:getBlock(index).box.position
+        if math.abs(blockPosition.x) > planSize.x or math.abs(blockPosition.y) > planSize.y or math.abs(blockPosition.z) > planSize.z then
+            if i % 5 == 0 then
+                stationFramePlan:setBlockType(index, BlockType.Framework)
+                stationFramePlan:setBlockColor(index, color)
+            end
+        else
+            if i % 14 == 0 then
+                stationFramePlan:setBlockType(index, BlockType.Framework)
+                stationFramePlan:setBlockColor(index, color)
+            end
+        end
+    end
+
+    for i, index in pairs(indices) do
+        if i % 3 == 0 then
+            local box = stationFramePlan:getBlock(index).box
+            local size = box.size
+            local minAxis = 0
+            if size.y < size.x then minAxis = 1 end
+            if size.z < size.y then minAxis = 2 end
+
+            local thickness = 3
+            local offset = vec3()
+
+            if minAxis == 0 then
+                offset.x = (size.x + thickness) * 0.5
+                size.x = thickness
+            else
+                offset.x = random():getFloat(size.x * 0.1, size.x * 0.3)
+                size.x = random():getFloat(size.x * 0.5, size.x)
+            end
+
+            if minAxis == 1 then
+                offset.y = (size.y + thickness) * 0.5
+                size.y = thickness
+            else
+                offset.y = random():getFloat(size.y * 0.1, size.y * 0.3)
+                size.y = random():getFloat(size.y * 0.5, size.y)
+            end
+
+            if minAxis == 2 then
+                offset.z = (size.z + thickness) * 0.5
+                size.z = thickness
+            else
+                offset.z = random():getFloat(size.z * 0.1, size.z * 0.3)
+                size.z = random():getFloat(size.z * 0.5, size.z)
+            end
+
+            stationFramePlan:addBlock(box.position + offset, size, index, -1, color, stationFrameMaterial, Matrix(), BlockType.Framework, ColorNone())
+            stationFramePlan:addBlock(box.position - offset, size, index, -1, color, stationFrameMaterial, Matrix(), BlockType.Framework, ColorNone())
+        end
+    end
+
     local _ScaleFactor = 0.25
     stationFramePlan:scale(vec3(_ScaleFactor, _ScaleFactor, _ScaleFactor))
     stationFramePlan.accumulatingHealth = true
@@ -711,7 +770,9 @@ function expandOperations_createStationFrame(framePosition)
     local stationFrame = Sector():createEntity(desc)
     stationFrame:setValue(mission.data.custom.defenseObjectiveScriptValue, true)
     stationFrame:setValue(mission.data.custom.stationFrameScriptValue, true)
-    stationFrame:setTitle("Station Frame", {})
+    stationFrame:setTitle("Construction Site", {})
+
+    Physics(stationFrame).driftDecrease = 0.2
 
     ESCCUtil.multiplyOverallDurability(stationFrame, 1.5)
 
@@ -1000,6 +1061,9 @@ function expandOperations_getTorpSlammerTable(targetTag)
         _DmgFactor = 1
         _tta = 40
         rangeFactor = 3
+    end
+    if mission.data.custom.threatType == 3 then --bounty hunters
+        _tta = _tta + 15 --These guys have normal torpedoes so make the big torps take longer to activate.
     end
 
     if mission.data.custom.enemyWavesSpawned >= 8 then --Make them more dangerous on the last wave.
