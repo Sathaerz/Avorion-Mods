@@ -174,17 +174,24 @@ end
 mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
     local _Prototypes = {Sector():getEntitiesByScriptValue("is_prototype")}
 
-    local _Taunts = {
+    local entryTaunts = {
         "You'll never see this coming!",
         "It seems we've been found out! Take them down now!",
         "I guess this is it. At least we'll be taking you with us.",
         "Witness us!",
         "Never thought we'd die running from a do-gooder.",
         "To infinity! And beyond!",
-        "One shall stand! One shall fall!"
+        "One shall stand! One shall fall!",
+        "Target verified, commencing hostilities.",
+        "This will be our first and final battle!",
+        "Let's see what this baby can do, hmm?",
+        "A good prototype needs testing, I suppose...",
+        "You should have backed off when you had the chance!",
+        "Prepare yourself!",
+        "Ready or not, here I come!"
     }
 
-    Sector():broadcastChatMessage(_Prototypes[1], ChatMessageType.Chatter, getRandomEntry(_Taunts))
+    Sector():broadcastChatMessage(_Prototypes[1], ChatMessageType.Chatter, getRandomEntry(entryTaunts))
     nextPhase()
 end
 
@@ -201,6 +208,38 @@ mission.phases[2].onTargetLocationEntered = function(_X, _Y)
         _BattleShip:invokeFunction(_script, _func, _time)
     end
 end
+
+mission.phases[2].onFail = function()
+    if atTargetLocation() then
+        local _sector = Sector()
+        local _Prototypes = {_sector:getEntitiesByScriptValue("is_prototype")}
+        local _prototype = _Prototypes[1]
+
+        local goodbyeTaunts = {
+            "Ha! This thing is invincible!",
+            "Finally! The hyperdrive is recharged! Get us out of here!",
+            "Can't wait to paint the town red with this...",
+            "See ya! Wouldn't want to be ya.",
+            "Mediocre, Captain!",
+            "All shall despair before our might!",
+            "AhahahahahAHAHAHAAHAHAHAHAHA!!!",
+            "The drive is charged, punch it!",
+            "As much as I enjoyed our little dance, it's time to cut and run.",
+            "I expected more from you, Captain. Maybe next time."
+        }
+
+        _sector:broadcastChatMessage(_prototype, ChatMessageType.Chatter, getRandomEntry(goodbyeTaunts))
+
+        local _protoDurability = Durability(_prototype)
+        _prototype:setValue("escc_active_ironcurtain", true) --fake an iron curtain being active so phasemode doesn't turn it off.
+        if _protoDurability then
+            _protoDurability.invincibility = 0.01
+        end
+
+        ESCCUtil.allPiratesDepart()
+    end
+end
+
 --region #PHASE 2 SECTOR CALLBACKS
 
 if onServer() then
@@ -311,7 +350,7 @@ function destroyPrototype_spawnPrototype()
     local _AddBlocker = false
     local _BlockerToAdd = ""
 
-    if _Danger >= 6 then
+    if _Danger >= 5 then
         _OffensiveScriptsct = _OffensiveScriptsct + 1
     end
     if _Danger >= 8 then
@@ -335,14 +374,14 @@ function destroyPrototype_spawnPrototype()
     end
 
     local _DefensiveScripts = {
-        "adaptivedefense.lua",
-        "phasemode.lua",
-        "ironcurtain.lua"
+        { scriptName = "adaptivedefense.lua" },
+        { scriptName = "phasemode.lua", },
+        { scriptName = "ironcurtain.lua" }
     }
     local _OffensiveScripts = {
-        "overdrive.lua",
-        "avenger.lua",
-        "frenzy.lua"
+        { scriptName = "overdrive.lua", scriptArgs = { incrementOnPhaseOut = true, incrementOnPhaseOutValue = 0.15 } },
+        { scriptName = "avenger.lua" },
+        { scriptName = "frenzy.lua", scriptArgs = { _UpdateCycle = 5, _IncreasePerUpdate = 0.15 } }
     }
 
     shuffle(random(), _DefensiveScripts)
@@ -351,16 +390,16 @@ function destroyPrototype_spawnPrototype()
     if _DefensiveScriptsct > 0 then
         for idx = 1, _DefensiveScriptsct do
             local _Script = _DefensiveScripts[idx]
-            mission.Log(methodName, "Adding defensive script : " .. tostring(_Script))
-            _BattleShip:addScriptOnce(_Script)
+            mission.Log(methodName, "Adding defensive script : " .. tostring(_Script.scriptName) .. " script args is : " .. tostring(_Script.scriptArgs))
+            _BattleShip:addScriptOnce(_Script.scriptName, _Script.scriptArgs)
         end
     end
 
     if _OffensiveScriptsct > 0 then
         for idx = 1, _OffensiveScriptsct do
             local _Script = _OffensiveScripts[idx]
-            mission.Log(methodName, "Adding offensive script : " .. tostring(_Script))
-            _BattleShip:addScriptOnce(_Script)
+            mission.Log(methodName, "Adding offensive script : " .. tostring(_Script.scriptName) .. " script args is : " .. tostring(_Script.scriptArgs))
+            _BattleShip:addScriptOnce(_Script.scriptName, _Script.scriptArgs)
         end
     end
 
@@ -665,6 +704,9 @@ mission.makeBulletin = function(_Station)
     reward = _BaseReward * rewardFactor --SET REWARD HERE
     reputation = 8000 + (8000 * (0.0175 * _DangerLevel) * rewardFactor) --Anywhere from 8000 to 64500
     punishRep = reputation / 2
+    if reputation > 20000 then
+        punishRep = reputation / 2.5
+    end
     if _DangerLevel == 10 then
         reputation = reputation * 1.5
     end
@@ -692,7 +734,7 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = { credits = reward, relations = reputation, paymentMessage = "Earned %1% for destroying the prototype."},
+            reward = { credits = reward, relations = reputation, paymentMessage = "Earned %1% for destroying the prototype." },
             punishment = { relations = punishRep },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,

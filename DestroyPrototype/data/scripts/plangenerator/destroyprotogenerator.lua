@@ -38,7 +38,7 @@ function DestroyProtoGenerator.create(position, giverFaction, pirateFaction, dan
 	position = position or Matrix()
     local x, y = Sector():getCoordinates()
 
-    local volume = Balancing_GetSectorShipVolume(x, y) * bshipScale * playerScaleFactor;
+    local volume = Balancing_GetSectorShipVolume(x, y) * bshipScale * playerScaleFactor
 
 	--Use highest available material level.
 	local availableMaterials = Balancing_GetTechnologyMaterialProbability(x, y)
@@ -78,31 +78,28 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	local sysrarities = upgradeGenerator:getSectorRarityDistribution(x, y)
 	
 	local turretFactor = 3
-	local damageFactor = 3
+	local damageFactor = 4
 	local turretRange = 1000
 	if dangerValue > 5 then
 		turretFactor = turretFactor + 0.5
-		damageFactor = damageFactor + 1.25
 		turretRange = turretRange + 375
+		damageFactor = damageFactor + ((dangerValue - 5) * 1) --should result in a smoother damage curve than +1.25 / +1.25 / +2.5
 	end
 	if dangerValue >= 8 then
 		turretFactor = turretFactor + 0.5
-		damageFactor = damageFactor + 1.25
 		turretRange = turretRange + 375
 	end
 	if dangerValue == 10 then
 		turretFactor = turretFactor + 1
-		damageFactor = damageFactor + 2.5
 		turretRange = turretRange + 750
 	end
-	
-	local validWepaonTable = DestroyProtoGenerator.getValidWeaponTypes(distFromCenter)
+
 	--Add two different types of military weapons + disruptor weapons -- also add artillery so the player can't just stand off and hammer it to death.
 	--Well, they still _can_, but at least it's a little more difficult this way.
 	--Update 2/18/2025 - I've learned a little bit more about how the AI works. This should make things spicier :)
-	ShipUtility.addSpecializedEquipment(ship, validWepaonTable, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
-	ShipUtility.addSpecializedEquipment(ship, validWepaonTable, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
-	ShipUtility.addSpecializedEquipment(ship, validWepaonTable, ShipUtility.NormalTorpedoes, turretFactor, 1, turretRange)
+	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
+	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 0, turretRange)
+	ShipUtility.addSpecializedEquipment(ship, ShipUtility.LongRangeWeapons, ShipUtility.NormalTorpedoes, turretFactor, 1, turretRange)
 
 	ship:setDropsAttachedTurrets(false) --We futz with the turrets after adding them, so we don't necessarily want to drop them.
 	
@@ -124,6 +121,7 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 		turretDrops = turretDrops + 3
 		systemDrops = systemDrops + 2
 	end
+
     rarities[-1] = 0 -- no petty turrets
     rarities[0] = 0 -- no common turrets
     rarities[1] = 0 -- no uncommon turrets
@@ -146,7 +144,6 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 		--Don't mess with exceptional rarities @ > 350
 	end
 	
-
     turretGenerator.rarities = rarities
     for _ = 1, turretDrops do
         Loot(ship):insert(InventoryTurret(turretGenerator:generate(x, y)))
@@ -168,50 +165,6 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
     ship:setValue("is_pirate", true)
 	ship:setValue("is_prototype", true)
 	ship:setValue("IW_nuclear_m", 0.2) --Same as the Xsotan Dreadnought
-end
-
-function DestroyProtoGenerator.getValidWeaponTypes(dist)
-	if dist > 360 then
-		--We are in titanium / iron region - just return long range weapons.
-		return ShipUtility.LongRangeWeapons
-	else
-		local weaponTbl = {}
-
-		--Copy long range weapons
-		for k, v in pairs(ShipUtility.LongRangeWeapons) do
-			weaponTbl[k] = v
-		end
-
-		--Remove chaingun.
-		local chaingunKey = nil
-		for k, v in pairs(weaponTbl) do
-			if v == WeaponType.ChainGun then
-				chaingunKey = k
-				break
-			end
-		end
-		if chaingunKey then
-			table.remove(weaponTbl, chaingunKey)
-		end
-
-		local mods = Mods()
-		for _, mod in pairs(mods) do
-			if mod.id == "2532733728" then --Vauss Cannon is active - we potentially need to remove the Vauss Cannon.
-				local vaussKey = nil
-				for k, v in pairs(weaponTbl) do
-					if v == WeaponType.VaussCannon then
-						vaussKey = k
-						break
-					end
-				end
-				if vaussKey then
-					table.remove(weaponTbl, vaussKey)
-				end
-			end
-		end
-
-		return weaponTbl
-	end
 end
 
 function DestroyProtoGenerator.getPlayerScaleFactor()
