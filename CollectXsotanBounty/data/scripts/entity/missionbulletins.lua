@@ -23,7 +23,7 @@ function MissionBulletins.getPossibleMissions()
 	end
 
 	if riftResearchSector and (stationTitle == "Equipment Dock" or stationTitle == "Repair Dock" or stationTitle == "Shipyard") then
-		table.insert(scripts, {path = "data/scripts/player/missions/xsotanbounty.lua", prob = 15, maxDistToCenter = 500})
+		table.insert(scripts, {path = "data/scripts/player/missions/xsotanbounty.lua", prob = 5, maxDistToCenter = 500})
 	end
 
 	return scripts
