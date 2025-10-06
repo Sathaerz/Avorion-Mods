@@ -14,6 +14,7 @@ local _Accel = false
 local _PlasFlamer = false
 local _MassDriver = false
 local _ArsPulseLaser = false
+local _ESGLauncher = false
 local _Dangerous = false
 
 for _, p in pairs(xmods) do
@@ -55,6 +56,9 @@ for _, p in pairs(xmods) do
     end
     if p.id == "3016092361" then
         _ArsPulseLaser = true
+    end
+    if p.id == "3482826383" then
+        _ESGLauncher = true
     end
 end
 
@@ -101,6 +105,11 @@ if _ArsPulseLaser then
     table.insert(AttackWeapons, WeaponType.ArsPulseLaser)
 end
 
+if _ESGLauncher then
+    table.insert(AttackWeapons, WeaponType.ElectroGrenade)
+    table.insert(AntiHullWeapons, WeaponType.ElectroGrenade)
+end
+
 if ShipUtility._Dangerous then
     if _Vauss then
         table.insert(AttackWeapons, WeaponType.VaussCannon)
@@ -113,6 +122,11 @@ if ShipUtility._Dangerous then
 
     if _Accel then
         table.insert(AttackWeapons, WeaponType.PulseAccelerator)
+    end
+
+    if _ESGLauncher then
+        --Put this under dangerous because it opens up the ESGLauncher to be included on prototype battleships, which is terrifying.
+        table.insert(LongRangeWeapons, WeaponType.ElectroGrenade)
     end
 end
 
@@ -135,6 +149,10 @@ if _ESCC then
 
     if _MassDriver then
         table.insert(ExecutionerWeapons, WeaponType.MassDriver)
+    end
+
+    if _ESGLauncher then
+        table.insert(ExecutionerWeapons, WeaponType.ElectroGrenade)
     end
 
     if ShipUtility._Dangerous then
