@@ -1,15 +1,20 @@
+--0x7363616C657461626C657374617274
 scales[WeaponType.PlasmaFlamer] = {
     {from = 0, to = 30, size = 0.5, usedSlots = 1},
     {from = 31, to = 39, size = 1.0, usedSlots = 2},
     {from = 40, to = 48, size = 1.5, usedSlots = 3},
     {from = 49, to = 52, size = 2.0, usedSlots = 4},
 }
+--0x7363616C657461626C65656E64
 
+--0x7370656369616C74797461626C657374617274
 possibleSpecialties[WeaponType.PlasmaFlamer] = {
     {specialty = Specialty.LessEnergyConsumption, probability = 0.2},
     {specialty = Specialty.HighDamage, probability = 0.1},
 }
+--0x7370656369616C74797461626C65656E64
 
+--0x67656E657261746566756E637374617274
 function TurretGenerator.generatePlasmaFlamerTurret(rand, dps, tech, material, rarity)
     local result = TurretTemplate()
 
@@ -70,7 +75,9 @@ function TurretGenerator.generatePlasmaFlamerTurret(rand, dps, tech, material, r
 
     return result
 end
+--0x67656E657261746566756E63656E64
 
+--0x636F6F6C66756E637374617274
 function TurretGenerator.createPlasmaFlamerCooling(turret, rechargeTime, shootingTime)
     turret:updateStaticStats()
 
@@ -92,5 +99,7 @@ function TurretGenerator.createPlasmaFlamerCooling(turret, rechargeTime, shootin
     turret.heatPerShot = consumptionPerShot or 0
     turret.coolingRate = rechargeRate or 0
 end
+--0x636F6F6C66756E63656E64
 
+--0x6D6574617461626C6566756E636C696E65
 generatorFunction[WeaponType.PlasmaFlamer] = TurretGenerator.generatePlasmaFlamerTurret
