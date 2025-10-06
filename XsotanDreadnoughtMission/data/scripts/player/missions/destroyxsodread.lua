@@ -262,8 +262,10 @@ end
 mission.makeBulletin = function(_Station)
     local _MethodName = "Make Bulletin"
     --We don't need a specific type of sector here. Just an empty one that's on the same side of the barrier as the questgiver.
+    local _sector = Sector()
+
     local target = {}
-    local x, y = Sector():getCoordinates()
+    local x, y = _sector:getCoordinates()
     local insideBarrier = MissionUT.checkSectorInsideBarrier(x, y)
     target.x, target.y = MissionUT.getEmptySector(x, y, 2, 15, insideBarrier)
 
@@ -300,11 +302,15 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward * 2
     end
 
-    reward = _BaseReward * Balancing.GetSectorRewardFactor(Sector():getCoordinates()) --SET REWARD HERE
-
-    reputation = 8000
+    local rewardFactor = Balancing.GetSectorRewardFactor(_sector:getCoordinates())
+    reward = _BaseReward * rewardFactor --SET REWARD HERE
+    reputation = 8000 + (8500 * (0.0175 * _DangerLevel) * rewardFactor) --Anywhere from 8000 to 67781
+    punishRep = reputation / 2
+    if reputation > 20000 then
+        punishRep = reputation / 2.5
+    end
     if _DangerLevel == 10 then
-        reputation = 12000
+        reputation = reputation * 1.5
     end
 
     local bulletin =
@@ -330,8 +336,8 @@ mission.makeBulletin = function(_Station)
         arguments = {{
             giver = _Station.index,
             location = target,
-            reward = {credits = reward, relations = reputation, paymentMessage = "Earned %1% for destroying the dreadnought."},
-            punishment = {relations = 8000 },
+            reward = { credits = reward, relations = reputation, paymentMessage = "Earned %1% for destroying the dreadnought." },
+            punishment = { relations = punishRep },
             dangerLevel = _DangerLevel,
             initialDesc = _Description,
             winMsg = _WinMsg,
