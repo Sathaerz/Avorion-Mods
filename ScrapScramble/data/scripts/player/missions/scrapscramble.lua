@@ -99,7 +99,7 @@ mission.phases[1].onBegin = function()
     mission.Log(methodName, "Sector name is " .. tostring(_sector.name) .. " Giver title is " .. tostring(giver.translatedTitle))
 
     mission.data.description[1].arguments = { sectorName = _sector.name, giverTitle = giver.translatedTitle }
-    mission.data.description[2].text = formatDescription(giver)
+    mission.data.description[2].text = scrapScramble_formatDescription(giver)
     mission.data.description[3].arguments = { _X = x, _Y = y }
 
     local descidx = 4
