@@ -972,7 +972,7 @@ mission.makeBulletin = function(_Station)
     if _DangerLevel > 5 then
         _Difficulty = "Difficult"
     end
-    if _DangerLevel == 10 then --This danger level in particular is brutally difficult.
+    if _DangerLevel >= 9 then --9+ in particular is brutally difficult.
         _Difficulty = "Extreme"
     end
     
