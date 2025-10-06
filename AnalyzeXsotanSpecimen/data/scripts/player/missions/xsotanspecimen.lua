@@ -16,9 +16,10 @@ mission.data.brief = mission._Name
 mission.data.title = mission._Name
 mission.data.autoTrackMission = true
 mission.data.description = {
-    {text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
-    {text = "..." },
+    { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
+    { text = "..." },
     { text = "${_ANALYZED} / ${_TARGETS} ${_XSOTANTYPE} analyzed", bulletPoint = true, fulfilled = false },
+    { text = "Analyze the Xsotan inside a rift for a bonus", visible = false, bulletPoint = true, fulfilled = false }
 }
 
 mission.data.accomplishMessage = "Thank you for gathering the combat telemetry. We transferred the reward to your account."
@@ -55,7 +56,7 @@ function initialize(_Data_in)
         mission.data.custom.targetXsotanType = _Data_in.targetType
         mission.data.custom.targets = 1 --always 1.
         mission.data.custom.analyzed = 0
-        
+        mission.data.custom.awardRiftBonus = _Data_in.eligibleForRiftBonus
 
         local xsotanType = mission.data.custom.xsotanTypes[mission.data.custom.targetXsotanType]
 
@@ -68,6 +69,9 @@ function initialize(_Data_in)
         mission.data.description[2].text = _Data_in.initialDesc
         mission.data.description[2].arguments = { _XSOTANTYPE = xsotanType.longName }
         mission.data.description[3].arguments = { _TARGETS = tostring(mission.data.custom.targets), _ANALYZED = tostring(mission.data.custom.analyzed), _XSOTANTYPE = xsotanType.longName }
+        if mission.data.custom.awardRiftBonus then
+            mission.data.description[4].visible = true
+        end
     end
 
     XsotanSpecimen_init(_Data_in)
@@ -522,9 +526,9 @@ function analyzeXsotanSpecimen_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
-    --If the player somehow manages to do this in a rift, give them up to x9 the payout and a juicy amount of rift research data.
+    --If the player somehow manages to do this in a rift (while eligible for a rift bonus), give them up to x15 the payout and a juicy amount of rift research data.
     local x, y = Sector():getCoordinates()
-    if Galaxy():sectorInRift(x, y) then
+    if mission.data.custom.awardRiftBonus and Galaxy():sectorInRift(x, y) then
         local _player = Player()
         local ship = _player.craft
 
@@ -536,7 +540,7 @@ function analyzeXsotanSpecimen_finishAndReward()
             Sector():dropCargo(nil, _player, nil, researchGood, 0, researchAmount)
         end
 
-        mission.data.reward.credits = mission.data.reward.credits * 3 * mission.data.custom.riftMultiplier
+        mission.data.reward.credits = mission.data.reward.credits * 5 * mission.data.custom.riftMultiplier
         mission.data.reward.relations = mission.data.reward.relations + 2000
         mission.data.reward.paymentMessage = mission.data.reward.paymentMessage .. " This includes a bonus."
     end
@@ -671,6 +675,15 @@ mission.makeBulletin = function(_Station)
         baseReward = baseReward * 2
     end
 
+    local eligibleForRiftBonus = false
+    local otherStations = {Sector():getEntitiesByType(EntityType.Station)}
+	for _, otherStation in pairs(otherStations) do
+		if otherStation.factionIndex == _Station.factionIndex and otherStation:hasScript("riftresearchcenter.lua") then
+            mission.Log(methodName, "Eligible for rift bonus!")
+			eligibleForRiftBonus = true
+		end
+	end
+
     reward = baseReward * Balancing.GetSectorRewardFactor(_sector:getCoordinates())
 
     missionReward = { credits = reward, relations = 6000, paymentMessage = "Earned %1% credits for analyzing the Xsotan." }
@@ -719,7 +732,8 @@ mission.makeBulletin = function(_Station)
             reward = missionReward,
             initialDesc = _Description,
             targetType = targetXsotanType.idx,
-            insideBarrier = insideBarrier
+            insideBarrier = insideBarrier,
+            eligibleForRiftBonus = eligibleForRiftBonus
         }},
     }
 
