@@ -404,6 +404,13 @@ function ESCCUtil.multiplyOverallDurability(entity, multiplier)
     end
 end
 
+function ESCCUtil.getSingleEntityByValue(_sector, scriptValue)
+    _sector = _sector or Sector()
+
+    local scriptTbl = { _sector:getEntitiesByScriptValue(scriptValue) }
+    return scriptTbl[1]
+end
+
 --endregion
 
 --region #FACTION HELPERS
@@ -422,6 +429,64 @@ function ESCCUtil.getNeutralSmugglerFaction()
     end
 
     return faction
+end
+
+--endregion
+
+--region #DIALOGUE HELPERS
+
+function ESCCUtil.setTalkerTextColors(table, talker, talkerColor, textColor)
+    for _, dx in pairs(table) do
+        dx.talker = talker
+        dx.textColor = textColor
+        dx.talkerColor = talkerColor
+    end
+end
+
+--endregion
+
+--region #ANIMATION HELPERS (CLIENT ONLY)
+
+function ESCCUtil.drawConstructionLaser(constructingEntity, constructedEntity, magnitudeMultiplier)
+    local _sector = Sector()
+
+    if constructingEntity and valid(constructingEntity) and constructedEntity and valid(constructedEntity) then
+        local _random = random()
+        local dir = _random:getDirection()
+
+        local magnitudeMultiplier = math.max((magnitudeMultiplier or 1), 1) --Needs to be at least 1.
+
+        local minMagnitude = 10 * magnitudeMultiplier
+        local maxMagnitude = 25 * magnitudeMultiplier
+
+        local magnitude = _random:getInt(minMagnitude, maxMagnitude)
+
+        local lsr = _sector:createLaser(constructingEntity.translationf, constructedEntity.translationf + (dir * magnitude), ColorRGB(0, 0.1, 1.0), 1)
+        lsr.collision = false
+        lsr.maxAliveTime = 0.025
+    end
+end
+
+function ESCCUtil.drawHealingAnimation(healerEntity, healedEntity)
+    local _sector = Sector()
+ 
+    if healerEntity and valid(healerEntity) and healedEntity and valid(healedEntity) then
+        local healedEntityHull = healedEntity.durability
+        local healedEntityMaxHull = healedEntity.maxDurability
+
+        if healedEntityHull < healedEntityMaxHull then
+            local cShipPos = healerEntity.translationf
+            local sFramePos = healedEntity.translationf
+            local beamColor = ColorRGB(0.0, 0.8, 0.5)
+
+            local repairLaser = _sector:createLaser(cShipPos, sFramePos, beamColor, 16)
+            repairLaser.maxAliveTime = 1.5
+            repairLaser.collision = false
+
+            local direction = random():getDirection()
+            _sector:createHyperspaceJumpAnimation(healedEntity, direction, ColorRGB(0.0, 1.0, 0.6), 0.2)
+        end
+    end
 end
 
 --endregion
@@ -481,18 +546,6 @@ function ESCCUtil.playerBeatStory(_Player)
         return false
     end
 end
-
---region #DIALOGUE HELPERS
-
-function ESCCUtil.setTalkerTextColors(table, talker, talkerColor, textColor)
-    for _, dx in pairs(table) do
-        dx.talker = talker
-        dx.textColor = textColor
-        dx.talkerColor = talkerColor
-    end
-end
-
---endregion
 
 --region #LOGGING
 

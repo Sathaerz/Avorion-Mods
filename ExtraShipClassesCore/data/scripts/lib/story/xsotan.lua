@@ -1,3 +1,6 @@
+--region #SPECIAL XSOTAN
+
+--Appears specially in the Eradicate Xsotan Infestation mission
 function Xsotan.createInfestor(_position, _volumeFactor, _extraLoot)
     local _MethodName = "Spawn Xsotan Infestor"
     mission.Log(_MethodName, "Beginning...")
@@ -51,6 +54,7 @@ function Xsotan.createInfestor(_position, _volumeFactor, _extraLoot)
     return _XsotanInfestor
 end
 
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
 function Xsotan.createOppressor(_position, _volumeFactor)
     _position = _position or Matrix()
     local volume = Xsotan.getShipVolume()
@@ -102,6 +106,7 @@ function Xsotan.createOppressor(_position, _volumeFactor)
     return ship
 end
 
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
 function Xsotan.createSunmaker(_position, _volumeFactor)
     local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
@@ -131,6 +136,7 @@ function Xsotan.createSunmaker(_position, _volumeFactor)
     return xsotanShip
 end
 
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
 function Xsotan.createBallistyx(_position, _volumeFactor)
     local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
@@ -156,6 +162,7 @@ function Xsotan.createBallistyx(_position, _volumeFactor)
     return xsotanShip
 end
 
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
 function Xsotan.createLonginus(_position, _volumeFactor)
     local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
@@ -183,20 +190,7 @@ function Xsotan.createLonginus(_position, _volumeFactor)
     return xsotanShip
 end
 
-function Xsotan.createPulverizer(_position, _volumeFactor)
-    local xsotanShip = Xsotan.createGenericShip(_position, _volumeFactor)
-
-    local name, type = ShipUtility.getMilitaryNameByVolume(xsotanShip.volume)
-    xsotanShip:setTitle("${toughness}Xsotan Pulverizer ${ship}"%_T, {toughness = "", ship = name})
-    xsotanShip:setValue("is_pulverizer", true)
-    xsotanShip:setValue("is_special_xsotan", true)
-    xsotanShip:setValue("xsotan_pulverizer", true)
-
-    ShipUtility.addPulverizerCannons(xsotanShip)
-
-    return xsotanShip
-end
-
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
 function Xsotan.createWarlock(_position, _volumeFactor)
     local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
@@ -212,6 +206,7 @@ function Xsotan.createWarlock(_position, _volumeFactor)
     return xsotanShip
 end
 
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
 function Xsotan.createTributary(_position, _volumeFactor)
     local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
@@ -227,6 +222,7 @@ function Xsotan.createTributary(_position, _volumeFactor)
     return xsotanShip
 end
 
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
 function Xsotan.createLevinstriker(_position, _volumeFactor)
     local xsotanShip = Xsotan.createShip(_position, _volumeFactor)
 
@@ -252,6 +248,7 @@ function Xsotan.createLevinstriker(_position, _volumeFactor)
     return xsotanShip
 end
 
+--Appears at the end of The Dig if the player loses vs. the Xsotan.
 function Xsotan.createParthenope(_position, _volumeFactor)
     local xsotanShip = Xsotan.createCarrier(_position, _volumeFactor, 30) --default # of fighters is fine
 
@@ -268,21 +265,7 @@ function Xsotan.createParthenope(_position, _volumeFactor)
     return xsotanShip
 end
 
-function Xsotan.createHierophant(_position, _volumeFactor)
-    local xsotanShip = Xsotan.createSummoner(_position, _volumeFactor)
-
-    local name = "Hierophant"
-    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    xsotanShip:setValue("is_hierophant", true)
-    xsotanShip:setValue("is_special_xsotan", true)
-    xsotanShip:setValue("xsotan_hierophant", true)
-
-    --Add Scripts
-    xsotanShip:addScriptOnce("enemies/reanimator.lua")
-
-    return xsotanShip
-end
-
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
 function Xsotan.createCaduceus(position, volumeFactor)
     local xsotanShip = Xsotan.createShip(position, volumeFactor)
 
@@ -304,6 +287,47 @@ function Xsotan.createCaduceus(position, volumeFactor)
     return xsotanShip
 end
 
+--Created by Warlocks, and maybe some other things :)
+function Xsotan.createRevenant(_Wreckage)
+    local _Sector = Sector()
+    --Get plan from wreckage.
+    local plan = _Wreckage:getMovePlan()
+    local _position = _Wreckage.position
+    local faction = Xsotan.getFaction()
+    --Infect.
+    Xsotan.infectPlan(plan)
+
+    local ship = _Sector:createShip(faction, "", plan, _position, EntityArrivalType.Default)
+
+    ShipUtility.addRevenantArtillery(ship)
+
+    local name, type = ShipUtility.getMilitaryNameByVolume(ship.volume)
+    name = "Revenant"
+    ship:setTitle("${toughness}Xsotan ${ship}"%_T, {toughness = "", ship = name})
+    ship.crew = ship.idealCrew
+    ship.shieldDurability = ship.shieldMaxDurability
+
+    AddDefaultShipScripts(ship)
+
+    ship:addScriptOnce("ai/patrol.lua")
+    ship:addScriptOnce("story/xsotanbehaviour.lua")
+    ship:addScriptOnce("utility/aiundockable.lua")
+    ship:setValue("is_revenant", true)
+    ship:setValue("xsotan_revenant", true)
+
+    Boarding(ship).boardable = false
+    ship.dockable = false
+
+    _Sector:deleteEntity(_Wreckage)
+
+    return ship
+end
+
+--endregion
+
+--region #XSOTAN DREADNOUGHT
+
+--Taken from Hammelpilaw's Xsotan Dreadnought event - there is a mission built around it.
 function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     dangerFactor = dangerFactor or 1 
     dangerFactor = math.max(dangerFactor, 1) --Should be at least 1.
@@ -563,40 +587,141 @@ function Xsotan.createDreadnought(position, dangerFactor, killedGuardian)
     return ship
 end
 
-function Xsotan.createRevenant(_Wreckage)
-    local _Sector = Sector()
-    --Get plan from wreckage.
-    local plan = _Wreckage:getMovePlan()
-    local _position = _Wreckage.position
+--endregion
+
+--region #UNUSED... FOR NOW
+
+function Xsotan.createHierophant(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createSummoner(_position, _volumeFactor)
+
+    local name = "Hierophant"
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_hierophant", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_hierophant", true)
+
+    --Add Scripts
+    xsotanShip:addScriptOnce("enemies/reanimator.lua")
+
+    return xsotanShip
+end
+
+function Xsotan.createPulverizer(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createGenericShip(_position, _volumeFactor)
+
+    local name, type = ShipUtility.getMilitaryNameByVolume(xsotanShip.volume)
+    xsotanShip:setTitle("${toughness}Xsotan Pulverizer ${ship}"%_T, {toughness = "", ship = name})
+    xsotanShip:setValue("is_pulverizer", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_pulverizer", true)
+
+    ShipUtility.addPulverizerCannons(xsotanShip)
+
+    return xsotanShip
+end
+
+function Xsotan.createHeresiarch(_position, _volumeFactor)
+    --Periodically sacrifices a Xsotan to boost the damage output of other Xsotan in the area
+    --Provides other boosts for Xsotan
+    --Supernova script
+end
+
+function Xsotan.createSchismatic(_position, _volumeFactor)
+    --Dynamic damage resistance (takes less damage from the damage type it has taken the most damage from)
+    --Dynamic teleportation (gets stunned if it takes damage from the damage type it has taken the least damage from, teleports otherwise)
+    --Fires volleys of torpedoes
+    _position = _position or Matrix()
+    local _sector = Sector()
+    local _random = random()
+
+    local volume = Xsotan.getShipVolume()
+    volume = volume * (_volumeFactor or 1)
+
+    local classification = { volume = 33, damage = 10, name = "Schismatic" }
+    volume = volume * classification.volume
+
+    local x, y = _sector:getCoordinates()
+    local probabilities = Balancing_GetTechnologyMaterialProbability(x, y)
+    local material = Material(getValueFromDistribution(probabilities))
     local faction = Xsotan.getFaction()
-    --Infect.
-    Xsotan.infectPlan(plan)
+    --Make a trimaran hull for these guys
+    local plan = Xsotan.getTrimaranShipPlan(_random, volume, material)
 
-    local ship = _Sector:createShip(faction, "", plan, _position, EntityArrivalType.Default)
+    --Finally, make the ship.
+    local ship = _sector:createShip(faction, "", plan, _position, EntityArrivalType.Jump)
 
-    ShipUtility.addRevenantArtillery(ship)
+    --Add turrets
+    local generator = SectorTurretGenerator()
+    generator.coaxialAllowed = false
 
-    local name, type = ShipUtility.getMilitaryNameByVolume(ship.volume)
-    name = "Revenant"
-    ship:setTitle("${toughness}Xsotan ${ship}"%_T, {toughness = "", ship = name})
+    local turret = generator:generateArmed(x, y, 0, Rarity(RarityType.Exotic))
+    local numTurrets = math.max(3, Balancing_GetEnemySectorTurrets(x, y))
+
+    ShipUtility.addTurretsToCraft(ship, turret, numTurrets)
+
+    ship:setTitle("${toughness}Xsotan ${ship}"%_T, {toughness = "", ship = classification.name})
     ship.crew = ship.idealCrew
     ship.shieldDurability = ship.shieldMaxDurability
+    ship.damageMultiplier = ship.damageMultiplier * classification.damage
+
+    Xsotan.applyCenterBuff(ship)
+    Xsotan.applyDamageBuff(ship)
 
     AddDefaultShipScripts(ship)
+
+    local torpSlammerValues = {
+        _TimeToActive = 12,
+        _ROF = 10,
+        _UpAdjust = false,
+        _DurabilityFactor = 12,
+        _ForwardAdjustFactor = 1,
+        _UseEntityDamageMult = true,
+        _DamageFactor = 0.5, --These are terrifying enough at x5 damage multiplier.
+        _TargetPriority = 3, --Random non-xsotan.
+        _FireBarrage = true,
+        _BarrageCount = 5,
+        _BarrageDelay = 0.5
+    }
 
     ship:addScriptOnce("ai/patrol.lua")
     ship:addScriptOnce("story/xsotanbehaviour.lua")
     ship:addScriptOnce("utility/aiundockable.lua")
-    ship:setValue("is_revenant", true)
-    ship:setValue("xsotan_revenant", true)
+    --Set values
+    ship:setValue("is_xsotan", true)
+    ship:setValue("is_schismatic", true)
+    ship:setValue("is_special_xsotan", true)
+    ship:setValue("xsotan_schismatic", true)
+    --Add special scripts :3
+    ship:addScriptOnce("enemies/superbosses/schismatic.lua")
+    ship:addScriptOnce("torpedoslammer.lua", torpSlammerValues) --Have to add this after is_xsotan set to true or else the script gets very unhappy.
 
     Boarding(ship).boardable = false
     ship.dockable = false
 
-    _Sector:deleteEntity(_Wreckage)
-
-    return ship
+    return ship    
 end
+
+function Xsotan.createTraditor(_position, _volumeFactor)
+    --Lighting tether to all player ships, which take damage periodically
+    --Tethers to all player ships, and any damage taken (including the lightning damage) spreads to nearby player ships
+    --Eats other Xsotan similar to Oppressor. Does not eat wrecks.
+end
+
+function Xsotan.createScourge(_position, _volumeFactor)
+    --Lots of armor + armor takes less damage
+    --Regenerates HP
+    --Long-range lasers (normal weapon)
+end
+
+function Xsotan.createRecreant(_position, _volumeFactor)
+    --Gets a massive damage bonus if it manages to kill a player's ship.
+    --Gets a minor damage bonus any time another Xsotan is killed.
+    --Gets a damage buff over time when heavily damaged.
+end
+
+--endregion
+
+--region #UTILITY
 
 function Xsotan.getSpecialXsotanFunctions()
     local funcTable = {
@@ -651,3 +776,27 @@ function Xsotan.createGenericShip(position, volumeFactor)
 
     return ship
 end
+
+function Xsotan.getTrimaranShipPlan(_random, volume, material)
+    local plan = PlanGenerator.makeXsotanShipPlan(volume / 3, material)
+    local plan2 = PlanGenerator.makeXsotanShipPlan(volume / 3, material)
+    local plan3 = PlanGenerator.makeXsotanShipPlan(volume / 3, material)
+    local funcTable = {
+        function(aplan, bplan)
+            attachMin(aplan, bplan, "z")
+        end,
+        function(aplan, bplan)
+            attachMin(aplan, bplan, "y")
+        end,
+        function(aplan, bplan)
+            attachMin(aplan, bplan, "x")
+        end
+    }
+    funcTable[_random:getInt(1, 3)](plan, plan2)
+    funcTable[_random:getInt(1, 3)](plan, plan3)
+
+    return plan
+end
+
+--endregion
+

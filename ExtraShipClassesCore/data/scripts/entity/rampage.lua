@@ -41,7 +41,6 @@ function Rampage.rampageBuff()
     local methodName = "RampageBuff"
 
     local _entity = Entity()
-    local _random = random()
 
     self.Log(methodName, "Entity damage multiplier is currently " .. tostring(_entity.damageMultiplier))
 
@@ -49,7 +48,7 @@ function Rampage.rampageBuff()
 
     self.Log(methodName, "Entity damage multiplier is now " .. tostring(_entity.damageMultiplier))
 
-    broadcastInvokeClientFunction("animation", _random:getDirection(), _random:getDirection(), _random:getDirection())
+    broadcastInvokeClientFunction("animation")
 end
 
 --Called in the sector context - we do not have access to Entity() here.
@@ -76,11 +75,14 @@ end
 
 --region #CLIENT FUNCTIONS
 
-function Rampage.animation(direction1, direction2, direction3)
+function Rampage.animation()
     local _sector = Sector()
     local _entity = Entity()
+    local _random = random()
 
-    for _, dir in pairs({direction1, direction2, direction3}) do
+    local dirs = { _random:getDirection(),  _random:getDirection(),  _random:getDirection()}
+
+    for _, dir in pairs(dirs) do
         _sector:createHyperspaceJumpAnimation(_entity, dir, ColorRGB(1.0, 0.0, 0.0), 0.3)
     end
 end

@@ -153,10 +153,7 @@ function Oppressor.oppressorBuff()
 
     self.Log(_MethodName, "Damage multiplier is now " .. tostring(_DamageMultiplier))
 
-    local direction = random():getDirection()
-    local direction2 = random():getDirection()
-    local direction3 = random():getDirection()
-    broadcastInvokeClientFunction("animation", direction, direction2, direction3)
+    broadcastInvokeClientFunction("animation")
 end
 
 function Oppressor.eatWreckages(fullPower)
@@ -207,6 +204,8 @@ function Oppressor.eatWreckages(fullPower)
 
     _entity.damageMultiplier = newDamageMultiplier
 
+    broadcastInvokeClientFunction("animation")
+
     --Heal the entity by twice the % of buff.
     local healPct = consumedBuffIncrement * 0.02
     if _entity.durability < _entity.maxDurability then
@@ -223,11 +222,15 @@ end
 
 --region #CLIENT only
 
-function Oppressor.animation(direction, direction2, direction3)
-    local _Sector = Sector()
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(1.0, 0.0, 0.0), 0.3)
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction2, ColorRGB(1.0, 0.0, 0.0), 0.3)
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction3, ColorRGB(1.0, 0.0, 0.0), 0.3)
+function Oppressor.animation()
+    local _sector = Sector()
+    local _entity = Entity()
+    local _random = random()
+
+    local dirs = { _random:getDirection(), _random:getDirection(), _random:getDirection() }
+    for _, dir in pairs(dirs) do
+        _sector:createHyperspaceJumpAnimation(_entity, dir, ColorRGB(1.0, 0.0, 0.0), 0.3)
+    end
 end
 
 function Oppressor.consumeAnimation(idx, anims)

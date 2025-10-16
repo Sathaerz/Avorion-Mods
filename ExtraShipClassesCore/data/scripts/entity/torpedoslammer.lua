@@ -50,8 +50,8 @@ self._Data = {}
         _LimitAmmo              = Set to true / false - if true, this script will terminate when _Ammo is 0 or less.
         _Ammo                   = Amount of ammo.
         _FireBarrage            = Set to true / false - if true, this script will fire barrages of torpedoes.
-        _BarrageCount           = # of torpedos to fire in the barrage
-        _BarrageDelay           = length of time between subsequent torpedoes in each barrage. _BarrageCount 4 / _BarrageDelay 0.5 would fire four torpedoes with a delay of 0.5s between each.
+        _BarrageCount           = # of additional torpedos to fire in the barrage
+        _BarrageDelay           = length of time between subsequent torpedoes in each barrage. _BarrageCount 4 / _BarrageDelay 0.5 would fire four extra torpedoes with a delay of 0.5s between each.
 
         Example:
 

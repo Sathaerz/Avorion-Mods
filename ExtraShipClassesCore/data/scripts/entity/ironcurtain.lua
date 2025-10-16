@@ -45,12 +45,7 @@ function IronCurtain.updateServer(_TimeStep)
     if self._Data._Active then
         self._Data._TimeActive = self._Data._TimeActive + _TimeStep
 
-        local _random = random()
-
-        local direction = _random:getDirection()
-        local direction2 = _random:getDirection()
-        local direction3 = _random:getDirection()
-        broadcastInvokeClientFunction("animation", direction, direction2, direction3)
+        broadcastInvokeClientFunction("animation")
 
         if self._Data._TimeActive > self._Data._Duration then
             self.Log(methodName, "Duration is up - resetting invincibility.")
@@ -98,11 +93,36 @@ end
 
 --region #CLIENT FUNCTIONS
 
-function IronCurtain.animation(direction, direction2, direction3)
-    local _Sector = Sector()
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(0.25, 0.25, 0.25), 0.4)
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction2, ColorRGB(0.25, 0.25, 0.25), 0.4)
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction3, ColorRGB(0.25, 0.25, 0.25), 0.4)
+function IronCurtain.animation()
+    local _sector = Sector()
+    local _random = random()
+    local _entity = Entity()
+    local _plan = Plan(_entity)
+
+    local blocks = _plan.numBlocks
+    local sparks = math.min(250, blocks)
+
+    local animColor = ColorRGB(0.25, 0.25, 0.25)
+
+    for i = 1, sparks do
+        local block = _plan:getNthBlock(_random:getInt(0, blocks - 1))
+
+        local center = block.box.center
+        local dir = _random:getDirection()
+        local factor = 0.5 + _random:getFloat(-0.3, 0.3)
+        local size = _entity.radius * 0.125
+
+        _sector:createSpark(center, dir * 4 * factor, size, 2.25, animColor, 0, _entity)
+
+        local factor2 = 0.1
+        _sector:createSpark(center, dir * 4 * factor2, size, 2.5, animColor, 0, _entity)
+    end
+
+    local dirs = { _random:getDirection(),  _random:getDirection(),  _random:getDirection() }
+
+    for _, dir in pairs(dirs) do
+        _sector:createHyperspaceJumpAnimation(_entity, dir, ColorRGB(0.25, 0.25, 0.25), 0.4)
+    end
 end
 
 --endregion

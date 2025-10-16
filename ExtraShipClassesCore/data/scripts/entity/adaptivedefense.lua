@@ -29,6 +29,7 @@ function AdaptiveDefense.initialize(_Values)
 
     self._Data = _Values or {}
     self._Data._Resistance = self._Data._Resistance or 0.55
+    self._Data._HullResistance = self._Data._HullResistance or 0.65
 
     --Values that the player shouldn't mess with via args.
     self._Data._PhysDamageTaken = 0
@@ -112,7 +113,7 @@ function AdaptiveDefense.adaptHull()
     local _Durability = Durability()
     if _Durability then
         self.Log(_MethodName, "Durability exists - setting resistance amount.")
-        _Durability:setWeakness(_AdaptToType, self._Data._Resistance * -1.1)
+        _Durability:setWeakness(_AdaptToType, self._Data._HullResistance * -1)
     end
 end
 

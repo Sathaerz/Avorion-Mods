@@ -61,8 +61,7 @@ function Eternal.updateServer(_TimeStep)
         end
 
         --Show animation if we either built up charges OR healed.
-        local direction = random():getDirection()
-        broadcastInvokeClientFunction("animation", direction)
+        broadcastInvokeClientFunction("animation")
     end
 end
 
@@ -70,8 +69,8 @@ function Eternal.onDamaged()
     Eternal._Data._TimeSinceLastHit = 0
 end
 
-function Eternal.animation(direction)
-    Sector():createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(0.0, 1.0, 0.6), 0.2)
+function Eternal.animation()
+    Sector():createHyperspaceJumpAnimation(Entity(), random():getDirection(), ColorRGB(0.0, 1.0, 0.6), 0.2)
 end
 
 function Eternal.Log(_MethodName, _Msg)

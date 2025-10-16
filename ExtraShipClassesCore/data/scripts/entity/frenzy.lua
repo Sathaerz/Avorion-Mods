@@ -59,8 +59,7 @@ function Frenzy.updateServer(_TimeStep)
 
             self.Log(_MethodName, "Running update cycle - new damage multiplier is : " .. tostring(_DmgFactor))
 
-            local direction = random():getDirection()
-            broadcastInvokeClientFunction("animation", direction)
+            broadcastInvokeClientFunction("animation", self._Data._UpdateCycle)
 
             if not damageLimited and _Entity:hasScript("frenzy.lua") then
                 --buff the overdrive script as well.
@@ -85,8 +84,37 @@ end
 
 --region #CLIENT functions
 
-function Frenzy.animation(direction)
-    Sector():createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(1.0, 0.0, 0.0), 0.2)
+function Frenzy.animation(updateCycle)
+    local _sector = Sector()
+    local _random = random()
+    local _entity = Entity()
+    local _plan = Plan(_entity)
+
+    local blocks = _plan.numBlocks
+    local sparks = math.min(200, blocks)
+
+    local animColor = ColorRGB(1.0, 0.0, 0.0)
+
+    local shortSparkTime = updateCycle * 0.7
+    local longSparkTime = updateCycle * 0.9
+
+    for i = 1, sparks do
+        local block = _plan:getNthBlock(_random:getInt(0, blocks - 1))
+
+        local center = block.box.center
+        local dir = _random:getDirection()
+        local factor = 0.5 + _random:getFloat(-0.3, 0.3)
+        local size = _entity.radius * 0.1
+
+        _sector:createSpark(center, dir * 4 * factor, size, shortSparkTime, animColor, 0, _entity)
+
+        local factor2 = 0.1
+        _sector:createSpark(center, dir * 4 * factor2, size, longSparkTime, animColor, 0, _entity)
+    end
+
+    local direction = _random:getDirection()
+
+    _sector:createHyperspaceJumpAnimation(_entity, direction, animColor, 0.2)
 end
 
 --endregion

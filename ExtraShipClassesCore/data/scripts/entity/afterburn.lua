@@ -91,13 +91,38 @@ function Afterburn.updateServer(_TimeStep)
     end
 
     if _ShowAnimation then
-        local direction = random():getDirection()
-        broadcastInvokeClientFunction("animation", direction)
+        broadcastInvokeClientFunction("animation")
     end
 end
 
-function Afterburn.animation(direction)
-    Sector():createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(1.0, 1.0, 0.0), 0.2)
+function Afterburn.animation()
+    local _sector = Sector()
+    local _random = random()
+    local _entity = Entity()
+    local _plan = Plan(_entity)
+
+    local blocks = _plan.numBlocks
+    local sparks = math.min(200, blocks)
+
+    local animColor = ColorRGB(1.0, 1.0, 0.0)
+
+    for i = 1, sparks do
+        local block = _plan:getNthBlock(_random:getInt(0, blocks - 1))
+
+        local center = block.box.center
+        local dir = _random:getDirection()
+        local factor = 1 + _random:getFloat(-3, 3)
+        local size = _entity.radius * 0.075
+
+        _sector:createSpark(center, dir * 4 * factor, size, 2.25, animColor, 0, _entity)
+
+        local factor2 = 0.5
+        _sector:createSpark(center, dir * 4 * factor2, size, 2.5, animColor, 0, _entity)
+    end
+
+    local direction = _random:getDirection()
+
+    _sector:createHyperspaceJumpAnimation(_entity, direction, animColor, 0.2)
 end
 
 --region #LOG / SECURE / RESTORE

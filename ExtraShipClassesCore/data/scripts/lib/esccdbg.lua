@@ -121,6 +121,7 @@ function initUI()
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Hierophant", "onSpawnXsotanHierophantButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Caduceus", "onSpawnXsotanCaduceusButtonPressed")
     MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Dreadnought", "onSpawnXsotanDreadnoughtButtonPressed")
+    MakeButton(xsotanTab, ButtonRect(nil, nil, nil, xsotanTab.height), "Xsotan Schismatic", "onSpawnXsotanSchismaticButtonPressed")
 
     local bossTab = window:createTab("Entity", "data/textures/icons/edge-crack.png", "ESCC Bosses")
     numButtons = 0
@@ -183,6 +184,7 @@ function initUI()
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Distance To Center", "onRunGetDistToCenterButtonPressed")
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Own Translation", "onGetTranslationButtonPressed")
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Clear All Wreckages", "onClearAllWrecksButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Check Sector Info", "onCheckSectorSpecificsButtonPressed")
     
     local weaponTab = tabbedWindow:createTab("Entity", "data/textures/icons/gunner.png", "ESCC Turrets")
     numButtons = 0
@@ -1202,6 +1204,17 @@ function onSpawnXsotanDreadnoughtButtonPressed()
 end
 callable(nil, "onSpawnXsotanDreadnoughtButtonPressed")
 
+function onSpawnXsotanSchismaticButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnXsotanSchismaticButtonPressed")
+        return
+    end
+
+    print("Creating Schismatic")
+    Xsotan.createSchismatic(nil, nil)
+end
+callable(nil, "onSpawnXsotanSchismaticButtonPressed")
+
 --endregion
 
 --region #BOSSTAB
@@ -1928,7 +1941,7 @@ end
 function onGetTranslationButtonPressed()
     local _entity = Entity()
 
-    print("Trnaslationf is " .. tostring(_entity.translationf))
+    print("Translationf is " .. tostring(_entity.translationf))
 end
 
 function onClearAllWrecksButtonPressed()
@@ -1948,6 +1961,46 @@ function onClearAllWrecksButtonPressed()
     print("Cleared " .. tostring(wreckageCt) .. " wreckages from sector.")
 end
 callable(nil, "onClearAllWrecksButtonPressed")
+
+function onCheckSectorSpecificsButtonPressed()
+    if onClient() then
+        invokeServerFunction("onCheckSectorSpecificsButtonPressed")
+        return
+    end
+
+    local x, y = Sector():getCoordinates()
+
+    local SectorSpecifics = include ("sectorspecifics")
+    local specs = SectorSpecifics()
+
+    local regular, offgrid, blocked, home, dust, factionIndex, centralArea = specs:determineContent(x, y, Server().seed)
+
+    local FactionsMap = include ("factionsmap")
+    local fm = FactionsMap(Server().seed)
+
+    local getFactionValue = fm:getFaction(x, y)
+
+    print("regular : " .. tostring(regular))
+    print("offgrid : " .. tostring(offgrid))
+    print("blocked : " .. tostring(blocked))
+    print("home : " .. tostring(home))
+    print ("dust : " .. tostring(dust))
+    print("factionIndex : " .. tostring(factionIndex))
+    print("centralArea : " .. tostring(centralArea))
+    print("getFaction : " .. tostring(getFactionValue))
+
+    --Scratchpad for testing faction expansion missions - no need to enable this.
+    --print("PRINTING FORWARD OUTPOST TABLE:")
+    --local forwardOutpostTable = getGlobal("forwardOutpost_sectors")
+    --if forwardOutpostTable then
+    --    for k, v in pairs(forwardOutpostTable) do
+    --        for ky, vy in pairs(forwardOutpostTable[k]) do
+    --            print("k : " .. tostring(k) .. " v : " .. tostring(v) .. " ky : " .. tostring(ky) .. " vy: " .. tostring(vy))
+    --        end
+    --    end
+    --end
+end
+callable(nil, "onCheckSectorSpecificsButtonPressed")
 
 --endregion
 

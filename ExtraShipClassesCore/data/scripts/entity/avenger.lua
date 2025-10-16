@@ -76,12 +76,7 @@ function Avenger.avengerBuff()
             _entity:invokeFunction("data/scripts/entity/overdrive.lua", "avengerBuff", self._Data._Multiplier)
         end
     
-        local _random = random()
-
-        local direction1 = _random:getDirection()
-        local direction2 = _random:getDirection()
-        local direction3 = _random:getDirection()
-        broadcastInvokeClientFunction("animation", direction1, direction2, direction3)
+        broadcastInvokeClientFunction("animation")
     else
         self.Log(methodName, "Avenger has been invoked recently - waiting 1 second to clear.")
     end
@@ -111,11 +106,14 @@ end
 
 --region #CLIENT functions
 
-function Avenger.animation(direction, direction2, direction3)
-    local _Sector = Sector()
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction, ColorRGB(1.0, 0.4, 0.0), 0.3)
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction2, ColorRGB(1.0, 0.6, 0.0), 0.3)
-    _Sector:createHyperspaceJumpAnimation(Entity(), direction3, ColorRGB(1.0, 0.6, 0.0), 0.3)
+function Avenger.animation()
+    local _sector = Sector()
+    local _entity = Entity()
+    local _random = random()
+
+    _sector:createHyperspaceJumpAnimation(_entity, _random:getDirection(), ColorRGB(1.0, 0.4, 0.0), 0.3)
+    _sector:createHyperspaceJumpAnimation(_entity, _random:getDirection(), ColorRGB(1.0, 0.6, 0.0), 0.3)
+    _sector:createHyperspaceJumpAnimation(_entity, _random:getDirection(), ColorRGB(1.0, 0.6, 0.0), 0.3)
 end
 
 --endregion
