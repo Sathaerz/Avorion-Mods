@@ -33,7 +33,7 @@ local Balancing = include("galaxy")
 local SpawnUtility = include ("spawnutility")
 local EventUT = include("eventutility")
 
-mission._Debug = 0
+mission._Debug = 1
 mission._Name = "Collect Pirate Bounty"
 
 --region #INIT
@@ -219,22 +219,24 @@ end
 
 function collectPirateBounty_pirateBountyOnSectorEntered(player, x, y, changeType)
     local methodName = "Pirate Bounty On Sector Entered"
-    mission.Log(methodName, "Checking arrival type")
+    mission.Log(methodName, "Checking arrival type. Player arrived via " .. tostring(changeType))
 
     if changeType == SectorChangeType.Jump or changeType == SectorChangeType.Gate or changeType == SectorChangeType.Wormhole then
         mission.Log(methodName, "Player arrived via jump. Hunters can spawn if applicable.")
         mission.data.custom.playerSwitchedViaJump = true
     else
+        mission.data.custom.playerSwitchedViaJump = false
         if changeType == SectorChangeType.Switch then
+            mission.Log(methodName, "Player arrived via switch. Checking for free switches...")
             mission.data.custom.freeSectorSwitches = mission.data.custom.freeSectorSwitches - 1
             if mission.data.custom.dangerLevel == 10 and random():test(0.5) then
                 mission.data.custom.freeSectorSwitches = mission.data.custom.freeSectorSwitches - 1
             end
-        end
-        mission.data.custom.playerSwitchedViaJump = false
-        if mission.data.custom.freeSectorSwitches <= 0 then --If we're out of free switches, consider the player to have jumped.
-            mission.Log(methodName, "Player is out of free switches. Consdiering this a jump.")
-            mission.data.custom.playerSwitchedViaJump = true
+
+            if mission.data.custom.freeSectorSwitches <= 0 then --If we're out of free switches, consider the player to have jumped.
+                mission.Log(methodName, "Player is out of free switches. Consdiering this a jump.")
+                mission.data.custom.playerSwitchedViaJump = true
+            end
         end
     end
 end
@@ -316,6 +318,7 @@ function collectPirateBounty_onHuntersFinished(_Generated)
 
     _Player:sendChatMessage(_Generated[1], ChatMessageType.Chatter, getRandomEntry(headhunterMessages) % {player = _Player.name})
 
+    mission.data.custom.playerSwitchedViaJump = false --Reset in case the player logs out / logs back in. The onSectorArrivalConfirmed for the mission will reun before the custom callback.
     mission.data.custom.freeSectorSwitches = 3 --Reset to 3 switches.
 end
 
