@@ -33,7 +33,7 @@ local Balancing = include("galaxy")
 local SpawnUtility = include ("spawnutility")
 local EventUT = include("eventutility")
 
-mission._Debug = 1
+mission._Debug = 0
 mission._Name = "Collect Pirate Bounty"
 
 --region #INIT
