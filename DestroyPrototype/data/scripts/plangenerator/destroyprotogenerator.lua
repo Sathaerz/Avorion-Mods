@@ -78,7 +78,7 @@ function DestroyProtoGenerator.addBattleshipEquipment(ship, dangerValue)
 	local sysrarities = upgradeGenerator:getSectorRarityDistribution(x, y)
 	
 	local turretFactor = 3
-	local damageFactor = 4
+	local damageFactor = 5
 	local turretRange = 1000
 	if dangerValue > 5 then
 		turretFactor = turretFactor + 0.5

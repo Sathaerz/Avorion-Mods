@@ -319,7 +319,7 @@ function destroyPrototype_spawnPrototype()
     local methodName = "Spawn Prototype"
     mission.Log(methodName, "Beginning.")
 
-    local _Rgen = ESCCUtil:getRand()
+    local _Rgen = random()
 
     PirateGenerator.pirateLevel = Balancing_GetPirateLevel(mission.data.location.x, mission.data.location.y)
     local _Scale = 40
@@ -381,7 +381,7 @@ function destroyPrototype_spawnPrototype()
     local _OffensiveScripts = {
         { scriptName = "overdrive.lua", scriptArgs = { incrementOnPhaseOut = true, incrementOnPhaseOutValue = 0.15 } },
         { scriptName = "avenger.lua" },
-        { scriptName = "frenzy.lua", scriptArgs = { _UpdateCycle = 5, _IncreasePerUpdate = 0.15 } }
+        { scriptName = "frenzy.lua", scriptArgs = { _UpdateCycle = 5, _IncreasePerUpdate = 0.3 } }
     }
 
     shuffle(random(), _DefensiveScripts)
@@ -472,10 +472,10 @@ function destroyPrototype_spawnPrototype()
             mission.Log(methodName, "Laser Sniper type chosen.")
             --Laser sniper
             local distToCenter = length(vec2(_X, _Y))
-            local laserSniperFactor = 150 --20% more damage than a longinus.
+            local laserSniperFactor = 125 --Same damage as a longinus
             if distToCenter > 360 then
                 mission.Log(methodName, "No shields available - cut damage in half.")
-                laserSniperFactor = 75 --Cut it in half to compensate for lack of shields.
+                laserSniperFactor = 62 --Cut it in half to compensate for lack of shields.
             end
 
             local _LaserSniperValues = {
