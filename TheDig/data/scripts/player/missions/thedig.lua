@@ -783,6 +783,13 @@ function theDig_spawnXsotanWave()
         waveSize = waveSize + 1
     end
 
+    --Only allow up to 25 Xsotan in the sector for performance reasons
+    local xsotanCt = ESCCUtil.countEntitiesByValue("is_xsotan")
+    local maxXsotanCt = 25
+    if xsotanCt + waveSize > maxXsotanCt then
+        waveSize = maxXsotanCt - xsotanCt
+    end
+
     --up to a 20% chance for a special and/or quantum xsotan inside the barrier - 10% outside.
     --10% chance for a summoner at danger level 10 regardless of inside or outside of barrier.
     local addSummoner = false
