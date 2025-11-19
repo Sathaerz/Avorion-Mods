@@ -79,6 +79,23 @@ mission.phases[1].onSectorEntered = function(x, y)
     lotwQuestUtil_addMissionToStation(x, y, "data/scripts/player/missions/lotw/lotwstory1.lua")
 end
 
+mission.phases[1].onSectorArrivalConfirmed = function(x, y)
+    local methodName = "Phase 1 On Sector Arrival Confirmed"
+    mission.Log(methodName, "Running.")
+    --I've seen players running heavily modded games completely miss the campaign. So we're adding an obnoxious tutorial.
+    local _player = Player()
+
+    --Don't send the hint as the same time as the adventurer - it can distract the player from the hint.
+    --I guess the player could potentially never see this, but if they just rocket out of the starting zone at the very start of the game? Fair enough.
+    --We also apparently always meet the adventurer so there's no need to worry if the player has the storyline turned off.
+    local metAdventurer = _player:getValue("single_interaction_interacted_adventurer1")
+
+    if lotwQuestUtil_checkDistanceOK(x, y) and not _player:getValue("_lotw_obnoxious_tutorial_shown") and metAdventurer then
+        mission.Log(methodName, "Distance is OK and adventurer not present and player has not been sent obnoxious tutorial - sending if applicable.")
+        invokeClientFunction(_player, "lotwQuestUtil_sendObnoxiousTutorialClient")
+    end
+end
+
 mission.phases[2] = {}
 mission.phases[2].updateServer = function()
     local _player = Player()
@@ -208,6 +225,8 @@ function lotwQuestUtil_addMissionToStation(x, y, missionScript)
             end
         end
 
+        mission.Log(methodName, "Final # of station candidates: " .. tostring(#stations))
+
         if #stations > 0 then
             for _, _Station in pairs(stations) do
                 local _ok, _bulletin = run(missionScript, "getBulletin", _Station)
@@ -222,6 +241,48 @@ function lotwQuestUtil_addMissionToStation(x, y, missionScript)
     else
         mission.Log(methodName, "Distance is " .. tostring(dist) .. " which does not qualify")
     end
+end
+
+function lotwQuestUtil_sendObnoxiousTutorialServer()
+    local methodName = "Send Obnoxious Tutorial (Server)"
+
+    mission.Log(methodName, "Marking obnoxious tutorial as sent.")
+
+    local _player = Player(callingPlayer)
+    _player:setValue("_lotw_obnoxious_tutorial_shown", true)
+end
+callable(nil, "lotwQuestUtil_sendObnoxiousTutorialServer")
+
+--endregion
+
+--region #CLIENT CALLS
+
+function lotwQuestUtil_sendObnoxiousTutorialClient()
+    local methodName = "Send Obnoxious Tutorial (Client)"
+
+    if not onClient() then
+        print("ERROR - this function only works clientside.")
+        return
+    end
+
+    mission.Log(methodName, "Finding station with tutorial.")
+
+    local stations = { Sector():getEntitiesByType(EntityType.Station) }
+    for _, station in pairs(stations) do
+        if station:hasScript("bulletinboard.lua") then
+            mission.Log(methodName, "Station " .. station.name .. " has bulletinboard.lua - checking bulletins.")
+            local _, bulletins = station:invokeFunction("bulletinboard.lua", "getDisplayedBulletins")
+            for _, bulletin in pairs(bulletins) do
+                --mission.Log(methodName, "Script is " .. bulletin.script) --Careful about enabling this - lots of spam.
+                if string.find(bulletin.script, "lotwstory1.lua") then
+                    mission.Log(methodName, "Found bulletin - displaying obnoxious hint.")
+                    Hud():displayHint("This station's bulletin board has a special mission! You can tell if a station has a special\nmission when the ! next to the station is any color other than green.\nFor example - Black Market missions will cause the ! to be colored purple.", station)
+                    invokeServerFunction("lotwQuestUtil_sendObnoxiousTutorialServer")
+                    return
+                end
+            end
+        end
+    end    
 end
 
 --endregion

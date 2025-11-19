@@ -37,6 +37,7 @@ _lordofthewastes_campaign_script_values = {
     "_lotw_mission3_failures",
     "_lotw_mission3_freighterskilled",
     "_lotw_mission4_failures",
+    "_lotw_obnoxious_tutorial_shown",
     "swenks_beaten",
 }
 

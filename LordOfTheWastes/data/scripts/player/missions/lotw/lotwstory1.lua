@@ -38,9 +38,9 @@ mission.data.description = {
     { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     { text = "..." }, --Placeholder
     { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false },
-    { text = "Destroy the first wave of pirates.", bulletPoint = true, fulfilled = false, visible = false },
-    { text = "Destroy the second wave of pirates.", bulletPoint = true, fulfilled = false, visible = false },
-    { text = "Destroy the third wave of pirates.", bulletPoint = true, fulfilled = false, visible = false },
+    { text = "Destroy the first wave of pirates", bulletPoint = true, fulfilled = false, visible = false },
+    { text = "Destroy the second wave of pirates", bulletPoint = true, fulfilled = false, visible = false },
+    { text = "Destroy the third wave of pirates", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Meet the liason in sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false, visible = false }
 }
 --Can't set mission.data.reward.paymentMessage here since we are using a custom init.
