@@ -374,14 +374,12 @@ function kothStory1_spawnPirateWave(_waveNo)
 
     _WaveGenerator:startBatch()
 
-    local posCounter = 1
     local _posDistance = 250 --#DistAdj
 
     local _piratePositions = _WaveGenerator:getStandardPositions(#_WaveTable, _posDistance)
 
-    for _, p in pairs(_WaveTable) do
-        _WaveGenerator:createScaledPirateByName(p, _piratePositions[posCounter])
-        posCounter = posCounter + 1
+    for posIdx, p in pairs(_WaveTable) do
+        _WaveGenerator:createScaledPirateByName(p, _piratePositions[posIdx])
     end
 
     _WaveGenerator:endBatch()

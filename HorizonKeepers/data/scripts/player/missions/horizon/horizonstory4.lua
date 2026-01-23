@@ -636,12 +636,10 @@ function kothStory4_spawnPirateWave()
         local wingTable = ESCCUtil.getStandardWave(_WaveDanger, _ct, "Standard", false)
         local wingPositions = wingGenerator:getStandardPositions(_Distance, _ct)
 
-        local _posidx = 1
         wingGenerator:startBatch()
 
-        for _, _pirate in pairs(wingTable) do
-            wingGenerator:createScaledPirateByName(_pirate, wingPositions[_posidx])
-            _posidx = _posidx + 1
+        for posIdx, _pirate in pairs(wingTable) do
+            wingGenerator:createScaledPirateByName(_pirate, wingPositions[posIdx])
         end
 
         wingGenerator:endBatch()

@@ -8,6 +8,6 @@ local self = HorizonStory9Boss
 function HorizonStory9Boss.initialize()
     if onClient() then
         Music():fadeOut(1.5)
-        registerBoss(Entity().index, nil, nil, "data/music/special/fs2aim.ogg")
+        registerBoss(Entity().index, nil, nil, "data/music/horizon/fs2aim.ogg")
     end
 end

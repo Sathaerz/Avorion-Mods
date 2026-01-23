@@ -217,7 +217,7 @@ mission.phases[4].onBeginServer = function()
     _VarlanceAI:setPassiveShooting(true)
 
     local _SmugglerHideout = Entity(mission.data.custom.smugglerOutpostID)
-    local _Radius = _SmugglerHideout:getBoundingSphere().radius * 3
+    local _Radius = _SmugglerHideout:getBoundingSphere().radius * 2
 
     _VarlanceAI:setFlyLinear(_SmugglerHideout.translationf, _Radius, false)
 end
@@ -237,7 +237,7 @@ mission.phases[4].triggers[1] = {
             local varlance = Entity(mission.data.custom.varlanceID)
     
             local dist = outpost:getNearestDistance(varlance)
-            if dist <= 500 then
+            if dist <= 1000 then
                 return true
             end
         end
@@ -544,7 +544,7 @@ function kothStory8_buildSmugglerSector(_X, _Y)
     local smugglerHideoutDurability = Durability(smugglerHideout)
     smugglerHideoutDurability.invincibility = 0.01
     
-    mission.data.custom.smugglerOutpostID = smugglerHideout.index
+    mission.data.custom.smugglerOutpostID = smugglerHideout.id
 
     --Make a group of 6 pirates.
     local _PirateTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, 8, "Standard")

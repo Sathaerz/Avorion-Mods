@@ -18,5 +18,6 @@ Special thanks to:
 - Belisarius for the music featured in mission 6 / 7:
     https://www.hard-light.net/forums/index.php?topic=83356.0 (Used with permission!)
 - Joe Staff for testing / coding help
+- Rose Rivera for writing / editing help
 
 ]]

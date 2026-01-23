@@ -132,7 +132,7 @@ mission.phases[1].playerCallbacks =
 
 mission.phases[2] = {}
 mission.phases[2].showUpdateOnEnd = true
-mission.phases[2].onBegin= function()
+mission.phases[2].onBegin = function()
     local _MethodName = "Phase 2 On Begin"
     mission.Log(_MethodName, "Beginning...")
 
@@ -914,7 +914,7 @@ end
 
 --endregion
 
---region #CLIENT / SERVER / DIALOG CALLS
+--region #CLIENT / SERVER DIALOG CALLS
 
 function kothStory2_contactedHacker()
     local _MethodName = "Contacted Hacker"

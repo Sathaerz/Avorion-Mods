@@ -27,7 +27,7 @@ function HorizonUtil.getFriendlyFaction()
     local galaxy = Galaxy()
     local faction = galaxy:findFaction(name)
     if faction == nil then
-        faction = galaxy:createFaction(name, 175, 0)
+        faction = galaxy:createFaction(name, 175, 0) --175 is the maximum distance at which these missions are offered.
         faction.initialRelations = 0
         faction.initialRelationsToPlayer = 0
         faction.staticRelationsToAll = true
@@ -182,7 +182,7 @@ function HorizonUtil.spawnFrostbiteWarship(_DeleteOnLeft)
     local possiblePlans = {
         "data/plans/horizon/frostbitewarship1.xml",
         "data/plans/horizon/frostbitewarship2.xml",
-        "data/plans/horizon/frostbitewarship3.xml",
+        "data/plans/horizon/frostbitewarship3.xml"
     }
 
     shuffle(random(), possiblePlans)
@@ -313,6 +313,9 @@ function HorizonUtil.spawnFrostbiteShip(_Data, _DeleteOnLeft)
     if _Data._ArmamentFunction then
         _Data._ArmamentFunction(_Ship)
     end
+
+    _Ship:setDropsAttachedTurrets(false)
+
     --Need to have this after the armament func or else the title could get overwritten.
     if _Data._ShipName then
         _Ship.name = _Data._ShipName
@@ -764,6 +767,9 @@ function HorizonUtil.spawnHorizonShip(_Data)
     if _Data._ArmamentFunction then
         _Data._ArmamentFunction(_HorizonShip)
     end
+
+    _HorizonShip:setDropsAttachedTurrets(false)
+
     --Title is set in armament function so it needs to be reset afterwards.
     if _Data._ShipName then
         _HorizonShip.name = _Data._ShipName
@@ -954,6 +960,8 @@ function HorizonUtil.spawnHorizonStation(_Data)
     if _Data._ArmamentFunction then
         _Data._ArmamentFunction(_Station)
     end
+
+    _Station:setDropsAttachedTurrets(false)
 
     return _Station
 end

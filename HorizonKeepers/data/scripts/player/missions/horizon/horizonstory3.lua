@@ -775,7 +775,7 @@ end
 
 --endregion
 
---region #CLIENT / SERVER / DIALOG CALLS
+--region #CLIENT / SERVER DIALOG CALLS
 
 function kothStory3_onPhase6PirateDialog(_PirateID, _PirateTitle)
     local d0 = {}

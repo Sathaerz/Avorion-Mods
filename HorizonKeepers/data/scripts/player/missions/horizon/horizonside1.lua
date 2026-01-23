@@ -34,6 +34,8 @@ mission.data.accomplishMessage = "Frostbite Company thanks you. Here's your comp
 
 --Custom data that we'll want.
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
+mission.data.custom.spawnedBoss = false
+mission.data.custom.playedBossCinematic = false
 
 --endregion
 
@@ -126,13 +128,24 @@ mission.phases[2].onTargetLocationEntered = function(x, y)
     mission.data.description[5].visible = true
 
     if onServer() then
-        kothSide1_spawnVarlance(false)
-        kothSide1_spawnBoss()
+        if not mission.data.custom.spawnedBoss then
+            kothSide1_spawnVarlance(false)
+            kothSide1_spawnBoss()
+            mission.data.custom.spawnedBoss = true
+        else
+            if mission.data.custom.gretelID and Sector():exists(mission.data.custom.gretelID) then
+                local gretel = Entity(mission.data.custom.gretelID)
+                gretel:invokeFunction("lasersniper.lua", "resetTimeToActive", 15)
+            end
+        end
     end
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(_X, _Y)
-    invokeClientFunction(Player(), "kothSide1_onBossAnimation")
+    if not mission.data.custom.playedBossCinematic then
+        invokeClientFunction(Player(), "kothSide1_onBossAnimation")
+        mission.data.custom.playedBossCinematic = true
+    end
 end
 
 --region #PHASE 2 TIMER CALLS

@@ -12,7 +12,7 @@ function HorizonStory4Battleship.initialize()
 
     if onClient() then
         Music():fadeOut(1.5)
-        registerBoss(Entity().index, nil, nil, "data/music/special/fs2razorback.ogg")
+        registerBoss(Entity().index, nil, nil, "data/music/horizon/fs2razorback.ogg")
     end
 
     if onServer() then

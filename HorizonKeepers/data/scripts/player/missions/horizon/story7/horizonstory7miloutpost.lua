@@ -7,7 +7,8 @@ local self = HorizonStory7MilOutpost
 
 function HorizonStory7MilOutpost.initialize()
     if onClient() then
-        registerBoss(Entity().index, nil, nil, "data/music/special/fs2bpintodarkv1.ogg")
+        Music():fadeOut(1.5)
+        registerBoss(Entity().index, nil, nil, "data/music/horizon/fs2bpintodarkv1.ogg")
     end
 end
 
@@ -16,6 +17,6 @@ function HorizonStory7MilOutpost.switchTracks()
         --print("invoking switch tracks")
         unregisterBoss(Entity().index)
         Music():fadeOut(1.5)
-        registerBoss(Entity().index, nil, nil, "data/music/special/fs2bpviolence.ogg")
+        registerBoss(Entity().index, nil, nil, "data/music/horizon/fs2bpviolence.ogg")
     end
 end

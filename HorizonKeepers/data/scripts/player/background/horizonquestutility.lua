@@ -10,6 +10,8 @@ mission._StoryStageValue = "_horizonkeepers_story_stage"
 --mission.tracing = true
 mission.data.silent = true
 
+--region #GLOBAL PHASE CALLS
+
 --globalphase is set to {} in structuredmission so we don't actually need to reset it here! Neat!
 mission.globalPhase.updateInterval = 30 --Update every 30 seconds. As long as we don't set an update interval in the subsequent phaess it should always update every 30 seconds.
 mission.globalPhase.updateServer = function()
@@ -39,6 +41,10 @@ mission.globalPhase.onRestore = function()
         _player:setValue(mission._StoryStageValue, 1)
     end
 end
+
+--endregion
+
+--region #PHASE CALLS
 
 mission.phases[1] = {}
 mission.phases[1].onSectorEntered = function(x, y)
@@ -200,6 +206,8 @@ mission.phases[10].onSectorEntered = function(x, y)
         kothQuestUtil_addMissionToStation(x, y, "data/scripts/player/missions/horizon/horizonside2.lua")
     end
 end
+
+--endregion
 
 --region #SERVER CALLS
 

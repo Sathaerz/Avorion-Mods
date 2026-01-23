@@ -207,6 +207,12 @@ end
 
 mission.phases[3].onTargetLocationEntered = function(x, y)
     if onServer() then
+        local _player = Player()
+        if _player:hasScript("events/alienattack.lua") then
+            _player:removeScript("events/alienattack.lua")
+            _player:sendChatMessage("", 3, "The subspace signals abruptly fade from your sensors.")
+        end
+
         kothStory7_buildObjectiveSector(x, y)
     end
 end
@@ -438,7 +444,7 @@ mission.phases[5].sectorCallbacks[1] = {
         local pShip = Entity(playershipidx)
         local eShip = Entity(defenderidx)
         
-        Player():sendChatMessage("", 3, "Your ship ${_PLAYERSHIP} is too close to the Horizon ship ${_ENEMYSHIP}. Move before it can scan you." % { _PLAYERSHIP = pShip.name, _ENEMYSHIP = eShip.name})
+        Player():sendChatMessage("", 3, "Your ship ${_PLAYERSHIP} is too close to the Horizon ship ${_ENEMYSHIP}. Move 10 km away before it can scan you." % { _PLAYERSHIP = pShip.name, _ENEMYSHIP = eShip.name})
         --Check timer slots 6 to 30. Use the first one that's available (timer 3 runs cleanup)
         local _MINTIMERSLOT = 6
         local _MAXTIMERSLOT = 30
@@ -528,7 +534,7 @@ mission.phases[5].timers[1] = {
             for _, pShip in pairs(playerShips) do
                 local dist = militaryOutpost:getNearestDistance(pShip)
                 if dist <= mission.data.custom.phase5MiloutpostMinDist and not mission.phases[5].timers[_TIMERSLOT] then
-                    Player():sendChatMessage("", 3, "Your ship is too close to the Military Installation. Move before it can scan you.")
+                    Player():sendChatMessage("", 3, "Your ship is too close to the Military Installation. Move 30 km away before it can scan you.")
                     --add timer slot 3 - if the player is still within 30km of the outpost in 30 seconds, fail.
                     mission.phases[5].timers[_TIMERSLOT] = {
                         time = 20,
@@ -1078,12 +1084,10 @@ function kothStory7_spawnPirateWave(lastWave)
             table.insert(wingTable, "Jammer")
         end
 
-        local _posidx = 1
         wingGenerator:startBatch()
 
-        for _, _pirate in pairs(wingTable) do
-            wingGenerator:createScaledPirateByName(_pirate, wingPositions[_posidx])
-            _posidx = _posidx + 1
+        for posIdx, _pirate in pairs(wingTable) do
+            wingGenerator:createScaledPirateByName(_pirate, wingPositions[posIdx])
         end
 
         wingGenerator:endBatch()
@@ -1446,7 +1450,7 @@ function kothStory7_onPhase2Dialog(varlanceID)
     d7.text = "I'm sending you the coordinates of the shipyard now. Sophie will meet you there with the captured freighter."
     d7.onEnd = kothStory7_onPhase2DialogEnd
 
-    ESCCUtil.setTalkerTextColors({d0, d1, d2, d4, d5, d6, d7 }, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
+    ESCCUtil.setTalkerTextColors({d0, d1, d2, d4, d5, d6, d7, d8 }, "Varlance", HorizonUtil.getDialogVarlanceTalkerColor(), HorizonUtil.getDialogVarlanceTextColor())
 
     ESCCUtil.setTalkerTextColors({d3}, "Sophie", HorizonUtil.getDialogSophieTalkerColor(), HorizonUtil.getDialogSophieTextColor())
 

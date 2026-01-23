@@ -35,6 +35,8 @@ mission.data.accomplishMessage = "Frostbite Company thanks you. Here's your comp
 
 --Custom data that we'll want.
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
+mission.data.custom.spawnedBoss = false
+mission.data.custom.playedBossCinematic = false
 
 --endregion
 
@@ -126,14 +128,26 @@ mission.phases[2].onTargetLocationEntered = function(x, y)
     mission.data.description[4].fulfilled = true
     mission.data.description[5].visible = true
 
-    if onServer() then
-        kothSide2_spawnVarlance(false)
-        kothSide2_spawnBoss()
+    if onServer() and not mission.data.custom.spawnedBoss then
+        if not mission.data.custom.spawnedBoss then
+            kothSide2_spawnVarlance(false)
+            kothSide2_spawnBoss()
+            mission.data.custom.spawnedBoss = true
+        else
+            if mission.data.custom.xsologizeID and Sector():exists(mission.data.custom.xsologizeID) then
+                local xsologize = Entity(mission.data.custom.xsologizeID)
+                xsologize:invokeFunction("lasersniper.lua", "resetTimeToActive", 15)
+            end
+        end
+
     end
 end
 
 mission.phases[2].onTargetLocationArrivalConfirmed = function(_X, _Y)
-    invokeClientFunction(Player(), "kothSide2_onBossAnimation")
+    if not mission.data.custom.playedBossCinematic then
+        invokeClientFunction(Player(), "kothSide2_onBossAnimation")
+        mission.data.custom.playedBossCinematic = true
+    end
 end
 
 --region #PHASE 2 TIMER CALLS
@@ -158,7 +172,7 @@ mission.phases[2].timers[2] = {
     time = 10,
     callback = function()
         local methodName = "Phase 2 Timer 2 Callback"
-        mission.Log(methodName, "Beginning...") --Be careful about enabling this one - can cause a lot of log messages.
+        --mission.Log(methodName, "Beginning...") --Be careful about enabling this one - can cause a lot of log messages.
 
         local _sector = Sector()
 
