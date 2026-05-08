@@ -51,8 +51,9 @@ mission._Name = "Attack Research Base"
 --region #INIT
 
 --Standard mission data.
-mission.data.brief = "Attack Research Base"
-mission.data.title = "Attack Research Base"
+mission.data.brief = mission._Name
+mission.data.title = mission._Name
+mission.data.autoTrackMission = true
 mission.data.description = {
     {text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
     {text = "..." },
@@ -320,15 +321,15 @@ function attackResearchBase_buildObjectiveSector(_X, _Y)
             _StationBay:clear()
         end
 
-        local _DuraFactor = 1.0
+        local _DuraFactor = 1.5
         local _ArtilleryFactor = 0
         if mission.data.custom.dangerLevel >= 6 then
-            _DuraFactor = 1
+            _DuraFactor = 2
             _ArtilleryFactor = 1
         end
         if mission.data.custom.dangerLevel == 10 then
-            _DuraFactor = 1.1
-            _ArtilleryFactor = 2
+            _DuraFactor = 3
+            _ArtilleryFactor = 3
         end
         if _Station:getValue("attackresearchbase_military_outpost") then
             --Military base.
@@ -339,14 +340,7 @@ function attackResearchBase_buildObjectiveSector(_X, _Y)
 
             mission.Log(_MethodName, "Bumping research outpost HP to factor : " .. tostring(_DuraFactor))
 
-            if _Dura then
-                _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * _DuraFactor
-            end
-        
-            local _Shield = Shield(_Station)
-            if _Shield then
-                _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * _DuraFactor
-            end
+            ESCCUtil.multiplyOverallDurability(_Station, _DuraFactor)
         end
         local _ShipAI = ShipAI(_Station)
         _ShipAI:setAggressive()
@@ -354,6 +348,10 @@ function attackResearchBase_buildObjectiveSector(_X, _Y)
         if mission.data.custom.pirates then
             _Station:setValue("is_pirate", true)
         end
+
+        --Make station unboardable + add bonus to prevent xavorion faction change
+        Boarding(_Station).boardable = false
+        _Station:addAbsoluteBias(StatsBonuses.DefenseWeapons, 1000)
 
         --Remove consumer / bulletin board script.
         _Station:removeScript("consumer.lua")
@@ -375,7 +373,7 @@ function attackResearchBase_buildObjectiveSector(_X, _Y)
     local _InitialDefenders = mission.data.custom.initialDefenders
     if mission.data.custom.pirates then
         local _SpawnTable = ESCCUtil.getStandardWave(mission.data.custom.dangerLevel, _InitialDefenders, "Standard")
-            
+        
         local generator = AsyncPirateGenerator(nil, attackResearchBase_onDefendersFinished)
         generator.pirateLevel = mission.data.custom.pirateLevel
 
@@ -586,12 +584,15 @@ mission.makeBulletin = function(_Station)
         _EnemyFactionName = "pirates"
     end
 
-    local _BaseReward = 70000
+    local _BaseReward = 45000
     if _DangerLevel >= 5 then
-        _BaseReward = _BaseReward + 6000
+        _BaseReward = _BaseReward + 16000
     end
     if _DangerLevel == 10 then
-        _BaseReward = _BaseReward + 12000
+        _BaseReward = _BaseReward + 27000
+    end
+    if not _Pirates then
+        _BaseReward = _BaseReward * 1.5 --Faction version of mission is harder.
     end
     if insideBarrier then
         _BaseReward = _BaseReward * 2
