@@ -1,1 +1,1 @@
-weaponProbabilities[WeaponType.MassDriver] =            {p = 1.75}
+weaponProbabilities[WeaponType.MassDriver] =            {p = 1.0}
