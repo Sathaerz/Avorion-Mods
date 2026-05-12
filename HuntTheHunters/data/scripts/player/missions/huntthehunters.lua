@@ -8,6 +8,7 @@ package.path = package.path .. ";data/scripts/?.lua"
 include("structuredmission")
 
 local EventUT = include("eventutility")
+local Balancing = include("galaxy")
 
 mission._Debug = 0
 mission._Name = "Hunt The Hunters"
@@ -19,8 +20,8 @@ mission.data.brief = mission._Name
 mission.data.title = mission._Name
 mission.data.autoTrackMission = true
 mission.data.description = {
-    {text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
-    {text = "..." },
+    { text = "You recieved the following request from the ${sectorName} ${giverTitle}:" }, --Placeholder
+    { text = "..." },
     { text = "${killedTargets} / ${targets} headhunters killed", bulletPoint = true, fulfilled = false },
 }
 
@@ -48,9 +49,12 @@ function initialize(dataIn, bulletinIn)
         --[[=====================================================
             MISSION DESCRIPTION SETUP:
         =========================================================]]
+        local targetArgs = tostring(mission.data.custom.targets)
+        
         mission.data.description[1].arguments = { sectorName = _sector.name, giverTitle = _giver.translatedTitle }
         mission.data.description[2].text = dataIn.initialDesc
-        mission.data.description[3].arguments = { targets = tostring(mission.data.custom.targets), killedTargets = "0" }
+        mission.data.description[2].arguments = { targets = targetArgs }
+        mission.data.description[3].arguments = { targets = targetArgs, killedTargets = "0" }
     end
 
     huntTheHunters_init(dataIn, bulletinIn)
@@ -272,7 +276,7 @@ mission.makeBulletin = function(station)
         baseReward = baseReward * 2
     end
 
-    reward = baseReward * missionTargets * Balancing_GetSectorRewardFactor(_sector:getCoordinates())
+    reward = baseReward * missionTargets * Balancing.GetSectorRewardFactor(_sector:getCoordinates())
 
     local bulletin = {
         brief = mission.data.brief,
