@@ -161,7 +161,7 @@ function SwenksSpecial.reduceInvulnTime()
 
         for _, _data in pairs(self._Data._InvulnData) do
             if _data._Activated then
-                _data._TimeActive = _data._TimeActive + 5
+                _data._TimeActive = _data._TimeActive + 10
             end
         end
 
