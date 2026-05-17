@@ -36,8 +36,8 @@ function TurretGenerator.generateSpreadFireTurret(rand, dps, tech, material, rar
     local _WACC2 = 0.85 - rand:getFloat(0, 0.08)
 
     local _COLOR = ColorHSV(rand:getFloat(195, 240), 1, 1)
-    local _WRANGE = rand:getFloat(620, 920) --Plasma gun is normaly 550 - 800
-    local _WVEL = rand:getFloat(400, 600) --Plasma gun is normally 500 - 700
+    local _WRANGE = rand:getFloat(650, 950) --Plasma gun is normaly 550 - 800
+    local _WVEL = rand:getFloat(525, 725) --Plasma gun is normally 500 - 700
     local _WSIZE = rand:getFloat(0.4, 0.7) --Plasma gun is normally 0.4 to 0.8
     local _XSEED = rand:getInt()
     local _XPLAS = rand:test(0.05)

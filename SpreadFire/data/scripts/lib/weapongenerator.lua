@@ -5,14 +5,19 @@ function WeaponGenerator.generateSpreadFire(rand, dps, tech, material, rarity, _
 
     --NULL values come into play when generating a single weapon for fighters -- anything after "Rarity" will be null.
     local fireDelay = _ROF or rand:getFloat(0.28, 0.38) --In case it is nil
-    local reach = _RANGE or rand:getFloat(620, 920)
+    local reach = _RANGE or rand:getFloat(650, 950)
     local damage = dps * fireDelay
-    local speed = _VELOCITY or rand:getFloat(500, 700)
+    local speed = _VELOCITY or rand:getFloat(525, 725)
     local weaponcolor = _COLOR or ColorHSV(rand:getFloat(195, 240), 1, 1)
     local weaponaccuracy =  _ACC or 0.99 - rand:getFloat(0, 0.01) --Favor the more accurate variety for just the weapon generation.
     local projectilesize = _SIZE or rand:getFloat(0.4, 0.7)
     local existingTime = reach / speed
-    local addPlasma = _ADDPLASMA or rand:test(0.05)
+    local addPlasma = nil
+    if _ADDPLASMA == nil then --Fixes a bug where it was possible for one weapon to get plasma damage and not the other.
+        addPlasma = rand:test(0.05)
+    else
+        addPlasma = _ADDPLASMA
+    end
 
     weapon.fireDelay = fireDelay
     weapon.reach = reach
