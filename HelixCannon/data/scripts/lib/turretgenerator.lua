@@ -38,7 +38,7 @@ function TurretGenerator.generateHelixCannonTurret(rand, dps, tech, material, ra
 
     local _COLOR = ColorHSV(rand:getFloat(135, 180), 1, 1)
     local _WRANGE = rand:getFloat(350, 575) --Plasma gun is normaly 550 - 800
-    local _WVEL = rand:getFloat(430, 630) --Plasma gun is normally 400 - 600
+    local _WVEL = rand:getFloat(450, 650) --Plasma gun is normally 400 - 600
     local _WSIZE = rand:getFloat(0.4, 0.8) --Plasma gun is normally 0.4 to 0.8
     local _XSEED = rand:getInt()
     local _XPLAS = rand:test(0.05)

@@ -4,7 +4,7 @@ function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, 
     weapon:setProjectile()
 
     --NULL values come into play when generating a single weapon for fighters -- anything after "Rarity" will be null.
-    local fireDelay = _ROF or rand:getFloat(0.15, 0.25)
+    local fireDelay = _ROF or rand:getFloat(0.14, 0.24)
     local reach = _RANGE or rand:getFloat(350, 575)
     local damage = dps * fireDelay * 1.15
     local speed = _VELOCITY or rand:getFloat(450, 650)
@@ -12,7 +12,12 @@ function WeaponGenerator.generateHelixCannon(rand, dps, tech, material, rarity, 
     local weaponaccuracy =  _ACC or 0.99 - rand:getFloat(0, 0.01) --Favor the more accurate variety for just the weapon generation.
     local projectilesize = _SIZE or rand:getFloat(0.4, 0.8)
     local existingTime = reach / speed
-    local addPlasma = _ADDPLASMA or rand:test(0.05)
+    local addPlasma = nil
+    if _ADDPLASMA == nil then --Fixes a bug where it was possible for one weapon to get plasma damage and not the other.
+        addPlasma = rand:test(0.05) 
+    else
+        addPlasma = _ADDPLASMA
+    end
 
     weapon.fireDelay = fireDelay
     weapon.reach = reach
