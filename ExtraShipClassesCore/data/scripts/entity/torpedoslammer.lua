@@ -39,6 +39,7 @@ self._Data = {}
             5 = player's current ship - specified by _pindex
             6 = random pirate or xsotan
             7 = random player or alliance ship or station
+            8 = prioitize script value, fallback to random player or alliance ship or station
         _TargetTag              = The script value to target by - "xtest1" for example would target by Sector():getByScriptValue("xtest1")
         _TorpOffset             = Applies an offset to torpedo generation. Defaults to 0. Set to a negative value for higher tech level torpedoes.
         _pindex                 = The index of the player to target w/ _TargetPriority 5. _TargetPriority cannot be set to 5 if this value is nil.
@@ -52,6 +53,8 @@ self._Data = {}
         _FireBarrage            = Set to true / false - if true, this script will fire barrages of torpedoes.
         _BarrageCount           = # of additional torpedos to fire in the barrage
         _BarrageDelay           = length of time between subsequent torpedoes in each barrage. _BarrageCount 4 / _BarrageDelay 0.5 would fire four extra torpedoes with a delay of 0.5s between each.
+        _DrunkMode              = Randomizes velocity / accel / turning factor from 0.1 to value in _AccelFactor, etc. Also resets target after firing.
+        _AntiAiDurabilityFactor = Increases durability factor when target is NOT owned by a player or alliance. Multiplicative with _DurabilityFactor
 
         Example:
 
@@ -117,6 +120,8 @@ function TorpedoSlammer.initialize(_Values)
             --_pindex, _PreferWarheadType, _PreferBodyType, _TargetTag, and _FireBarrage can all be nil.
             self._Data._BarrageCount = self._Data._BarrageCount or 0
             self._Data._BarrageDelay = self._Data._BarrageDelay or math.huge
+            self._Data._DrunkMode = self._Data._DrunkMode or false
+            self._Data._AntiAiDurabilityFactor = self._Data._AntiAiDurabilityFactor or 1
     
             --Fix the target priority - if the ship isn't Xsotan make it use 4 instead of 3.
             if self._Data._TargetPriority == 3 and not self_is_xsotan then
@@ -184,6 +189,11 @@ function TorpedoSlammer.updateServer(_TimeStep)
                         deferredCallback(self._Data._BarrageDelay * barragePosition, "fireAtTarget")
                     end
                 end
+
+                if self._Data._DrunkMode then
+                    self._Data._CurrentTarget = nil
+                end
+
                 self._Data._FireCycle = 0
 
                 if self._Data._LimitAmmo then
@@ -297,6 +307,22 @@ function TorpedoSlammer.pickNewTarget()
                     table.insert(_TargetCandidates, _Candidate)
                 end
             end
+        end,
+        function() --8 = Pick an entity with a specific script value. If none are available, fall back to player or alliance ship or station.
+            local _ScriptValueEntities = {_Sector:getEntitiesByScriptValue(self._Data._TargetTag)}
+
+            if #_ScriptValueEntities > 0 then
+                for _, _Candidate in pairs(_ScriptValueEntities) do
+                    table.insert(_TargetCandidates, _Candidate)
+                end
+            else
+                local _SectorEntities = { _Sector:getEntities() }
+                for _, _Candidate in pairs(_SectorEntities) do
+                    if (_Candidate.type == EntityType.Ship or _Candidate.type == EntityType.Station) and _Candidate.playerOrAllianceOwned then
+                        table.insert(_TargetCandidates, _Candidate)
+                    end
+                end
+            end
         end
     }
 
@@ -369,6 +395,11 @@ function TorpedoSlammer.fireAtTarget()
     local _Flight = _Desc:getComponent(ComponentType.DirectFlightPhysics)
     local _Dura = _Desc:getComponent(ComponentType.Durability)
 
+    if not self._Data._CurrentTarget or not valid(self._Data._CurrentTarget) then
+        print("[TorpedoSlammer] - [" .. tostring(_MethodName) .. "] - Warning! Current target is nil or not valid.")
+        return
+    end
+
     _TorpAI.target = self._Data._CurrentTarget.id
     _Torp.intendedTargetFaction = self._Data._CurrentTarget.factionIndex
 
@@ -401,12 +432,22 @@ function TorpedoSlammer.fireAtTarget()
     local _BaseShieldDamage = _Torpedo.shieldDamage
     local _BaseHullDamage = _Torpedo.hullDamage
 
+    local accelFactor = self._Data._AccelFactor
+    local velocityFactor = self._Data._VelocityFactor
+    local turnFactor = self._Data._TurningSpeedFactor
+    if self._Data._DrunkMode then
+        local _random = random()
+        accelFactor = _random:getFloat(0.1, self._Data._AccelFactor)
+        velocityFactor = _random:getFloat(0.1, self._Data._VelocityFactor)
+        turnFactor = _random:getFloat(0.1, self._Data._TurningSpeedFactor)
+    end
+
     _Torpedo.shieldDamage = _Torpedo.shieldDamage * self._Data._DamageFactor * _EntityDamageMultiplier
     _Torpedo.hullDamage = _Torpedo.hullDamage * self._Data._DamageFactor * _EntityDamageMultiplier
     _Torpedo.reach = _Torpedo.reach * self._Data._ReachFactor
-    _Torpedo.acceleration = _Torpedo.acceleration * self._Data._AccelFactor
-    _Torpedo.maxVelocity = _Torpedo.maxVelocity * self._Data._VelocityFactor
-    _Torpedo.turningSpeed = _Torpedo.turningSpeed * self._Data._TurningSpeedFactor
+    _Torpedo.acceleration = _Torpedo.acceleration * accelFactor
+    _Torpedo.maxVelocity = _Torpedo.maxVelocity * velocityFactor
+    _Torpedo.turningSpeed = _Torpedo.turningSpeed * turnFactor
     _Torpedo.shockwaveSize = _Torpedo.shockwaveSize * self._Data._ShockwaveFactor
 
     --Very spammy - debug level is 2.
@@ -431,8 +472,13 @@ function TorpedoSlammer.fireAtTarget()
 
     _TorpVel.velocityf = vec3(1,1,1) * 10
 
-    _Dura.maximum = _Torpedo.durability * self._Data._DurabilityFactor
-    _Dura.durability = _Torpedo.durability * self._Data._DurabilityFactor
+    local durabilityFactor = self._Data._DurabilityFactor
+    if not self._Data._CurrentTarget.playerOrAllianceOwned then
+        durabilityFactor = durabilityFactor * self._Data._AntiAiDurabilityFactor
+    end
+
+    _Dura.maximum = _Torpedo.durability * durabilityFactor
+    _Dura.durability = _Torpedo.durability * durabilityFactor
 
     Sector():createEntity(_Desc)
 end
@@ -483,9 +529,33 @@ function TorpedoSlammer.generateTorpedo()
     return _Generator:generate(_SimSector, 0, 0, Rarity(RarityType.Exotic), _WarheadType, _BodyType)
 end
 
+--region #EXTERN
+
 function TorpedoSlammer.resetTimeToActive(_Time)
     self._Data._TimeToActive = _Time
 end
+
+function TorpedoSlammer.setBarrageMode(_BarrageCount, _BarrageDelay)
+    self._Data._FireBarrage = true
+    self._Data._BarrageCount = _BarrageCount           
+    self._Data._BarrageDelay = _BarrageDelay           
+end
+
+function TorpedoSlammer.incrementDamageFactor(increment)
+    local currentDamageFactor = self._Data._DamageFactor
+    local newDamageFactor = self._Data._DamageFactor + increment
+
+    self._Data._DamageFactor = math.max(currentDamageFactor, newDamageFactor)
+end
+
+function TorpedoSlammer.incrementShockwaveFactor(increment)
+    local currentShockwaveFactor = self._Data._ShockwaveFactor
+    local newShockwaveFactor = self._Data._ShockwaveFactor + increment
+
+    self._Data._ShockwaveFactor = math.max(currentShockwaveFactor, newShockwaveFactor)
+end
+
+--endregion
 
 --region #LOG / SECURE / RESTORE
 

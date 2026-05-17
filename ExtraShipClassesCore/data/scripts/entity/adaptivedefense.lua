@@ -9,6 +9,7 @@ local self = AdaptiveDefense
 self._Data = {}
 --Placeholder / demo values to show what the script can have altered in one easy spot.
 --self._Data._Resistance = nil --defaults to 0.55
+--self._Data._HullResistance = nil --defaults to 0.65
 --self._Data._PhysDamageTaken = nil
 --self._Data._AntiDamageTaken = nil
 --self._Data._PlasDamageTaken = nil
@@ -25,7 +26,7 @@ self._Debug = 0
 function AdaptiveDefense.initialize(_Values)
     local _MethodName = "Initialize"
     local _Entity = Entity()
-    self.Log(_MethodName, "Attaching AdaptiveDefense v3 script to enemy.")
+    self.Log(_MethodName, "Attaching AdaptiveDefense v4 script to enemy.")
 
     self._Data = _Values or {}
     self._Data._Resistance = self._Data._Resistance or 0.55
@@ -67,9 +68,7 @@ function AdaptiveDefense.updateServer(_TimeStep)
     if _DamageTaken > 0 then
         self.Log(_MethodName, "Adapting defenses to offensive pressure...")
 
-        self.adaptShield()
-
-        self.adaptHull()
+        self.setResistances()
 
         self._Data._FirstUpdateRun = true
     else
@@ -77,8 +76,8 @@ function AdaptiveDefense.updateServer(_TimeStep)
     end
 end
 
-function AdaptiveDefense.adaptShield()
-    local _MethodName = "Adapt Shield"
+function AdaptiveDefense.setResistances()
+    local _MethodName = "Set Resistances"
     local _AdaptToDamage = 0
     local _AdaptToType = DamageType.Physical
     for _DmgType, _DmgTaken in pairs(_DamageTakenTable) do
@@ -94,18 +93,6 @@ function AdaptiveDefense.adaptShield()
     if _Shield then
         self.Log(_MethodName, "Shield exists - setting resistance amount.")
         _Shield:setResistance(_AdaptToType, self._Data._Resistance)
-    end
-end
-
-function AdaptiveDefense.adaptHull()
-    local _MethodName = "Adapt Hull"
-    local _AdaptToDamage = 0
-    local _AdaptToType = DamageType.Physical
-    for _DmgType, _DmgTaken in pairs(_DamageTakenTable) do
-        if _DmgTaken > _AdaptToDamage then
-            _AdaptToDamage = _DmgTaken
-            _AdaptToType = _DmgType
-        end
     end
 
     self.Log(_MethodName, "Setting hull resistance to " .. tostring(_AdaptToType))

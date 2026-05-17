@@ -41,10 +41,18 @@ end
 
 function Frenzy.updateServer(_TimeStep)
     local _MethodName = "On Update Server"
+    local _Entity = Entity()
+
+    local ratio = _Entity.durability / _Entity.maxDurability
+    if ratio < self._Data._DamageThreshold then
+        self.Log(_MethodName, "Activating frenzy script.")
+        self._Data._Active = true
+    end
+
     if self._Data._Active then
         self._Data._Timer = self._Data._Timer + _TimeStep
         if self._Data._Timer >= self._Data._UpdateCycle then
-            local _Entity = Entity()
+            
             local _DmgFactor = (_Entity.damageMultiplier or 1) + self._Data._IncreasePerUpdate
             local damageLimited = false
 

@@ -149,9 +149,10 @@ function Xsotan.createBallistyx(_position, _volumeFactor)
     --Add Scripts
     local _TorpSlammerValues = {
         _TimeToActive = 12,
-        _ROF = 4,
+        _ROF = 3,
         _UpAdjust = false,
         _DurabilityFactor = 4,
+        _DamageFactor = 1.25,
         _ForwardAdjustFactor = 1,
         _UseEntityDamageMult = true,
         _TargetPriority = 3 --Random non-xsotan.
@@ -176,6 +177,11 @@ function Xsotan.createLonginus(_position, _volumeFactor)
     local _X, _Y = Sector():getCoordinates()
 
     local _LaserDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 125
+
+    local distToCenter = math.sqrt(_X*_X, _Y*_Y)
+    if distToCenter > 360 then
+        _LaserDamage = 75 --Lower to compensate for lack of shields.
+    end
 
     local _LaserSniperValues = { --#LONGINUS_SNIPER
         _DamagePerFrame = _LaserDamage,
@@ -235,7 +241,7 @@ function Xsotan.createLevinstriker(_position, _volumeFactor)
     --Add scripts
     local _X, _Y = Sector():getCoordinates()
 
-    local lightningDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 150
+    local lightningDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 200
 
     local thunderstrikeValues = { --#LEVINSTRIKER_LIGHTNING
         damagePerStrike = lightningDamage,
@@ -321,6 +327,23 @@ function Xsotan.createRevenant(_Wreckage)
     _Sector:deleteEntity(_Wreckage)
 
     return ship
+end
+
+--Appears as part of the gang of special Xsotan in xsotan-based missions.
+function Xsotan.createHierophant(_position, _volumeFactor)
+    local xsotanShip = Xsotan.createSummoner(_position, _volumeFactor)
+
+    local name = "Hierophant"
+    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
+    xsotanShip:setValue("is_hierophant", true)
+    xsotanShip:setValue("is_special_xsotan", true)
+    xsotanShip:setValue("xsotan_hierophant", true)
+
+    --Add Scripts
+    xsotanShip:addScriptOnce("enemies/reanimator.lua")
+    xsotanShip:addScriptOnce("enemies/blinker.lua")
+
+    return xsotanShip
 end
 
 --endregion
@@ -591,21 +614,6 @@ end
 
 --region #UNUSED... FOR NOW
 
-function Xsotan.createHierophant(_position, _volumeFactor)
-    local xsotanShip = Xsotan.createSummoner(_position, _volumeFactor)
-
-    local name = "Hierophant"
-    xsotanShip:setTitle("${toughness}Xsotan ${ship}", {toughness = "", ship = name})
-    xsotanShip:setValue("is_hierophant", true)
-    xsotanShip:setValue("is_special_xsotan", true)
-    xsotanShip:setValue("xsotan_hierophant", true)
-
-    --Add Scripts
-    xsotanShip:addScriptOnce("enemies/reanimator.lua")
-
-    return xsotanShip
-end
-
 function Xsotan.createPulverizer(_position, _volumeFactor)
     local xsotanShip = Xsotan.createGenericShip(_position, _volumeFactor)
 
@@ -729,13 +737,39 @@ function Xsotan.getSpecialXsotanFunctions()
         Xsotan.createLonginus,      --Lasersniper Xsotan
         Xsotan.createBallistyx,     --Torpedo Xsotan
         Xsotan.createWarlock,       --Reanimator Xsotan
-        Xsotan.createOppressor,     --Beefy Xsotan that eats other Xsotan (and wreckages)
         Xsotan.createCaduceus,      --Healer Xsotan
         Xsotan.createTributary,     --AOE damage specialist Xsotan
-        Xsotan.createLevinstriker   --Lightning damage Xsotan
+        Xsotan.createLevinstriker,  --Lightning damage Xsotan
+        Xsotan.createOppressor,     --Beefy Xsotan that eats other Xsotan (and wreckages). Very bad news.
+        Xsotan.createHierophant     --Quantum summoner / warlock hybrid. Very bad news.
     }
     
     return funcTable
+end
+
+function Xsotan.getSpecialXsotanFunction()
+    local funcTable = Xsotan.getSpecialXsotanFunctions()
+
+    return randomEntry(funcTable)
+end
+
+function Xsotan.getWeightedSpecialXsotanFunction()
+    local funcTable = Xsotan.getSpecialXsotanFunctions()
+
+    local probabilityTable = {}
+    probabilityTable[1] = 1 --Sunmaker
+    probabilityTable[2] = 1 --Longinus
+    probabilityTable[3] = 1 --Ballistyx
+    probabilityTable[4] = 1 --Warlock
+    probabilityTable[5] = 1 --Caduceus
+    probabilityTable[6] = 1 --Tributary
+    probabilityTable[7] = 1 --Levinstriker
+    probabilityTable[8] = 0.5 --Oppressor
+    probabilityTable[9] = 0.5 --Hierophant
+
+    local funcIdx = selectByWeight(random(), probabilityTable)
+
+    return funcTable[funcIdx]
 end
 
 function Xsotan.createGenericShip(position, volumeFactor)

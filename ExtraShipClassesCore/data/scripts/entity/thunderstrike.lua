@@ -32,13 +32,14 @@ function Thunderstrike.initialize(values)
         local self_is_xsotan = _entity:getValue("is_xsotan")
         local defaultTargetPriority = 1
         if self_is_xsotan then
+            self.Log(methodName, "Entity is Xsotan - overriding default target priority.")
             defaultTargetPriority = 2
         end
 
         Boarding(_entity).boardable = false
 
         if not _restoring then
-            self.data.damageRange = self.data.damageRange or 2000
+            self.data.damageRange = self.data.damageRange or 3000
             self.data.damagePerStrike = self.data.damagePerStrike or 10000
             self.data.targetPriority = self.data.targetPriority or defaultTargetPriority
             self.data.pickNewTargetCycle = self.data.pickNewTargetCycle or 15
@@ -123,7 +124,7 @@ function Thunderstrike.update(timeStep)
 
                 self.Log(methodName, "Dealing " .. tostring(damageAmount) .. " to Entity " .. self.data.currentTarget.name)
                 ESCCWeaponScriptUtil.inflictDamageToTarget(self.data.currentTarget, damageAmount, DamageType.Electric, _entity.index)
-                self.drawSmallLaser()
+                self.invokeDrawSmallLaser()
                 if _random:test(0.5) then
                     local delay = _random:getFloat(0, 0.25)
                     deferredCallback(delay, "drawSmallLaser")
@@ -153,33 +154,6 @@ function Thunderstrike.deleteCurrentLasers()
     if valid(mainLaser) then Sector():removeLaser(mainLaser) end
 
     mainLaser = nil
-end
-
-function Thunderstrike.drawSmallLaser(endPoint)
-    local methodName = "Draw Small Laser"
-
-    if onServer() then
-        self.Log(methodName, "Calling on server => invoking on client.")
-        broadcastInvokeClientFunction("drawSmallLaser", self.data.currentTarget.translationf)
-        return
-    end
-
-    self.Log(methodName, "Calling on client.")
-
-    local _sector = Sector()
-    local _random = random()
-    
-    local beamLength = _random:getInt(100, 300)
-    local beamDirection = _random:getDirection()
-    local beamStart = endPoint + (beamDirection * beamLength)
-
-    local smallLaser = _sector:createLaser(beamStart, endPoint, ColorRGB(0.66, 0.66, 1.0), 2.5)
-    smallLaser.collision = true
-    smallLaser.maxAliveTime = 0.5
-    smallLaser.shape = BeamShape.Lightning
-    smallLaser.animationSpeed = 0
-    smallLaser.animationAcceleration = 0
-    smallLaser.shapeSize = 13
 end
 
 --endregion
@@ -255,6 +229,18 @@ function Thunderstrike.reportDestroyedTarget(index)
     end
 end
 
+function Thunderstrike.invokeDrawSmallLaser()
+    local methodName = "Invoke Draw Small Laser"
+
+    self.Log(methodName, "Broadcast invoking drawSmallLaser on Client.")
+
+    if self.data.currentTarget and valid(self.data.currentTarget) then
+        broadcastInvokeClientFunction("drawSmallLaser", self.data.currentTarget.translationf)
+    else
+        self.Log(methodName, "Current Target not valid - func will not be invoked.")
+    end
+end
+
 --endregion
 
 --region #CLIENT FUNCTIONS
@@ -313,6 +299,27 @@ function Thunderstrike.updateLaser()
             _sector:removeLaser(mainLaser)
         end
     end
+end
+
+function Thunderstrike.drawSmallLaser(endPoint)
+    local methodName = "Draw Small Laser"
+
+    self.Log(methodName, "Calling on client.")
+
+    local _sector = Sector()
+    local _random = random()
+    
+    local beamLength = _random:getInt(100, 300)
+    local beamDirection = _random:getDirection()
+    local beamStart = endPoint + (beamDirection * beamLength)
+
+    local smallLaser = _sector:createLaser(beamStart, endPoint, ColorRGB(0.66, 0.66, 1.0), 2.5)
+    smallLaser.collision = true
+    smallLaser.maxAliveTime = 0.5
+    smallLaser.shape = BeamShape.Lightning
+    smallLaser.animationSpeed = 0
+    smallLaser.animationAcceleration = 0
+    smallLaser.shapeSize = 13
 end
 
 --endregion

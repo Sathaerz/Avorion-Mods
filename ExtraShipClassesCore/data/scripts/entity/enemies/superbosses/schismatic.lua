@@ -21,7 +21,7 @@ function Schismatic.initialize(_Values)
     self.Log(methodName, "Attaching Schismatic v2 script to enemy.")
 
     self._Data = _Values or {}
-    self._Data._Resistance = 0.55
+    self._Data._Resistance = 0.75
     self._Data._HullResistance = 0.75
 
     --Teleport values
@@ -40,7 +40,6 @@ function Schismatic.initialize(_Values)
     self._Data._EnRGDamageTaken = 0
     self._Data._ElecDamageTaken = 0
     self._Data._OverallDamageTaken = 0
-    self._Data._FirstUpdateRun = false --Updates once per second until this is run, then once per 20s afterwards.
 
     if onServer() then
         --Pulse cannon gang sit down.
@@ -80,11 +79,7 @@ function Schismatic.updateServer(timeStep)
     if _DamageTaken > 0 then
         self.Log(methodName, "Adapting defenses to offensive pressure...")
 
-        self.adaptShield()
-
-        self.adaptHull()
-
-        self._Data._FirstUpdateRun = true
+        self.setResistances()
     else
         self.Log(methodName, "Have not taken damage yet - nothing to adapt to. Setting table entires to 0.")
 
@@ -130,6 +125,8 @@ function Schismatic.onDamaged(_ObjectIndex, _Amount, _Inflictor, _DamageSource, 
     end
 end
 
+--region #DAMAGE TAKEN MANAGEMENT
+
 function Schismatic.adaptDefense(_DamageType, _Amount)
     if _DamageType ~= DamageType.Fragments then
         _DamageTaken = (_DamageTaken or 0) + _Amount
@@ -137,10 +134,8 @@ function Schismatic.adaptDefense(_DamageType, _Amount)
     end
 end
 
---region #DAMAGE TAKEN MANAGEMENT
-
-function Schismatic.adaptShield()
-    local methodName = "Adapt Shield"
+function Schismatic.setResistances()
+    local methodName = "Set Resistances"
     local _AdaptToDamage = 0
     local _AdaptToType = DamageType.Physical
     for _DmgType, _DmgTaken in pairs(_DamageTakenTable) do
@@ -154,28 +149,14 @@ function Schismatic.adaptShield()
 
     local _Shield = Shield()
     if _Shield then
-        self.Log(methodName, "Shield exists - setting resistance amount.")
+        self.Log(methodName, "Shield exists - setting shield resistance amount.")
         _Shield:setResistance(_AdaptToType, self._Data._Resistance)
     end
-end
-
-function Schismatic.adaptHull()
-    local methodName = "Adapt Hull"
-    local _AdaptToDamage = 0
-    local _AdaptToType = DamageType.Physical
-    for _DmgType, _DmgTaken in pairs(_DamageTakenTable) do
-        if _DmgTaken > _AdaptToDamage then
-            _AdaptToDamage = _DmgTaken
-            _AdaptToType = _DmgType
-        end
-    end
-
-    self.Log(methodName, "Setting hull resistance to " .. tostring(_AdaptToType))
 
     local _Durability = Durability()
     if _Durability then
-        self.Log(methodName, "Durability exists - setting resistance amount.")
-        _Durability:setWeakness(_AdaptToType, self._Data._HullResistance * -1)
+        self.Log(methodName, "Durability exists - setting hull resistance amount.")
+        _Durability:setWeakness(_AdaptToType, self._Data._HullResistance * -1) --Setting the weakness to a negative value reduces damage taken.
     end
 end
 

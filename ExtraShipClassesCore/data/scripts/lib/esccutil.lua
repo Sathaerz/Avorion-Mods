@@ -329,7 +329,7 @@ end
 
 function ESCCUtil.replaceIcon(_Craft, _IconPath)
     local _safetyBreakout = 0
-    while _Craft:hasScript("icon.lua") or _safetyBreakout < 10 do --Shouldn't need more than 10 iterations to nuke the old icon script.
+    while _Craft:hasScript("icon.lua") and _safetyBreakout < 15 do --Shouldn't need too many iterations to nuke the old icon script.
         _Craft:removeScript("icon.lua")
         _safetyBreakout = _safetyBreakout + 1
     end
@@ -337,7 +337,7 @@ function ESCCUtil.replaceIcon(_Craft, _IconPath)
     _Craft:addScript("icon.lua", _IconPath)
 end
 
-function ESCCUtil.setBombardier(_Ship)
+function ESCCUtil.setBombardier(_Ship) --Pirate torp slammer
     local _TitleArgs = _Ship:getTitleArguments()
 
     local _ToughnessArg = _TitleArgs.toughness or ""
@@ -348,7 +348,7 @@ function ESCCUtil.setBombardier(_Ship)
     self.replaceIcon(_Ship, "data/textures/icons/pixel/torpedoboatex.png")
 end
 
-function ESCCUtil.setDeadshot(_Ship)
+function ESCCUtil.setDeadshot(_Ship) --Pirate laser sniper
     local _TitleArgs = _Ship:getTitleArguments()
 
     local _ToughnessArg = _TitleArgs.toughness or ""
@@ -359,7 +359,7 @@ function ESCCUtil.setDeadshot(_Ship)
     self.replaceIcon(_Ship, "data/textures/icons/pixel/laserboat.png")
 end
 
-function ESCCUtil.setMarksman(_Ship)
+function ESCCUtil.setMarksman(_Ship) --Faction laser sniper
     --Faction ships usually have less elaborate titles.
     local titleArgs = _Ship:getTitleArguments()
 
@@ -370,7 +370,7 @@ function ESCCUtil.setMarksman(_Ship)
     self.replaceIcon(_Ship, "data/textures/icons/pixel/laserboat.png")
 end
 
-function ESCCUtil.setFusilier(_Ship)
+function ESCCUtil.setFusilier(_Ship) --Faction torp slammer
     --Faction ships usually have less elaborate titles.
     local titleArgs = _Ship:getTitleArguments()
 
@@ -438,6 +438,13 @@ end
 function ESCCUtil.setTalkerTextColors(table, talker, talkerColor, textColor)
     for _, dx in pairs(table) do
         dx.talker = talker
+        dx.textColor = textColor
+        dx.talkerColor = talkerColor
+    end
+end
+
+function ESCCUtil.setTextColors(table, talkerColor, textColor)
+    for _, dx in pairs(table) do
         dx.textColor = textColor
         dx.talkerColor = talkerColor
     end

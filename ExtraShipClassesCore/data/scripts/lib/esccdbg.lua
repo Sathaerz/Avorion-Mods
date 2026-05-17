@@ -6,11 +6,12 @@ include("callable")
 include("productions")
 include("weapontype")
 
-local PirateGenerator = include("pirategenerator") --needed for lotw - do not remove.
+local PirateGenerator = include("pirategenerator") --needed for lotw and vbmn - do not remove.
 local AsyncPirateGenerator = include("asyncpirategenerator")
 local SpawnUtility = include("spawnutility")
 local ShipUtility = include("shiputility")
 local TorpedoGenerator = include("torpedogenerator")
+local SectorGenerator = include("SectorGenerator")
 local Xsotan = include ("story/xsotan")
 local Balancing = include ("galaxy")
 --ITR scripts
@@ -161,6 +162,7 @@ function initUI()
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Invincibility Data Dump", "onInvincibilityDataDumpButtonPressed")
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Weapon Type Data Dump", "onWeaponTypeDataDumpPressed")
     MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Material Probabilities 0-500", "onMatlProbabilities0550Pressed")
+    MakeButton(dataDumpTab, ButtonRect(nil, nil, nil, dataDumpTab.height), "Dump random():getDirection", "onRandomGetDirectionButtonPressed")
 
     local otherTab = window:createTab("Entity", "data/textures/icons/papers.png", "Other")
     numButtons = 0
@@ -185,6 +187,8 @@ function initUI()
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Own Translation", "onGetTranslationButtonPressed")
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Clear All Wreckages", "onClearAllWrecksButtonPressed")
     MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Check Sector Info", "onCheckSectorSpecificsButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Spawn Diamond Formation", "onSpawnDiamondFormationButtonPressed")
+    MakeButton(otherTab, ButtonRect(nil, nil, nil, otherTab.height), "Get Linear Velocity", "onGetLinearVelocityPressed")
     
     local weaponTab = tabbedWindow:createTab("Entity", "data/textures/icons/gunner.png", "ESCC Turrets")
     numButtons = 0
@@ -1676,6 +1680,21 @@ function onMatlProbabilities0550Pressed()
 end
 callable(nil, "onMatlProbabilities0550Pressed")
 
+function onRandomGetDirectionButtonPressed()
+    if onClient() then
+        invokeServerFunction("onRandomGetDirectionButtonPressed")
+        return
+    end
+
+    local _random = random()
+
+    for _ = 1, 10 do
+        print(tostring(_random:getDirection()))
+    end
+
+end
+callable(nil, "onRandomGetDirectionButtonPressed")
+
 --endregion
 
 --region #OTHERTAB
@@ -2001,6 +2020,58 @@ function onCheckSectorSpecificsButtonPressed()
     --end
 end
 callable(nil, "onCheckSectorSpecificsButtonPressed")
+
+function onSpawnDiamondFormationButtonPressed()
+    if onClient() then
+        invokeServerFunction("onSpawnDiamondFormationButtonPressed")
+        return
+    end
+
+    local _player = Player(callingPlayer)
+    local _random = random()
+    local craft = Entity(_player.craftIndex)
+
+    if craft then
+        local x, y = Sector():getCoordinates()
+        local sectorGenerator = SectorGenerator(x, y)
+        local sizeConst = 75
+        local dir = _random:getDirection()
+
+        local position1 = craft.translationf
+        local position2 = position1 + (dir * 5000) --far position.
+
+        local rotateAxis = _random:getDirection()
+        local baseMatrix = MatrixLookUpPosition(_random:getDirection(), _random:getDirection(), position2)
+        local pos3Matrix = rotate(baseMatrix, 50, rotateAxis)
+        local pos4Matrix = rotate(baseMatrix, -50, rotateAxis)
+
+        sectorGenerator:createSmallAsteroid(position1, sizeConst, false, nil)
+        sectorGenerator:createSmallAsteroid(position2, sizeConst, false, nil)
+        sectorGenerator:createSmallAsteroid(pos3Matrix.position, sizeConst, false, nil)
+        sectorGenerator:createSmallAsteroid(pos4Matrix.position, sizeConst, false, nil)
+    else
+        print("Player not in craft.")
+    end
+
+end
+callable(nil, "onSpawnDiamondFormationButtonPressed")
+
+function onGetLinearVelocityPressed()
+    if onClient() then
+        invokeServerFunction("onGetLinearVelocityPressed")
+        return
+    end
+
+    local _player = Player(callingPlayer)
+    local craft = Entity(_player.craftIndex)
+    
+    if craft then
+        local _velocity = Velocity(craft)
+
+        print("Linear Velocity is : " .. tostring(_velocity.linear))
+    end
+end
+callable(nil, "onGetLinearVelocityPressed")
 
 --endregion
 

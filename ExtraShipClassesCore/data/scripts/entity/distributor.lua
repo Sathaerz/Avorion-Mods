@@ -35,17 +35,20 @@ function Distributor.initialize(values)
         local self_is_xsotan = _entity:getValue("is_xsotan")
         local defaultTargetPriority = 1
         if self_is_xsotan then
+            self.Log(methodName, "Entity is Xsotan - overriding default target priority.")
             defaultTargetPriority = 2
         end
 
         Boarding(_entity).boardable = false
 
         if not _restoring then
-            self.data.blastRadius = self.data.blastRadius or 2000
+            self.data.blastRadius = self.data.blastRadius or 2500
             self.data.blastDamageMultiplier = self.data.blastMultiplier or 0.5 --The multiplier for the amount of damage that is passed on to the target's allies.
             self.data.targetPriority = self.data.targetPriority or defaultTargetPriority
-            self.data.damagePrimaryTarget = self.data.damagePrimaryTarget or false
-            self.data.damagePrimaryTargetMultiplier = self.data.damagePrimaryTargetMultiplier or 0.1
+            if self.damagePrimaryTarget == nil then
+                self.damagePrimaryTarget = true
+            end
+            self.data.damagePrimaryTargetMultiplier = self.data.damagePrimaryTargetMultiplier or 0.15
             self.data.pickNewTargetCycle = self.data.pickNewTargetCycle or 20
             self.data.timeToActive = self.data.timeToActive or 10
             --TARGET PRIORITIES:

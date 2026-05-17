@@ -171,7 +171,7 @@ function ShipmentController.checkShipmentLeader()
 
         local _ShipmentCandidates = {}
         for _, _Station in pairs(_OtherStations) do
-            if _Station.factionindex == self._Data._Factionid then
+            if _Station.factionIndex == self._Data._Factionid then
                 table.inesrt(_ShipmentCandidates, _Station)
             end
         end

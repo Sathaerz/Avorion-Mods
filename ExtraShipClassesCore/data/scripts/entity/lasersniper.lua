@@ -3,6 +3,8 @@ package.path = package.path .. ";data/scripts/?.lua"
 
 include ("randomext")
 
+ESCCWeaponScriptUtil = include("esccweaponscriptutil")
+
 -- namespace LaserSniper
 LaserSniper = {}
 local self = LaserSniper
@@ -207,51 +209,32 @@ function LaserSniper.updateIntersection(_TimeStep)
     end
 
     local boss = Entity()
-    _Entity = Sector():intersectBeamRay(ray, boss, nil)
-    if _Entity then
-        if _Entity.type == EntityType.Asteroid or _Entity.type == EntityType.Wreckage then
-            self.showExplosion(_Entity)
-            _Entity:destroy(boss.id, 1, DamageType.Energy)
-            if _Entity then Sector():deleteEntity(_Entity) end
+    intersectedEntity = Sector():intersectBeamRay(ray, boss, nil)
+    if intersectedEntity then
+        if intersectedEntity.type == EntityType.Asteroid or intersectedEntity.type == EntityType.Wreckage then
+            self.showExplosion(intersectedEntity)
+            intersectedEntity:destroy(boss.id, 1, DamageType.Energy)
+            if intersectedEntity then Sector():deleteEntity(intersectedEntity) end
         else
             self._Data._BeamMisses = 0
-            local _Shield = Shield(_Entity.id)
+            local _Shield = Shield(intersectedEntity.id)
 
             --Require log level 3 for these to avoid spam. It's not quite as bad as log level 5 but it's still rough.
-            local _EntityDamageMultiplier = 1
+            local bossDamageMultiplier = 1
             if self._Data._UseEntityDamageMult then
                 if self._Data._UseStaticDamageMult then
-                    _EntityDamageMultiplier = (self._Data._StaticDamageMultValue or 1)
-                    self.Log(_MethodName, "Static damage multiplier is " .. tostring(_EntityDamageMultiplier), 3)
+                    bossDamageMultiplier = (self._Data._StaticDamageMultValue or 1)
+                    self.Log(_MethodName, "Static damage multiplier is " .. tostring(bossDamageMultiplier), 3)
                 else
-                    _EntityDamageMultiplier = (boss.damageMultiplier or 1)
-                    self.Log(_MethodName, "Damage multiplier is " .. tostring(_EntityDamageMultiplier), 3)
+                    bossDamageMultiplier = (boss.damageMultiplier or 1)
+                    self.Log(_MethodName, "Damage multiplier is " .. tostring(bossDamageMultiplier), 3)
                 end
             end
 
-            local _DamageToShield = self._Data._DamagePerFrame * _EntityDamageMultiplier * self._Data._DamageFactor
-            local _DamageToHull = 0
+            local finalDamageValue = self._Data._DamagePerFrame * bossDamageMultiplier * self._Data._DamageFactor
 
-            self.Log(_MethodName, "Inflicting " .. tostring(_DamageToShield) .. " damage", 3)
-
-            --We'll be nice and not bypass shields this time, unlike IHDTX-style lasers.
-            if _Shield and not self._Data._ShieldPen then
-                if _Shield.durability < _DamageToShield then
-                    _DamageToHull = _DamageToShield - _Shield.durability
-                    _DamageToShield = _Shield.durability
-                end
-                if _DamageToShield > 0 then
-                    _Shield:inflictDamage(_DamageToShield, 1, DamageType.Energy, boss.translationf, boss.id)
-                end
-            else
-                _DamageToHull = _DamageToShield
-            end
-
-            if _DamageToHull > 0 then
-                local durability = Durability(_Entity.id)
-                if not durability then return end
-                durability:inflictDamage(_DamageToHull, 1, DamageType.Energy, boss.id)
-            end
+            self.Log(_MethodName, "Inflicting " .. tostring(finalDamageValue) .. " damage", 3)
+            ESCCWeaponScriptUtil.inflictDamageToTarget(intersectedEntity, finalDamageValue, DamageType.Energy, boss.index)
         end
     end
 end
@@ -264,13 +247,7 @@ function LaserSniper.pickNewTarget()
     --Pick a random target for now. I had this done by highest firepower, but I think it made the sniper too predictable.
     --Now remodeled to make it harder for my dumb ass to put an infinite loop in and explode my computer :3
     local _Sector = Sector()
-    local _RawEnemies = {_Sector:getEnemies(_Factionidx)} 
-    local _Enemies = {}
-    for _, _RawEnemy in pairs(_RawEnemies) do
-        if _RawEnemy.type == EntityType.Ship or _RawEnemy.type == EntityType.Station then
-           table.insert(_Enemies, _RawEnemy) 
-        end
-    end
+    local _Enemies = ESCCWeaponScriptUtil.getEnemiesInSector(_Sector, _Factionidx)
 
     local _TargetCandidates = {}
 
@@ -285,13 +262,13 @@ function LaserSniper.pickNewTarget()
             local _Stations = {_Sector:getEntitiesByType(EntityType.Station)}
 
             for _, _Candidate in pairs(_Ships) do
-                if not self.isXsotanCheck(_Candidate) then
+                if not ESCCWeaponScriptUtil.isTargetXsotanCheck(_Candidate) then
                     table.insert(_TargetCandidates, _Candidate)
                 end
             end
 
             for _, _Candidate in pairs(_Stations) do
-                if not self.isXsotanCheck(_Candidate) then
+                if not ESCCWeaponScriptUtil.isTargetXsotanCheck(_Candidate) then
                     table.insert(_TargetCandidates, _Candidate)
                 end
             end
@@ -324,56 +301,13 @@ function LaserSniper.pickNewTarget()
 
      _TargetPriorityFunctions[_TargetPriority]()
 
-    if #_TargetCandidates > 0 then
-        local chosenCandidate = nil
-        local attempts = 0
-
-        self.Log(_MethodName, "Found at least one suitable target. Picking a random one.", 1)
-
-        while not chosenCandidate and attempts < 10 do
-            local randomPick = randomEntry(_TargetCandidates)
-            if self.invincibleTargetCheck(randomPick) then
-                chosenCandidate = randomPick
-            end
-            attempts = attempts + 1
-        end
-
-        if not chosenCandidate then
-            self.Log(_MethodName, "Could not find a non-invincible target in 10 tries - picking one at random", 1)
-            chosenCandidate = randomEntry(_TargetCandidates)
-        end
-        
-        return chosenCandidate
-    else
-        self.Log(_MethodName, "WARNING - Could not find any target candidates.", 1)
+     if #_TargetCandidates > 0 then
+        self.Log(_MethodName, tostring(#_TargetCandidates) .. " suitable candidates found. Picking one at random.", 1)
+        return ESCCWeaponScriptUtil.pickTargetFromTable(_TargetCandidates, self._Target_Invincible_Debug == 1)
+     else
+        self.Log(_MethodName, "WARNING - could not find any target candidates.", 1)
         return nil
-    end
-end
-
-function LaserSniper.invincibleTargetCheck(entity)
-    if not entity.invincible or self._Target_Invincible_Debug == 1 then
-        return true
-    else
-        return false
-    end
-end
-
-function LaserSniper.isXsotanCheck(entity)
-    --Minions don't have the is_xsotan tag set, so we need to set up a list.
-    local xsotanTags = {
-        "is_xsotan",
-        "xsotan_summoner_minion",
-        "xsotan_master_summoner_minion", --We're unlikely to see these, but hey! you never know.
-        "xsotan_revenant"
-    }
-
-    for idx, tag in pairs(xsotanTags) do
-        if entity:getValue(tag) then
-            return true
-        end
-    end
-
-    return false
+     end
 end
 
 --region #SERVER => EXTERNAL ADJ METHODS
