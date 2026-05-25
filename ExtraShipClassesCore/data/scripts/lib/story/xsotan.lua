@@ -151,7 +151,7 @@ function Xsotan.createBallistyx(_position, _volumeFactor)
         _TimeToActive = 12,
         _ROF = 3,
         _UpAdjust = false,
-        _DurabilityFactor = 4,
+        _DurabilityFactor = 12,
         _DamageFactor = 1.25,
         _ForwardAdjustFactor = 1,
         _UseEntityDamageMult = true,
@@ -241,7 +241,7 @@ function Xsotan.createLevinstriker(_position, _volumeFactor)
     --Add scripts
     local _X, _Y = Sector():getCoordinates()
 
-    local lightningDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 200
+    local lightningDamage = Balancing_GetSectorWeaponDPS(_X, _Y) * 150
 
     local thunderstrikeValues = { --#LEVINSTRIKER_LIGHTNING
         damagePerStrike = lightningDamage,
