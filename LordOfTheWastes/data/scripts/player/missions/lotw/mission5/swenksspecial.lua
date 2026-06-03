@@ -15,6 +15,7 @@ self._Data = {}
 self._Data._Active = nil
 self._Data._ReinforcementsToSpawn = 0
 self._Data._Invoked = false
+self._Data._HandHoldMessageSent = false
 self._Data._Complained = false
 
 self._Data._InvulnData = {
@@ -24,7 +25,8 @@ self._Data._InvulnData = {
         _Activated = false,
         _RunUpdate = false,
         _TimeActive = 0,
-        _MaxTimeActive = 30
+        _MaxTimeActive = 32, --Formerly 30
+        _MaxDamageMult = 10
     },
     { 
         _Message = "More! More!!",
@@ -32,7 +34,8 @@ self._Data._InvulnData = {
         _Activated = false,
         _RunUpdate = false,
         _TimeActive = 0,
-        _MaxTimeActive = 35
+        _MaxTimeActive = 40, --Formerly 35
+        _MaxDamageMult = 13
     },
     { 
         _Message = "I'll tear you to pieces, wretch!",
@@ -40,7 +43,8 @@ self._Data._InvulnData = {
         _Activated = false,
         _RunUpdate = false,
         _TimeActive = 0,
-        _MaxTimeActive = 40
+        _MaxTimeActive = 48, --Formerly 40
+        _MaxDamageMult = 16
     }
 }
 
@@ -63,7 +67,7 @@ function SwenksSpecial.getUpdateInterval()
 end
 
 function SwenksSpecial.updateServer(_TimeStep)
-    local _MethodName = "Update Server"
+    local methodName = "Update Server"
     self._Data._Invoked = false
 
     local swenks = Entity()
@@ -73,7 +77,7 @@ function SwenksSpecial.updateServer(_TimeStep)
             if _data._Activated and _data._RunUpdate then
                 local _TimeActive = _data._TimeActive
                 local _MaxTimeActive = _data._MaxTimeActive
-                self.Log(_MethodName, "Invuln is active - time active : " .. tostring(_TimeActive) .. " out of : " .. tostring(_MaxTimeActive))
+                self.Log(methodName, "Invuln is active - time active : " .. tostring(_TimeActive) .. " out of : " .. tostring(_MaxTimeActive))
                 
                 _TimeActive = _TimeActive + _TimeStep
                 if _TimeActive >= _MaxTimeActive then
@@ -92,6 +96,21 @@ function SwenksSpecial.updateServer(_TimeStep)
                 end
                 _data._TimeActive = _TimeActive
             end
+        end
+    end
+
+    --Don't let his damage multiplier go over a certain amount unless he is angry, in which case all bets are off.
+    if not swenks:getValue("swenks_angry") then
+        local damageMult = (swenks.damageMultiplier or 1)
+        local maxDamageMult = 7 --Base _MaxDamageMult
+        for _, data in pairs(self._Data._InvulnData) do
+            if data._Activated then
+                maxDamageMult = math.max(maxDamageMult, data._MaxDamageMult)
+            end
+        end
+        if damageMult > maxDamageMult then
+            self.Log(methodName, "swenks_angry is not set and damage mult (" .. tostring(damageMult) .. ") greater than max of " .. tostring(maxDamageMult) .. " - resetting.")
+            swenks.damageMultiplier = maxDamageMult
         end
     end
 
@@ -120,7 +139,7 @@ function SwenksSpecial.onDamaged(selfIndex, amount, inflictor)
                 swenks.invincible = true
                 _Sector:broadcastChatMessage("", 3, "${_SHIP} activates his iron curtain!" % { _SHIP = swenks.translatedTitle })
                 self.sendMessage(_data._Message)
-                self._Data._ReinforcementsToSpawn = 4
+                self._Data._ReinforcementsToSpawn = self._Data._ReinforcementsToSpawn + 4
             end
         end
     end
@@ -128,12 +147,16 @@ end
 
 --Called in the Sector context.
 function SwenksSpecial.swenksOnDestroyed(_Entityidx, _LastDamageInflictor)
-    local _MethodName = "swenksOnDestroyed"
-    self.Log(_MethodName, "Calling...")
+    local methodName = "swenksOnDestroyed"
+    self.Log(methodName, "Calling...")
 
     local _DestroyedEntity = Entity(_Entityidx)
     if _DestroyedEntity.type ~= EntityType.Ship and _DestroyedEntity.type ~= EntityType.Station then
-        self.Log(_MethodName, "Destroyed entity type was not a ship or station - returning.")
+        self.Log(methodName, "Destroyed entity type was not a ship or station - returning.")
+        return
+    end
+    if _DestroyedEntity:getValue("is_swenks") then
+        self.Log(methodName, "Don't invoke for destruction of self.")
         return
     end
     local _TargetFaction = _DestroyedEntity.factionIndex
@@ -141,7 +164,9 @@ function SwenksSpecial.swenksOnDestroyed(_Entityidx, _LastDamageInflictor)
     local _Ships = {Sector():getEntitiesByFaction(_TargetFaction)}
     for _, _Ship in pairs(_Ships) do
         if _Ship:hasScript("swenksspecial.lua") then
-            _Ship:invokeFunction("data/scripts/entity/story/swenksspecial.lua", "reduceInvulnTime")
+            local scriptPath = "player/missions/lotw/mission5/swenksspecial.lua"
+            _Ship:invokeFunction(scriptPath, "reduceInvulnTime")
+            _Ship:invokeFunction(scriptPath, "sendHandHoldMessage")
         end
     end
 end
@@ -161,12 +186,21 @@ function SwenksSpecial.reduceInvulnTime()
 
         for _, _data in pairs(self._Data._InvulnData) do
             if _data._Activated then
-                _data._TimeActive = _data._TimeActive + 10
+                _data._TimeActive = _data._TimeActive + 14 --Formerly 10
             end
         end
 
         self._Data._Invoked = true
     end   
+end
+
+function SwenksSpecial.sendHandHoldMessage()
+    local swenks = Entity()
+
+    if not self._Data._HandHoldMessageSent and swenks:getValue("swenks_handhold") then 
+        Sector():broadcastChatMessage("", 2, "${_SHIP}'s weapons power up as you destroy his allies!" % { _SHIP = swenks.translatedTitle })
+        self._Data._HandHoldMessageSent = true
+    end
 end
 
 function SwenksSpecial.spawnReinforcements(_Ct)
@@ -221,21 +255,21 @@ end
 
 --region #LOG SECURE / RESTORE
 
-function SwenksSpecial.Log(_MethodName, _Msg)
+function SwenksSpecial.Log(methodName, _Msg)
     if self._Debug == 1 then
-        print("[SwenksSpecial] - [" .. tostring(_MethodName) .. "] - " .. tostring(_Msg))
+        print("[SwenksSpecial] - [" .. tostring(methodName) .. "] - " .. tostring(_Msg))
     end
 end
 
 function SwenksSpecial.secure()
-    local _MethodName = "Secure"
-    self.Log(_MethodName, "Securing self._Data")
+    local methodName = "Secure"
+    self.Log(methodName, "Securing self._Data")
     return self._Data
 end
 
 function SwenksSpecial.restore(_Values)
-    local _MethodName = "Restore"
-    self.Log(_MethodName, "Restoring self._Data")
+    local methodName = "Restore"
+    self.Log(methodName, "Restoring self._Data")
     self._Data = _Values
 end
 

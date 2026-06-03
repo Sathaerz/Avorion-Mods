@@ -224,11 +224,12 @@ function lotwStory5_spawnSwenks()
     boss:removeScript("icon.lua")
     boss:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
     boss:addScript("player/missions/lotw/mission5/swenks.lua")
-    boss:addScript("story/swenksspecial.lua")
+    boss:addScript("player/missions/lotw/mission5/swenksspecial.lua")
     boss:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
     boss:addScriptOnce("avenger.lua")
     boss:setValue("is_pirate", true)
     boss:setValue("is_swenks", true)
+    boss:setValue("swenks_handhold", true)
 
     Boarding(boss).boardable = false
 end

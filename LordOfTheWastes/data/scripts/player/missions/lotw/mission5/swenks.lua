@@ -93,20 +93,32 @@ function startFightServer(provoked)
         end
 
         swenks:addScript("avenger.lua", { _Multiplier = 2 })
-        swenks:addScript("frenzy.lua", { _DamageThreshold = 1.01, _IncreasePerUpdate = 0.25, _UpdateCycle = 10 })
+        swenks:addScript("frenzy.lua", { _DamageThreshold = 1.01, _IncreasePerUpdate = 2.00, _UpdateCycle = 10 })
+        swenks:setValue("swenks_angry", true)
 
         local _random = Random()
-        for _ = 1, 2 do
-            local tcsRarity = RarityType.Rare
+        local upgrades = {
+            "data/scripts/systems/militarytcs.lua",
+            "data/scripts/systems/militarytcs.lua"
+        }
+
+        if _random:test(0.5) then
+            table.insert(upgrades, "data/scripts/systems/energybooster.lua")
+        else
+            table.insert(upgrades, "data/scripts/systems/hyperspacebooster.lua")
+        end
+        
+        for _, upgradeScript in pairs(upgrades) do
+            local upgRarity = RarityType.Rare
             if _random:test(0.05) then
-                tcsRarity = RarityType.Exotic
+                upgRarity = RarityType.Exotic
             else
-                if _random:test(0.25) then
-                    tcsRarity = RarityType.Exceptional
+                if _random:test(0.025) then
+                    upgRarity = RarityType.Exceptional
                 end
             end
 
-            Loot(swenks.index):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(tcsRarity), Seed(_random:getInt(1, 20000))))
+            Loot(swenks.index):insert(SystemUpgradeTemplate(upgradeScript, Rarity(upgRarity), Seed(_random:getInt(1, 20000))))
         end
     end
 
