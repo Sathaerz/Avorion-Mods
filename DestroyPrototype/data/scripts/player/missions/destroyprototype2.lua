@@ -14,10 +14,10 @@
             - Prototype Turret / Damage factor will be 3.
             - Prototype Loot = 4 guaranteed turrets.
             - Prototype will get 1 randomly chosen defensive script (adaptive / iron curtain / phasemode)
+        4+  - The prototype will get 1 randomly chosen offensive script (overdrive / frenzy / avenger)
         6-7 - [These conditions are present at danger level 6-7 and above]
             - Prototype Scale will be 50.
             - Prototype Turret Factor will be 4
-            - The prototype will get 1 randomly chosen offensive script (overdrive / frenzy / avenger)
             - +1 initial defender
         8-9 - [These conditions are present at danger level 8-9 and above]
             - Prototype Durability will increase by 25%
@@ -350,7 +350,7 @@ function destroyPrototype_spawnPrototype()
     local _AddBlocker = false
     local _BlockerToAdd = ""
 
-    if _Danger >= 5 then
+    if _Danger >= 4 then
         _OffensiveScriptsct = _OffensiveScriptsct + 1
     end
     if _Danger >= 8 then
@@ -689,7 +689,10 @@ mission.makeBulletin = function(_Station)
     local _WinMsg = destroyPrototype_formatWinMessage(_Station)
     local _LoseMsg = destroyPrototype_formatLoseMessage(_Station)
 
-    local _BaseReward = 500000
+    local _BaseReward = 400000
+    if _DangerLevel >= 4 then
+        _BaseReward = _BaseReward + 100000
+    end
     if _DangerLevel > 5 then
         _BaseReward = _BaseReward + 200000
     end
