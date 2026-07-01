@@ -713,18 +713,73 @@ function Xsotan.createTraditor(_position, _volumeFactor)
     --Lighting tether to all player ships, which take damage periodically
     --Tethers to all player ships, and any damage taken (including the lightning damage) spreads to nearby player ships
     --Eats other Xsotan similar to Oppressor. Does not eat wrecks.
+
 end
 
 function Xsotan.createScourge(_position, _volumeFactor)
     --Lots of armor + armor takes less damage
     --Regenerates HP
     --Long-range lasers (normal weapon)
+    _position = _position or Matrix()
+    local _sector = Sector()
+    local _random = random()
+
+    local volume = Xsotan.getShipVolume()
+    volume = volume * (_volumeFactor or 1)
+
+    local classification = { volume = 33, damage = 10, name = "Scourge" }
+    volume = volume * classification.volume
+
+    local x, y = _sector:getCoordinates()
+    local probabilities = Balancing_GetTechnologyMaterialProbability(x, y)
+    local material = Material(getValueFromDistribution(probabilities))
+    local faction = Xsotan.getFaction()
+    --Make a trimaran hull for these guys
+    local plan = Xsotan.getTrimaranShipPlan(_random, volume, material)
+
+    --Alter plan to swap cargo / hull for armor.
+
+
+    --Finally, make the ship.
+    local ship = _sector:createShip(faction, "", plan, _position, EntityArrivalType.Jump)
+
+     --Add turrets
+    local generator = SectorTurretGenerator()
+    generator.coaxialAllowed = false
+
+    local turret = generator:generateArmed(x, y, 0, Rarity(RarityType.Exotic), WeaponType.Laser)
+    turret:setRange(3500) --Extremely long range
+    local numTurrets = math.max(3, Balancing_GetEnemySectorTurrets(x, y) + 2)
+
+    ShipUtility.addTurretsToCraft(ship, turret, numTurrets)
+
+    ship:setTitle("${toughness}Xsotan ${ship}"%_T, {toughness = "", ship = classification.name})
+    ship.crew = ship.idealCrew
+    ship.shieldDurability = ship.shieldMaxDurability
+    ship.damageMultiplier = ship.damageMultiplier * classification.damage
+
+    ship:addScriptOnce("ai/patrol.lua")
+    ship:addScriptOnce("story/xsotanbehaviour.lua")
+    ship:addScriptOnce("utility/aiundockable.lua")
+    --Set values
+    ship:setValue("is_xsotan", true)
+    ship:setValue("is_scourge", true)
+    ship:setValue("is_special_xsotan", true)
+    ship:setValue("xsotan_scourge", true)
+    --Add special scripts :3
+    ship:addScriptOnce("eternal.lua")
+
+    Boarding(ship).boardable = false
+    ship.dockable = false
+
+    return ship    
 end
 
 function Xsotan.createRecreant(_position, _volumeFactor)
     --Gets a massive damage bonus if it manages to kill a player's ship.
     --Gets a minor damage bonus any time another Xsotan is killed.
     --Gets a damage buff over time when heavily damaged.
+
 end
 
 --endregion

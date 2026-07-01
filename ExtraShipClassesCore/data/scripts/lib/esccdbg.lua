@@ -146,6 +146,7 @@ function initUI()
     MakeButton(aiTestTab, ButtonRect(nil, nil, nil, aiTestTab.height), "Fly to me", "onFlyToMeButtonPressed")
     MakeButton(aiTestTab, ButtonRect(nil, nil, nil, aiTestTab.height), "Shoot me", "onShootMeButtonPressed")
     MakeButton(aiTestTab, ButtonRect(nil, nil, nil, aiTestTab.height), "Use Pursuit", "onAttachTindalosButtonPressed")
+    MakeButton(aiTestTab, ButtonRect(nil, nil, nil, aiTestTab.height), "Use Indepenedent Weapon AI", "onIndWeaponAIButtonPressed")
 
     local dataDumpTab = window:createTab("Entity", "data/textures/icons/solar-cell.png", "Data Dumps")
     numButtons = 0
@@ -1437,6 +1438,17 @@ function onAttachTindalosButtonPressed()
     Entity():addScript("data/scripts/entity/ai/custom/pursuitai.lua")
 end
 callable(nil, "onAttachTindalosButtonPressed")
+
+function onIndWeaponAIButtonPressed()
+    if onClient() then
+        invokeServerFunction("onIndWeaponAIButtonPressed")
+        return
+    end
+    
+    print("adding custom Turret AI to entity.")
+    Entity():addScript("data/scripts/entity/ai/custom/independentweapons.lua")
+end
+callable(nil, "onIndWeaponAIButtonPressed")
 
 --endregion
 

@@ -388,6 +388,22 @@ function ESCCUtil.removeCivilScripts(_Ship)
     _Ship:setValue("npc_chatter", nil)
 end
 
+function ESCCUtil.setOverallDurability(entity, multiplier) --Technically better practice to put a variable in the multiplyOverallDurabiliy function but eeehhhhhh
+    local useMultiplier = multiplier
+
+    local entityShields = Shield(entity)
+    if entityShields then
+        entityShields.maxDurabilityFactor = useMultiplier
+    else
+        useMultiplier = useMultiplier * 2
+    end
+
+    local entityDurability = Durability(entity)
+    if entityDurability then
+        entityDurability.maxDurabilityFactor = useMultiplier
+    end
+end
+
 function ESCCUtil.multiplyOverallDurability(entity, multiplier)
     local useMultiplier = multiplier
 
@@ -402,6 +418,13 @@ function ESCCUtil.multiplyOverallDurability(entity, multiplier)
     if entityDurability then
         entityDurability.maxDurabilityFactor = (entityDurability.maxDurabilityFactor or 1) * useMultiplier
     end
+end
+
+function ESCCUtil.scaleEntityPlan(entity, scaleFactor)
+    local entityPlan = entity:getFullPlanCopy()
+
+    entityPlan:scale(scaleFactor)
+    entity:setMovePlan(entityPlan)
 end
 
 function ESCCUtil.getSingleEntityByValue(_sector, scriptValue)

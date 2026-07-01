@@ -1,11 +1,11 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
--- namespace ESCCBossBlades
-ESCCBossBlades = {}
-local self = ESCCBossBlades
+-- namespace ESCCBossDespair
+ESCCBossDespair = {}
+local self = ESCCBossDespair
 
-function ESCCBossBlades.initialize()
+function ESCCBossDespair.initialize()
     local _MethodName = "Initialize"
 
     if onClient() then
