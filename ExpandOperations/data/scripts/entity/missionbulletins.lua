@@ -12,7 +12,7 @@ function MissionBulletins.getPossibleMissions()
     end
 
     if not station.playerOrAllianceOwned and (stationTitle == "Smuggler Hideout" or stationTitle == "Smuggler's Market") and canAdd then
-		table.insert(scripts, {path = "data/scripts/player/missions/expandoperations.lua", prob = 1})
+		table.insert(scripts, {path = "data/scripts/player/missions/expandoperations.lua", prob = 2})
 	end
 
     return scripts

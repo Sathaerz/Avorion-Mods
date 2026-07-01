@@ -37,13 +37,25 @@ mission.data.description = {
     { text = "..." },
     { text = "Prepare your defense", bulletPoint = true, fulfilled = false },
     { text = "Protect the construction ship", bulletPoint = true, fulfilled = false, visible = false },
-    { text = "Protect the station frame", bulletPoint = true, fulfilled = false, visible = false }
+    { text = "Protect the construction site", bulletPoint = true, fulfilled = false, visible = false }
 }
 
 --custom data we'll want.
 mission.data.custom.constructionShipScriptValue = "expandoperations_construction_ship"
 mission.data.custom.stationFrameScriptValue = "expandoperations_station_frame"
 mission.data.custom.defenseObjectiveScriptValue = "expandoperations_defense_objective"
+mission.data.custom.enemyFactionRepLost = 12500
+mission.data.custom.cShip70PctAlertSent = false
+mission.data.custom.cShip40PctAlertSent = false
+mission.data.custom.sFrame70PctAlertSent = false
+mission.data.custom.sFrame40PctAlertSent = false
+--some easy balancing levers
+mission.data.custom.constructionShipVolumeBonus = 4
+mission.data.custom.constructionShipDurabilityBonus = 5
+mission.data.custom.baseTorptta = 30
+mission.data.custom.baseTorpDmgFactor = 1.5
+mission.data.custom.baseTorpSlammerSpawnChance = 0.75 --minus dangerLevel * 0.025 (0.25 @ dl 10)
+mission.data.custom.stationFrameInitialDurability = 4
 
 --some logging data
 mission.data.custom.threatLogTbl = {
@@ -92,7 +104,7 @@ function initialize(dataIn, bulletinIn)
             mission.Log(methodName, "Enemy faction is : " .. tostring(enemyFaction.name))
             mission.data.custom.enemyName = enemyFaction.name
         end
-        mission.data.custom.developmentIndex = dataIn.developmentIndex
+        mission.data.custom.developmentIndex = _sector:getValue("smuggler_development_index") + 1
         mission.data.custom.inBarrier = dataIn.inBarrier
         mission.data.custom.phaseOneTimer = 0
         mission.data.custom.phaseOneMsgSent = false
@@ -109,6 +121,11 @@ function initialize(dataIn, bulletinIn)
             terminate()
             return
         end
+        if mission.data.custom.developmentIndex > 5 then
+            print("Smuggler development index too high - aborting.")
+            terminate()
+            return
+        end
 
         --[[=====================================================
             MISSION DESCRIPTION SETUP:
@@ -118,7 +135,7 @@ function initialize(dataIn, bulletinIn)
         mission.data.description[2].arguments = { _FACTIONNAME = mission.data.custom.enemyName }
     end
 
-    --Run vanilla init. Managers _restoring on its own.
+    --Run vanilla init. Manages _restoring on its own.
     expandOperations_init(dataIn, bulletinIn)
 end
 
@@ -153,8 +170,8 @@ mission.globalPhase.onAccomplish = function()
     expandOperations_doMissionEndCleanup() --Handles threatType == 1 by itself.
 end
 
-mission.phases[1] = {}
-
+mission.phases[1] = {} --Deploy construction ship phase
+mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].updateTargetLocationServer = function(timeStep)
     local methodName = "Update Target Location Server"
     mission.data.custom.phaseOneTimer = mission.data.custom.phaseOneTimer + timeStep
@@ -179,18 +196,19 @@ mission.phases[1].updateTargetLocationServer = function(timeStep)
     end
 end
 
-mission.phases[1].onTargetLocationLeft = function(x, y)
-    mission.data.timeLimit = mission.internals.timePassed + (10 * 60) --Player has 10 minutes to return.
-    mission.data.timeLimitInDescription = true --Show the player how much time is left.
-end
-
 mission.phases[1].onTargetLocationEntered = function(x, y)
     mission.data.timeLimit = nil 
     mission.data.timeLimitInDescription = false
 end
 
-mission.phases[2] = {}
+mission.phases[1].onTargetLocationLeft = function(x, y)
+    mission.data.timeLimit = mission.internals.timePassed + (10 * 60) --Player has 10 minutes to return.
+    mission.data.timeLimitInDescription = true --Show the player how much time is left.
+end
+
+mission.phases[2] = {} --Construction ship fly to construction spot phase
 mission.phases[2].timers = {}
+mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].onBegin = function()
     mission.data.description[3].fulfilled = true
     mission.data.description[4].visible = true
@@ -228,6 +246,14 @@ mission.phases[2].onBeginServer = function()
     sync() --We want to sync mission.data.custom.scaleStationFrameIndex here.
 end
 
+mission.phases[2].onUpdateTargetLocationServer = function(timeStep)
+    local _sector = Sector()
+
+    local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
+
+    expandOperations_handleBonusAndAlerts(_sector, constructionShip, nil)
+end
+
 mission.phases[2].onEntityDestroyed = function(id, lastDamageInflictor)
     if atTargetLocation() then
         local destroyedEntity = Entity(id)
@@ -237,14 +263,14 @@ mission.phases[2].onEntityDestroyed = function(id, lastDamageInflictor)
     end
 end
 
-mission.phases[2].onTargetLocationLeft = function(x, y)
-    mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to return.
-    mission.data.timeLimitInDescription = true --Show the player how much time is left.
-end
-
 mission.phases[2].onTargetLocationEntered = function(x, y)
     mission.data.timeLimit = nil 
     mission.data.timeLimitInDescription = false
+end
+
+mission.phases[2].onTargetLocationLeft = function(x, y)
+    mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to return.
+    mission.data.timeLimitInDescription = true --Show the player how much time is left.
 end
 
 --region #PHASE 2 TIMER CALLS
@@ -256,13 +282,13 @@ mission.phases[2].timers[1] = {
     callback = function()
         local _sector = Sector()
 
-        local constructionShip = expandOperations_getEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
+        local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
 
         local stationTbl = { _sector:getEntitiesByType(EntityType.Station) }
 
         local shipAI = ShipAI(constructionShip)
 
-        if expandOperations_isConstrcutionShipPositionGood(constructionShip, stationTbl) then
+        if expandOperations_isConstructionShipPositionGood(constructionShip, stationTbl) then
             shipAI:stop()
             nextPhase()
         else
@@ -305,8 +331,9 @@ end
 
 --endregion
 
-mission.phases[3] = {}
+mission.phases[3] = {} --Defend construction ship phase
 mission.phases[3].timers = {}
+mission.phases[3].showUpdateOnEnd = true
 mission.phases[3].updateInterval = function()
     if onClient() then
         return 0
@@ -322,7 +349,7 @@ end
 mission.phases[3].onBeginServer = function()
     local _sector = Sector()
     --Create station frame and start building.
-    local constructionShip = expandOperations_getEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
+    local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
 
     local stationFramePosition = expandOperations_getPositionInFront(constructionShip, 750)
     expandOperations_createStationFrame(stationFramePosition)
@@ -362,27 +389,12 @@ mission.phases[3].onBeginServer = function()
 end
 
 mission.phases[3].updateTargetLocationServer = function(timeStep)
-    local constructionShip = expandOperations_getEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
-    if constructionShip and valid(constructionShip) then
-        local constructionShipHull = constructionShip.durability
-        local constructionShipMaxHull = constructionShip.maxDurability
+    local _sector = Sector()
 
-        local ratio = constructionShipHull / constructionShipMaxHull
-        if ratio < 0.5 then
-            mission.data.custom.constructionShipHealthBonus = false
-        end
-    end
+    local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
+    local stationFrame = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
 
-    local stationFrame = expandOperations_getEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
-    if stationFrame and valid(stationFrame) then
-        local stationFrameHull = stationFrame.durability
-        local stationFrameMaxHull = stationFrame.maxDurability
-
-        local ratio = stationFrameHull / stationFrameMaxHull
-        if ratio < 0.75 then
-            mission.data.custom.stationFrameHealthBonus = false
-        end
-    end
+    expandOperations_handleBonusAndAlerts(_sector, constructionShip, stationFrame)
 end
 
 mission.phases[3].onTargetLocationLeft = function(x, y)
@@ -406,7 +418,12 @@ mission.phases[3].timers[1] = {
     time = 0.05,
     callback = function()
         if atTargetLocation() then
-            expandOperations_drawConstructionLaser()
+            local _sector = Sector()
+            
+            local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
+            local constructionSite = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
+
+            ESCCUtil.drawConstructionLaser(constructionShip, constructionSite, mission.data.custom.scaleStationFrameIndex)
         end
     end,
     repeating = true
@@ -422,14 +439,18 @@ mission.phases[3].timers[2] = {
         local methodName = "Phase 3 Timer 2 Callback"
         if atTargetLocation() then
             local stationFrameScaleTbl = { vec3(2,2,2), vec3(1.5, 1.5, 1.5), vec3(1.33, 1.33, 1.33) }
+            local stationFrameDurabilityTbl = { 2, 1, 1 }
             local scaleIndex = mission.data.custom.scaleStationFrameIndex + 1
 
             if scaleIndex > #stationFrameScaleTbl then
                 mission.Log(methodName, "Scale index is " .. tostring(scaleIndex) .. " this exceeds the table size - replacing the station, then finishing and rewarding.")
                 nextPhase()
             else
+                local stationFrame = ESCCUtil.getSingleEntityByValue(nil, mission.data.custom.stationFrameScriptValue)
+
                 mission.Log(methodName, "Scale index is " .. tostring(scaleIndex) .. " scaling the station frame.")
-                expandOperations_scaleStationFramePlan(stationFrameScaleTbl[scaleIndex])
+                ESCCUtil.scaleEntityPlan(stationFrame, stationFrameScaleTbl[scaleIndex])
+                ESCCUtil.setOverallDurability(stationFrame, stationFrameDurabilityTbl[scaleIndex])
             end
 
             mission.data.custom.scaleStationFrameIndex = scaleIndex
@@ -471,7 +492,7 @@ mission.phases[3].timers[4] = {
     time = 30,
     callback = function()
         if atTargetLocation() then
-            local stationFrame = expandOperations_getEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
+            local stationFrame = ESCCUtil.getSingleEntityByValue(nil, mission.data.custom.stationFrameScriptValue)
 
             if stationFrame and valid(stationFrame) then
                 local stationFrameHull = stationFrame.durability
@@ -493,8 +514,13 @@ end
 
 --endregion
 
-mission.phases[4] = {}
+mission.phases[4] = {} --Cleanup phase
 mission.phases[4].timers = {}
+mission.phases[4].onBegin = function()
+    mission.data.description[4].fulfilled = true
+    mission.data.description[5].fulfilled = true
+end
+
 mission.phases[4].onBeginServer = function()
     local methodName = "Phase 4 On Begin Server"
 
@@ -504,16 +530,16 @@ mission.phases[4].onBeginServer = function()
     local sectorGenerator = SectorGenerator(x, y)
 
     --Have the construction ship go off somewhere and delete it after 20-30 seconds.
-    local constructionShip = expandOperations_getEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
+    local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
     local shipAI = ShipAI(constructionShip)
 
     local endPoint = constructionShip.translationf + (_random:getDirection() * 100000)
     shipAI:setFly(endPoint, 0, nil, nil, true)
 
-    constructionShip:addScript("utility/delayeddelete.lua", _random:getFloat(4, 5))
+    constructionShip:addScript("utility/delayeddelete.lua", _random:getFloat(10, 15))
 
     --Replace the station frame with an actual real station.
-    local stationFrame = expandOperations_getEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
+    local stationFrame = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
     local sFrameLook = vec3(stationFrame.position.look.x, stationFrame.position.look.y, stationFrame.position.look.z)
     local sFrameUp = vec3(stationFrame.position.up.x, stationFrame.position.up.y, stationFrame.position.up.z)
     local sFramePos = vec3(stationFrame.position.pos.x, stationFrame.position.pos.y, stationFrame.position.pos.z)
@@ -619,9 +645,9 @@ function expandOperations_createConstructionShip()
     local x, y = Sector():getCoordinates()
     local shipGenerator = AsyncShipGenerator(nil, expandOperations_onConstructionShipFinished)
 
-    local constructionShipVolume = Balancing_GetSectorShipVolume(x, y) * 6
-
     local pos = expandOperations_getPositionInFront(outpost, 250)
+
+    local constructionShipVolume = Balancing_GetSectorShipVolume(x, y) * mission.data.custom.constructionShipVolumeBonus
 
     shipGenerator:startBatch()
 
@@ -641,16 +667,21 @@ function expandOperations_onConstructionShipFinished(generated)
 
     local endPoint = outpost.translationf + (random():getDirection() * 100000)
 
-    local constructionShipDurabilityFactor = 6
+    local constructionShipDurabilityFactor = mission.data.custom.constructionShipDurabilityBonus
+    if mission.data.custom.dangerLevel >= 5 then
+        construcitonShipDurabilityFactor = constructionShipDurabilityFactor * 1.5
+    end
     local x, y = Sector():getCoordinates()
 
     local distToCenter = math.sqrt(x*x + y*y)
-    if distToCenter > 360 then
+    if distToCenter > 360 and mission.data.custom.dangerLevel >= 5 then
         constructionShipDurabilityFactor = constructionShipDurabilityFactor * 1.5 --Increase it a bit becasue ships are much less tough, relatively speaking, in the outer regions.
     end
 
     ESCCUtil.multiplyOverallDurability(constructionShip, constructionShipDurabilityFactor)
     ESCCUtil.replaceIcon(constructionShip, "data/textures/icons/pixel/shipyard-repair.png")
+
+    constructionShip:addCrew(20, CrewMan(CrewProfessionType.Repair))
 
     local constructionShipAI = ShipAI(constructionShip)
     constructionShipAI:setFly(endPoint, 0, nil, nil, true)
@@ -658,7 +689,7 @@ function expandOperations_onConstructionShipFinished(generated)
     Placer.resolveIntersections(generated)
 end
 
-function expandOperations_isConstrcutionShipPositionGood(constructionShip, stationTbl)
+function expandOperations_isConstructionShipPositionGood(constructionShip, stationTbl)
     local positionOK = true
 
     --is the construction ship at least 30 km from all stations?
@@ -692,6 +723,7 @@ function expandOperations_createStationFrame(framePosition)
        ComponentType.Scripts,
        ComponentType.ScriptCallback,
        ComponentType.Title,
+       ComponentType.Name,
        ComponentType.Owner,
        ComponentType.Durability,
        ComponentType.PlanMaxDurability,
@@ -759,6 +791,9 @@ function expandOperations_createStationFrame(framePosition)
         end
     end
 
+    local _sector = Sector()
+    local x, y = _sector:getCoordinates()
+
     local _ScaleFactor = 0.25
     stationFramePlan:scale(vec3(_ScaleFactor, _ScaleFactor, _ScaleFactor))
     stationFramePlan.accumulatingHealth = true
@@ -767,26 +802,92 @@ function expandOperations_createStationFrame(framePosition)
     desc:setMovePlan(stationFramePlan)
     desc.factionIndex = _Faction.index
 
-    local stationFrame = Sector():createEntity(desc)
+    local stationFrame = _sector:createEntity(desc)
     stationFrame:setValue(mission.data.custom.defenseObjectiveScriptValue, true)
     stationFrame:setValue(mission.data.custom.stationFrameScriptValue, true)
     stationFrame:setTitle("Construction Site", {})
 
     Physics(stationFrame).driftDecrease = 0.2
 
-    ESCCUtil.multiplyOverallDurability(stationFrame, 1.5)
+    local frameDurabilityFactor = mission.data.custom.stationFrameInitialDurability
+    local distToCenter = math.sqrt(x*x + y*y)
+    if distToCenter > 360 then
+        frameDurabilityFactor = frameDurabilityFactor * 1.5 --Increase it a bit becasue / stations are much less tough, relatively speaking, in the outer regions.
+    end
+
+    ESCCUtil.setOverallDurability(stationFrame, frameDurabilityFactor)
 
     mission.Log(methodName, "Station frame created - entity type is " .. tostring(stationFrame.type))
 
     Placer.resolveIntersections()
 end
 
-function expandOperations_scaleStationFramePlan(scaleFactor)
-    local stationFrame = expandOperations_getEntityByValue(nil, mission.data.custom.stationFrameScriptValue)
-    local stationFramePlan = stationFrame:getFullPlanCopy()
+function expandOperations_handleBonusAndAlerts(sector, constructionShip, stationFrame)
+    local methodName = "Handle Bonus And Alerts" --Don't get rid of this - it is used in a few commented out lines below.
 
-    stationFramePlan:scale(scaleFactor)
-    stationFrame:setMovePlan(stationFramePlan)
+    local _sector = sector or Sector()
+
+    if constructionShip and valid(constructionShip) then
+        --mission.Log(methodName, "Evaluating construction ship") --Careful about enabling this - it is spammy.
+        local constructionShipHull = constructionShip.durability
+        local constructionShipMaxHull = constructionShip.maxDurability
+
+        local ratio = constructionShipHull / constructionShipMaxHull
+        --Handle bonus
+        if ratio < 0.5 then --this does not reset - once the player loses the bonus it is gone.
+            mission.data.custom.constructionShipHealthBonus = false
+        end
+
+        --Handle alerts
+        if ratio <= 0.7 then
+            if not mission.data.custom.cShip70PctAlertSent then
+                _sector:broadcastChatMessage("", 2, "The construction ship has dropped to 70% hull!")
+                mission.data.custom.cShip70PctAlertSent = true
+            end
+        else
+            mission.data.custom.cShip70PctAlertSent = false
+        end
+
+        if ratio <= 0.4 then
+            if not mission.data.custom.cShip40PctAlertSent then
+                _sector:broadcastChatMessage("", 2, "The construction ship has dropped to 40% hull! Immediate assistance required!")
+                mission.data.custom.cShip40PctAlertSent = true
+            end
+        else
+            mission.data.custom.cShip40PctAlertSent = false
+        end
+    end
+
+    if stationFrame and valid(stationFrame) then
+        --mission.Log(methodName, "Evaluating station frame") --Careful about enabling this - it is spammy.
+        local stationFrameHull = stationFrame.durability
+        local stationFrameMaxHull = stationFrame.maxDurability
+
+        local ratio = stationFrameHull / stationFrameMaxHull
+        --Handle bonus
+        if ratio < 0.75 then --this does not reset - once the player loses the bonus it is gone.
+            mission.data.custom.stationFrameHealthBonus = false
+        end
+
+        --Handle alerts
+        if ratio <= 0.7 then
+            if not mission.data.custom.sFrame70PctAlertSent then
+                _sector:broadcastChatMessage("", 2, "The station frame has dropped to 70% hull!")
+                mission.data.custom.sFrame70PctAlertSent = true
+            end
+        else
+            mission.data.custom.sFrame70PctAlertSent = false
+        end
+
+        if ratio <= 0.4 then
+            if not mission.data.custom.sFrame40PctAlertSent then
+                _sector:broadcastChatMessage("", 2, "The station frame has dropped to 40% hull! Immediate assistance required!")
+                mission.data.custom.sFrame40PctAlertSent = true
+            end
+        else
+            mission.data.custom.sFrame40PctAlertSent = false
+        end
+    end
 end
 
 function expandOperations_replacementDefendersFinished(generated)
@@ -803,7 +904,7 @@ function expandOperations_spawnFactionWave(largeWave)
 
     local _random = random()
 
-    local distance = 2500 --_#FACTDistAdj
+    local distance = 3000 --_#FACTDistAdj
 
     local spawnFunc = function(wingScriptValue, wingOnSpawnFunc)
         local maxCt = 4
@@ -840,7 +941,7 @@ function expandOperations_spawnFactionWave(largeWave)
     if largeWave then
         spawnFunc("expandoperations_beta_wing", expandOperations_onBetaWingFinished)
 
-        if _random:test(0.05 * mission.data.custom.dangerLevel) then
+        if _random:test(0.025 * mission.data.custom.dangerLevel) then
             spawnFunc("expandoperations_gamma_wing", expandOperations_onGammaWingFinished)
         end
     end
@@ -966,10 +1067,11 @@ function expandOperations_onAlphaWingFinished(generated)
 
     expandOperations_onWingFinished(generated, wingScriptValue, 1, mission.data.custom.constructionShipScriptValue, false)
 
-    --if there are no torp slammers in the group, 75-25% chance to add one - goes down as danger level goes up. torp slammer targets construction ship
+    --if there are no torp slammers in the group, 75-35% chance to add one - goes down as danger level goes up. torp slammer targets construction ship
     shuffle(random(), generated)
     local torpSlammerCount = ESCCUtil.countEntitiesByValueAndScript(wingScriptValue, "torpedoslammer.lua")
     local torpSlammerChance = 0.75 - (mission.data.custom.dangerLevel * 0.05)
+    torpSlammerChance = math.max(torpSlammerChance, 0.35)
 
     if torpSlammerCount == 0 and _random:test(torpSlammerChance) then
         local torpSlammerCandidate = generated[1]
@@ -980,6 +1082,11 @@ function expandOperations_onAlphaWingFinished(generated)
             ESCCUtil.setBombardier(torpSlammerCandidate)
         else
             ESCCUtil.setFusilier(torpSlammerCandidate)
+        end
+
+        --Make it more durable if we are on low difficulty. The small pirate ships get blown up super easily.
+        if mission.data.custom.dangerLevel < 5 and mission.data.custom.threatType == 2 then
+            ESCCUtil.multiplyOverallDurability(torpSlammerCandidate, 2)
         end
 
         --Finally, make it immune to the defenders.
@@ -993,17 +1100,17 @@ end
 function expandOperations_onBetaWingFinished(generated)
     local methodName = "On Beta Wing Finished"
     mission.Log(methodName, "Running...")
-    --Priority attacker => defender / player OR priority attacker => station frame.
+    --Priority attacker => defender / player OR priority attacker => station frame. Usually targets station frame.
     local wingScriptValue = "expandoperations_beta_wing"
     local defenderCt = ESCCUtil.countEntitiesByValue("is_defender")
     local _random = random()
 
-    if _random:test(0.5) then
+    if _random:test(0.75) then
         expandOperations_onWingFinished(generated, wingScriptValue, 1, mission.data.custom.stationFrameScriptValue, true)
 
-        --if there are no torp slammers in the group, 75-25% chance to add one - goes down as danger level goes up. torp slammer targets station frame.
+        --if there are no torp slammers in the group, 72.5-50% chance to add one - goes down as danger level goes up. torp slammer targets station frame.
         local torpSlammerCount = ESCCUtil.countEntitiesByValueAndScript(wingScriptValue, "torpedoslammer.lua")
-        local torpSlammerChance = 0.75 - (mission.data.custom.dangerLevel * 0.05)
+        local torpSlammerChance = mission.data.custom.baseTorpSlammerSpawnChance - (mission.data.custom.dangerLevel * 0.025)
 
         if torpSlammerCount == 0 and _random:test(torpSlammerChance) then
             local torpSlammerCandidate = generated[1]
@@ -1016,10 +1123,40 @@ function expandOperations_onBetaWingFinished(generated)
                 ESCCUtil.setFusilier(torpSlammerCandidate)
             end
 
+            --Make it more durable if we are on low difficulty. The small pirate ships get blown up super easily.
+            if mission.data.custom.dangerLevel < 5 and mission.data.custom.threatType == 2 then
+                ESCCUtil.multiplyOverallDurability(torpSlammerCandidate, 2)
+            end
+
             --Finally, make it immune to the defenders.
             local slammerDurability = Durability(torpSlammerCandidate)
             if slammerDurability then
                 slammerDurability:addFactionImmunity(mission.data.custom.friendlyFaction)
+            end
+        else
+            mission.Log(methodName, "No torp slammers created - buffing beta wing.")
+            --If no torp slammers are added, then instead give all beta wing ships a damage bonus, but only if the station frame scale index is greater than 0.
+            local bonusDamage = 0.10
+            if mission.data.custom.dangerLevel < 5 then
+                bonusDamage = bonusDamage + 0.15
+            end
+            bonusDamage = bonusDamage * math.ceil(mission.data.custom.dangerLevel / 4) * mission.data.custom.scaleStationFrameIndex
+
+            local bonusDurability = 1 + (0.5 * mission.data.custom.scaleStationFrameIndex)
+
+            mission.Log(methodName, "beta wing bonus damage is " .. tostring(bonusDamage) .. " bonus durability is " .. tostring(bonusDurability))
+
+            for _, betaShip in pairs(generated) do
+                betaShip.damageMultiplier = (betaShip.damageMultiplier or 1) + bonusDamage
+                ESCCUtil.multiplyOverallDurability(betaShip, bonusDurability)
+            end
+
+            shuffle(_random, generated)
+            for idx = 1, 2 do
+                local genDurability = Durability(generated[idx])
+                if genDurability then
+                    genDurability:addFactionImmunity(mission.data.custom.friendlyFaction)
+                end
             end
         end
     else
@@ -1046,34 +1183,51 @@ function expandOperations_onGammaWingFinished(generated)
 end
 
 function expandOperations_getTorpSlammerTable(targetTag)
-    --Same idea as defend prototype. Lower difficulty torps need to be more dangerous to compensate for lack of difficulty.
-    local _DmgFactor = 4
-    local _tta = 30
+    --Same idea as defend prototype. Lower difficulty torps need to be more dangerous to compensate for lack of difficulty otherwise.
+    local _DmgFactor = mission.data.custom.baseTorpDmgFactor
+    local _tta = mission.data.custom.baseTorptta
     local _PrefType = TorpedoUtility.WarheadType.Tandem
     local rangeFactor = 6
+    local useROF = 10
+
     if mission.data.custom.dangerLevel >= 5 then
-        _PrefType = TorpedoUtility.WarheadType.Nuclear
+        _PrefType = TorpedoUtility.WarheadType.Fusion --strip shields quickly.
         _DmgFactor = 2
-        _tta = 35
-        rangeFactor = 3
+        rangeFactor = 4
+        useROF = 8
     elseif mission.data.custom.dangerLevel == 10 then
         _PrefType = TorpedoUtility.WarheadType.Nuclear
         _DmgFactor = 1
-        _tta = 40
         rangeFactor = 3
+        useROF = 8
     end
     if mission.data.custom.threatType == 3 then --bounty hunters
-        _tta = _tta + 15 --These guys have normal torpedoes so make the big torps take longer to activate.
+        local addTime = 15 --These guys have normal torpedoes so make the big torps take longer to activate.
+        if targetTag == mission.data.custom.stationFrameScriptValue and mission.data.custom.scaleStationFrameIndex > 0 then
+            addTime = 0 --Unless we're targeting a scaled up station.
+        end
+
+        _tta = _tta + addTime 
     end
 
     if mission.data.custom.enemyWavesSpawned >= 8 then --Make them more dangerous on the last wave.
+        _DmgFactor = _DmgFactor + 1
         _tta = math.floor(_tta / 2)
         rangeFactor = rangeFactor * 2
     end
 
+    if targetTag == mission.data.custom.stationFrameScriptValue and mission.data.custom.scaleStationFrameIndex > 0 then
+        _DmgFactor = _DmgFactor * 3 --Do heavier damage after the station scales a bit, otherwise there's no chance in hell its going down
+        if mission.data.custom.dangerLevel == 10 then
+            _DmgFactor = math.max(_DmgFactor, 6) --Set minimum damage level.
+        end
+
+        _tta = _tta - 5 --Activate sooner as well.
+    end
+
     local torpSlammerTable = {
         _TimeToActive = _tta,
-        _ROF = 8,
+        _ROF = useROF,
         _UpAdjust = false,
         _DamageFactor = _DmgFactor,
         _DurabilityFactor = 8,
@@ -1115,7 +1269,7 @@ function expandOperations_onWingFinished(generated, wingScriptValue, targetPrior
             end
 
             --The hunters need a little bit of extra help, since they don't have as good danger level scaling as faction / pirates.
-            local hunterDangerBonus = 1 + (mission.data.custom.dangerLevel * 0.01) + random():getFloat(-0.01, 0.01)
+            local hunterDangerBonus = 1 + (mission.data.custom.dangerLevel * 0.015) + random():getFloat(-0.015, 0.015)
             ESCCUtil.multiplyOverallDurability(enemy, hunterDangerBonus)
 
             enemy.damageMultiplier = (enemy.damageMultiplier or 1) * hunterDangerBonus
@@ -1147,7 +1301,18 @@ function expandOperations_onWingFinished(generated, wingScriptValue, targetPrior
 
     Placer.resolveIntersections(generated)
 
-    SpawnUtility.addEnemyBuffs(generated)
+    if mission.data.custom.dangerLevel >= 9 then
+        SpawnUtility.addEnemyBuffs(generated)
+    else
+        local nonDefenders = {}
+        for _, ship in pairs(generated) do
+            if not ship:getValue("is_defender") then
+                table.insert(nonDefenders, ship)
+            end
+        end
+
+        SpawnUtility.addEnemyBuffs(nonDefenders)
+    end
 end
 
 function expandOperations_setNoLootIfApplicable(enemy)
@@ -1182,7 +1347,7 @@ function expandOperations_doMissionEndCleanup()
 
         _Galaxy:setFactionRelations(_Faction, _FriendlyFaction, mission.data.custom.enemyRelationLevel2Giver)
         _Galaxy:setFactionRelationStatus(_Faction, _FriendlyFaction, mission.data.custom.enemyRelationStatus2Giver)
-        _Galaxy:setFactionRelations(_Faction, _MissionDoer, mission.data.custom.enemyRelationLevel - 12500)
+        _Galaxy:setFactionRelations(_Faction, _MissionDoer, mission.data.custom.enemyRelationLevel - mission.data.custom.enemyFactionRepLost)
         _Galaxy:setFactionRelationStatus(_Faction, _MissionDoer, mission.data.custom.enemyRelationStatus)
     end
 end
@@ -1210,7 +1375,7 @@ function expandOperations_missionShipsDepart()
         end
     end
 
-    local stationFrame = expandOperations_getEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
+    local stationFrame = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
 
     if stationFrame and valid(stationFrame) then
         MissionUT.deleteOnPlayersLeft(stationFrame)
@@ -1268,63 +1433,13 @@ end
 
 --region #CLIENT CALLS
 
-function expandOperations_drawConstructionLaser()
-    local _sector = Sector()
-
-    local constructionShip = expandOperations_getEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
-    local stationFrame = expandOperations_getEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
-
-    if constructionShip and valid(constructionShip) and stationFrame and valid(stationFrame) then
-        local _random = random()
-        local dir = _random:getDirection()
-
-        local magnitudeMultiplier = math.max((mission.data.custom.scaleStationFrameIndex or 1), 1) --Needs to be at least 1.
-
-        local minMagnitude = 10 * magnitudeMultiplier
-        local maxMagnitude = 25 * magnitudeMultiplier
-
-        local magnitude = _random:getInt(minMagnitude, maxMagnitude)
-
-        local lsr = _sector:createLaser(constructionShip.translationf, stationFrame.translationf + (dir * magnitude), ColorRGB(0, 0.1, 1.0), 1)
-        lsr.collision = false
-        lsr.maxAliveTime = 0.025
-    end
-end
-
 function expandOperations_playHealingAnimation()
+    --Since this is invoked from the server rather than called directly, we still need this.
     local _sector = Sector()
+    local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
+    local constructionSite = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
 
-    local constructionShip = expandOperations_getEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
-    local stationFrame = expandOperations_getEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
-
-    if constructionShip and valid(constructionShip) and stationFrame and valid(stationFrame) then
-        local stationFrameHull = stationFrame.durability
-        local stationFrameMaxHull = stationFrame.maxDurability
-
-        if stationFrameHull < stationFrameMaxHull then
-            local cShipPos = constructionShip.translationf
-            local sFramePos = stationFrame.translationf
-            local beamColor = ColorRGB(0.0, 0.8, 0.5)
-
-            local repairLaser = _sector:createLaser(cShipPos, sFramePos, beamColor, 16)
-            repairLaser.maxAliveTime = 1.5
-            repairLaser.collision = false
-
-            local direction = random():getDirection()
-            _sector:createHyperspaceJumpAnimation(stationFrame, direction, ColorRGB(0.0, 1.0, 0.6), 0.2)
-        end
-    end
-end
-
---endregion
-
---region #SERVER / CLIENT UTILITY CALLS
-
-function expandOperations_getEntityByValue(_sector, scriptValue)
-    _sector = _sector or Sector()
-
-    local scriptTbl = { _sector:getEntitiesByScriptValue(scriptValue) }
-    return scriptTbl[1]
+    ESCCUtil.drawHealingAnimation(constructionShip, constructionSite)
 end
 
 --endregion
@@ -1350,7 +1465,7 @@ function expandOperations_formatDescription(station, threatType)
     }
 
     local threatTable = {
-        "We've been at odds with the ${_FACTIONNAME} about this for the last few weeks. If we go ahead with this, they'll try and put a stop to it. Be ready for a fight. Those faction ships are dangerous!", --factions
+        "We've been at odds with the ${_FACTIONNAME} about this for the last few cycles. If we go ahead with this, they'll try and put a stop to it. Be ready for a fight. Those faction ships are dangerous!", --factions
         "The local pirates probably won't appreciate us doing this, but when has anyone let pirates stop them? Still, they'll definitely try to attack us if we go through with it.", --pirates
         "The nearby factions have been insisting we don't have the 'proper permits' to do this, but they seem unwilling to confront us themselves. They'll probably hire headhunters to do their dirty work for them." --headhunters
     }
@@ -1423,26 +1538,26 @@ mission.makeBulletin = function(station)
 
     mission.Log(methodName, "Danger level is " .. tostring(dangerLevel) .. " / " .. missionDifficulty)
 
-    local baseReward = 50000
+    local baseReward = 30000
     local baseRep = 8000
     if dangerLevel >= 5 then
-        baseReward = baseReward + 15000
+        baseReward = baseReward + 27500
     end
     if dangerLevel == 10 then
-        baseReward = baseReward + 35000
+        baseReward = baseReward + 47500
         baseRep = baseRep + 2000
     end
 
-    if threatType == 1 then --the faction version tends to be more difficult, even at danger 1.
-        baseReward = baseReward * 1.5
+    if threatType == 1 then --the faction version tends to be extremely difficult, even at danger 1.
+        baseReward = baseReward * 2
     end
 
     if insideBarrier then
         baseReward = baseReward * 2
     end
 
-    reward = baseReward * Balancing.GetSectorRewardFactor(_sector:getCoordinates()) * (1 + (smugglerDevelopmentIndex * 0.05))
-    reputation = baseRep * 2
+    reward = baseReward * Balancing.GetSectorRewardFactor(_sector:getCoordinates()) * (1 + (smugglerDevelopmentIndex * 0.1))
+    reputation = baseRep * (1 + (smugglerDevelopmentIndex / 10))
 
     local bulletin = {
         --data for the bulletin board
@@ -1456,6 +1571,14 @@ mission.makeBulletin = function(station)
         msg = "Thanks for your help. We'll be sending out the construction ship soon.",
         giverTitle = station.title,
         giverTitleArgs = station:getTitleArguments(),
+        checkAccept = [[
+            local self, player = ...
+            if player:hasScript("missions/expandoperations.lua") then
+                player:sendChatMessage(Entity(self.arguments[1].giver), 1, "You cannot accept this mission again while it is in progress! Complete or abandon the mission.")
+                return 0
+            end
+            return 1
+        ]],
         onAccept = [[
             local self, player = ...
             player:sendChatMessage(Entity(self.arguments[1].giver), 0, self.msg, self.formatArguments._X, self.formatArguments._Y)
@@ -1470,7 +1593,6 @@ mission.makeBulletin = function(station)
             dangerLevel = dangerLevel,
             inBarrier = insideBarrier,
             initialDesc = missionDescription,
-            developmentIndex = smugglerDevelopmentIndex,
             threatType = threatType,
             enemyFaction = enemyFaction
         }},
