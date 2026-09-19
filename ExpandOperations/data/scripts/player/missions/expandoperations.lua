@@ -56,6 +56,8 @@ mission.data.custom.baseTorptta = 30
 mission.data.custom.baseTorpDmgFactor = 1.5
 mission.data.custom.baseTorpSlammerSpawnChance = 0.75 --minus dangerLevel * 0.025 (0.25 @ dl 10)
 mission.data.custom.stationFrameInitialDurability = 4
+--display value - no balancing affected by this.
+mission.data.custom.estimatedConstructionTimeLeft = 605 --There's a really funny joke here but I'll leave it to your imagination.
 
 --some logging data
 mission.data.custom.threatLogTbl = {
@@ -243,6 +245,29 @@ mission.phases[2].onBeginServer = function()
         Player():sendChatMessage(mission.data.custom.enemyName, 0, "You would help this smuggler scum? It's about time we've crushed this blight on our territory.")
     end
 
+    --Finally, if there are no defenders, we spawn a number up to the current # of stations - 2, but always at least 1.
+    local defenderCt = ESCCUtil.countEntitiesByValue("is_defender")
+    if defenderCt == 0 then
+
+        local _sector = Sector()
+
+        local stations = {_sector:getEntitiesByType(EntityType.Station)}
+
+        local stationCt = 0
+
+        for _, station in pairs(stations) do
+            if station.factionIndex == mission.data.custom.friendlyFaction then
+                stationCt = stationCt + 1
+            end
+        end
+
+        local defendersToSpawn = stationCt - 2
+        defendersToSpawn = math.max(defendersToSpawn, 1)
+        
+        mission.Log(methodName, "Spawning " .. tostring(defendersToSpawn) .. " defenders.")
+        expandOperations_spawnDefenders(defendersToSpawn)
+    end
+
     sync() --We want to sync mission.data.custom.scaleStationFrameIndex here.
 end
 
@@ -280,23 +305,28 @@ if onServer() then
 mission.phases[2].timers[1] = {
     time = 10,
     callback = function()
-        local _sector = Sector()
+        local methodName = "Phase 2 Timer 1"
+        if atTargetLocation() then
+            local _sector = Sector()
 
-        local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
+            local constructionShip = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.constructionShipScriptValue)
 
-        local stationTbl = { _sector:getEntitiesByType(EntityType.Station) }
+            local stationTbl = { _sector:getEntitiesByType(EntityType.Station) }
 
-        local shipAI = ShipAI(constructionShip)
+            local shipAI = ShipAI(constructionShip)
 
-        if expandOperations_isConstructionShipPositionGood(constructionShip, stationTbl) then
-            shipAI:stop()
-            nextPhase()
-        else
-            --Check to make sure the ship is still flying. If it is not, send it off in another random direction.
-            if not shipAI.state == AIState.Fly then
-                local endPoint = constructionShip.translationf + (random():getDirection() * 100000)
-                shipAI:setFly(endPoint, 0, nil, nil, true)
+            if expandOperations_isConstructionShipPositionGood(constructionShip, stationTbl) then
+                shipAI:stop()
+                nextPhase()
+            else
+                --Check to make sure the ship is still flying. If it is not, send it off in another random direction.
+                if not shipAI.state == AIState.Fly then
+                    local endPoint = constructionShip.translationf + (random():getDirection() * 100000)
+                    shipAI:setFly(endPoint, 0, nil, nil, true)
+                end
             end
+        else
+            mission.Log(methodName, "Player needs to return to target sector.")
         end
     end,
     repeating = true
@@ -338,12 +368,53 @@ mission.phases[3].updateInterval = function()
     if onClient() then
         return 0
     else --onServer()
-        return 1
+        return 0.25 --Update quickly
     end
 end
 
 mission.phases[3].onBegin = function()
     mission.data.description[5].visible = true
+end
+
+mission.phases[3].onPreRenderHud = function()
+    local methodName = "Phase 3 On PreRender Hud"
+
+    local _player = Player()
+    if not _player then
+        return
+    end
+    if _player.state == PlayerStateType.BuildCraft or _player.state == PlayerStateType.BuildTurret or _player.state == PlayerStateType.PhotoMode then
+        return
+    end
+
+    local renderer = UIRenderer()
+
+    local _sector = Sector()
+
+    local stationFrame = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
+
+    --Render a white marker around the station frame
+    if stationFrame and valid(stationFrame) then
+        local v2, size = renderer:calculateEntityTargeter(stationFrame)
+
+        local colorWhite = ColorRGB(1.0, 1.0, 1.0)
+        renderer:renderEntityTargeter(stationFrame, colorWhite, size * 1.25)
+        --renderer:renderEntityArrow(stationFrame, 30, 10, 250, color)  --no need for an arrow, but we'll keep the code here just in case.
+
+        local str = "Estimated Build Progress"
+
+        local rect = Rect(v2.x - size, v2.y - (size * 2.5), v2.x + size, v2.y + size)
+        drawTextRect(str, rect, 0, 0, colorWhite, 10, false, false, 2)
+
+        local timeLeft = mission.data.custom.estimatedConstructionTimeLeft
+        local mins = math.floor(timeLeft / 60)
+        local secs = timeLeft - (mins * 60)
+
+        local rect2 = Rect(v2.x - size, v2.y + (size * 0.5), v2.x + size, v2.y + size)
+        drawTextRect(string.format("Time Remaining: %02d:%05.2f", math.max(0, mins), math.max(0.01, secs)), rect2, 0, 0, ColorRGB(1.0, 1.0, 1.0), 10, false, false, 2)
+    end
+
+    renderer:display()
 end
 
 mission.phases[3].onBeginServer = function()
@@ -395,6 +466,9 @@ mission.phases[3].updateTargetLocationServer = function(timeStep)
     local stationFrame = ESCCUtil.getSingleEntityByValue(_sector, mission.data.custom.stationFrameScriptValue)
 
     expandOperations_handleBonusAndAlerts(_sector, constructionShip, stationFrame)
+
+    mission.data.custom.estimatedConstructionTimeLeft = mission.data.custom.estimatedConstructionTimeLeft - timeStep
+    sync() --need to sync this to client. Would technically be more efficient to run this clientside but the game desyncs pretty easily.
 end
 
 mission.phases[3].onTargetLocationLeft = function(x, y)
@@ -588,15 +662,7 @@ mission.phases[4].onBeginServer = function()
     local defendersToSpawn = desiredDefenderCt - defenderCt
 
     if defendersToSpawn > 0 then
-        local defenderGenerator = AsyncShipGenerator(nil, expandOperations_replacementDefendersFinished)
-
-        defenderGenerator:startBatch()
-    
-        for _ = 1, defendersToSpawn do
-            defenderGenerator:createDefender(Faction(mission.data.custom.friendlyFaction), defenderGenerator:getGenericPosition())
-        end
-        
-        defenderGenerator:endBatch()
+        expandOperations_spawnDefenders(defendersToSpawn)
     end
 
     Placer.resolveIntersections()
@@ -674,8 +740,8 @@ function expandOperations_onConstructionShipFinished(generated)
     local x, y = Sector():getCoordinates()
 
     local distToCenter = math.sqrt(x*x + y*y)
-    if distToCenter > 360 and mission.data.custom.dangerLevel >= 5 then
-        constructionShipDurabilityFactor = constructionShipDurabilityFactor * 1.5 --Increase it a bit becasue ships are much less tough, relatively speaking, in the outer regions.
+    if distToCenter > 360 then
+        constructionShipDurabilityFactor = constructionShipDurabilityFactor * 2 --Increase it a bit becasue ships are much less tough, relatively speaking, in the outer regions.
     end
 
     ESCCUtil.multiplyOverallDurability(constructionShip, constructionShipDurabilityFactor)
@@ -890,7 +956,19 @@ function expandOperations_handleBonusAndAlerts(sector, constructionShip, station
     end
 end
 
-function expandOperations_replacementDefendersFinished(generated)
+function expandOperations_spawnDefenders(defenderSpawnCt)
+    local defenderGenerator = AsyncShipGenerator(nil, expandOperations_defendersFinished)
+
+    defenderGenerator:startBatch()
+
+    for _ = 1, defenderSpawnCt do
+        defenderGenerator:createDefender(Faction(mission.data.custom.friendlyFaction), defenderGenerator:getGenericPosition())
+    end
+    
+    defenderGenerator:endBatch()
+end
+
+function expandOperations_defendersFinished(generated)
     for _, defender in pairs(generated) do
         defender:removeScript("antismuggle.lua")
     end
@@ -1159,10 +1237,12 @@ function expandOperations_onBetaWingFinished(generated)
                 end
             end
         end
-    else
+    else        
         if defenderCt > 0 and _random:test(0.5) then
+            mission.Log(methodName, "Beta wing going after defenders")
             expandOperations_onWingFinished(generated, wingScriptValue, 1, "is_defender", false)
         else
+            mission.Log(methodName, "Beta wing going after player")
             expandOperations_onWingFinished(generated, wingScriptValue, 2, nil, false)
         end
     end
@@ -1188,13 +1268,13 @@ function expandOperations_getTorpSlammerTable(targetTag)
     local _tta = mission.data.custom.baseTorptta
     local _PrefType = TorpedoUtility.WarheadType.Tandem
     local rangeFactor = 6
-    local useROF = 10
+    local useROF = 14
 
     if mission.data.custom.dangerLevel >= 5 then
         _PrefType = TorpedoUtility.WarheadType.Fusion --strip shields quickly.
         _DmgFactor = 2
         rangeFactor = 4
-        useROF = 8
+        useROF = 10
     elseif mission.data.custom.dangerLevel == 10 then
         _PrefType = TorpedoUtility.WarheadType.Nuclear
         _DmgFactor = 1
@@ -1470,7 +1550,7 @@ function expandOperations_formatDescription(station, threatType)
         "The nearby factions have been insisting we don't have the 'proper permits' to do this, but they seem unwilling to confront us themselves. They'll probably hire headhunters to do their dirty work for them." --headhunters
     }
 
-    return descriptionTable[descriptionType] .. "\n\n" .. threatTable[threatType]
+    return descriptionTable[descriptionType] .. "\n\n" .. threatTable[threatType] .. "\n\nWe would suggest that you bring additional ships. You will need the firepower."
 end
 
 function expandOperations_getThreatType(rand, station)
