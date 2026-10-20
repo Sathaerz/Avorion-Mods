@@ -41,6 +41,7 @@ mission.data.description = {
 
 --Custom data that we'll want.
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
+mission.data.custom.phase1MailID = "_horizon_story4_mail"
 mission.data.custom.phase2Timer = 0
 mission.data.custom.checkEscortCount = false
 mission.data.custom.towSpawned = false
@@ -115,6 +116,7 @@ end
 --endregion
 
 mission.phases[1] = {}
+mission.phases[1].timers = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
@@ -136,7 +138,7 @@ mission.phases[1].onBeginServer = function()
 	_Mail.text = Format("Hey, buddy.\n\nI've done some digging. Horizon Keepers, LTD. is one of the larger corporations in this arm of the galaxy. It seems like their public facing front is selling radar units, as well as probes and other sensory equipment. Nobody knows what their other lines of business are, and I got shut down pretty quickly when I started asking questions. I checked both the wreckages of the freighters we took out earlier and it also looks like the captains managed to delete the logs. I did find some strange Xsotan parts in the holds, though.\n\nI'd say we're out of luck since none of the other scheduled shipments have showed up, but I heard a nearby rift expedition took a turn for the worse. I can't say for sure, but I think Horizon might have been involved.\n\nWe're going to steal one of their ships.\n\nIf the rumors are right, they should be towing one of their heavy hitters through (%1%:%2%). Meet me there, and cover my back while my crew hijacks it. We'll have to work fast - we don't want to give them a chance to get away.\n\nVarlance", _X, _Y)
 	_Mail.header = "Did Some Digging"
 	_Mail.sender = "Varlance @FrostbiteCompany"
-	_Mail.id = "_horizon_story4_mail"
+	_Mail.id = mission.data.custom.phase1MailID
 	_Player:addMail(_Mail)
 end
 
@@ -147,13 +149,47 @@ mission.phases[1].playerCallbacks = {
 			if onServer() then
 				local _Player = Player()
 				local _Mail = _Player:getMail(_MailIndex)
-				if _Mail.id == "_horizon_story4_mail" then
+				if _Mail.id == mission.data.custom.phase1MailID then
 					nextPhase()
 				end
 			end
 		end
 	}
 }
+
+--region #PHASE 1 TIMER CALLS
+
+if onServer() then
+
+--Reset mission if mail is deleted unread.
+mission.phases[1].timers[1] = {
+    time = 30,
+    callback = function()
+        local methodName = "Mail Check"
+        mission.Log(methodName, "Checking for phase 1 mail.")
+
+        local _player = Player()
+        local n = _player and _player.numMails
+        local mailPresent = false
+        if type(n) ~= "number" then
+            return --assume mail is still present.
+        end
+        for idx = 0, n do
+            local _mail = _player:getMail(idx)
+            if _mail and _mail.id == mission.data.custom.phase1MailID then
+                mailPresent = true
+            end
+        end
+        if not mailPresent then
+            terminate() --No progress made. Just reset the mission.
+        end
+    end,
+    repeating = true
+}
+
+end
+
+--endregion
 
 mission.phases[2] = {}
 mission.phases[2].showUpdateOnEnd = true
@@ -634,7 +670,7 @@ function kothStory4_spawnPirateWave()
         wingGenerator.pirateLevel = mission.data.custom.pirateLevel
 
         local wingTable = ESCCUtil.getStandardWave(_WaveDanger, _ct, "Standard", false)
-        local wingPositions = wingGenerator:getStandardPositions(_Distance, _ct)
+        local wingPositions = wingGenerator:getStandardPositions(_ct, _Distance)
 
         wingGenerator:startBatch()
 

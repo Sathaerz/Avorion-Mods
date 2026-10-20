@@ -82,7 +82,7 @@ function HorizonStory2Dialog1.getDialog()
 
     d2.text = "I don't know you! I can't trust you! Why should I do anything for you?"
     d2.answers = {
-        { answer = "You can trust me.", followup = d4 },
+        { answer = "You can trust me.", followUp = d4 },
         { answer = "I'll pay you.", followUp = d8 }
     }
 

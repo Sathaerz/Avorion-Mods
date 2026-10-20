@@ -43,6 +43,7 @@ mission.data.description = {
 
 --Custom data that we'll want.
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
+mission.data.custom.phase1MailID = "_horizon_story3_mail1"
 mission.data.custom.transportsSpawned = false
 mission.data.custom.phase3PirateGroupSpawned = false
 mission.data.custom.phase5PirateKOd = false
@@ -81,6 +82,7 @@ mission.globalPhase.onTargetLocationLeft = function(_X, _Y)
 end
 
 mission.phases[1] = {}
+mission.phases[1].timers = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
@@ -89,20 +91,20 @@ mission.phases[1].onBeginServer = function()
 
     mission.data.custom.firstLocation = kothStory3_getNextLocation(true)
 
-    local _X = mission.data.custom.firstLocation.x
-    local _Y = mission.data.custom.firstLocation.y
+    local locX = mission.data.custom.firstLocation.x
+    local locY = mission.data.custom.firstLocation.y
 
-    mission.data.custom.pirateLevel = Balancing_GetPirateLevel(_X, _Y) --Set the pirate level based on the first location.
+    mission.data.custom.pirateLevel = Balancing_GetPirateLevel(locX, locY) --Set the pirate level based on the first location.
 
-    mission.data.description[3].arguments = { _X = mission.data.custom.firstLocation.x, _Y = mission.data.custom.firstLocation.y }
+    mission.data.description[3].arguments = { _X = locX, _Y = locY }
     
     --Send mail to player.
     local _Player = Player()
     local _Mail = Mail()
-	_Mail.text = Format("Hey, buddy.\n\nIt's Varlance. I was right about the data we got from that chip. It looks like it's a schedule of shipments. They're all converging on a single sector. I think we should make sure a couple of them are delayed... permanently. I've found two that are scheduled to arrive soon. I'm going to hit one of them, and I'd like you to hit the other one. They'll be heading through (%1%:%2%) shortly. Head there and take them out. Make sure you hit them quick - they'll only be a couple jumps away from their destination by then.\n\nI've already hit another group of pirates and dropped a fake data chip in the wreckage of their shipyard, then dropped some wreckages from a third group. With any luck, the owners of the chip - whoever they are - will think a second group of pirates wiped out their freighters, then got taken out by some rivals.\n\nGood hunting, buddy.\n\nVarlance", _X, _Y)
+	_Mail.text = Format("Hey, buddy.\n\nIt's Varlance. I was right about the data we got from that chip. It looks like it's a schedule of shipments. They're all converging on a single sector. I think we should make sure a couple of them are delayed... permanently. I've found two that are scheduled to arrive soon. I'm going to hit one of them, and I'd like you to hit the other one. They'll be heading through (%1%:%2%) shortly. Head there and take them out. Make sure you hit them quick - they'll only be a couple jumps away from their destination by then.\n\nI've already hit another group of pirates and dropped a fake data chip in the wreckage of their shipyard, then dropped some wreckages from a third group. With any luck, the owners of the chip - whoever they are - will think a second group of pirates wiped out their freighters, then got taken out by some rivals.\n\nGood hunting, buddy.\n\nVarlance", locX, locY)
 	_Mail.header = "Plan of Action"
 	_Mail.sender = "Varlance @FrostbiteCompany"
-	_Mail.id = "_horizon_story3_mail1"
+	_Mail.id = mission.data.custom.phase1MailID
 	_Player:addMail(_Mail)
 end
 
@@ -113,13 +115,47 @@ mission.phases[1].playerCallbacks = {
 			if onServer() then
 				local _Player = Player()
 				local _Mail = _Player:getMail(_MailIndex)
-				if _Mail.id == "_horizon_story3_mail1" then
+				if _Mail.id == mission.data.custom.phase1MailID then
 					nextPhase()
 				end
 			end
 		end
 	}
 }
+
+--region #PHASE 1 TIMER CALLS
+
+if onServer() then
+
+--Reset mission if mail is deleted unread.
+mission.phases[1].timers[1] = {
+    time = 30,
+    callback = function()
+        local methodName = "Mail Check"
+        mission.Log(methodName, "Checking for phase 1 mail.")
+
+        local _player = Player()
+        local n = _player and _player.numMails
+        local mailPresent = false
+        if type(n) ~= "number" then
+            return --assume mail is still present.
+        end
+        for idx = 0, n do
+            local _mail = _player:getMail(idx)
+            if _mail and _mail.id == mission.data.custom.phase1MailID then
+                mailPresent = true
+            end
+        end
+        if not mailPresent then
+            terminate() --No progress made. Just reset the mission.
+        end
+    end,
+    repeating = true
+}
+
+end
+
+--endregion
 
 mission.phases[2] = {}
 mission.phases[2].timers = {}
@@ -274,15 +310,15 @@ mission.phases[4].onBeginServer = function()
 
     mission.data.custom.thirdLocation = kothStory3_getNextLocation(false)
     
-    local _X = mission.data.custom.thirdLocation.x
-    local _Y = mission.data.custom.thirdLocation.y
+    local locX = mission.data.custom.thirdLocation.x
+    local locY = mission.data.custom.thirdLocation.y
 
-    mission.data.description[8].arguments = { _X = mission.data.custom.firstLocation.x, _Y = mission.data.custom.firstLocation.y }
+    mission.data.description[8].arguments = { _X = locX, _Y = locY }
     
     --Send mail to player.
     local _Player = Player()
     local _Mail = Mail()
-	_Mail.text = Format("Good news, buddy. There's another group of pirates that was gonna link up with the freighters you took out. If we move quickly enough we can catch them by surprise. Head to (%1%:%2%). I'll meet you there.\n\nBy the way... did you notice a strange ship with their caravan? There was one in the group I eliminated - it's not like any pirate ship I've seen. We need more information. Try to leave some of them alive to talk.\n\nVarlance", _X, _Y)
+	_Mail.text = Format("Good news, buddy. There's another group of pirates that was gonna link up with the freighters you took out. If we move quickly enough we can catch them by surprise. Head to (%1%:%2%). I'll meet you there.\n\nBy the way... did you notice a strange ship with their caravan? There was one in the group I eliminated - it's not like any pirate ship I've seen. We need more information. Try to leave some of them alive to talk.\n\nVarlance", locX, locY)
 	_Mail.header = "Meet up"
 	_Mail.sender = "Varlance @FrostbiteCompany"
 	_Mail.id = "_horizon_story3_mail2"

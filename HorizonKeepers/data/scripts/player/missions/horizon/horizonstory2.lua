@@ -49,6 +49,7 @@ mission.data.description = {
 
 --Custom data that we'll want.
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
+mission.data.custom.phase1MailID = "_horizon_story2_mail1"
 mission.data.custom.annoyedHacker = 0
 mission.data.custom.doneContainerJob = false
 mission.data.custom.doneSatelliteJob = false 
@@ -90,6 +91,7 @@ mission.globalPhase.onAccomplish = function()
 end
 
 mission.phases[1] = {}
+mission.phaess[1].timers = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
@@ -110,7 +112,7 @@ mission.phases[1].onBeginServer = function()
 	_Mail.text = Format("Hey, Captain.\n\nIt's me, Varlance - your old buddy from smashing the pirate fleet. I'd love to catch up, but I'll cut to the chase. Found the hacker I mentioned the other day.\nThey've been spending time at a local smuggler's outpost recently. You'll find it at (%1%:%2%). I'll meet you there.\n\nVarlance", _X, _Y)
 	_Mail.header = "Found the Hacker"
 	_Mail.sender = "Varlance @FrostbiteCompany"
-	_Mail.id = "_horizon_story2_mail1"
+	_Mail.id = mission.data.custom.phase1MailID
 	_player:addMail(_Mail)
 end
 
@@ -122,13 +124,47 @@ mission.phases[1].playerCallbacks =
 			if onServer() then
 				local _player = Player()
 				local _Mail = _player:getMail(_MailIndex)
-				if _Mail.id == "_horizon_story2_mail1" then
+				if _Mail.id == mission.data.custom.phase1MailID then
 					nextPhase()
 				end
 			end
 		end
 	}
 }
+
+--region #PHASE 1 TIMER CALLS
+
+if onServer() then
+
+--Reset mission if mail is deleted unread.
+mission.phases[1].timers[1] = {
+    time = 30,
+    callback = function()
+        local methodName = "Mail Check"
+        mission.Log(methodName, "Checking for phase 1 mail.")
+
+        local _player = Player()
+        local n = _player and _player.numMails
+        local mailPresent = false
+        if type(n) ~= "number" then
+            return --assume mail is still present.
+        end
+        for idx = 0, n do
+            local _mail = _player:getMail(idx)
+            if _mail and _mail.id == mission.data.custom.phase1MailID then
+                mailPresent = true
+            end
+        end
+        if not mailPresent then
+            terminate() --No progress made. Just reset the mission.
+        end
+    end,
+    repeating = true
+}
+
+end
+
+--endregion
 
 mission.phases[2] = {}
 mission.phases[2].showUpdateOnEnd = true

@@ -624,6 +624,8 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
 
             local _random = random()
 
+            local _turretOffset = -16
+
             for _ = 1, 4 do
                 local _rarity = Rarity(RarityType.Exotic)
                 if _random:test(0.25) then
@@ -633,7 +635,7 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
                 if _random:test(0.5) then
                     _Loot:insert(upgradeGenerator:generateSectorSystem(x, y, _rarity, nil))
                 else
-                    _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, 16, _rarity, nil, nil)))
+                    _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, _turretOffset, _rarity, nil, nil)))
                 end
             end
 
@@ -650,7 +652,7 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
                     if _random:test(0.5) then
                         _Loot:insert(upgradeGenerator:generateSectorSystem(x, y, rarity, nil))
                     else
-                        _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, 16, rarity, nil, nil)))
+                        _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, _turretOffset, rarity, nil, nil)))
                     end
                 end
             end
@@ -660,7 +662,7 @@ function HorizonUtil.spawnProjectXsologizev2(_DeleteOnLeft, _Position)
                 if _random:test(0.5) then
                     _Loot:insert(upgradeGenerator:generateSectorSystem(x, y, nil, nil))
                 else
-                    _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, 16, nil, nil, nil)))
+                    _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, _turretOffset, nil, nil, nil)))
                 end
             end
 
@@ -945,7 +947,9 @@ function HorizonUtil.spawnHorizonStation(_Data)
 
     Physics(_Station).driftDecrease = 0.2    
 
+    --Make unboardable / add bonus to prevent xavorion faction switch.
     Boarding(_Station).boardable = false
+    _Station:addAbsoluteBias(StatsBonuses.DefenseWeapons, 1000)
     _Station.dockable = false
 
     local _DeleteOnLeft = _Data._DeleteOnPlayerLeft
@@ -1066,11 +1070,21 @@ function HorizonUtil.getPWXv2LootFunc()
 
         local _random = random()
 
+        local _turretOffset = -8
+
+        --1 guaranteed legendary or exotic subsystem.
+        local useRarity = Rarity(RarityType.Exotic)
+        if _random:test(0.25) then
+            useRarity = Rarity(RarityType.Legendary)
+        end
+        _Loot:insert(upgradeGenerator:generateSectorSystem(x, y, useRarity, nil))
+
+        --Exceptional Turret / Exotic System OR Exotic Turret / Exceptional system
         if _random:test(0.5) then
-            _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, 0, Rarity(RarityType.Exceptional), nil, nil)))
+            _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, _turretOffset, Rarity(RarityType.Exceptional), nil, nil)))
             _Loot:insert(upgradeGenerator:generateSectorSystem(x, y, Rarity(RarityType.Exotic), nil))
         else
-            _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, 0, Rarity(RarityType.Exotic), nil, nil)))
+            _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, _turretOffset, Rarity(RarityType.Exotic), nil, nil)))
             _Loot:insert(upgradeGenerator:generateSectorSystem(x, y, Rarity(RarityType.Exceptional), nil))
         end
                     
@@ -1082,7 +1096,7 @@ function HorizonUtil.getPWXv2LootFunc()
             end
 
             _Loot:insert(upgradeGenerator:generateSectorSystem(x, y, _rarity, nil))
-            _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, 0, _rarity, nil, nil)))
+            _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, _turretOffset, _rarity, nil, nil)))
         end
 
         --Add 4x wildcard items.
@@ -1090,7 +1104,7 @@ function HorizonUtil.getPWXv2LootFunc()
             if _random:test(0.5) then
                 _Loot:insert(upgradeGenerator:generateSectorSystem(x, y, nil, nil))
             else
-                _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, 0, nil, nil, nil)))
+                _Loot:insert(InventoryTurret(turretGenerator:generate(x, y, _turretOffset, nil, nil, nil)))
             end
         end
 

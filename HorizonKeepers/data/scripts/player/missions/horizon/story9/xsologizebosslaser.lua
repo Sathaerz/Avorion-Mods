@@ -2,6 +2,7 @@ package.path = package.path .. ";data/scripts/lib/?.lua"
 package.path = package.path .. ";data/scripts/?.lua"
 
 include ("randomext")
+include ("callable")
 
 -- namespace XsologizeBossLaser
 XsologizeBossLaser = {}
@@ -105,11 +106,14 @@ function XsologizeBossLaser.pickNewTarget()
 
     if self._Data._pindex then
         self.Log(_MethodName, "pindex is " .. tostring(self._Data._pindex), 2)
-        local _PlayerTarget = Player(self._Data._pindex)
-        local _PlayerTargetShip = Entity(_PlayerTarget.craft.id)
+        --This fixes an issue where an offline player was targeted by the laser, or the player recently had their ship destroyed.
+        --Must have happened b/c someone disconnected shortly after getting into the sector to start the mission. Never encountered this one myself.
+        local playerTarget = Player(self._Data._pindex)
+        local playerTargetCraft = playerTarget and playerTarget.craft
+        local playerTargetShip = playerTargetCraft and Entity(playerTargetCraft.id)
 
-        if _PlayerTargetShip and valid(_PlayerTargetShip) then
-            table.insert(_TargetCandidates, _PlayerTargetShip)
+        if playerTargetShip and valid(playerTargetShip) then
+            table.insert(_TargetCandidates, playerTargetShip)
         end
     end
 

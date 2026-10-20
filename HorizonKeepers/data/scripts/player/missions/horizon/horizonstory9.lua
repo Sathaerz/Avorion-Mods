@@ -192,6 +192,12 @@ mission.phases[3].onBeginServer = function()
     end
 end
 
+mission.phases[3].onTargetLocationLeft = function(_X, _Y)
+    if onServer() then
+        fail()
+    end
+end
+
 local kothStory9_onPhase3DialogEnd = makeDialogServerCallback("kothStory9_onPhase3DialogEnd", 3, function()
     nextPhase()
 end)
@@ -270,7 +276,7 @@ mission.phases[3].triggers[1] = {
 
         if not xsologize then
             print("ERROR: XSOLOGIZE should exist at this point")
-            terminate()
+            fail() --Sure, whatever, we can fail it instead.
             return
         end
 
@@ -284,6 +290,10 @@ mission.phases[3].triggers[2] = {
     condition = function()
         if atTargetLocation() then
             local varlance = Entity(mission.data.custom.varlanceID)
+            if not varlance or not valid(varlance) then
+                return false
+            end
+            
             local varlanceHPThreshold = varlance.durability / varlance.maxDurability
 
             if ESCCUtil.countEntitiesByValue("is_frostbite") == 1 and varlanceHPThreshold < 0.2 then

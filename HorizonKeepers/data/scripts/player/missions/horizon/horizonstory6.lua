@@ -869,7 +869,7 @@ function kothStory6_onPhase4Dialog(weaponID)
     d3.text = "You don't understand. To stay as we are... it is only a matter of time until the galaxy is rent asunder again."
     d3.followUp = d4
 
-    d4.text = "They are endless. They are unstoppable. We must evolve, and the Xsotan are the next step... beyond the horizon!"
+    d4.text = "They are endless. They are unstoppable. We must evolve, and the Xsotan are the next step... beyond the horizon. We stand at its gates as keepers!"
     d4.followUp = d5
 
     d5.text = "I see. You've clearly lost your grasp on reality."

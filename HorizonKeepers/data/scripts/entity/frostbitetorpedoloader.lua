@@ -72,7 +72,7 @@ function FrostbiteTorpedoLoader.initialize(values)
             table.insert(self.torpedoes, torpGenerator:generate(x, y, nil, nil, WarheadType.Plasma, nil))
         end
 
-        table.insert(self.torpedoes, torpGenerator:generate(x, x, nil, nil, WarheadType.Sabot, nil))
+        table.insert(self.torpedoes, torpGenerator:generate(x, y, nil, nil, WarheadType.Sabot, nil))
 
         if not self.data.sabotOnly then
             table.insert(self.torpedoes, torpGenerator:generate(x, y, nil, nil, WarheadType.EMP, nil))

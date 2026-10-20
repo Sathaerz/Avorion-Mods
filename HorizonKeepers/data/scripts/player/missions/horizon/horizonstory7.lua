@@ -34,7 +34,7 @@ mission.data.description = {
     { text = "Head to sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Join Sophie in sector (${_X}:${_Y})", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Stay undetected", bulletPoint = true, fulfilled = false, visible = false },
-    { text = "(Recommended) Stay at least 30 km from the Military Outpost", bulletPoint = true, fulfilled = false, visible = false },
+    { text = "Stay at least 30 km from the Military Outpost", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Escort the freighter", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Defend the freighter", bulletPoint = true, fulfilled = false, visible = false },
     { text = "Defend the shipyard", bulletPoint = true, fulfilled = false, visible = false },
@@ -106,12 +106,19 @@ mission.globalPhase.onTargetLocationEntered = function(_X, _Y)
 end
 
 mission.globalPhase.onTargetLocationLeft = function(_X, _Y)
+    local methodName = "On Target Location Left"
+
     local phIndex = mission.internals.phaseIndex
     --Fail immediately in the stealth phases.
     if phIndex == 4 or phIndex == 5 then
-        fail()
+        if onServer() then
+            mission.Log(methodName, "Mission failed because player left the target area during stealth phase.")
+            fail()
+        end
     elseif phIndex == 7 and mission.data.custom.phase7FinishEventDone then
-        kothStory7_finishAndReward()
+        if onServer() then
+            kothStory7_finishAndReward()
+        end
     else
         mission.data.timeLimit = mission.internals.timePassed + (5 * 60) --Player has 5 minutes to head back to the sector.
         mission.data.timeLimitInDescription = true --Show the player how much time is left.
@@ -274,11 +281,14 @@ local kothStory7_onPhase4DialogEndGood = makeDialogServerCallback("kothStory7_on
 end)
 
 local kothStory7_onPhase4DialogEndBad = makeDialogServerCallback("kothStory7_oonPhase4DialogEndBad", 4, function()
+    local methodName = "On Phase 4 Dialog Bad End"
+
     --next, every horizon ship becomes hostile
     --add a powerful defense controller to the sector.
     kothStory7_onStealthBroken(true)
 
     --next, fail the mission.
+    mission.Log(methodName, "Mission failed because player picked wrong dialog options.")
     fail()
 end)
 
@@ -412,6 +422,8 @@ mission.phases[5].updateTargetLocationServer = function(timeStep)
 end
 
 mission.phases[5].onEntityDestroyed = function(id, lastDamageInflictor)
+    local methodName = "Phase 5 On Entity Destroyed"
+
     local destroyer = Entity(lastDamageInflictor)
 
     if id == mission.data.custom.freighterID then
@@ -423,11 +435,13 @@ mission.phases[5].onEntityDestroyed = function(id, lastDamageInflictor)
         
         if destroyer.factionIndex == _player.index then
             kothStory7_onStealthBroken(true)
+            mission.Log(methodName, "Mission failed becasue player destroyed a ship during stealth phase.")
             fail()
         end
 
         if _player.allianceIndex and destroyer.factionIndex == _player.allianceIndex then
             kothStory7_onStealthBroken(true)
+            mission.Log(methodName, "Mission failed becasue player's alliance destroyed a ship during stealth phase.")
             fail()
         end
     end
@@ -454,21 +468,16 @@ mission.phases[5].sectorCallbacks[1] = {
                 mission.phases[5].timers[tidx] = {
                     time = 15,
                     callback = function()
-                        local _MethodName = "Phase 5 Timer [6 to 30]"
-                        mission.Log(_MethodName, "Calling.")
+                        local internalTimerMethodName = "Phase 5 Timer [6 to 30] Callback"
+                        mission.Log(internalTimerMethodName, "Calling.")
 
                         local _sector = Sector()
 
                         if atTargetLocation() then
-                            local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
-                            local playerShips = {}
-                            for _, _e in pairs(playerEntities) do
-                                if _e.type == EntityType.Ship then
-                                    table.insert(playerShips, _e)
-                                end
-                            end
+                            local playerShips = kothStory7_getPlayerAndAllianceShips(Player(), _sector)
                             local defenderShips = { _sector:getEntitiesByScriptValue("is_horizon_defender") }
     
+                            --Verify distances
                             for _, pShip in pairs(playerShips) do
                                 for _, dShip in pairs(defenderShips) do
                                     --same as sus script. Distance needed is decreased by chameleon.
@@ -484,6 +493,7 @@ mission.phases[5].sectorCallbacks[1] = {
 
                                         if dist <= adjDist then
                                             kothStory7_onStealthBroken(true)
+                                            mission.Log(internalTimerMethodName, "Mission failed because player was noticed by defender.")
                                             fail()
                                         end
                                     end
@@ -516,16 +526,12 @@ if onServer() then
 mission.phases[5].timers[1] = {
     time = 10,
     callback = function()
+        local methodName = "Phase 5 Timer 1 Callback"
         local _sector = Sector()
         if atTargetLocation() then
             local militaryOutpost = Entity(mission.data.custom.militaryOutpostID)
-            local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
-            local playerShips = {}
-            for _, _e in pairs(playerEntities) do
-                if _e.type == EntityType.Ship then
-                    table.insert(playerShips, _e)
-                end
-            end
+
+            local playerShips = kothStory7_getPlayerAndAllianceShips(Player(), _sector)
 
             --Start a timer if the player is within 30km of the outpost.
             --This actually be one of the most tortured pieces of logic I've ever written but damn if it doesn't work.
@@ -539,25 +545,18 @@ mission.phases[5].timers[1] = {
                     mission.phases[5].timers[_TIMERSLOT] = {
                         time = 20,
                         callback = function()
-                            local _MethodName = "Phase 5 Timer 3 Callback"
-                            mission.Log(_MethodName, "Calling.")
-
-                            local _sector = Sector()
+                            local internalTimerMethodName = "Phase 5 Timer 4 Callback"
+                            mission.Log(internalTimerMethodName, "Calling.")
 
                             if atTargetLocation() then
                                 local militaryOutpost = Entity(mission.data.custom.militaryOutpostID)
-                                local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
-                                local playerShips = {}
-                                for _, _e in pairs(playerEntities) do
-                                    if _e.type == EntityType.Ship then
-                                        table.insert(playerShips, _e)
-                                    end
-                                end
+                                local playerShips = kothStory7_getPlayerAndAllianceShips(Player(), Sector())
 
                                 for _, pShip in pairs(playerShips) do
                                     local dist = militaryOutpost:getNearestDistance(pShip)
                                     if dist <= mission.data.custom.phase5MiloutpostMinDist then
                                         kothStory7_onStealthBroken(true)
+                                        mission.Log(internalTimerMethodName, "Mission failed because player got too close to the miliatry outpost.")
                                         fail()
                                     end
                                 end
@@ -572,6 +571,7 @@ mission.phases[5].timers[1] = {
             local shieldPct = militaryOutpost.shieldDurability / militaryOutpost.shieldMaxDurability
             if shieldPct <= 0.95 then
                 kothStory7_onStealthBroken(true)
+                mission.Log(methodName, "Mission failed because player attacked the military outpost.")
                 fail()
             end
         end
@@ -604,13 +604,7 @@ mission.phases[5].timers[3] = {
         local _sector = Sector()
         if atTargetLocation() then
             local freighter = Entity(mission.data.custom.freighterID)
-            local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
-            local playerShips = {}
-            for _, _e in pairs(playerEntities) do
-                if _e.type == EntityType.Ship then
-                    table.insert(playerShips, _e)
-                end
-            end
+            local playerShips = kothStory7_getPlayerAndAllianceShips(Player(), _sector)
     
             --need to have at least 1 player ship within 20 km of the freighter.
             local escortOK = false
@@ -635,17 +629,11 @@ mission.phases[5].timers[3] = {
                 mission.phases[5].timers[_TIMERSLOT] = {
                     time = 20,
                     callback = function()
-                        local _sector = Sector()
+                        local internalTimerMethodName = "Phase 5 Timer 5 Callback"
 
                         if atTargetLocation() then
                             local freighter = Entity(mission.data.custom.freighterID)
-                            local playerEntities = { _sector:getEntitiesByFaction(Player().index) }
-                            local playerShips = {}
-                            for _, _e in pairs(playerEntities) do
-                                if _e.type == EntityType.Ship then
-                                    table.insert(playerShips, _e)
-                                end
-                            end
+                            local playerShips = kothStory7_getPlayerAndAllianceShips(Player(), Sector())
 
                             local escortOK = false
                             for _, pShip in pairs(playerShips) do
@@ -658,6 +646,7 @@ mission.phases[5].timers[3] = {
 
                             if not escortOK then
                                 kothStory7_onStealthBroken(true)
+                                mission.Log(internalTimerMethodName, "Mission failed because player was too far from the freighter.")
                                 fail()
                             end
                         end
@@ -968,6 +957,9 @@ function kothStory7_buildObjectiveSector(x, y)
     mo:setValue("_DefenseController_Manage_Own_Invincibility", true)
     mo:addScriptOnce("player/missions/horizon/story7/horizonstory7miloutpost.lua")
 
+    local moAI = ShipAI(mo)
+    moAI:setPassive()
+
     local frostbiteFaction = HorizonUtil.getFriendlyFaction()
     local _HorizonFaction = HorizonUtil.getEnemyFaction()
 
@@ -1031,6 +1023,29 @@ function kothStory7_buildObjectiveSector(x, y)
     mission.data.custom.cleanUpSector = true
 end
 
+function kothStory7_getPlayerAndAllianceShips(_player, _sector)
+    local playerShips = {}
+
+    local playerEntities = { _sector:getEntitiesByFaction(_player.index) }
+    local playerAllianceEntities = {}
+    if _player.allianceIndex then
+        playerAllianceEntities = { _sector:getEntitiesByFaction(_player.allianceIndex) }
+    end
+
+    for _, _e in pairs(playerEntities) do
+        if _e.type == EntityType.Ship then
+            table.insert(playerShips, _e)
+        end
+    end
+    for _, _e in pairs(playerAllianceEntities) do
+        if _e.type == EntityType.Ship then
+            table.insert(playerShips, _e)
+        end
+    end
+
+    return playerShips
+end
+
 function kothStory7_onStealthBroken(runMissionFailed)
     local _sector = Sector()
 
@@ -1040,6 +1055,9 @@ function kothStory7_onStealthBroken(runMissionFailed)
         horizonAI:clearFriendFactions()
         horizonAI:clearFriendEntities()
     end
+
+    local moAI = ShipAI(mission.data.custom.militaryOutpostID)
+    moAI:setAggressive()
 
     if runMissionFailed then
         --mission ends. first, frostbite ships immediately jump out
@@ -1079,10 +1097,11 @@ function kothStory7_spawnPirateWave(lastWave)
         end
 
         local wingTable = ESCCUtil.getStandardWave(_WaveDanger, _ct, threatTable, false)
-        local wingPositions = wingGenerator:getStandardPositions(_Distance, _ct)
         if isAlpha then
             table.insert(wingTable, "Jammer")
         end
+
+        local wingPositions = wingGenerator:getStandardPositions(#wingTable, _Distance)
 
         wingGenerator:startBatch()
 
@@ -1241,6 +1260,8 @@ function kothStory7_onSpawnBetaWingFinished(generated)
 end
 
 function kothStory7_onFreighterDestroyed()
+    local methodName = "On Freighter Destroyed"
+
     local sophie = Entity(mission.data.custom.varlanceID)
 
     if sophie then
@@ -1249,12 +1270,20 @@ function kothStory7_onFreighterDestroyed()
         sophie:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
     end
 
+    local moAI = ShipAI(mission.data.custom.militaryOutpostID)
+    moAI:setAggressive()
+
     invokeClientFunction(Player(), "kothStory7_changeOutpostTrack", mission.data.custom.militaryOutpostID)
 
+    kothStory7_addDefenseController(Sector())
+
+    mission.Log(methodName, "Mission failed due to freighter destruction.")
     fail()
 end
 
 function kothStory7_onShipyardDestroyed()
+    local methodName = "On Shipyard Destroyed"
+
     local sophie = Entity(mission.data.custom.varlanceID)
 
     if sophie then
@@ -1269,8 +1298,14 @@ function kothStory7_onShipyardDestroyed()
         freighter:addScriptOnce("utility/delayeddelete.lua", random():getFloat(4, 7))
     end
 
+    local moAI = ShipAI(mission.data.custom.militaryOutpostID)
+    moAI:setAggressive()
+
     invokeClientFunction(Player(), "kothStory7_changeOutpostTrack", mission.data.custom.militaryOutpostID)
 
+    kothStory7_addDefenseController(Sector())
+
+    mission.Log(methodName, "Mission failed due to shipyard destruction.")
     fail()
 end
 
@@ -1480,7 +1515,7 @@ function kothStory7_onPhase4Dialog(outpostID)
 
     local _PlayerName = Player().name
 
-    d0.text = "Unidentified ships, this is Military Installation MRI-7873-SRD6F6C - sector traffic control. Your target profiles match the mercenaries that have been raiding our convoys over the last few weeks."
+    d0.text = "Unidentified ships, this is Military Installation MRI-7873-SRD6F6C - sector traffic control. Your target profiles match the mercenaries that have been raiding our convoys over the last few cycles."
     d0.followUp = d1
 
     d1.text = "Stand down and prepare to be boarded."

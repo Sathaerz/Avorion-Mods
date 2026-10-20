@@ -40,6 +40,7 @@ mission.data.description = {
 
 --Custom data that we'll want.
 mission.data.custom.dangerLevel = 10 --Key everything off of danger 10.
+mission.data.custom.phase1MailID = "_horizon_story5_mail"
 mission.data.custom.phase3Timer1 = 0
 mission.data.custom.phase3AWACSOrderSent = false
 mission.data.custom.awacsRewardBonus = true
@@ -111,7 +112,8 @@ end
     
 --endregion
 
-mission.phases[1] = {}
+mission.phases[1] = {} --Read mail phase
+mission.phases[1].timers = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
@@ -133,7 +135,7 @@ mission.phases[1].onBeginServer = function()
 	_Mail.text = Format("Hey, buddy.\n\nI don't think the captain of this ship was highly regarded by his corporate overlords. Figures, since the idiot got his ship trashed in a rift. Not a whole lot of breadcrumbs to follow, but we've got enough. I found the shipyard they were going to tow this thing to in order to repair it - it looks like it was one of their own. Makes sense, I wouldn't trust a pirate shipyard with this baby either. We also found more Xsotan parts, which is... concerning. I'd like to investigate this further.\n\nLooking at the shipment schedule, there's a window we might be able to take advantage of - we can put a squad in one of their freighters and steal the data from their network before they're aware of what's happening. There's only one problem. That shipyard is way too heavily defended to pull a trick like that off. We'll need to get them to overcommit so we can get our forces in, and I've got an idea.\n\nThis ship also has data on a research outpost that's fairly out of the way. It's lightly defended, but it will start screaming for help once we hit it. We can use that to draw their forces in and defeat them in detail. I'll get an AWACS ship ready - meet us at (%1%:%2%) and get ready for action.\n\nVarlance", _X, _Y)
 	_Mail.header = "Next Steps"
 	_Mail.sender = "Varlance @FrostbiteCompany"
-	_Mail.id = "_horizon_story5_mail"
+	_Mail.id = mission.data.custom.phase1MailID
 	_Player:addMail(_Mail)
 end
 
@@ -144,7 +146,7 @@ mission.phases[1].playerCallbacks = {
 			if onServer() then
 				local _Player = Player()
 				local _Mail = _Player:getMail(_MailIndex)
-				if _Mail.id == "_horizon_story5_mail" then
+				if _Mail.id == mission.data.custom.phase1MailID then
 					nextPhase()
 				end
 			end
@@ -152,7 +154,41 @@ mission.phases[1].playerCallbacks = {
 	}
 }
 
-mission.phases[2] = {}
+--region #PHASE 1 TIMER CALLS
+
+if onServer() then
+
+--Reset mission if mail is deleted unread.
+mission.phases[1].timers[1] = {
+    time = 30,
+    callback = function()
+        local methodName = "Mail Check"
+        mission.Log(methodName, "Checking for phase 1 mail.")
+
+        local _player = Player()
+        local n = _player and _player.numMails
+        local mailPresent = false
+        if type(n) ~= "number" then
+            return --assume mail is still present.
+        end
+        for idx = 0, n do
+            local _mail = _player:getMail(idx)
+            if _mail and _mail.id == mission.data.custom.phase1MailID then
+                mailPresent = true
+            end
+        end
+        if not mailPresent then
+            terminate() --No progress made. Just reset the mission.
+        end
+    end,
+    repeating = true
+}
+
+end
+
+--endregion
+
+mission.phases[2] = {} --Defend AWACS phase
 mission.phases[2].showUpdateOnEnd = true
 mission.phases[2].onBegin = function()
     local _MethodName = "Phase 2 On Begin"
@@ -200,6 +236,10 @@ mission.phases[3].updateTargetLocationServer = function(timeStep)
     local _sector = Sector()
     local awacsEntities = { _sector:getEntitiesByScriptValue("is_frostbite_awacs") }
     local station = Entity(mission.data.custom.horizonStationID)
+
+    if not station or not valid(station) then
+        fail()
+    end
 
     if #awacsEntities == 0 then
         fail()
