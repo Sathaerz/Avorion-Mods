@@ -36,7 +36,9 @@ function SpawnUtility.addToughness(entity, level)
     if _PlayerCt > 0 and hasIncreasingThreat then
         local ITUtil = include("increasingthreatutility")
         local hatedplayers = ITUtil.getSectorPlayersByHatred(entity.factionIndex)
-        _Hatred = math.min(hatedplayers[1].hatred, 1000) --cap at +20% @ 1000
+        if hatedplayers and hatedplayers[1] then
+            _Hatred = math.min(hatedplayers[1].hatred or 0, 1000) --cap at +20% @ 1000
+        end
         _dt = _dt + ((_Hatred / 50) / 100)
     end
 
