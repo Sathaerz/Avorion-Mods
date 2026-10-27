@@ -106,7 +106,7 @@ function initialize(_Data_in)
                 mission.data.custom.maximumXsotan = mission.data.custom.maximumXsotan + 1
                 mission.data.custom.xsotanSizeBonus.min = mission.data.custom.xsotanSizeBonus.min + 1
                 mission.data.custom.xsotanSizeBonus.max = mission.data.custom.xsotanSizeBonus.max + 1
-                mission.data.custom.xsotanKillreq = mission.data.custom.xsotanKillreq + 2
+                mission.data.custom.xsotanKillreq = mission.data.custom.xsotanKillreq + 5
             end
 
             if mission.data.custom.inBarrier then
@@ -122,7 +122,7 @@ function initialize(_Data_in)
                     if mission.data.custom.dangerLevel == 10 then
                         mission.data.custom.maximumXsotan = mission.data.custom.maximumXsotan + 1
                         mission.data.custom.xsoDamageMultiplier = mission.data.custom.xsoDamageMultiplier + 1.5
-                        mission.data.custom.xsotanKillreq = mission.data.custom.xsotanKillreq + 2
+                        mission.data.custom.xsotanKillreq = mission.data.custom.xsotanKillreq + 10
                         mission.data.custom.maximumQuantum = mission.data.custom.maximumQuantum + 1
                     end
                 end
@@ -242,6 +242,9 @@ mission.phases[2].onEntityDestroyed = function(id, lastDamageInflictor)
 
     if atTargetLocation() then
         local entity = Entity(id)
+        if not valid(entity) then --Sure, nil check, why not.
+            return
+        end
         if valid(entity) and entity:getValue("_infestation_xsotan") then
             mission.data.custom.xsotanKilled = mission.data.custom.xsotanKilled + 1
         end
@@ -328,7 +331,7 @@ function eradicateXsotan_spawnXsotanWave()
     if mission.data.custom.dangerLevel == 10 then
         mission.Log(_MethodName, "Adding danger 10 quantum to spawn table")
         _AddQuantum = true
-        if rgen:test(0.25) == 1 then 
+        if rgen:test(0.25) then 
             mission.Log(_MethodName, "Adding summoner to spawn table")
             _AddSmn = true 
         end
@@ -452,7 +455,7 @@ end
 
 function eradicateXsotan_formatDescription(_Station, _insideBarrier)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
 
     local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
