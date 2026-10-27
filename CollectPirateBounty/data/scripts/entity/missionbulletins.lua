@@ -13,5 +13,9 @@ function MissionBulletins.getPossibleMissions()
 		table.insert(scripts, {path = "data/scripts/player/missions/piratebounty.lua", prob = 15})
 	end
 
+	if stationTitle == "Forward Outpost" then --Not a player station, but we'll allow it.
+		table.insert(scripts, {path = "data/scripts/player/missions/piratebounty.lua", prob = 5})
+	end
+
 	return scripts
 end

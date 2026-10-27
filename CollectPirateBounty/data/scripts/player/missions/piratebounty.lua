@@ -142,7 +142,7 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
         return
     end
 
-    if (_DestroyedEntity.type == EntityType.Ship or _DestroyedEntity.type == EntityType.Station) and (_EntityDestroyer.type == EntityType.Ship or _EntityDestroyer.type == EntityType.Station) then
+    if (_DestroyedEntity.type == EntityType.Ship or _DestroyedEntity.type == EntityType.Station) then
         mission.Log(_MethodName, "Both destroyer / destroyed were ships / stations - checking faction indexes.")
         local _dfindex = _EntityDestroyer.factionIndex -- "destroyer faction" index
         local _pfindex = mission.data.custom.pirateFaction -- "pirate faction" index
@@ -438,7 +438,7 @@ end
 
 function collectPirateBounty_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
 
     local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
