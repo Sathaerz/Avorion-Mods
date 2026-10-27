@@ -26,5 +26,9 @@ function MissionBulletins.getPossibleMissions()
 		table.insert(scripts, {path = "data/scripts/player/missions/xsotanbounty.lua", prob = 5, maxDistToCenter = 500})
 	end
 
+	if stationTitle == "Forward Outpost" then --Not a player station, but we'll allow it.
+		table.insert(scripts, {path = "data/scripts/player/missions/xsotanbounty.lua", prob = 5, maxDistToCenter = 500})
+	end
+
 	return scripts
 end

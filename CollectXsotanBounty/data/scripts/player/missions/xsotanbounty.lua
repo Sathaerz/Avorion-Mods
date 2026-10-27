@@ -158,7 +158,7 @@ mission.phases[1].onEntityDestroyed = function(_ID, _LastDamageInflictor)
         return
     end
 
-    if insideBarrierOK and (_DestroyedEntity.type == EntityType.Ship or _DestroyedEntity.type == EntityType.Station) and (_EntityDestroyer.type == EntityType.Ship or _EntityDestroyer.type == EntityType.Station) then
+    if insideBarrierOK and (_DestroyedEntity.type == EntityType.Ship or _DestroyedEntity.type == EntityType.Station) then
         mission.Log(methodName, "Both destroyer / destroyed were ships / stations - checking faction indexes.")
         local _dfindex = _EntityDestroyer.factionIndex -- "destroyer faction" index
         local _xfindex = Xsotan.getFaction().index -- xsotan faction index
@@ -231,8 +231,9 @@ function collectXsotanBounty_trySpawnSpecialXsotan(x, y, inRift)
             if _random:test(odds) then
                 mission.Log(methodName, "Spawning Xostan")
                 local generator = AsyncShipGenerator(nil, nil)
-                local xsotanFunction = getRandomEntry(Xsotan.getSpecialXsotanFunctions(generator:getGenericPosition(), vol))
-                local xsotan = xsotanFunction()
+                local xsotanFunction = getRandomEntry(Xsotan.getSpecialXsotanFunctions())
+                local xsotan = xsotanFunction(generator:getGenericPosition(), vol)
+                --No need to apply the "is_special_xsotan" tag because the xsotan lib already applies it.
 
                 --xsotan don't get savage, hardcore, etc. in rifts
                 if not inRift then
@@ -291,7 +292,7 @@ end
 
 function collectXsotanBounty_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
 
     local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
