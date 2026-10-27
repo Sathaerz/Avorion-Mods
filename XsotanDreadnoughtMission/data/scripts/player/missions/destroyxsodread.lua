@@ -147,6 +147,10 @@ mission.phases[2].timers[1] = {
 
         local dreadnoughts = {Sector():getEntitiesByScriptValue("xsotan_dreadnought")}
 
+        --This is not a bug. The dreadnought is spawned before this phase starts, so if there is no dreadnought it means that either...
+        --It exited the sector while your fleet wasn't there.
+        --Or your fleet destroyed it while you weren't there.
+        --AFAIK there is no way to tell between the two above scenarios. Try staying with your fleet next time.
         if atTargetLocation() and mission.data.custom.dreadnoughtKilled >= 1 and #dreadnoughts == 0 then
             destroyXsoDread_finishAndReward()
         end
@@ -163,7 +167,8 @@ mission.phases[2].timers[2] = {
         local dreadnoughts = {Sector():getEntitiesByScriptValue("xsotan_dreadnought")}
 
         if atTargetLocation() and mission.data.custom.dreadnoughtKilled == 0 and #dreadnoughts == 0 then
-            --The dreadnought left the sector. Realistically speaking this will not happen due to the fact that it aggros instantly.
+            --The dreadnought left the sector. This will generally not happen UNLESS the player leaves the sector entirely, at which point the dreadnought
+            --WILL jump out due to the Xsotan script. Try staying with your fleet next time.
             destroyXsoDread_failAndPunish()
         end
     end,
@@ -200,7 +205,7 @@ end
 
 function destroyXsoDread_formatWinMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
 
     if _Aggressive > 0.5 then
@@ -221,7 +226,7 @@ end
 
 function destroyXsoDread_formatLoseMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
 
     if _Aggressive > 0.5 then
@@ -241,7 +246,7 @@ end
 
 function destroyXsoDread_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
 
     local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
