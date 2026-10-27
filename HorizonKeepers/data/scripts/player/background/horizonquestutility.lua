@@ -244,7 +244,9 @@ function kothQuestUtil_addMissionToStation(x, y, missionScript)
         if #stations > 0 then
             for _, _Station in pairs(stations) do
                 local _ok, _bulletin = run(missionScript, "getBulletin", _Station)
-                _Station:invokeFunction("bulletinboard", "removeBulletin", _bulletin.brief)
+                if _bulletin then
+                    _Station:invokeFunction("bulletinboard", "removeBulletin", _bulletin.brief)
+                end
             end
 
             shuffle(random(), stations)

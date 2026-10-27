@@ -91,7 +91,7 @@ mission.globalPhase.onAccomplish = function()
 end
 
 mission.phases[1] = {}
-mission.phaess[1].timers = {}
+mission.phases[1].timers = {}
 mission.phases[1].showUpdateOnEnd = true
 mission.phases[1].onBeginServer = function()
     local _MethodName = "Phase 1 On Begin Server"
