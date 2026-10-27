@@ -69,7 +69,7 @@ function finishScript()
 end
 
 function onFoundEnd()
-    Player():invokeFunction("player/missions/destroystronghold.lua", "foundCodes")
+    Player():invokeFunction("player/missions/destroystronghold.lua", "destroyStronghold_foundCodes")
 
     terminate()
     return

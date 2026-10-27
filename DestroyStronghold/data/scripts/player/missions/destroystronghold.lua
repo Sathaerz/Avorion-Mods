@@ -59,25 +59,7 @@ function initialize(_Data_in)
             local _Sector = Sector()
             local _Giver = Entity(_Data_in.giver)
             --[[=====================================================
-                CUSTOM MISSION DATA:
-                .dangerLevel
-                .locations
-                .optlocation
-                .pirateLevel
-                .maxDefenders
-                .defenderRespawnTime
-                .freighterRespawnTime
-                .freighterSupply
-                .freighterSupplyTransfer
-                .freighterScale
-                .optionalPiratesGenerated
-                .optionalPiratesTaunted
-                .optionalPiratesAllDestroyed
-                .wreckagePieceIds
-                .optionalObjectiveCompleted
-                .builtMainSector
-                .militaryStationid
-                .forcedDefenderScale
+                CUSTOM MISSION DATA SETUP
             =========================================================]]
             mission.data.custom.dangerLevel = _Data_in.dangerLevel
             mission.data.custom.locations = {}
@@ -117,6 +99,9 @@ function initialize(_Data_in)
             end
             PirateGenerator.pirateLevel = mission.data.custom.pirateLevel
 
+            --[[=====================================================
+                MISSION DESCRIPTION SETUP:
+            =========================================================]]            
             mission.data.description[1].arguments = { sectorName = _Sector.name, giverTitle = _Giver.translatedTitle }
             mission.data.description[2].text = _Data_in.initialDesc
             mission.data.description[2].arguments = { x = _X, y = _Y }
@@ -149,7 +134,7 @@ end
 
 mission.globalPhase.onAbandon = function()
     if mission.data.location then
-        dumpMilitaryStationCargo()
+        destroyStronghold_dumpMilitaryStationCargo()
         runFullSectorCleanup(true)
     end
 end
@@ -157,7 +142,7 @@ end
 mission.globalPhase.onFail = function()
     --There's no real 'fail' condition but we'll keep this one anyways just in case.
     if mission.data.location then
-        dumpMilitaryStationCargo()
+        destroyStronghold_dumpMilitaryStationCargo()
         runFullSectorCleanup(true)
     end
 end
@@ -226,12 +211,15 @@ mission.phases[1].onTargetLocationEntered = function(_X, _Y)
     mission.Log(_MethodName, "Beginning...")
 
     --Build the sector, then start the reinforcement and shipment scripts.
-    buildObjectiveSector(_X, _Y)
+    destroyStronghold_buildObjectiveSector(_X, _Y)
     mission.Log(_MethodName, "Starting scripts.")
 
     local _Sector = Sector()
 
     local _MilitaryStation = Entity(mission.data.custom.militaryStationid)
+    if not _MilitaryStation or not valid(_MilitaryStation) then
+        return
+    end
     local _SetOptionalObjectiveInvoked = false
     --ADD DEFENDER CONTROLLER + SHIPMENT CONTROLLER SCRIPT
     if not _Sector:hasScript("sector/background/defensecontroller.lua") then
@@ -361,7 +349,7 @@ mission.phases[1].updateTargetLocationServer = function(timeStep)
             MissionUT.deleteOnPlayersLeft(_P)
         end
 
-        finishAndReward()
+        destroyStronghold_finishAndReward()
     end
 end
 
@@ -394,7 +382,7 @@ mission.phases[1].onOptionalLocationArrivalConfirmed = function(_X, _Y)
         mission.Log(_MethodName, "Optional pirates did not taunt. Broadcast taunt.")
 
         local _Pirates = {Sector():getEntitiesByScriptValue("is_pirate")}
-        if _Pirates then
+        if #_Pirates > 0 then
             mission.Log(_MethodName, "Sending pirate taunt")
             local _Lines = {
                 "Who sold us out? We're going to kill you after we deal with this!",
@@ -420,31 +408,15 @@ mission.phases[1].optionalUpdateServer = function(_TimeStep)
     if ESCCUtil.countEntitiesByValue("is_pirate") == 0 and not mission.data.custom.optionalPiratesAllDestroyed then
         mission.Log(_MethodName, "All optional pirates destroyed. Attach wreckage searching scripts to the wrecks.")
 
-        local _WreckSizes = { 1000, 900, 800, 700, 600, 500, 400, 300, 200, 150, 100, 50, 40, 30, 20, 10 }
-        local _TargetWreckSize = 1000
         local _Rgen = ESCCUtil:getRand()
-
-        --Tries to find the largest wreckage size (by block count) that there are at least 5 of.
         local _Wreckages = {Sector():getEntitiesByType(EntityType.Wreckage)}
-        mission.Log(_MethodName, "Wreckages found : " .. tostring(#_Wreckages))
-        for _, _Wsize in pairs(_WreckSizes) do
-            local _Count = 0
-            for _, _Wr in pairs(_Wreckages) do
-                local _Pl = Plan(_Wr.id)
-                if _Pl.numBlocks >= _Wsize then _Count = _Count + 1 end
-            end
-            if _Count >= 5 then 
-                _TargetWreckSize = _Wsize
-                break
-            end
-        end
 
-        --Get 5 random wreckages from the table.
+        --Get 5 random wreckages from the sector. We don't care how big they are.
         shuffle(random(), _Wreckages)
         local _CandidateWrecks = {}
         for _, _Wreck in pairs(_Wreckages) do
             local _Pl = Plan(_Wreck.id)
-            if _Pl.numBlocks >= _TargetWreckSize then
+            if _Pl.numBlocks >= 10 then --The wrecks should have at least 10 blocks unless the player is using a weirdo shipgen mod.
                 table.insert(_CandidateWrecks, _Wreck)
                 if #_CandidateWrecks >= 5 then
                     break
@@ -458,10 +430,15 @@ mission.phases[1].optionalUpdateServer = function(_TimeStep)
             _Wreck:addScriptOnce(mission.data.custom.wreckageScriptPath)
             _Wreck:setValue("_destroystronghold_optionalwreck_targetplayer", Player().index)
         end
+        -- Sure, we can return here if there are no wrecks to search. Seriously, how did this even happen? Did the player have a mod that insta-deleted all wreckages?
+        if #mission.data.custom.wreckagePieceIds == 0 then 
+            mission.data.custom.optionalPiratesAllDestroyed = true
+            return
+        end
         local _TargetWreck = Entity(mission.data.custom.wreckagePieceIds[_Rgen:getInt(1, #mission.data.custom.wreckagePieceIds)])
         _TargetWreck:setValue("_destroystronghold_optionalwreck_hascode", true)
 
-        registerMarkWreckages()
+        destroyStronghold_registerMarkWreckages()
         showMissionUpdated(mission._Name)
         mission.data.description[4].fulfilled = true
         mission.data.description[5].visible = true
@@ -475,7 +452,7 @@ end
 
 --region #SERVER CALLS
 
-function buildObjectiveSector(_X, _Y)
+function destroyStronghold_buildObjectiveSector(_X, _Y)
     local _MethodName = "Build Sector"
 
     if not mission.data.custom.builtMainSector then
@@ -522,8 +499,9 @@ function buildObjectiveSector(_X, _Y)
         _ShipAI:setAggressive()
         --Add pilots so it can actually use the fighters.
         _Station:addCrew(60, CrewMan(CrewProfessionType.Pilot))
-        --No boarding.
+        --No boarding + add bonus to prevent xavorion faction switch.
         Boarding(_Station).boardable = false
+        _Station:addAbsoluteBias(StatsBonuses.DefenseWeapons, 1000)
         --Remove cargo if we're at a danger level less than 8 or if we're too far outside the barrier.
         local _Dist = ESCCUtil.getDistanceToCenter(_X, _Y)
         if mission.data.custom.dangerLevel < 8 or _Dist > 175 then
@@ -531,33 +509,27 @@ function buildObjectiveSector(_X, _Y)
             _StationBay:clear()
         end
         --Change to "Arms Fortress" and buff shields / hp. Effectively a 50% buff to damage via more guns.
-        local _DuraFactor = 1.3
+        local _DuraFactor = 1.5
         if mission.data.custom.dangerLevel == 10 then
-            ShipUtility.addScalableArtilleryEquipment(_Station, 4.0, 1.0, false)
-            _DuraFactor = 1.5
+            ShipUtility.addScalableArtilleryEquipment(_Station, 4.0, 2.0, false)
+            _DuraFactor = 3
 
             _Station.title = "Arms Fortress"
             _Station:addScript("icon.lua", "data/textures/icons/pixel/skull_big.png")
             _Station:addScriptOnce("internal/common/entity/background/legendaryloot.lua")
+
+            _Station.damageMultiplier = (_Station.damageMultiplier or 1) * 1.25
         else
             _Station.title = "Military Outpost"
             _Station:addScript("icon.lua", "data/textures/icons/pixel/military.png")
         end
         --Bump station HP / shield.
-        local _Dura = Durability(_Station)
-        if _Dura then
-            _Dura.maxDurabilityFactor = _Dura.maxDurabilityFactor * _DuraFactor
-        end
-
-        local _Shield = Shield(_Station)
-        if _Shield then
-            _Shield.maxDurabilityFactor = _Shield.maxDurabilityFactor * _DuraFactor
-        end
+        ESCCUtil.multiplyOverallDurability(_Station, _DuraFactor)
 
         --finally, (maybe) add a military tcs to the station's loot table.
         if _Rgen:test(0.25) then
             local _upgradeGenerator = UpgradeGenerator()
-            local _upgradeRarities = getSectorRarityTables(_X, _Y, _upgradeGenerator)
+            local _upgradeRarities = destroyStronghold_getSectorRarityTables(_X, _Y, _upgradeGenerator)
             local _seedInt = _Rgen:getInt(1, 20000)
             Loot(_Station):insert(SystemUpgradeTemplate("data/scripts/systems/militarytcs.lua", Rarity(getValueFromDistribution(_upgradeRarities)), Seed(_seedInt)))
         end
@@ -589,7 +561,7 @@ function buildObjectiveSector(_X, _Y)
     end
 end
 
-function dumpMilitaryStationCargo()
+function destroyStronghold_dumpMilitaryStationCargo()
     if atTargetLocation() then
        --Abandoned in-sector.
         --Dump all of the cargo in the military base in case the player tries to kill it after abandoning to make things easier.
@@ -603,7 +575,7 @@ function dumpMilitaryStationCargo()
     end
 end
 
-function getSectorRarityTables(_X, _Y, _upgradeGenerator)
+function destroyStronghold_getSectorRarityTables(_X, _Y, _upgradeGenerator)
     local _dangerLevel = mission.data.custom.dangerLevel
     local _rarities = _upgradeGenerator:getSectorRarityDistribution(_X, _Y)
     _rarities[-1] = 0 --no petty
@@ -630,7 +602,7 @@ function getSectorRarityTables(_X, _Y, _upgradeGenerator)
     return _rarities
 end
 
-function finishAndReward()
+function destroyStronghold_finishAndReward()
     local _MethodName = "Finish and Reward"
     mission.Log(_MethodName, "Running win condition.")
 
@@ -643,7 +615,7 @@ end
 --region #CLIENT / SERVER CALLS
 
 local DestroyStronghold_getLoc = getMissionLocation
-function getMissionLocation()
+function getMissionLocation() --Can't use destroyStronghold_ to localize this to this file - this is called externally.
     local _Locations = {}
     if mission.data.custom.optionalObjectiveCompleted then
         table.insert(_Locations, ivec2(mission.data.location.x, mission.data.location.y))
@@ -656,25 +628,25 @@ function getMissionLocation()
     return unpack(_Locations)
 end
 
-function registerMarkWreckages()
+function destroyStronghold_registerMarkWreckages()
     local _MethodName = "Register Mark Wreckages"
     if onClient() then
         _MethodName = _MethodName .. " [CLIENT]"
         mission.Log(_MethodName, "Reigstering onPreRenderHud callback.")
 
         local _Player = Player()
-        if _Player:registerCallback("onPreRenderHud", "onMarkWreckages") == 1 then
+        if _Player:registerCallback("onPreRenderHud", "destroyStronghold_onMarkWreckages") == 1 then
             mission.Log(_MethodName, "WARNING - Could not attach prerender callback to script.")
         end
     else
         _MethodName = _MethodName .. " [SERVER]"
         mission.Log(_MethodName, "Invoking on Client")
         
-        invokeClientFunction(Player(), "registerMarkWreckages")
+        invokeClientFunction(Player(), "destroyStronghold_registerMarkWreckages")
     end
 end
 
-function foundCodes()
+function destroyStronghold_foundCodes()
     local _MethodName = "Found Codes"
     
     if onClient() then
@@ -682,13 +654,13 @@ function foundCodes()
         mission.Log(_MethodName, "Unregistering callback and reinvoking on server.")
 
         local _Player = Player()
-        if _Player:unregisterCallback("onPreRenderHud", "onMarkWreckages") == 1 then
+        if _Player:unregisterCallback("onPreRenderHud", "destroyStronghold_onMarkWreckages") == 1 then
             mission.Log(_MethodName, "WARNING - Could not detach prerender callback to script.")
         end
 
         showMissionUpdated(mission._Name)
 
-        invokeServerFunction("foundCodes")
+        invokeServerFunction("destroyStronghold_foundCodes")
     else
         mission.Log(_MethodName, "Invoking on Server")
     end
@@ -696,13 +668,13 @@ function foundCodes()
     mission.data.description[5].fulfilled = true
     mission.data.custom.optionalObjectiveCompleted = true
 end
-callable(nil, "foundCodes")
+callable(nil, "destroyStronghold_foundCodes")
 
 --endregion
 
 --region #CLIENT CALLS
 
-function onMarkWreckages()
+function destroyStronghold_onMarkWreckages()
     local _MethodName = "On Mark Wreckages"
 
     local player = Player()
@@ -718,9 +690,8 @@ function onMarkWreckages()
 
     for _, wreckId in pairs(mission.data.custom.wreckagePieceIds) do
         local entity = Entity(wreckId)
-        if not entity then return end
-        
-        if entity:hasScript(mission.data.custom.wreckageScriptPath) then
+
+        if entity and entity:hasScript(mission.data.custom.wreckageScriptPath) then
             local _ContainerMarkOrange = ESCCUtil.getSaneColor(255, 173, 0)
 
             renderer:renderEntityTargeter(entity, _ContainerMarkOrange)
@@ -735,9 +706,9 @@ end
 
 --region #MAKEBULLETIN CALL
 
-function formatWinMessage(_Station)
+function destroyStronghold_formatWinMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
 
     if _Aggressive > 0.5 then
@@ -756,9 +727,9 @@ function formatWinMessage(_Station)
     return _Msgs[_MsgType]
 end
 
-function formatDescription(_Station, _DangerLevel)
+function destroyStronghold_formatDescription(_Station, _DangerLevel)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
 
     local _DescriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
@@ -827,10 +798,10 @@ mission.makeBulletin = function(_Station)
         _Difficulty = "Extreme"
     end
     
-    local _Description = formatDescription(_Station, _DangerLevel)
-    local _WinMsg = formatWinMessage(_Station)
+    local _Description = destroyStronghold_formatDescription(_Station, _DangerLevel)
+    local _WinMsg = destroyStronghold_formatWinMessage(_Station)
 
-    local _BaseReward = 170000
+    local _BaseReward = 160000
     if _DangerLevel >= 6 then
         _BaseReward = _BaseReward + 6000
     end
@@ -838,7 +809,7 @@ mission.makeBulletin = function(_Station)
         _BaseReward = _BaseReward + 9000
     end
     if _DangerLevel == 10 then
-        _BaseReward = _BaseReward + 12000
+        _BaseReward = _BaseReward + 25000
     end
     if insideBarrier then
         _BaseReward = _BaseReward * 2
