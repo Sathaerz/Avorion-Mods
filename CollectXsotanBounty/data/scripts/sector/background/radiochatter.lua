@@ -1,9 +1,9 @@
 --Always add these.
 if onClient() then
 
-    local CollectPirateBounty_initialize = RadioChatter.initialize
+    local CollectXsotanBounty_initialize = RadioChatter.initialize
     function RadioChatter.initialize()
-        CollectPirateBounty_initialize()
+        CollectXsotanBounty_initialize()
 
         --General
         if self.GeneralShipChatter then
