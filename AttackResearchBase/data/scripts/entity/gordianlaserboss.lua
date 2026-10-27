@@ -90,31 +90,18 @@ function GordianLaserBoss.update(timeStep)
         local boss = Entity()
 
         if onServer() then
-            --Be careful about enabling these, they can get spammy.
-            if not data.targetEntityId or not Entity(data.targetedEntityId) then
-                --self.Log(methodName, "Target does not exist. Picking new target.")
-            else
-                if not Entity(data.targetedEntityId).isShip then
-                    --self.Log(methodName, "Target is not a ship. Picking new target.")
-                end
-
-                if Entity(data.targetEntityId).invincible then
-                    --self.Log(methodName, "Target is invincible. Picking new target.")
-                end
-            end
-
-            if not data.targetEntityId or not Entity(data.targetedEntityId) or not Entity(data.targetedEntityId).isShip or Entity(data.targetEntityId).invincible then
+            --No need for the debug stuff anymore, we've established that it works well enough.
+            local laserBossTarget = data.targetEntityId and Entity(data.targetEntityId)
+            if not laserBossTarget or not valid(laserBossTarget) or not laserBossTarget.isShip or laserBossTarget.invincible then
                 -- set new target
                 local players = {Sector():getPlayers()}
                 shuffle(random(), players)
                 local newTarget = nil
                 for _, player in pairs(players) do
-                    if not player.craft then goto continue end
-
-                    newTarget = player.craft.id
-                    break
-
-                    ::continue::
+                    if player.craft then
+                        newTarget = player.craft.id
+                        break
+                    end
                 end
                 data.targetEntityId = newTarget
                 GordianLaserBoss.sync()
@@ -178,8 +165,14 @@ function GordianLaserBoss.updateTimer(entity, timeStep)
         return
     end
 
-    if not data.targetEntityId then return end
-    ShipAI():setPassiveTurning(Entity(data.targetntityId).translationf) -- turn while we update timer
+    if not data.targetEntityId then 
+        return 
+    end
+
+    local laserBossTarget = Entity(data.targetEntityId)
+    if laserBossTarget and valid(laserBossTarget) then
+        ShipAI():setPassiveTurning(laserBossTarget.translationf) -- turn while we update timer
+    end
 end
 
 function GordianLaserBoss.initializeShot(entity, timeStep)

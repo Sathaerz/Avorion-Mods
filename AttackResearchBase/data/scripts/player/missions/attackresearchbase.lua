@@ -14,7 +14,9 @@
             - Research station present in sector
             - 4 initial defenders from medium threat table.
             - 3 respawning defenders
-            - 2% Chance per danger level to drop chip with super secret ultra-difficult followup mission.
+            - Someone called this out in a bugfix doc. Look, kid, I don't think I've checked these headers in over 3 years of redesigning / adjusting things.
+            - You'll note that NONE of the newer missions have these.
+            - 1% Chance per danger level to drop chip with super secret ultra-difficult followup mission.
             - Respawning defenders spawn every 3 minutes.
         5 - [These conditions are present at danger level 5 and above]
             - 25% chance that Military Outpost is present in sector as well.
@@ -496,12 +498,12 @@ end
 
 function attackResearchBase_formatDescription(_Station, _DangerValue)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
 
     local descriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
         descriptionType = 2 --Aggressive.
-    elseif _Aggressive < 0.5 then
+    elseif _Aggressive <= -0.5 then
         descriptionType = 3 --Peaceful.
     end
 

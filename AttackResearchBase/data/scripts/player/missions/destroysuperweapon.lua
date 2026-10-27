@@ -100,21 +100,22 @@ mission.phases[1] = {}
 mission.phases[1].onTargetLocationEntered = function(_X, _Y) 
     local _MethodName = "Phase 1 on Target Location Entered"
     
-    if not mission.data.custom.gordianKnotid then
-        local _GordianKnot = PariahUtility.spawnSuperWeapon(mission.data.custom.mainType, mission.data.custom.secondaryWeapons)
-        mission.data.custom.gordianKnotid = _GordianKnot.id
-    end
+    local _gk = mission.data.custom.gordianKnotid and Entity(mission.data.custom.gordianKnotid)
+    if not _gk or not valid(_gk) then
+        _gk = PariahUtility.spawnSuperWeapon(mission.data.custom.mainType, mission.data.custom.secondaryWeapons)
+        mission.data.custom.gordianKnotid = _gk.id
+    else
+        --gk is spawned + valid - reset superweapons.
+        --Give the plyer a grace period before it starts blasting.
+        local _func = "resetTimeToActive"
+        
+        --gk always has torp slammer.
+        _gk:invokeFunction("torpedoslammer.lua", _func, 15)
 
-    --Give the plyer a grace period before it starts blasting.
-    local _func = "resetTimeToActive"
-    local _gk = Entity(mission.data.custom.gordianKnotid)
-
-    --gk always has torp slammer.
-    _gk:invokeFunction("torpedoslammer.lua", _func, 15)
-
-    if _gk and valid(_gk) and _gk:getValue("_gk_superweaponscript") then
-        local _script = _gk:getValue("_gk_superweaponscript")
-        _gk:invokeFunction(_script, _func, 30)
+        if _gk and valid(_gk) and _gk:getValue("_gk_superweaponscript") then
+            local _script = _gk:getValue("_gk_superweaponscript")
+            _gk:invokeFunction(_script, _func, 30)
+        end
     end
 end
 
@@ -138,6 +139,9 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
     }
 
     local _GordianKnot = Entity(mission.data.custom.gordianKnotid)
+    if not _GordianKnot or not valid(_GordianKnot) then --Sure, why not add a nil check.
+        return
+    end
     Sector():broadcastChatMessage(_GordianKnot, ChatMessageType.Chatter, _Taunts[_Rgen:getInt(1, #_Taunts)])
 end
 
@@ -159,6 +163,7 @@ function destroySuperWeapon_finishAndReward()
     mission.Log(_MethodName, "Running win condition.")
 
     --We have to manually set the reputation here because we can't carry over the giver from the previous mission to the chip to this mission.
+    --Also, like, we're maxing it out.
     local _MissionDoer = Player().craftFaction or Player()
     local _Faction = Faction(mission.data.custom.friendlyFaction)
     local _Relation = _MissionDoer:getRelation(mission.data.custom.friendlyFaction)
