@@ -47,7 +47,7 @@ include("structuredmission")
 ESCCUtil = include("esccutil")
 
 local Balancing = include ("galaxy")
-local PrototypeGenerator = include("destroyprotogenerator")
+local PrototypeGenerator = include("plangenerator/destroyprotogenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local PirateGenerator = include("pirategenerator")
 local SpawnUtility = include ("spawnutility")
@@ -188,7 +188,10 @@ mission.phases[1].onTargetLocationArrivalConfirmed = function(_X, _Y)
         "A good prototype needs testing, I suppose...",
         "You should have backed off when you had the chance!",
         "Prepare yourself!",
-        "Ready or not, here I come!"
+        "Ready or not, here I come!",
+        "You FA'd, now it's time to FO.",
+        "We're gonna 86 your ass.",
+        "Hope you're ready to die, Captain."
     }
 
     Sector():broadcastChatMessage(_Prototypes[1], ChatMessageType.Chatter, getRandomEntry(entryTaunts))
@@ -597,7 +600,7 @@ end
 
 function destroyPrototype_formatWinMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
 
     if _Aggressive > 0.5 then
@@ -618,7 +621,7 @@ end
 
 function destroyPrototype_formatLoseMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
 
     if _Aggressive > 0.5 then
@@ -638,7 +641,7 @@ end
 
 function destroyPrototype_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
 
     local _DescriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
