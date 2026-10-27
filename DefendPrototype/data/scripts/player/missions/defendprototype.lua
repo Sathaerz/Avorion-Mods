@@ -20,7 +20,7 @@ ESCCUtil = include("esccutil")
 
 local Balancing = include ("galaxy")
 local SectorGenerator = include ("SectorGenerator")
-local PrototypeGenerator = include("defendprotogenerator")
+local PrototypeGenerator = include("plangenerator/defendprotogenerator")
 local AsyncPirateGenerator = include ("asyncpirategenerator")
 local SpawnUtility = include ("spawnutility")
 local TorpedoUtility = include ("torpedoutility")
@@ -644,7 +644,7 @@ function defendPrototype_onBetaBackgroundPiratesFinished(_Generated)
     local _PrefType = TorpedoUtility.WarheadType.Tandem
     local rangeFactor = 4
     if mission.data.custom.dangerLevel >= 6 then
-        _PrefType = TorpedoUtility.WarheadType.Nuclear
+        _PrefType = TorpedoUtility.WarheadType.Neutron
         _DmgFactor = 2
         _tta = 25
         rangeFactor = 1
@@ -891,7 +891,7 @@ callable(nil, "defendPrototype_playHealAnimations")
 
 function defendPrototype_formatWinMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
 
     if _Aggressive > 0.5 then
@@ -912,7 +912,7 @@ end
 
 function defendPrototype_formatLoseMessage(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
     local _MsgType = 1 --1 = Neutral / 2 = Aggressive / 3 = Peaceful
 
     if _Aggressive > 0.5 then
@@ -932,7 +932,7 @@ end
 
 function defendPrototype_formatDescription(_Station)
     local _Faction = Faction(_Station.factionIndex)
-    local _Aggressive = _Faction:getTrait("aggressive")
+    local _Aggressive = _Faction:getTrait("aggressive") or 0
 
     local _DescriptionType = 1 --Neutral
     if _Aggressive > 0.5 then
@@ -980,12 +980,15 @@ mission.makeBulletin = function(_Station)
     local _WinMsg = defendPrototype_formatWinMessage(_Station)
     local _LoseMsg = defendPrototype_formatLoseMessage(_Station)
 
-    local _BaseReward = 400000
+    local _BaseReward = 300000
     if _DangerLevel >= 5 then
         _BaseReward = _BaseReward + 400000
     end
+    if _DangerLevel >= 9 then
+        _BaseReward = _BaseReward + 200000
+    end
     if _DangerLevel == 10 then
-        _BaseReward = _BaseReward + 500000
+        _BaseReward = _BaseReward + 400000
     end
     if insideBarrier then
         _BaseReward = _BaseReward * 2
